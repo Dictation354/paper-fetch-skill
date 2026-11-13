@@ -1,12 +1,11 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
+from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
 import unittest
 from pathlib import Path
-from unittest import mock
 from bs4 import BeautifulSoup
 from paper_fetch.http import HttpTransport
-from paper_fetch.providers import _springer_authors as springer_authors
-from paper_fetch.providers import _springer_html as springer_html
-from paper_fetch.providers import _springer_markdown as springer_markdown
 from paper_fetch.providers import html_springer_nature, springer as springer_provider
 from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.markdown.citations import normalize_inline_citation_markdown
@@ -14,44 +13,10 @@ from paper_fetch.quality.html_availability import assess_html_fulltext_availabil
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers._html_section_markdown import render_clean_text_from_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import normalize_text
 
 
 class SpringerHtmlRegressionTests(unittest.TestCase):
-    def test_springer_compat_facade_does_not_mutate_canonical_dependencies(
-        self,
-    ) -> None:
-        canonical_markdown = springer_markdown.extract_article_markdown
-        canonical_authors = springer_authors.extract_authors
-
-        with (
-            mock.patch.object(
-                springer_html, "extract_article_markdown"
-            ) as facade_markdown,
-            mock.patch.object(springer_html, "extract_authors") as facade_authors,
-        ):
-            springer_html.extract_html_payload(
-                "<html><body><article><p>Springer body.</p></article></body></html>",
-                "https://link.springer.com/article/10.1007/example",
-            )
-
-        self.assertIs(
-            springer_markdown.extract_article_markdown,
-            canonical_markdown,
-        )
-        self.assertIs(springer_authors.extract_authors, canonical_authors)
-        facade_markdown.assert_not_called()
-        facade_authors.assert_not_called()
-        for removed_name in (
-            "_AUTHOR_PIPELINE",
-            "extract_html_extraction_sidecars",
-            "extract_numbered_references_from_html",
-            "figure_download_candidates",
-        ):
-            with self.subTest(removed_name=removed_name):
-                self.assertFalse(hasattr(springer_html, removed_name))
-
     def test_springer_internal_site_family_profiles_cover_three_public_families(
         self,
     ) -> None:
@@ -83,7 +48,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             "html.parser",
         )
 
-        springer_html._remove_springer_ai_alt_disclaimers(soup)
+        _springer_dom._remove_springer_ai_alt_disclaimers(soup)
 
         self.assertIsNone(soup.find(id="ai-alt-disclaimer-1"))
         self.assertEqual(soup.find("img").get("aria-describedby"), "caption")
@@ -132,7 +97,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 
         for url in urls:
             with self.subTest(url=url):
-                payload = springer_html.extract_html_payload(
+                payload = _springer_markdown.extract_html_payload(
                     html,
                     url,
                     title="Expandable Box Example",
@@ -240,7 +205,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         </html>
         """
 
-        payload = springer_html.extract_html_payload(
+        payload = _springer_markdown.extract_html_payload(
             html,
             "https://www.nature.com/articles/example-article",
         )
@@ -356,13 +321,13 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
             "fulltext_links": [],
             "references": [],
         }
-        html_metadata = springer_html.parse_html_metadata(html_text, source_url)
-        merged_metadata = springer_html.merge_html_metadata(
+        html_metadata = _springer_dom.parse_html_metadata(html_text, source_url)
+        merged_metadata = _springer_dom.merge_html_metadata(
             base_metadata, html_metadata
         )
         if not merged_metadata.get("doi"):
             merged_metadata["doi"] = doi
-        extraction_payload = springer_html.extract_html_payload(
+        extraction_payload = _springer_markdown.extract_html_payload(
             html_text,
             source_url,
             title=str(merged_metadata.get("title") or ""),
@@ -370,7 +335,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         extracted_assets = (
             []
             if extracted_asset_profile == "none"
-            else springer_html.extract_html_assets(
+            else _springer_assets.extract_html_assets(
                 html_text,
                 source_url,
                 asset_profile=extracted_asset_profile,
@@ -388,34 +353,40 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="springer",
-            source_url=source_url,
-            content_type="text/html",
-            body=html_text.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=source_url,
+                    content_type="text/html",
+                    body=html_text.encode("utf-8"),
+                    markdown_text=extraction_payload["markdown_text"],
+                    extracted_assets=extracted_assets,
+                    merged_metadata=merged_metadata,
+                    diagnostics={
+                        "availability_diagnostics": diagnostics.to_dict(),
+                        "extraction": {
+                            "abstract_text": normalize_text(
+                                abstract_sections[0]["text"]
+                            )
+                            if abstract_sections
+                            else None,
+                            "abstract_sections": abstract_sections,
+                            "section_hints": list(extraction_payload["section_hints"]),
+                            "extracted_authors": list(
+                                extraction_payload.get("extracted_authors") or []
+                            ),
+                            "references": list(
+                                extraction_payload.get("references") or []
+                            ),
+                        },
+                    },
+                ),
                 source_url=source_url,
                 content_type="text/html",
                 body=html_text.encode("utf-8"),
-                markdown_text=extraction_payload["markdown_text"],
-                extracted_assets=extracted_assets,
                 merged_metadata=merged_metadata,
-                diagnostics={
-                    "availability_diagnostics": diagnostics.to_dict(),
-                    "extraction": {
-                        "abstract_text": normalize_text(abstract_sections[0]["text"])
-                        if abstract_sections
-                        else None,
-                        "abstract_sections": abstract_sections,
-                        "section_hints": list(extraction_payload["section_hints"]),
-                        "extracted_authors": list(
-                            extraction_payload.get("extracted_authors") or []
-                        ),
-                        "references": list(extraction_payload.get("references") or []),
-                    },
-                },
             ),
-            trace=trace_from_markers(["fulltext:springer_html_ok"]),
-            merged_metadata=merged_metadata,
+            trace=[trace_event("fulltext", "springer_html", "ok")],
         )
         downloaded_assets = (
             self._fake_downloaded_assets(extracted_assets)
@@ -475,18 +446,18 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 </html>
 """
 
-        body_html, supplementary_html = springer_html.extract_asset_html_scopes(
+        body_html, supplementary_html = _springer_assets.extract_asset_html_scopes(
             html_text,
             source_url,
             title="Example Article",
         )
-        body_assets = springer_html.extract_scoped_html_assets(
+        body_assets = _springer_assets.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile="body",
             supplementary_html_text=supplementary_html,
         )
-        all_assets = springer_html.extract_scoped_html_assets(
+        all_assets = _springer_assets.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile="all",
@@ -531,17 +502,17 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 </html>
 """
 
-        body_html, supplementary_html = springer_html.extract_asset_html_scopes(
+        body_html, supplementary_html = _springer_assets.extract_asset_html_scopes(
             html_text,
             source_url,
             title="Example Article",
         )
-        source_data_html = springer_html.extract_source_data_html_scope(
+        source_data_html = _springer_assets.extract_source_data_html_scope(
             html_text,
             source_url,
             title="Example Article",
         )
-        all_assets = springer_html.extract_scoped_html_assets(
+        all_assets = _springer_assets.extract_scoped_html_assets(
             body_html,
             source_url,
             asset_profile="all",
@@ -597,7 +568,7 @@ class SpringerHtmlRegressionTests(unittest.TestCase):
 </html>
 """
 
-        assets = springer_html.extract_html_assets(
+        assets = _springer_assets.extract_html_assets(
             html_text,
             source_url,
             asset_profile="body",
@@ -844,7 +815,7 @@ def test_caption_formula_cannot_consume_the_next_springer_figure():
     <figure><img src="https://example.test/Fig2.png" alt="Figure 2"><figcaption>Figure 2. Second result.</figcaption></figure>
     </section></div></div></article>
     """
-    markdown = springer_html.extract_html_payload(
+    markdown = _springer_markdown.extract_html_payload(
         html, "https://www.nature.com/articles/example"
     )["markdown_text"]
     assert markdown.count("https://example.test/Fig1.png") == 1
@@ -867,7 +838,7 @@ def test_springer_box_image_keeps_its_own_url_before_numbered_figures():
     <figure><img src="https://example.test/Fig1.png" alt="Figure 1"><figcaption>Figure 1. Result.</figcaption></figure>
     </section></div></div></article>
     """
-    markdown = springer_html.extract_html_payload(
+    markdown = _springer_markdown.extract_html_payload(
         html, "https://www.nature.com/articles/example"
     )["markdown_text"]
     assert markdown.count("https://example.test/box.png") == 1

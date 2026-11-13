@@ -648,13 +648,6 @@ def _unique_asset_staging_path(staging_dir: Path) -> Path:
     return staging_dir / f".paper-fetch-asset-{uuid.uuid4().hex}.part"
 
 
-def _transport_supports_streaming(transport: object) -> bool:
-    return bool(
-        getattr(transport, "_streaming_ready", False) is True
-        and callable(getattr(transport, "stream_to_file", None))
-    )
-
-
 def _rollback_response_reservation(response: AssetFetchResponse | None) -> None:
     if response is not None:
         response.rollback()
@@ -805,37 +798,12 @@ def _request_asset_candidate(
         request_headers = dict(
             request_context.candidate_headers_filter(candidate_url, request_headers)
         )
-    if _transport_supports_streaming(transport):
-        return _stream_asset_candidate(
-            kind,
-            transport,
-            candidate_url,
-            request_headers=request_headers,
-            request_context=request_context,
-        )
-
-    request_policy = HttpRequestPolicy(
-        allowed_hosts=request_context.allowed_hosts,
-        sensitive_headers=request_context.sensitive_headers,
-        max_response_bytes=request_context.asset_budget.max_bytes_per_asset,
-        max_compressed_response_bytes=request_context.asset_budget.max_bytes_per_asset,
-        timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-        retry_on_rate_limit=True,
-        retry_on_transient=True,
-    )
-    if request_context.provider_name and request_context.route_name:
-        request_policy = provider_request_policy(
-            request_context.provider_name,
-            request_context.route_name,
-            base=request_policy,
-        )
-    return AssetFetchResponse.from_mapping(
-        transport.request(
-            "GET",
-            candidate_url,
-            headers=request_headers,
-            request_policy=request_policy,
-        )
+    return _stream_asset_candidate(
+        kind,
+        transport,
+        candidate_url,
+        request_headers=request_headers,
+        request_context=request_context,
     )
 
 

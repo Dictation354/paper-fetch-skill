@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+
 from dataclasses import asdict, dataclass, field, replace
 import importlib.util
 from pathlib import Path
@@ -55,7 +56,6 @@ class ProviderFailure(Exception):
         retry_after_seconds: int | None = None,
         missing_env: list[str] | None = None,
         warnings: list[str] | None = None,
-        source_trail: list[str] | None = None,
         trace: list[TraceEvent] | None = None,
         diagnostics: FailureDiagnostics | None = None,
     ) -> None:
@@ -65,18 +65,8 @@ class ProviderFailure(Exception):
         self.retry_after_seconds = retry_after_seconds
         self.missing_env = list(missing_env or [])
         self.warnings = [str(item) for item in (warnings or []) if str(item).strip()]
-        self.source_trail = [
-            str(item) for item in (source_trail or []) if str(item).strip()
-        ]
         self.trace = list(trace or [])
         self.diagnostics = diagnostics or FailureDiagnostics()
-        self.provider = self.diagnostics.provider
-        self.route = self.diagnostics.route
-        self.stage = self.diagnostics.stage
-        self.http_status = self.diagnostics.http_status
-        self.error_category = self.diagnostics.error_category
-        self.retryable = self.diagnostics.retryable
-        self.details = dict(self.diagnostics.details)
 
     def with_updates(self, **updates: Any) -> ProviderFailure:
         values: dict[str, Any] = {
@@ -85,7 +75,6 @@ class ProviderFailure(Exception):
             "retry_after_seconds": self.retry_after_seconds,
             "missing_env": self.missing_env,
             "warnings": self.warnings,
-            "source_trail": self.source_trail,
             "trace": self.trace,
             "diagnostics": self.diagnostics,
         }
@@ -158,123 +147,18 @@ class PreparedFetchResultPayload:
     context: dict[str, Any] = field(default_factory=dict)
 
 
-@dataclass(init=False)
+@dataclass
 class RawFulltextPayload:
-    """Provider payload whose full-text facts are owned by ``content``.
-
-    The legacy full-text keyword arguments remain as an explicit construction and
-    attribute projection for provider extensions. They are never stored on this
-    wrapper, so updates cannot diverge from ``ProviderContent``.
-    """
+    """Provider content and its acquisition diagnostics."""
 
     provider: str
     content: ProviderContent
     warnings: list[str] = field(default_factory=list)
     trace: list[TraceEvent] = field(default_factory=list)
 
-    def __init__(
-        self,
-        provider: str,
-        source_url: str | None = None,
-        content_type: str | None = None,
-        body: bytes | None = None,
-        content: ProviderContent | None = None,
-        warnings: list[str] | None = None,
-        trace: list[TraceEvent] | None = None,
-        merged_metadata: Mapping[str, Any] | None = None,
-        needs_local_copy: bool | None = None,
-    ) -> None:
-        if content is None:
-            if source_url is None or content_type is None or body is None:
-                raise TypeError(
-                    "RawFulltextPayload requires content or the legacy "
-                    "source_url/content_type/body projection."
-                )
-            content = ProviderContent(
-                route_kind="raw",
-                source_url=source_url,
-                content_type=content_type,
-                body=body,
-                merged_metadata=merged_metadata,
-                needs_local_copy=bool(needs_local_copy),
-            )
-        elif any(value is not None for value in (source_url, content_type, body)):
-            content = replace(
-                content,
-                source_url=source_url if source_url is not None else content.source_url,
-                content_type=(
-                    content_type if content_type is not None else content.content_type
-                ),
-                body=body if body is not None else content.body,
-                merged_metadata=(
-                    merged_metadata
-                    if merged_metadata is not None
-                    else content.merged_metadata
-                ),
-                needs_local_copy=(
-                    needs_local_copy
-                    if needs_local_copy is not None
-                    else content.needs_local_copy
-                ),
-            )
-        elif merged_metadata is not None or needs_local_copy is not None:
-            content = replace(
-                content,
-                merged_metadata=(
-                    merged_metadata
-                    if merged_metadata is not None
-                    else content.merged_metadata
-                ),
-                needs_local_copy=(
-                    needs_local_copy
-                    if needs_local_copy is not None
-                    else content.needs_local_copy
-                ),
-            )
-        self.provider = provider
-        self.content = content
-        self.warnings = warnings if warnings is not None else []
-        self.trace = trace if trace is not None else []
-
-    @property
-    def source_url(self) -> str:
-        return self.content.source_url
-
-    @source_url.setter
-    def source_url(self, value: str) -> None:
-        self.content = replace(self.content, source_url=value)
-
-    @property
-    def content_type(self) -> str:
-        return self.content.content_type
-
-    @content_type.setter
-    def content_type(self, value: str) -> None:
-        self.content = replace(self.content, content_type=value)
-
-    @property
-    def body(self) -> bytes:
-        return self.content.body
-
-    @body.setter
-    def body(self, value: bytes) -> None:
-        self.content = replace(self.content, body=value)
-
-    @property
-    def merged_metadata(self) -> Mapping[str, Any] | None:
-        return self.content.merged_metadata
-
-    @merged_metadata.setter
-    def merged_metadata(self, value: Mapping[str, Any] | None) -> None:
-        self.content = replace(self.content, merged_metadata=value)
-
-    @property
-    def needs_local_copy(self) -> bool:
-        return self.content.needs_local_copy
-
-    @needs_local_copy.setter
-    def needs_local_copy(self, value: bool) -> None:
-        self.content = replace(self.content, needs_local_copy=value)
+    def __post_init__(self) -> None:
+        if not isinstance(self.content, ProviderContent):
+            raise TypeError("content must be ProviderContent")
 
 
 @dataclass(frozen=True)
@@ -535,13 +419,11 @@ def combine_provider_failures(
         message = f"{selected_label}: {selected_failure.message}"
     missing_env: list[str] = []
     warnings: list[str] = []
-    source_trail: list[str] = []
     retry_after_values: list[int] = []
     trace: list[TraceEvent] = []
     for _label, failure in failures:
         extend_unique(missing_env, failure.missing_env)
         extend_unique(warnings, failure.warnings)
-        extend_unique(source_trail, failure.source_trail)
         trace = merge_trace(trace, failure.trace)
         if failure.retry_after_seconds is not None:
             retry_after_values.append(failure.retry_after_seconds)
@@ -550,7 +432,6 @@ def combine_provider_failures(
         retry_after_seconds=max(retry_after_values) if retry_after_values else None,
         missing_env=missing_env,
         warnings=warnings,
-        source_trail=source_trail,
         trace=trace,
     )
 
@@ -566,7 +447,7 @@ def restricted_provider_result(
     from ..quality.access_boundary import CONFIRMED_PAYWALL
     from ..tracing import trace_event
 
-    details = dict(failure.details)
+    details = dict(failure.diagnostics.details)
     received_html = str(details.pop("received_html", "") or "")
     merged = dict(metadata)
     merged.update(
@@ -594,7 +475,9 @@ def restricted_provider_result(
         trace=trace,
     )
     apply_quality_assessment(article, availability_diagnostics=details)
-    article.quality.source_trail.append(CONFIRMED_PAYWALL)
+    article.trace.append(
+        trace_event("fulltext", provider, "fail", code=CONFIRMED_PAYWALL)
+    )
     evidence = details[CONFIRMED_PAYWALL]
     content = ProviderContent(
         route_kind="html" if received_html else "metadata",

@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers.base import ProviderContent
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
 
@@ -33,9 +36,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                         },
                         raw_payload=RawFulltextPayload(
                             provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                            content=ProviderContent(
+                                route_kind="raw",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
                         ),
                         article=official_article,
                     ),
@@ -58,7 +64,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_model_emits_service_debug_logs_for_official_provider(
         self,
@@ -94,9 +103,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                         },
                         raw_payload=RawFulltextPayload(
                             provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                            content=ProviderContent(
+                                route_kind="raw",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
                         ),
                         article=official_article,
                     ),
@@ -180,9 +192,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                         },
                         raw_payload=RawFulltextPayload(
                             provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                            content=ProviderContent(
+                                route_kind="raw",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
                         ),
                         article=official_article,
                     ),
@@ -204,9 +219,18 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("resolve:url", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-        self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("resolve", "url", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_model_uses_elsevier_pii_metadata_for_url_without_doi(
         self,
@@ -225,9 +249,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                 super().__init__(
                     raw_payload=RawFulltextPayload(
                         provider="elsevier",
-                        source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                        content_type="text/xml",
-                        body=b"<xml/>",
+                        content=ProviderContent(
+                            route_kind="raw",
+                            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                            content_type="text/xml",
+                            body=b"<xml/>",
+                        ),
                     ),
                     article=sample_article(),
                 )
@@ -259,8 +286,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
         )
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("metadata:elsevier_ok", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("metadata", "elsevier", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_model_downloads_related_assets_for_official_xml(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -347,7 +380,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn(
-            "download:elsevier_assets_saved_profile_all", article.quality.source_trail
+            trace_facts(
+                trace_event("download", "elsevier_assets_saved_profile_all", "info")
+            ),
+            trace_facts(article.trace),
         )
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
@@ -399,9 +435,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -423,7 +462,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(related_asset_calls, [])
-        self.assertNotIn("download:elsevier_assets_saved", article.quality.source_trail)
+        self.assertNotIn(
+            trace_facts(trace_event("download", "elsevier_assets", "saved")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_model_skips_related_asset_downloads_for_profile_none(
         self,
@@ -466,9 +508,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=official_article,
                             related_asset_factory=write_related_assets,
@@ -491,8 +536,10 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
 
         self.assertEqual(related_asset_calls, [])
         self.assertIn(
-            "download:elsevier_assets_skipped_profile_none",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event("download", "elsevier_assets_skipped_profile_none", "info")
+            ),
+            trace_facts(article.trace),
         )
 
     def test_fetch_paper_model_treats_request_failure_during_asset_download_as_warning(
@@ -527,9 +574,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=sample_article(),
                             related_asset_error=RequestFailure(
@@ -553,8 +603,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "elsevier_xml")
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-        self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("download", "elsevier_assets_failed", "info")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any("HTTP 503" in warning for warning in article.quality.warnings)
         )
@@ -591,9 +647,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=sample_article(),
                             related_asset_error=OSError("disk full"),
@@ -615,8 +674,14 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "elsevier_xml")
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-        self.assertIn("download:elsevier_assets_failed", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("download", "elsevier_assets_failed", "info")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any("disk full" in warning for warning in article.quality.warnings)
         )
@@ -654,9 +719,12 @@ class ServiceOfficialPipelineTests(unittest.TestCase):
                                 },
                                 raw_payload=RawFulltextPayload(
                                     provider="elsevier",
-                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                    content_type="text/xml",
-                                    body=b"<xml/>",
+                                    content=ProviderContent(
+                                        route_kind="raw",
+                                        source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                        content_type="text/xml",
+                                        body=b"<xml/>",
+                                    ),
                                 ),
                                 article=sample_article(),
                                 related_asset_error=AttributeError(

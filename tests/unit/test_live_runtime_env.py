@@ -1,4 +1,6 @@
 from __future__ import annotations
+from dataclasses import asdict
+from paper_fetch.tracing import trace_event
 
 import os
 from pathlib import Path
@@ -10,15 +12,12 @@ import pytest
 from paper_fetch.browser_preflight import BrowserPreflightResult
 from paper_fetch.config import BROWSER_BINARY_PATH_ENV_VAR
 from paper_fetch.config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
 )
 from paper_fetch.providers.browser_runtime import (
     load_runtime_config,
-    storage_state_path,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
 from tests._environment import (
@@ -74,25 +73,23 @@ def test_isolated_live_env_derives_unique_provider_storage_paths() -> None:
     overridden = {
         BROWSER_PROFILE_DIR_ENV_VAR: "/real/shared-profile",
         BROWSER_USER_DATA_DIR_ENV_VAR: "/real/shared-user-data",
-        AMS_STORAGE_STATE_JSON_ENV_VAR: "/real/ams.json",
         WILEY_PROFILE_DIR_ENV_VAR: "/real/wiley-profile",
-        WILEY_STORAGE_STATE_JSON_ENV_VAR: "/real/wiley.json",
     }
     env, tempdir = _runtime_env.build_isolated_live_env(overridden)
     try:
         for name in overridden:
             assert name not in env
         paths = {
-            provider: storage_state_path(
-                load_runtime_config(env, provider=provider, doi="10.1000/example")
-            )
+            provider: load_runtime_config(
+                env, provider=provider, doi="10.1000/example"
+            ).user_data_dir
             for provider in ("science", "wiley", "ams")
         }
         assert len(set(paths.values())) == len(paths)
         for provider, path in paths.items():
             assert path is not None
             assert path.is_relative_to(tempdir.name)
-            assert f"{provider}-camoufox" in path.parts
+            assert provider in path.parts
     finally:
         tempdir.cleanup()
 
@@ -155,14 +152,22 @@ def test_live_mcp_no_access_detection_requires_machine_readable_boundary() -> No
     assert _runtime_env.is_machine_readable_no_access(
         {
             "status": "ok",
-            "source_trail": ["route:provider_candidate_springer_access_boundary_stop"],
+            "trace": [
+                asdict(
+                    trace_event(
+                        "route",
+                        "provider_candidate_springer_access_boundary_stop",
+                        "info",
+                    )
+                )
+            ],
         }
     )
     assert not _runtime_env.is_machine_readable_no_access(
         {
             "status": "ok",
             "acceptance": {"content": "metadata_only"},
-            "source_trail": ["fulltext:springer_fail_html"],
+            "trace": [asdict(trace_event("fulltext", "springer_fail_html", "info"))],
         }
     )
 
@@ -222,7 +227,6 @@ def test_live_preflight_uses_nested_browser_runtime_availability() -> None:
     preflight.assert_called_once_with(
         "wiley",
         env={},
-        save_storage_state=True,
         download_dir=None,
         artifact_mode="none",
     )
@@ -256,7 +260,6 @@ def test_live_aip_preflight_does_not_persist_fingerprint_bound_state() -> None:
     preflight.assert_called_once_with(
         "aip",
         env={},
-        save_storage_state=False,
         download_dir=None,
         artifact_mode="none",
     )
@@ -316,7 +319,7 @@ def test_live_report_keeps_actual_data_after_assertion_or_skip(tmp_path, skip):
     record = {
         "provider": "science",
         "source": "science_html",
-        "source_trail": ["fulltext:science_html_ok"],
+        "trace": [asdict(trace_event("fulltext", "science_html", "ok"))],
         "acceptance": {"overall": "degraded"},
         "asset_paths": ["figure.png"],
         "performance": {"fetch_wall_seconds": 1.25},

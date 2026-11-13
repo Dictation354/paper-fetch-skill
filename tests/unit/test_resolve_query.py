@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
 import json
 import unittest
 from paper_fetch.resolve import query as resolve_query
@@ -551,7 +552,7 @@ class ResolveQueryTests(unittest.TestCase):
         )
 
     def test_url_query_wraps_request_failure_from_landing_page_fetch(self) -> None:
-        class FailingTransport:
+        class FailingTransport(RecordedStreamTransport):
             def request(self, *args, **kwargs):
                 raise resolve_query.RequestFailure(
                     502, "HTTP 502 for https://example.test/paper"
@@ -568,7 +569,7 @@ class ResolveQueryTests(unittest.TestCase):
     def test_url_query_with_embedded_doi_falls_back_to_doi_when_landing_page_is_blocked(
         self,
     ) -> None:
-        class FailingTransport:
+        class FailingTransport(RecordedStreamTransport):
             def request(self, *args, **kwargs):
                 raise resolve_query.RequestFailure(
                     403,
@@ -591,7 +592,7 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(result.confidence, 1.0)
 
     def test_url_query_does_not_swallow_programming_errors(self) -> None:
-        class BrokenTransport:
+        class BrokenTransport(RecordedStreamTransport):
             def request(self, *args, **kwargs):
                 raise AttributeError("broken transport")
 

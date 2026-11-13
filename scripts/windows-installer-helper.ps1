@@ -342,8 +342,6 @@ function Install-Skills {
 
     Write-Log "Installing Codex skill to $codexSkill"
     Copy-InstalledSkill $codexSkill
-    $legacyCodexSkill = Join-Path (Join-Path (Join-Path $env:USERPROFILE ".codex") "skills") $SkillName
-    Remove-Item -LiteralPath $legacyCodexSkill -Recurse -Force -ErrorAction SilentlyContinue
     Write-Log "Installing Claude Code skill to $claudeSkill"
     Copy-InstalledSkill $claudeSkill
     Write-Log "Installing Antigravity skill to $antigravitySkill"
@@ -354,8 +352,7 @@ function Remove-Skills {
     $codexSkill = Join-Path (Join-Path (Join-Path $env:USERPROFILE ".agents") "skills") $SkillName
     $claudeSkill = Join-Path (Join-Path (Join-Path $env:USERPROFILE ".claude") "skills") $SkillName
     $antigravitySkill = Join-Path (Join-Path (Get-AntigravityHome) "skills") $SkillName
-    $legacyCodexSkill = Join-Path (Join-Path (Join-Path $env:USERPROFILE ".codex") "skills") $SkillName
-    foreach ($skillDir in @($codexSkill, $legacyCodexSkill, $claudeSkill, $antigravitySkill)) {
+    foreach ($skillDir in @($codexSkill, $claudeSkill, $antigravitySkill)) {
         Remove-Item -Recurse -Force -ErrorAction SilentlyContinue $skillDir
         Write-Log "Removed $skillDir"
     }

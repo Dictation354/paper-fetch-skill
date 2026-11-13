@@ -570,7 +570,7 @@ def test_codex_scope_migration_upgrade_and_uninstall(
     else:
         assert result.returncode == 0, result.stderr
         assert_skill_bundle_matches_repo(unittest.TestCase(), target)
-        assert all(not path.exists() for path in legacy)
+        assert all(path.exists() for path in legacy)
         # Repeated upgrades replace stale content and keep the new bundle discoverable.
         (target / "stale.md").write_text("stale\n")
         assert run().returncode == 0
@@ -582,30 +582,12 @@ def test_codex_scope_migration_upgrade_and_uninstall(
         (path / "SKILL.md").write_text("legacy\n")
     result = run("--uninstall")
     assert result.returncode == 0, result.stderr
-    assert all(not path.exists() for path in [target, *legacy])
+    assert not target.exists()
+    assert all(path.exists() for path in legacy)
     assert (other_scope / "SKILL.md").read_text() == "old\n"
 
 
-def test_codex_home_can_equal_new_discovery_root(tmp_path):
-    repo = tmp_path / "repo"
-    copy_installer_fixture(repo)
-    home = tmp_path / "home"
-    target = home / ".agents/skills/paper-fetch-skill"
-    shutil.copytree(STATIC_SKILL_DIR, target)
-    env = dict(os.environ, HOME=str(home), CODEX_HOME=str(home / ".agents"))
-    # Exercise the cleanup boundary without installing the package into the test process.
-    result = subprocess.run(
-        [
-            "bash",
-            "-c",
-            'source "$1"; PF_HOST=codex; PF_SKILL_DIR="$2"; pf_skill_remove_legacy_copies',
-            "migration",
-            str(repo / "scripts/_skill_install_common.sh"),
-            str(target),
-        ],
-        env=env,
-        capture_output=True,
-        text=True,
-    )
-    assert result.returncode == 0, result.stderr
-    assert_skill_bundle_matches_repo(unittest.TestCase(), target)
+def test_installer_has_no_legacy_skill_cleanup_entrypoint():
+    script = (REPO_ROOT / "scripts/_skill_install_common.sh").read_text()
+    assert "pf_skill_remove_legacy_copies" not in script
+    assert ".codex/skills" not in script

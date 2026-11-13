@@ -23,6 +23,7 @@ def mock_browser_dependencies(monkeypatch):
         camoufox,
         "_dependency_details",
         lambda: {
+            "runtime_valid": False,
             "packages": {"camoufox": False, "playwright": False},
             "package_ready": False,
             "runtime_installed": False,

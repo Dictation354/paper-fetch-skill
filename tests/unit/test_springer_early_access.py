@@ -1,8 +1,10 @@
 """Minimal access-grant and accepted-manuscript landing contracts."""
 
+from paper_fetch.providers import _springer_dom
+
+
 import pytest
 
-from paper_fetch.providers import _springer_dom
 from paper_fetch.providers.springer import _raise_for_springer_paywall
 from paper_fetch.providers.base import ProviderFailure
 

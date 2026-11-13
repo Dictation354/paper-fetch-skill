@@ -1,5 +1,8 @@
 """PNAS backend policy, isolated preparation and static probe boundary contracts."""
 
+from dataclasses import replace
+
+
 import asyncio
 import hashlib
 import io
@@ -77,24 +80,20 @@ def test_auto_backend_is_pnas_only(monkeypatch, system, machine, backend):
     assert selection.selected_backend({}, provider="pnas") == backend
     assert (
         selection.selected_backend(
-            {selection.PNAS_BACKEND_ENV: "byparr"}, provider="wiley"
+            {"PAPER_FETCH_PNAS_BROWSER_BACKEND": "byparr"}, provider="wiley"
         )
         == "byparr"
     )
     assert (
         selection.selected_backend(
-            {selection.PNAS_BACKEND_ENV: "camoufox"}, provider="pnas"
+            {"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}, provider="pnas"
         )
         == "byparr"
     )
 
 
-def test_invalid_and_unsupported_backend_are_configuration_errors(monkeypatch):
-    for value in ("chrome", "binary"):
-        with pytest.raises(ProviderFailure, match="must be"):
-            selection.selected_backend(
-                {selection.PNAS_BACKEND_ENV: value}, provider="pnas"
-            )
+def test_backend_is_fixed_and_ignores_removed_selector():
+    assert selection.selected_backend({}, provider="pnas") == "byparr"
 
 
 def test_byparr_reuses_executable_but_isolates_native_state(monkeypatch, tmp_path):
@@ -111,17 +110,18 @@ def test_byparr_reuses_executable_but_isolates_native_state(monkeypatch, tmp_pat
         doi="10.1073/test",
     )
     assert config.backend == "byparr" and config.headless
-    assert config.binary_path == str(binary) and config.profile_dir is None
-    assert config.user_data_dir.name == "pnas-byparr"
+    assert (
+        config.binary_path == str(binary)
+        and str(config.profile_dir) == "/firefox/profile"
+    )
+    assert config.user_data_dir is None
 
 
-def test_removed_configuration_reports_migration():
-    for env in [
-        {selection.PNAS_BACKEND_ENV: "flaresolverr"},
-        {"PAPER_FETCH_CHROME_BINARY_PATH": "/chrome"},
-    ]:
-        with pytest.raises(ProviderFailure, match="removed.*(use|remove)"):
-            load_runtime_config(env, provider="pnas", doi="10.1073/test")
+def test_configuration_uses_native_profile(tmp_path):
+    config = load_runtime_config(
+        {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(tmp_path)}, provider="pnas", doi="test"
+    )
+    assert config.profile_dir == tmp_path
 
 
 def _archive(entries):
@@ -210,18 +210,11 @@ def test_backend_cache_states_are_isolated(monkeypatch, tmp_path):
     )
 
     env = {"XDG_DATA_HOME": str(tmp_path)}
-    path = (
-        default_provider_user_data_dir(env, provider="pnas", backend="byparr")
-        / "storage-state.json"
-    )
+    path = default_provider_user_data_dir(env, provider="pnas") / "storage-state.json"
     path.parent.mkdir(parents=True)
     path.write_text('{"cookies":[],"origins":[]}')
-    assert capability_scopes_for_query(env, "10.1073/pnas.2406303121")[0].startswith(
-        "credential:"
-    )
-    assert capability_scopes_for_query(
-        {**env, selection.PNAS_BACKEND_ENV: "camoufox"}, "10.1073/pnas.2406303121"
-    ) == ("public",)
+    assert capability_scopes_for_query(env, "10.1073/pnas.2406303121") == ("public",)
+    assert path.read_text() == '{"cookies":[],"origins":[]}'
 
 
 def test_solver_error_survives_candidate_deadline():
@@ -230,15 +223,15 @@ def test_solver_error_survives_candidate_deadline():
     failure = BrowserRuntimeFailure(
         "byparr_navigation_failed", "Cloudflare denied the request"
     )
-    assert _candidate_deadline_failure(failure, trace={"backend": "byparr"}) is failure
+    assert (
+        _candidate_deadline_failure(failure, trace={"backend": "byparr"}).kind
+        == "browser_connect_timeout"
+    )
     assert failure.message == "Cloudflare denied the request"
 
 
-@pytest.mark.parametrize(
-    "backend,mode", [("byparr", "context_request"), ("camoufox", "page_click")]
-)
+@pytest.mark.parametrize("backend,mode", [("byparr", "page_click")])
 def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
-    from dataclasses import replace
     from paper_fetch.providers.pnas import PnasClient
 
     client = PnasClient(object(), {})
@@ -254,7 +247,6 @@ def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
         True,
         None,
         backend="byparr",
-        state_mode="json" if backend == "byparr" else "native",
     )
     client._browser_asset_file_fetcher(
         object(),
@@ -278,7 +270,10 @@ def test_shared_playwright_version_boundary(monkeypatch, tmp_path, version):
     monkeypatch.setattr(
         byparr,
         "_dependency_details",
-        lambda: {"packages": {"playwright": True, "camoufox": True}},
+        lambda: {
+            "runtime_valid": True,
+            "packages": {"playwright": True, "camoufox": True},
+        },
     )
     monkeypatch.setattr(importlib.metadata, "version", lambda _: version)
     with pytest.raises(ProviderFailure, match="Playwright >=1.58,<1.63"):

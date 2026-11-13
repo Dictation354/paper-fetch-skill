@@ -7,14 +7,15 @@ from .provider_catalog import PROVIDER_CATALOG_RESOURCE_URI
 
 DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
     ("target", '"paper"'),
-    ("modes", '["article", "markdown"]'),
-    ("strategy.asset_profile", "null (provider default)"),
+    ("preset", '"temporary_read"'),
+    ("modes", '["markdown"]'),
+    ("strategy.asset_profile", '"none"'),
     ("strategy.allow_metadata_only_fallback", "true"),
-    ("include_refs", "null"),
+    ("include_refs", '"all"'),
     ("max_tokens", '"full_text"'),
     ("prefer_cache", "false"),
-    ("no_download", "false"),
-    ("artifact_mode", '"markdown-assets"'),
+    ("no_download", "true"),
+    ("artifact_mode", '"none"'),
     ("save_markdown", "false"),
     ("markdown_output_dir", "null"),
     ("markdown_filename", "null"),
@@ -52,10 +53,6 @@ SKILL_ENVIRONMENT_VARIABLES: tuple[tuple[str, str], ...] = (
         "Optional Wiley Text and Data Mining client token for the official Wiley PDF lane; browser PDF/ePDF fallback can still run without it when the local runtime is ready.",
     ),
     (
-        "PAPER_FETCH_WILEY_STORAGE_STATE_JSON",
-        "Optional Wiley browser storage-state JSON override; the managed default uses provider-scoped storage-state.",
-    ),
-    (
         "PAPER_FETCH_WILEY_PROFILE_DIR",
         "Optional Wiley profile override for provider-scoped storage state.",
     ),
@@ -80,49 +77,45 @@ ERROR_CONTRACT: tuple[tuple[str, str], ...] = (
 
 def server_instructions() -> str:
     return (
-        "Resolve, inspect, cache, or fetch papers by DOI, landing URL, or title. Resolve "
-        "ambiguous identities before fetching; use compact request-sensitive cache checks "
-        "before network work. The nine tools return schema_version=2 payloads and structured errors. "
-        "batch_check(queries=[query]) handles single-paper and batch probes; mode defaults to "
-        "metadata and only metadata is accepted. Inspect results[0].probe_state and "
-        "results[0].error for a single probe. The standalone has_fulltext tool and article "
-        "check mode are removed. For body checks without disk output, use batch_fetch with "
-        "modes=[article], detail=compact, save_markdown=false, no_download=true, "
-        "prefer_cache=false, artifact_mode=none, strategy.asset_profile=none, and no "
-        "batch_results; judge each result by acceptance. "
-        "fetch_paper and batch_fetch accept target=paper|supplementary (default paper). "
-        "Supplementary tasks discover materials without a body, preserve per-item failures, and use content_requested=false acceptance. "
-        "fetch_paper defaults to article+markdown, provider-default assets, metadata-only "
-        "fallback enabled, full text, cache preference off, downloads on, and "
-        "artifact_mode=markdown-assets. Fetch and batch calls may access remote services; "
-        "fetch_paper and batch_fetch may write provider artifacts/cache or explicit outputs, "
-        "while browser_preflight may open publisher pages and save filtered storage-state. "
-        "Every fetch checks managed Camoufox at request start, including HTTP/cache hits; batches check once. Default: official/prerelease with camoufox==0.5.9 selects the latest compatible stable or prerelease browser in upstream order; official/stable excludes prereleases. Explicit channel/pins take priority. Updates reuse a valid local runtime on failure; otherwise HTTP/cache can continue and browser launch reports the saved failure. Core without browser dependencies and explicit executables skip managed updates. "
-        "provider_status is local/static; "
-        "browser_preflight is live and never performs PDF fallback or automatic auth. Do not "
-        "bypass login, challenge, paywall, or entitlement boundaries. Read current provider, "
-        f"source, runtime, preflight, and asset-default facts from {PROVIDER_CATALOG_RESOURCE_URI}. "
-        "Supporting clients receive progress/log updates for fetch, browser preflight, "
-        "and batch work."
+        "Resolve, inspect, cache, or fetch known papers by DOI, URL, or title. "
+        "Resolve ambiguous identities before fetching. Honor explicit user files/sources; "
+        "otherwise reuse valid session content handles, then qualified local text. "
+        "fetch_paper and batch_fetch share preset=temporary_read (default), cacheable_read, archive. "
+        "Presets expand before explicit options, including nested strategy overrides and false values. "
+        "temporary_read returns a Markdown handle without paper, asset, or cache writes. "
+        "cacheable_read reuses/writes request-matching cache in an explicit or configured scope. "
+        "archive saves Markdown and reports actual file snapshots; body assets default to none. "
+        "archive may use markdown_output_dir as its scope. Required paths must be supplied. "
+        "Tools return schema_version=3 business payloads only in structuredContent. "
+        "Use content_ref and read_content with next_offset (Unicode code points), including after saving. "
+        "Multiple papers use batch_fetch; same-execution aliases share handles. Request article explicitly. "
+        "read_content is local and read-only; expired handles never refetch. "
+        "Fetch defaults use full text, all references, metadata fallback and no body assets. "
+        "Explicit body/all assets enable downloads and Markdown assets unless explicitly overridden. "
+        "batch_results alone opts into batch JSONL. Fetch tools may access remote services and "
+        "write explicitly selected cache/artifacts/outputs. Saved files appear in output_artifacts. "
+        "target=supplementary discovers materials independently; archive downloads attachments and saves an index. "
+        "batch_check(mode=metadata) only probes availability, including for one query. "
+        "Judge acquisition by acceptance, returned text by pagination/truncation facts, and reading "
+        "completion by portions actually consumed. provider_status is static; browser_preflight "
+        "is live and shares the native publisher profile with auth and fetch. Runtime preparation "
+        f"is on demand; selected platform engine facts are at {PROVIDER_CATALOG_RESOURCE_URI}. "
+        "Do not bypass access controls or manual-auth boundaries."
     )
 
 
 def fetch_tool_description() -> str:
     return (
-        "Fetch one paper as structured article, Markdown, and/or metadata with provenance, "
-        "or use target=supplementary for independent material discovery/download without a body or body PDF. "
-        "target defaults to paper; supplementary ignores body asset/render options, returns a structured supplementary list "
-        "and a material-only Markdown index. Empty complete discovery returns no_result; no_download returns unarchived links. "
-        "quality, trace, and token estimates. Defaults are modes=article+markdown, "
-        "provider-default assets, metadata-only fallback enabled, include_refs=null, "
-        "max_tokens=full_text, prefer_cache=false, no_download=false, "
-        "artifact_mode=markdown-assets and save_markdown=false. The call may access remote "
-        "services and write provider artifacts, assets, and an MCP cache sidecar. "
-        "no_download=true suppresses those writes; save_markdown=true is an explicit separate "
-        "write and returns a path instead of inline full text. artifact_mode=none suppresses "
-        "provider artifacts but retains MCP cache semantics. asset_profile=none|body|all "
-        "controls local assets; body/all may return bounded ImageContent. Use prefer_cache=true "
-        "only with matching request semantics. Current provider/source/runtime/asset-default "
-        f"facts are at {PROVIDER_CATALOG_RESOURCE_URI}. Access controls and manual-auth "
-        "boundaries are never bypassed."
+        "Fetch a known paper with a paged Markdown handle, metadata and acceptance. "
+        "preset=temporary_read is the default and writes no paper artifacts/cache. "
+        "cacheable_read reuses and writes cache in download_dir or a configured scope. "
+        "archive saves Markdown to markdown_output_dir or download_dir, returning actual output_artifacts. "
+        "All presets default to full_text, all references, metadata fallback and asset_profile=none. "
+        "Explicit options override preset defaults; body/all assets enable downloads and "
+        "artifact_mode=markdown-assets unless those fields were explicitly supplied. "
+        "Body content is always in content_ref/read_content, also when saving. "
+        "Explicit body/all assets may add bounded ImageContent. target=supplementary retrieves "
+        "materials without fetching the body; archive downloads attachments and saves a material index. "
+        "Missing required paths are argument errors. Runtime preparation is independent of paper writes. "
+        f"Provider and selected platform engine facts are at {PROVIDER_CATALOG_RESOURCE_URI}."
     )

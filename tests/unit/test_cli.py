@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 import contextlib
 import io
 import json
@@ -410,7 +412,6 @@ class CliTests(unittest.TestCase):
 
     def test_auth_ams_subcommand_invokes_generic_auth_helper(self) -> None:
         auth_result = SimpleNamespace(
-            storage_state_path=Path("/tmp/ams-storage-state.json"),
             profile_dir=Path("/tmp/ams-camoufox"),
             verified=True,
             final_url="https://journals.ametsoc.org/view/example.xml",
@@ -435,17 +436,15 @@ class CliTests(unittest.TestCase):
 
         self.assertEqual(exit_code, 0)
         self.assertEqual(stderr.getvalue(), "")
-        self.assertIn("AMS storage state:", stdout.getvalue())
+        self.assertIn("AMS profile dir:", stdout.getvalue())
         authenticate.assert_called_once()
         self.assertEqual(authenticate.call_args.kwargs["provider"], "ams")
 
     def test_auth_wiley_subcommand_invokes_generic_auth_helper(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
-            state_path = Path(tmpdir) / "storage-state.json"
             profile_dir = Path(tmpdir) / "publisher-browser-profiles" / "wiley"
             target_url = "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
             auth_result = SimpleNamespace(
-                storage_state_path=state_path,
                 profile_dir=profile_dir,
                 verified=True,
                 final_url=target_url,
@@ -481,7 +480,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
             rendered = stdout.getvalue()
-            self.assertIn("Wiley storage state:", rendered)
+            self.assertIn("Wiley profile dir:", rendered)
             self.assertIn("Wiley profile dir:", rendered)
             self.assertIn(
                 "Wiley native profile verified: True",
@@ -537,7 +536,7 @@ class CliTests(unittest.TestCase):
                 stage="complete",
                 target_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
                 final_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
-                storage_state_path=state_path,
+                profile_dir=state_path,
             )
             stdout = io.StringIO()
             stderr = io.StringIO()
@@ -570,7 +569,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(stderr.getvalue(), "")
             rendered = stdout.getvalue()
             self.assertIn("ok: Wiley (wiley)", rendered)
-            self.assertIn("Storage state:", rendered)
+            self.assertIn("Profile directory:", rendered)
             run_preflight.assert_called_once()
             kwargs = run_preflight.call_args.kwargs
             self.assertEqual(kwargs["providers"], ["wiley"])
@@ -1340,12 +1339,15 @@ class CliTests(unittest.TestCase):
                 (output_dir / "Example_et_al_2026_Example_Article.md").exists()
             )
             self.assertIn(
-                "download:markdown_skipped_no_fulltext", envelope.source_trail
+                trace_facts(
+                    trace_event("download", "markdown_skipped_no_fulltext", "info")
+                ),
+                trace_facts(envelope.trace),
             )
             self.assertTrue(
                 any(
                     "nothing written to disk" in warning
-                    for warning in envelope.warnings
+                    for warning in envelope.quality.warnings
                 )
             )
 

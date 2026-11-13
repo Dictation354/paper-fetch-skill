@@ -1,8 +1,9 @@
 from __future__ import annotations
+from dataclasses import replace
 
 import asyncio
 import json
-from dataclasses import asdict, replace
+from dataclasses import asdict
 from unittest import mock
 
 from paper_fetch import provider_catalog as runtime_catalog
@@ -165,3 +166,29 @@ def test_server_registers_readable_provider_catalog_resource() -> None:
     assert mime_type == "application/json"
     assert isinstance(raw_payload, str)
     assert json.loads(raw_payload) == provider_catalog_resource_payload()
+
+
+def test_catalog_runtime_facts_are_read_only_and_derived_from_runtime_owners(
+    monkeypatch,
+):
+    from paper_fetch.providers.browser_runtime import byparr_preparation, preparation
+    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
+
+    def forbidden(*args, **kwargs):
+        raise AssertionError("catalog must not prepare or download components")
+
+    monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", forbidden)
+    monkeypatch.setattr(byparr_preparation, "download", forbidden)
+    facts = provider_catalog_resource_payload()["browser_runtime"]
+    assert facts["backend"] == "byparr"
+    assert (
+        facts["byparr_version"]
+        == json.loads(byparr_preparation.MANIFEST_PATH.read_text())["version"]
+    )
+    assert facts["platform_engine"] == engine_name()
+    assert facts["preparation"] == "on_demand"
+    assert facts["preparation_reuse_scope"] == "request_or_batch"
+    assert (
+        facts["update_check_interval_seconds"]
+        == preparation.UPDATE_CHECK_INTERVAL_SECONDS
+    )

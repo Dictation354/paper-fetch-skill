@@ -1,6 +1,7 @@
 """Routing and probe logic for provider selection."""
 
 from __future__ import annotations
+from ..tracing import TraceEvent, extend_trace
 
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
@@ -29,7 +30,7 @@ from ..reason_codes import (
 )
 from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
-from ..tracing import route_marker
+from ..tracing import route_event
 from ..publisher_identity import (
     ProviderIdentityCandidate,
     _ordered_provider_signals,
@@ -80,19 +81,19 @@ def crossref_allowed_as_source(strategy: FetchStrategy) -> bool:
     return provider_allowed("crossref", strategy)
 
 
-def route_signal_markers(
+def route_signal_events(
     *,
     landing_urls: list[str | None] | None = None,
     publishers: list[str | None] | None = None,
     doi: str | None = None,
-) -> list[str]:
-    markers: list[str] = []
+) -> list[TraceEvent]:
+    markers: list[TraceEvent] = []
     for provider, signal in _ordered_provider_signals(
         landing_urls=landing_urls,
         publishers=publishers,
         doi=doi,
     ):
-        extend_unique(markers, [route_marker(f"signal_{signal}_{provider}")])
+        extend_trace(markers, [route_event(f"signal_{signal}_{provider}")])
     return markers
 
 

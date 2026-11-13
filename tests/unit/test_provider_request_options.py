@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import base64
 import json
 import tempfile
@@ -184,7 +187,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         ):
             payload = client.fetch_raw_fulltext(doi, {})
 
-        self.assertEqual(payload.content_type, "text/xml")
+        self.assertEqual(payload.content.content_type, "text/xml")
         self.assertEqual(transport.calls[0]["headers"]["X-ELS-APIKey"], "secret")
         self.assertNotIn("X-ELS-" + "Insttoken", transport.calls[0]["headers"])
         self.assertNotIn("Authorization", transport.calls[0]["headers"])
@@ -260,7 +263,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
             doi, {"landing_page_url": "https://www.nature.com/articles/example"}
         )
 
-        self.assertEqual(payload.content_type, "text/html; charset=utf-8")
+        self.assertEqual(payload.content.content_type, "text/html; charset=utf-8")
         self.assertEqual(
             transport.calls[0]["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS
         )
@@ -315,7 +318,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            payload.source_url,
+            payload.content.source_url,
             "https://link.springer.com/article/10.1186/s13059-024-03246-2",
         )
         self.assertEqual(len(transport.calls), 2)
@@ -381,7 +384,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
         self.assertEqual(payload.content.route_kind, "html")
-        self.assertEqual(payload.content_type, "text/html")
+        self.assertEqual(payload.content.content_type, "text/html")
 
     def test_browser_workflow_fast_path_uses_conservative_fallback_after_challenge(
         self,
@@ -457,8 +460,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         assert payload.content is not None
         self.assertEqual(payload.content.fetcher, "byparr")
         self.assertIn(
-            "fulltext:wiley_html_ok",
-            [event.marker() for event in payload.trace if event.marker()],
+            trace_facts(trace_event("fulltext", "wiley_html", "ok")),
+            trace_facts(
+                [
+                    trace_event(event.stage, event.component, event.outcome)
+                    for event in payload.trace
+                    if trace_event(event.stage, event.component, event.outcome)
+                ]
+            ),
         )
 
     def test_browser_workflow_preserves_fast_access_gate_when_retry_times_out(
@@ -589,7 +598,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertIsNotNone(payload.content)
         assert payload.content is not None
         self.assertEqual(payload.content.fetcher, "byparr")
-        self.assertEqual(payload.content_type, "text/html")
+        self.assertEqual(payload.content.content_type, "text/html")
 
     def test_html_asset_download_prefers_direct_full_size_url_before_preview(
         self,
@@ -846,6 +855,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                         "connection reset by peer",
                         error_category="connection_reset",
                     ),
+                    *[
+                        RequestFailure(
+                            None,
+                            "connection reset by peer",
+                            error_category="connection_reset",
+                        )
+                        for _ in range(2)
+                    ],
                 ],
             }
         )
@@ -866,7 +883,7 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(
             result["asset_failures"][0]["error_category"], "connection_reset"
         )
-        self.assertEqual([call["url"] for call in transport.calls], [url, url])
+        self.assertEqual([call["url"] for call in transport.calls], [url] * 4)
 
     def test_elsevier_body_asset_retry_successes_are_appended_in_reference_order(
         self,
@@ -878,9 +895,12 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         transport = RecordingTransport(
             {
                 ("GET", urls[0]): [
-                    RequestFailure(
-                        None, "Network error: timed out", error_category="timeout"
-                    ),
+                    *[
+                        RequestFailure(
+                            None, "Network error: timed out", error_category="timeout"
+                        )
+                        for _ in range(1)
+                    ],
                     {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
@@ -895,11 +915,14 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                     "url": urls[1],
                 },
                 ("GET", urls[2]): [
-                    RequestFailure(
-                        None,
-                        "temporary failure in name resolution",
-                        error_category="dns_error",
-                    ),
+                    *[
+                        RequestFailure(
+                            None,
+                            "temporary failure in name resolution",
+                            error_category="dns_error",
+                        )
+                        for _ in range(3)
+                    ],
                     {
                         "status_code": 200,
                         "headers": {"content-type": "image/png"},
@@ -2227,33 +2250,35 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         client = SpringerClient(transport, {})
         raw_payload = RawFulltextPayload(
             provider="springer",
-            source_url="https://link.springer.com/article/10.1000/example",
-            content_type="text/html",
-            body=b"<html></html>",
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url="https://link.springer.com/article/10.1000/example",
+                    content_type="text/html",
+                    body=b"<html></html>",
+                    extracted_assets=[
+                        {
+                            "kind": "figure",
+                            "heading": "Figure 1",
+                            "caption": "Body figure",
+                            "url": figure_url,
+                            "section": "body",
+                        },
+                        {
+                            "kind": "supplementary",
+                            "heading": "Download PDF",
+                            "caption": "",
+                            "url": "https://link.springer.com/content/pdf/10.1000/example.pdf",
+                            "section": "supplementary",
+                        },
+                    ],
+                    merged_metadata={"doi": "10.1000/example"},
+                ),
                 source_url="https://link.springer.com/article/10.1000/example",
                 content_type="text/html",
                 body=b"<html></html>",
-                extracted_assets=[
-                    {
-                        "kind": "figure",
-                        "heading": "Figure 1",
-                        "caption": "Body figure",
-                        "url": figure_url,
-                        "section": "body",
-                    },
-                    {
-                        "kind": "supplementary",
-                        "heading": "Download PDF",
-                        "caption": "",
-                        "url": "https://link.springer.com/content/pdf/10.1000/example.pdf",
-                        "section": "supplementary",
-                    },
-                ],
                 merged_metadata={"doi": "10.1000/example"},
             ),
-            merged_metadata={"doi": "10.1000/example"},
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:

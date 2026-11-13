@@ -1,6 +1,8 @@
 """Real subscription HTML stops fetching and still lands CLI/MCP reports."""
 
 from dataclasses import replace
+
+
 import json
 from unittest import mock
 from paper_fetch import cli, service
@@ -16,6 +18,7 @@ from paper_fetch.runtime import RuntimeContext
 from tests.block_fixtures import iter_block_samples
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support._mcp_support import retained_view
 
 
 def test_confirmed_subscription_stops_and_saves_cli_mcp(monkeypatch, tmp_path, capsys):
@@ -130,11 +133,14 @@ def test_confirmed_subscription_stops_and_saves_cli_mcp(monkeypatch, tmp_path, c
     )
     assert requests == ["browser_html", "browser_html"]
     assert result["acceptance"]["overall"] == "limited"
-    assert result["content_kind"] == "abstract_only"
+    assert result["acceptance"]["content"] == "abstract_only"
     # Existing save_markdown semantics require full text; limited results keep
     # their structured report and received metadata instead.
     assert not (mcpdir / "paper.md").exists()
-    assert "markdown_skipped_no_fulltext" in " ".join(result["source_trail"])
+    assert any(
+        event["component"] == "markdown_skipped_no_fulltext"
+        for event in retained_view(result, "diagnostics")["trace"]
+    )
     assert "Complete remote-sensing time series" in json.dumps(
         result, ensure_ascii=False
     )

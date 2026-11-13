@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.tracing import TraceEvent, trace_event
+from dataclasses import replace
 import json
 import tempfile
 import urllib.parse
@@ -23,7 +26,7 @@ from paper_fetch.providers.atypon_browser_workflow import (
 )
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.tracing import trace_from_markers
+from paper_fetch.tracing import merge_trace
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -99,7 +102,7 @@ def _typed_raw_payload(
     body: bytes,
     route: str,
     markdown_text: str | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     extraction: Mapping[str, object] | None = None,
     availability_diagnostics: Mapping[str, object] | None = None,
     browser_context_seed: Mapping[str, object] | None = None,
@@ -112,20 +115,22 @@ def _typed_raw_payload(
         diagnostics["availability_diagnostics"] = dict(availability_diagnostics)
     return RawFulltextPayload(
         provider=provider,
-        source_url=source_url,
-        content_type=content_type,
-        body=body,
-        content=ProviderContent(
-            route_kind=route,
+        content=replace(
+            ProviderContent(
+                route_kind=route,
+                source_url=source_url,
+                content_type=content_type,
+                body=body,
+                markdown_text=markdown_text,
+                diagnostics=diagnostics,
+                browser_context_seed=dict(browser_context_seed or {}),
+                suggested_filename=suggested_filename,
+            ),
             source_url=source_url,
             content_type=content_type,
             body=body,
-            markdown_text=markdown_text,
-            diagnostics=diagnostics,
-            browser_context_seed=dict(browser_context_seed or {}),
-            suggested_filename=suggested_filename,
         ),
-        trace=trace_from_markers(source_trail or []),
+        trace=events or [],
     )
 
 
@@ -133,11 +138,15 @@ def _payload_route(raw_payload: RawFulltextPayload) -> str | None:
     return raw_payload.content.route_kind if raw_payload.content is not None else None
 
 
-def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
-    return [event.marker() for event in raw_payload.trace if event.marker()]
+def _payload_events(raw_payload: RawFulltextPayload) -> list[str]:
+    return [
+        trace_event(event.stage, event.component, event.outcome)
+        for event in raw_payload.trace
+        if trace_event(event.stage, event.component, event.outcome)
+    ]
 
 
-class AssetTransport:
+class AssetTransport(RecordedStreamTransport):
     def __init__(
         self, responses: dict[tuple[str, str], dict[str, object] | Exception]
     ) -> None:
@@ -280,7 +289,7 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
         html: str,
         landing_url: str,
         extraction_metadata: Mapping[str, object],
-        source_trail: list[str] | None = None,
+        events: list[TraceEvent] | None = None,
     ) -> tuple[str, dict[str, object], RawFulltextPayload]:
         markdown_text, extraction = client.extract_markdown(
             html,
@@ -294,7 +303,9 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
             body=html.encode("utf-8"),
             route="html",
             markdown_text=markdown_text,
-            source_trail=list(source_trail or [f"fulltext:{client.name}_html_ok"]),
+            events=list(
+                events or [trace_event("fulltext", f"{client.name}_html", "ok")]
+            ),
             extraction=extraction,
         )
         return markdown_text, extraction, raw_payload
@@ -309,14 +320,14 @@ class AtyponBrowserWorkflowProviderTestCase(unittest.TestCase):
         extraction_metadata: Mapping[str, object] | None = None,
         downloaded_assets: list[dict[str, object]] | None = None,
         asset_failures: list[dict[str, object]] | None = None,
-        source_trail: list[str] | None = None,
+        events: list[TraceEvent] | None = None,
     ):
         _, extraction, raw_payload = self._build_browser_html_raw_payload(
             client,
             html=html,
             landing_url=landing_url,
             extraction_metadata=extraction_metadata or article_metadata,
-            source_trail=source_trail,
+            events=events,
         )
         article = client.to_article_model(
             dict(article_metadata),

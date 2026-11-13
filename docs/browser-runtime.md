@@ -34,8 +34,7 @@ caller-thread 机制调用浏览器，direct HTTP 仍可并行。
 
 bundle 的 `BrowserAssetPolicy` 显式声明附件点击和 figure page 能力、调度与 preview hooks；`BrowserPagePolicy` 承担页面复核。共享执行代码按能力调用 provider adapter，保持既有候选顺序、并发和重试。单个 HTML 候选执行与文档诊断收集分别封装，页面准备回调统一接收取消入口。
 
-原生模式由 profile owner 管理 `persistent_context=True`、出版社归属与目录锁；JSON
-模式由原有状态 owner 管理过滤后快照，选择规则见[状态模式](browser-backends.md#状态模式)。
+所有 provider 由原生 profile owner 管理持久上下文、出版社归属与目录锁；认证、预检、正文及资产共享相同目录。
 规范化目录使用进程间排他锁，同目录请求排队，不同出版社可并行；等待遵守取消和
 请求期限。切换出版社前关闭上一会话并释放锁，不交叉持锁等待。外部占用、归属冲突、
 元数据损坏和等待超时明确报错，不删除 Firefox 原生锁或回退临时会话。
@@ -64,7 +63,7 @@ provider preparation 前的快照，之后重新捕获以保留展开的引用�
 PNAS 正文使用浏览器 DOM；就绪采样覆盖 `p` 和 `[role="paragraph"]`，从选中正文
 容器的 `textContent` 生成指纹，避免布局变化重置稳定性判断。仍要求两次相同指纹、
 750ms 观察间隔和每候选 8 秒预算；首次同步浏览器调用可能受页面执行阻塞影响。
-正文图片在 JSON 与原生状态模式下均先直连，失败后复用同主机恢复决策；浏览器恢复
+正文图片先直连，失败后复用同主机恢复决策；浏览器恢复
 优先通过同会话 `context_get` 携带 cookie 和文章 Referer 收取原始字节，成功即返回，
 失败才进入原有页面请求与图片恢复路径，同一轮不重复 context request。原图候选、
 并发上限和验收保持不变。侧栏统计请求拦截不构成性能保证。项目尚未接入 PMC
@@ -101,10 +100,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
   `allowed_hosts` / 额外敏感 header 仍逐跳生效。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
-- `persistent_profile` diagnostics 区分原生目录加载、同 context 复用和 JSON 导入；
-  `storage_state_load.used` 只在本次实际导入 JSON 时为 true，不把存在的快照标为已注入。
-  JSON 导出独立记录于 `storage_state_save`。两种状态模式的目录、JSON 导入和 auth
-  回放见[浏览器生命周期](browser-backends.md#生命周期)。
+- `persistent_profile` diagnostics 区分原生目录加载和同 context 复用；不导入或导出 JSON 状态。
 - MCP 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
   禁用私有缓存读写。元数据只保存摘要，不保存 Cookie 或 localStorage 明文。
 
@@ -155,13 +151,13 @@ CLI、MCP 和 Python API 入口只建立准备作用域，首次使用后端才�
 
 `doctor`/`provider_status`、解析和帮助命令保持静态、只读；`fetch`、`auth` 和
 `browser-preflight` 在首次实际启动前准备 runtime。预检随后执行 live 页面访问与可选
-storage-state 保存。受支持的 Cloudflare interstitial 可在原预算内自动处理；登录、
+原生 profile 更新。受支持的 Cloudflare interstitial 可在原预算内自动处理；登录、
 付费、entitlement 与不支持的 challenge 仍遵守访问边界，详见
 [受管 Byparr](browser-backends.md#统一受管-byparr)。
 
 IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：它最多等待
 15 秒，直到 `#article` 包含目标文章号。持续的 AWS WAF 页使用
 `reason_code=aws_waf_challenge`、`status=challenge`，diagnostics 保留
-`challenge_provider=aws_waf` 与兼容字段 `legacy_reason_code`。
+`challenge_provider=aws_waf` 。
 
 离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供 Playwright 1.62.0 与 Byparr 使用；`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。浏览器依赖为 InvisiblePlaywright 0.49.1 / invisible-core 61.62.0，pyee 保持 13.0.1。

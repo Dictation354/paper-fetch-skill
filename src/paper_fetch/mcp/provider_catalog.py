@@ -6,7 +6,13 @@ from dataclasses import asdict
 import json
 from typing import Any
 
-from ..config import DEFAULT_USER_AGENT
+from ..config import DEFAULT_USER_AGENT, build_runtime_env
+from ..browser_runtime_policy import (
+    BYPARR_MANIFEST_PATH,
+    UPDATE_CHECK_INTERVAL_SECONDS,
+    engine_name,
+    selected_backend,
+)
 from .. import provider_catalog as runtime_catalog
 
 PROVIDER_CATALOG_RESOURCE_URI = "resource://paper-fetch/provider-catalog"
@@ -98,6 +104,16 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
         "source_count": len(source_provider_map),
         "providers": providers,
         "source_provider_map": source_provider_map,
+        "browser_runtime": {
+            "backend": selected_backend(build_runtime_env(), provider="pnas"),
+            "byparr_version": json.loads(
+                BYPARR_MANIFEST_PATH.read_text(encoding="utf-8")
+            )["version"],
+            "platform_engine": engine_name(),
+            "preparation": "on_demand",
+            "preparation_reuse_scope": "request_or_batch",
+            "update_check_interval_seconds": UPDATE_CHECK_INTERVAL_SECONDS,
+        },
     }
 
 

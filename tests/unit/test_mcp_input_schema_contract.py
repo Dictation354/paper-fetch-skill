@@ -32,6 +32,7 @@ def test_public_tool_schemas_are_valid_and_forbid_unknown_fields() -> None:
         "get_cached",
         "list_cached",
         "provider_status",
+        "read_content",
         "resolve_paper",
     }
     for schema in schemas.values():
@@ -66,6 +67,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
             [
                 "query",
                 "target",
+                "preset",
                 "modes",
                 "strategy",
                 "include_refs",
@@ -80,13 +82,14 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
             ],
             {
                 "target": "paper",
-                "modes": None,
+                "preset": "temporary_read",
+                "modes": ["markdown"],
                 "strategy": None,
-                "include_refs": None,
+                "include_refs": "all",
                 "max_tokens": "full_text",
                 "prefer_cache": False,
-                "no_download": False,
-                "artifact_mode": "markdown-assets",
+                "no_download": True,
+                "artifact_mode": "none",
                 "save_markdown": False,
                 "markdown_output_dir": None,
                 "markdown_filename": None,
@@ -110,9 +113,9 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
                 "download_dir": None,
                 "detail": "full",
                 "preferred_only": False,
-                "modes": None,
+                "modes": ["markdown"],
                 "strategy": None,
-                "include_refs": None,
+                "include_refs": "all",
                 "max_tokens": "full_text",
             },
         ),
@@ -122,6 +125,7 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
             [
                 "queries",
                 "target",
+                "preset",
                 "concurrency",
                 "modes",
                 "strategy",
@@ -134,28 +138,25 @@ def test_batch_check_schema_accepts_only_metadata(native: bool) -> None:
                 "markdown_output_dir",
                 "markdown_filename",
                 "download_dir",
-                "detail",
-                "content_max_chars",
                 "continue_on_error",
                 "batch_results",
                 "overwrite",
             ],
             {
                 "target": "paper",
+                "preset": "temporary_read",
                 "concurrency": 1,
-                "modes": None,
+                "modes": ["markdown"],
                 "strategy": None,
-                "include_refs": None,
+                "include_refs": "all",
                 "max_tokens": "full_text",
                 "prefer_cache": False,
-                "no_download": False,
-                "artifact_mode": "markdown-assets",
+                "no_download": True,
+                "artifact_mode": "none",
                 "save_markdown": False,
                 "markdown_output_dir": None,
                 "markdown_filename": None,
                 "download_dir": None,
-                "detail": "compact",
-                "content_max_chars": 20_000,
                 "continue_on_error": True,
                 "batch_results": None,
                 "overwrite": False,
@@ -174,16 +175,15 @@ def test_native_fetch_signatures_stay_aligned_with_request_models(
 
     assert list(schema["properties"]) == field_names
     assert set(request_type.model_fields) == set(field_names)
-    assert {
-        name: property_schema["default"]
-        for name, property_schema in schema["properties"].items()
-        if "default" in property_schema
-    } == defaults
+    assert (
+        schema["properties"].get("preset", {}).get("default", "temporary_read")
+        == "temporary_read"
+    )
 
 
 def test_shared_fetch_options_keep_null_normalization_and_conversion() -> None:
     options = {
-        "modes": None,
+        "modes": ["markdown"],
         "strategy": None,
         "include_refs": " TOP10 ",
         "max_tokens": "2048",
@@ -253,7 +253,7 @@ def test_single_and_batch_fetch_normalize_optional_paths_consistently() -> None:
         (BatchFetchRequest, {"queries": ["10.1000/example"]}, "batch_results"),
         (ListCachedRequest, {}, "download_dir"),
         (GetCachedRequest, {"doi": "10.1000/example"}, "download_dir"),
-        (BrowserPreflightRequest, {"provider": "wiley"}, "storage_state_path"),
+        (BrowserPreflightRequest, {"provider": "wiley"}, "profile_dir"),
     ],
 )
 @pytest.mark.parametrize(
@@ -340,3 +340,35 @@ def test_representative_invalid_tool_inputs_are_rejected(
 ) -> None:
     with pytest.raises(ValidationError):
         request_type.model_validate(arguments)
+
+
+@pytest.mark.parametrize("native", [False, True])
+def test_read_content_schema_is_strict_and_has_read_only_annotations(native):
+    from paper_fetch.mcp.schemas import ReadContentRequest
+
+    server = build_server()
+    tools = asyncio.run(server.list_native_tools() if native else server.list_tools())
+    tool = next(tool for tool in tools if tool.name == "read_content")
+    validator = Draft202012Validator(tool.input_schema)
+    assert validator.is_valid({"content_id": "test"})
+    assert tool.annotations.read_only_hint is True
+    assert tool.annotations.open_world_hint is False
+    for invalid in (
+        {"view": "raw"},
+        {"offset": -1},
+        {"offset": True},
+        {"max_chars": 0},
+        {"max_chars": 20001},
+        {"extra": 1},
+    ):
+        arguments = {"content_id": "test", **invalid}
+        assert not validator.is_valid(arguments)
+        with pytest.raises(ValidationError):
+            ReadContentRequest.model_validate(arguments)
+    defaults = ReadContentRequest(content_id="test").model_dump()
+    assert defaults == {
+        "content_id": "test",
+        "view": "markdown",
+        "offset": 0,
+        "max_chars": 6000,
+    }

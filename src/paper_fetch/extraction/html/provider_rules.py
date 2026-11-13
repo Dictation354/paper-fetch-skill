@@ -634,10 +634,6 @@ class _RegisteredNoiseProfiles(SetABC[str]):
 REGISTERED_NOISE_PROFILES: SetABC[str] = _RegisteredNoiseProfiles()
 
 
-def _reset_provider_html_rules_cache() -> None:
-    """Compatibility hook; rules now share the immutable runtime bundle cache."""
-
-
 def _cleanup_policy_from_rules(rules: ProviderHtmlRules) -> CleanupPolicy:
     cleanup = rules.cleanup
     front_matter = rules.front_matter

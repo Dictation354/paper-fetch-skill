@@ -17,8 +17,7 @@ import zipfile
 from filelock import FileLock, Timeout
 
 from .types import BrowserRuntimeFailure
-
-MANIFEST_PATH = Path(__file__).with_name("byparr-manifest.json")
+from ...browser_runtime_policy import BYPARR_MANIFEST_PATH as MANIFEST_PATH
 
 
 class PreparationBudget:

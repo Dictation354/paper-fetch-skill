@@ -1,6 +1,8 @@
 """Real shared Camoufox/Byparr lifecycle and local HTTP/browser contracts."""
 
 from dataclasses import replace
+
+
 import base64
 import contextlib
 import os
@@ -18,10 +20,6 @@ from paper_fetch.providers.browser_runtime.api import fetch_html_with_browser
 from paper_fetch.providers.browser_runtime.navigation import navigate_page
 from paper_fetch.providers.browser_runtime.platforms import (
     supported_platform,
-)
-from paper_fetch.providers.browser_runtime.paths import (
-    stage_storage_state,
-    commit_staged_storage_state,
 )
 from paper_fetch.providers.browser_runtime.types import (
     BrowserHtmlFetchOptions,
@@ -244,8 +242,6 @@ def _config(tmp_path, provider="pnas"):
         None,
         user_data_dir=tmp_path / f"{provider}-byparr",
         backend="byparr",
-        state_mode="json",
-        persist_storage_state=False,
     )
 
 
@@ -326,7 +322,9 @@ def test_accepted_json_state_restores_in_fresh_owned_camoufox(
     prepared, site, monkeypatch, tmp_path
 ):
     base, _, _ = site
-    config = replace(_config(tmp_path), persist_storage_state=True)
+    config = replace(
+        _config(tmp_path),
+    )
     _set_home(monkeypatch, "pnas", "https://www.pnas.org/")
 
     def attach(context):
@@ -357,10 +355,6 @@ def test_accepted_json_state_restores_in_fresh_owned_camoufox(
             ]
         )
         page.evaluate("localStorage.setItem('entitlement','local-test')")
-        staged, _ = stage_storage_state(
-            context, config, filter_url="https://www.pnas.org/article"
-        )
-        assert commit_staged_storage_state(staged, config)["saved"]
     with RuntimeContext(env={}) as runtime:
         context = runtime.new_browser_context_for_runtime_config(config)
         page = attach(context)
@@ -370,7 +364,7 @@ def test_accepted_json_state_restores_in_fresh_owned_camoufox(
             c["name"] == "auth" and c["value"] == "local-test"
             for c in context.cookies()
         )
-        assert context._paper_fetch_navigator.diagnostics["state_restored"]
+        assert runtime.browser_profile_diagnostics(context)["native_profile_loaded"]
 
 
 def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_path):
@@ -626,7 +620,7 @@ def _set_home(monkeypatch, provider, url):
     monkeypatch.setattr(provider_catalog, "PROVIDER_CATALOG", catalog)
 
 
-@pytest.mark.parametrize("state_mode", ["native", "json"])
+@pytest.mark.parametrize("state_mode", ["native"])
 def test_shared_context_modes_preserve_state_and_real_responses(
     prepared, site, tmp_path, state_mode
 ):
@@ -634,7 +628,10 @@ def test_shared_context_modes_preserve_state_and_real_responses(
     from paper_fetch.providers.browser_runtime.navigation import context_get
 
     base, assets, calls = site
-    config = replace(_config(tmp_path), provider="wiley", state_mode=state_mode)
+    config = replace(
+        _config(tmp_path),
+        provider="wiley",
+    )
     owner, context = open_browser_context(config)
     try:
         page = context.new_page()
@@ -846,7 +843,9 @@ def test_ieee_iframe_pdf_keeps_real_response_or_download_under_byparr(
     from paper_fetch.providers.browser_runtime.context import open_browser_context
 
     config = replace(
-        _config(tmp_path), provider="ieee", doi="10.1109/test", state_mode="native"
+        _config(tmp_path),
+        provider="ieee",
+        doi="10.1109/test",
     )
     owner, context = open_browser_context(config)
     body = b"%PDF-1.7\nlocal IEEE original bytes\n%%EOF"
@@ -892,7 +891,9 @@ def test_wiley_page_image_captures_original_bytes_under_byparr(prepared, tmp_pat
     asset = figure(root, 1)
     body = png_bytes(640, 480)
     config = replace(
-        _config(tmp_path), provider="wiley", doi="10.1111/test", state_mode="native"
+        _config(tmp_path),
+        provider="wiley",
+        doi="10.1111/test",
     )
     with RuntimeContext(env={}) as runtime:
         context = runtime.new_browser_context_for_runtime_config(config)

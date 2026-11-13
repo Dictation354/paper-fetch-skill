@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from unittest import mock
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
@@ -46,7 +48,7 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                 route_kind="html",
                                 markdown_text="# Wiley Article\n\n## Results\n\n"
                                 + ("Body text " * 80),
-                                source_trail=["fulltext:wiley_html_ok"],
+                                events=[trace_event("fulltext", "wiley_html", "ok")],
                             ),
                             article=article,
                             related_assets={
@@ -81,29 +83,38 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                             ),
                         )
 
-                self.assertTrue(envelope.has_fulltext)
-                self.assertEqual(envelope.content_kind, "fulltext")
-                self.assertIn("fulltext:wiley_article_ok", envelope.source_trail)
+                self.assertTrue(envelope.quality.has_fulltext)
+                self.assertEqual(envelope.quality.content_kind, "fulltext")
+                self.assertIn(
+                    trace_facts(trace_event("fulltext", "wiley", "article_ok")),
+                    trace_facts(envelope.trace),
+                )
                 if preview_accepted:
                     self.assertIn(
-                        "download:wiley_assets_preview_accepted",
-                        envelope.source_trail,
+                        trace_facts(
+                            trace_event("download", "wiley_assets_preview", "accepted")
+                        ),
+                        trace_facts(envelope.trace),
                     )
                     self.assertFalse(
                         any(
                             "fell back to preview images" in warning
-                            for warning in envelope.warnings
+                            for warning in envelope.quality.warnings
                         )
                     )
                 else:
                     self.assertIn(
-                        "download:wiley_assets_preview_fallback",
-                        envelope.source_trail,
+                        trace_facts(
+                            trace_event(
+                                "download", "wiley_assets_preview_fallback", "info"
+                            )
+                        ),
+                        trace_facts(envelope.trace),
                     )
                     self.assertTrue(
                         any(
                             "fell back to preview images" in warning
-                            for warning in envelope.warnings
+                            for warning in envelope.quality.warnings
                         )
                     )
 
@@ -153,8 +164,12 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                             route_kind="html",
                                             markdown_text="# Example Article\n\n## Results\n\n"
                                             + ("Body text " * 80),
-                                            source_trail=[
-                                                f"fulltext:{provider_name}_html_ok"
+                                            events=[
+                                                trace_event(
+                                                    "fulltext",
+                                                    f"{provider_name}_html",
+                                                    "ok",
+                                                )
                                             ],
                                         ),
                                         article=sample_article(doi),
@@ -217,7 +232,9 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                     route_kind="html",
                                     markdown_text="# Example Article\n\n## Results\n\n"
                                     + ("Body text " * 80),
-                                    source_trail=["fulltext:science_html_ok"],
+                                    events=[
+                                        trace_event("fulltext", "science_html", "ok")
+                                    ],
                                 ),
                                 article=sample_article(resolved.doi),
                                 related_asset_factory=lambda *args, **kwargs: (
@@ -247,7 +264,10 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertIn(
-            "download:science_assets_skipped_profile_none", envelope.source_trail
+            trace_facts(
+                trace_event("download", "science_assets_skipped_profile_none", "info")
+            ),
+            trace_facts(envelope.trace),
         )
 
     def test_fetch_paper_warns_when_scoped_provider_falls_back_to_preview_images(
@@ -283,7 +303,9 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                     route_kind="html",
                                     markdown_text="# Example Article\n\n## Results\n\n"
                                     + ("Body text " * 80),
-                                    source_trail=["fulltext:science_html_ok"],
+                                    events=[
+                                        trace_event("fulltext", "science_html", "ok")
+                                    ],
                                 ),
                                 article=sample_article(resolved.doi),
                                 related_assets={
@@ -321,11 +343,14 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         self.assertTrue(
             any(
                 "Science asset downloads fell back to preview images" in warning
-                for warning in envelope.warnings
+                for warning in envelope.quality.warnings
             )
         )
         self.assertFalse(
-            any("Science figure downloads" in warning for warning in envelope.warnings)
+            any(
+                "Science figure downloads" in warning
+                for warning in envelope.quality.warnings
+            )
         )
 
     def test_fetch_paper_accepts_preview_images_with_sufficient_dimensions(
@@ -361,7 +386,9 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
                                     route_kind="html",
                                     markdown_text="# Example Article\n\n## Results\n\n"
                                     + ("Body text " * 80),
-                                    source_trail=["fulltext:science_html_ok"],
+                                    events=[
+                                        trace_event("fulltext", "science_html", "ok")
+                                    ],
                                 ),
                                 article=sample_article(resolved.doi),
                                 related_assets={
@@ -398,12 +425,21 @@ class ServiceProbeAndAssetTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertIn("download:science_assets_preview_accepted", envelope.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("download", "science_assets_preview", "accepted")),
+            trace_facts(envelope.trace),
+        )
         self.assertNotIn(
-            "download:science_assets_preview_fallback", envelope.source_trail
+            trace_facts(
+                trace_event("download", "science_assets_preview_fallback", "info")
+            ),
+            trace_facts(envelope.trace),
         )
         self.assertFalse(
-            any("used preview images" in warning for warning in envelope.warnings)
+            any(
+                "used preview images" in warning
+                for warning in envelope.quality.warnings
+            )
         )
 
     def test_probe_has_fulltext_uses_crossref_license_signal(self) -> None:

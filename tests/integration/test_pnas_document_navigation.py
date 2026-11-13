@@ -1,5 +1,8 @@
 """PNAS document replacement and candidate readiness in a real offline browser."""
 
+from dataclasses import replace
+
+
 import json
 import os
 from pathlib import Path
@@ -40,7 +43,6 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
     monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
     # Keep all network interception in this offline context. Sidebar blocking has
     # its own contract; a page route's continue_ would bypass context fixtures.
-    from dataclasses import replace
 
     from paper_fetch.providers import _registry
 
@@ -103,7 +105,6 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
                 artifact_dir=tmp_path,
                 headless=True,
                 user_agent=None,
-                persist_storage_state=False,
             ),
             max_timeout_ms=15000,
             wait_seconds=0,

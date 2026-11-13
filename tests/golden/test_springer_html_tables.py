@@ -1,8 +1,9 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.providers import _springer_markdown
 import re
 import unittest
 from bs4 import BeautifulSoup
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.extraction.html.tables import render_table_markdown
 from paper_fetch.runtime import RuntimeContext
@@ -53,7 +54,7 @@ NATURE_HEADER_SVG_URL = (
 )
 
 
-class FakeTransport:
+class FakeTransport(RecordedStreamTransport):
     def __init__(self, responses: dict[str, dict[str, object] | Exception]) -> None:
         self.responses = responses
 
@@ -168,7 +169,7 @@ class SpringerHtmlTableTests(unittest.TestCase):
             encoding="utf-8", errors="ignore"
         )
 
-        markdown = springer_html.extract_html_payload(
+        markdown = _springer_markdown.extract_html_payload(
             html, SPRINGER_CLASSIC_LANDING_URL, title=SPRINGER_CLASSIC_TITLE
         )["markdown_text"]
 

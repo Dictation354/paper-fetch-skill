@@ -40,7 +40,6 @@ def _setup_landing_browser(monkeypatch, tmp_path, raw, metadata):
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     browser = _Context()
     browser.page.content = lambda: raw
@@ -99,7 +98,7 @@ def test_confirmed_paywall_landing_stops_even_when_rest_fixture_has_fulltext(
     article = envelope.article
     assert article.quality.content_kind == "abstract_only"
     assert article.metadata.abstract
-    assert "trace:confirmed_article_paywall" in article.quality.source_trail
+    assert any(event.code == "confirmed_article_paywall" for event in article.trace)
     acceptance = evaluate_fetch_acceptance(
         envelope, doi=DOI, expected_doi=DOI, asset_profile="none"
     )
@@ -162,4 +161,4 @@ def test_confirmed_paywall_landing_prevents_rest_browser_and_pdf_requests(
     article = envelope.article
     assert article.quality.content_kind == "abstract_only"
     assert article.quality.has_abstract
-    assert "trace:confirmed_article_paywall" in article.quality.source_trail
+    assert any(event.code == "confirmed_article_paywall" for event in article.trace)

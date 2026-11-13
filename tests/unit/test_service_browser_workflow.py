@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from unittest import mock
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
@@ -51,11 +53,20 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_fail", article.quality.source_trail)
         self.assertIn(
-            "fallback:wiley_html_managed_by_provider", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "wiley", "fail")),
+            trace_facts(article.trace),
         )
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(
+                trace_event("fallback", "wiley_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any(
                 "Full text was not available" in warning
@@ -110,9 +121,15 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
         self.assertIn(
-            "fallback:science_html_managed_by_provider", article.quality.source_trail
+            trace_facts(
+                trace_event("fallback", "science_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
         )
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
 
     def test_science_provider_public_source_and_html_assets_are_exposed(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -149,7 +166,9 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                     route_kind="html",
                                     markdown_text="# Science Example\n\n## Results\n\n"
                                     + ("Body text " * 80),
-                                    source_trail=["fulltext:science_html_ok"],
+                                    events=[
+                                        trace_event("fulltext", "science_html", "ok")
+                                    ],
                                 ),
                                 article_factory=science_provider.ScienceClient(
                                     HttpTransport(), {}
@@ -190,10 +209,16 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
         self.assertEqual(envelope.source, "science")
         self.assertIn(
-            "download:science_assets_saved_profile_body", envelope.source_trail
+            trace_facts(
+                trace_event("download", "science_assets_saved_profile_body", "info")
+            ),
+            trace_facts(envelope.trace),
         )
         self.assertFalse(
-            any("text-only full text" in warning for warning in envelope.warnings)
+            any(
+                "text-only full text" in warning
+                for warning in envelope.quality.warnings
+            )
         )
         assert envelope.article is not None
         self.assertEqual(len(envelope.article.assets), 1)
@@ -234,7 +259,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                 route_kind="html",
                                 markdown_text="# Wiley HTML Article\n\n## Results\n\n"
                                 + ("Body text " * 80),
-                                source_trail=["fulltext:wiley_html_ok"],
+                                events=[trace_event("fulltext", "wiley_html", "ok")],
                             ),
                             article_factory=WileyClient(
                                 HttpTransport(), {}
@@ -272,7 +297,10 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn(
-            "download:wiley_assets_saved_profile_body", article.quality.source_trail
+            trace_facts(
+                trace_event("download", "wiley_assets_saved_profile_body", "info")
+            ),
+            trace_facts(article.trace),
         )
         self.assertEqual(len(article.assets), 1)
         self.assertEqual(article.assets[0].section, "body")
@@ -316,7 +344,7 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                 route_kind="html",
                                 markdown_text="# PNAS HTML Article\n\n## Results\n\n"
                                 + ("Body text " * 80),
-                                source_trail=["fulltext:pnas_html_ok"],
+                                events=[trace_event("fulltext", "pnas_html", "ok")],
                             ),
                             article_factory=pnas_provider.PnasClient(
                                 HttpTransport(), {}
@@ -362,7 +390,10 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
         self.assertEqual(article.source, "pnas")
         self.assertIn(
-            "download:pnas_assets_saved_profile_all", article.quality.source_trail
+            trace_facts(
+                trace_event("download", "pnas_assets_saved_profile_all", "info")
+            ),
+            trace_facts(article.trace),
         )
         self.assertEqual(
             {asset.kind for asset in article.assets}, {"figure", "supplementary"}
@@ -464,8 +495,12 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                                                     "**Figure 1.** Caption body for the browser HTML figure.",
                                                 ]
                                             ),
-                                            source_trail=[
-                                                f"fulltext:{case['provider_name']}_html_ok"
+                                            events=[
+                                                trace_event(
+                                                    "fulltext",
+                                                    f"{case['provider_name']}_html",
+                                                    "ok",
+                                                )
                                             ],
                                         ),
                                         article_factory=case["article_factory"],
@@ -568,9 +603,11 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
                         warnings=[
                             "Full text was extracted from PDF fallback after the HTML path was not usable."
                         ],
-                        source_trail=[
-                            f"fulltext:{provider_name}_html_fail",
-                            f"fulltext:{provider_name}_pdf_fallback_ok",
+                        events=[
+                            trace_event("fulltext", f"{provider_name}_html", "fail"),
+                            trace_event(
+                                "fulltext", f"{provider_name}_pdf_fallback", "ok"
+                            ),
                         ],
                         needs_local_copy=True,
                     )
@@ -624,8 +661,14 @@ class ServiceBrowserWorkflowTests(unittest.TestCase):
 
                     self.assertEqual(article.source, expected_source)
                     self.assertIn(
-                        f"download:{provider_name}_assets_skipped_text_only",
-                        article.quality.source_trail,
+                        trace_facts(
+                            trace_event(
+                                "download",
+                                f"{provider_name}_assets_skipped_text_only",
+                                "info",
+                            )
+                        ),
+                        trace_facts(article.trace),
                     )
         finally:
             paper_fetch.resolve_paper = original_resolve

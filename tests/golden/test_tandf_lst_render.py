@@ -1,6 +1,7 @@
 """HTML-derived semantic oracle for the LST article (not a generated snapshot)."""
 
 from __future__ import annotations
+
 from tests.support.markdown_presentation import visible_markdown
 from tests.support.tandf_lst_render import DOI, URL, assert_formulas, source_html
 from tests.support.test_evidence import evidence_cache as cache

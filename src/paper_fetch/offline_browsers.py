@@ -12,15 +12,7 @@ if TYPE_CHECKING:
     from .offline_setup import Setup
 
 
-def selected_backends(selection: str) -> tuple[str, ...]:
-    return ("Byparr",) if selection in {"all", "camoufox", "byparr"} else ()
-
-
-def prepare(setup: Setup, *, selection: str, interactive: bool) -> None:
-    backends = selected_backends(selection)
-    if not backends:
-        setup.report("Byparr", "skipped", "Only Windows/Linux x64; macOS uses Camoufox")
-        return
+def prepare(setup: Setup, *, interactive: bool) -> None:
     if sys.platform == "linux":
         missing = {
             name: packages
@@ -68,13 +60,9 @@ def prepare(setup: Setup, *, selection: str, interactive: bool) -> None:
                 setup.report(
                     "Browser libraries", "ready", "System dependencies rechecked"
                 )
-    for backend in backends:
-        if backend == "Byparr":
-            setup.step(
-                "Byparr",
-                lambda: byparr.prepare(
-                    setup, interactive=interactive, system_dependencies=False
-                ),
-            )
-        else:
-            setup.step("Camoufox", lambda: setup.browser(selected=True))
+    setup.step(
+        "Byparr",
+        lambda: byparr.prepare(
+            setup, interactive=interactive, system_dependencies=False
+        ),
+    )

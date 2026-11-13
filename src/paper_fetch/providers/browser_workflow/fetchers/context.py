@@ -239,7 +239,6 @@ def _new_browser_context(
         browser_config,
         headless=headless,
         user_agent=None,
-        persist_storage_state=False,
     )
     manager, browser_context = open_browser_context(
         active_config,

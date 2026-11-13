@@ -58,9 +58,9 @@ def test_envelope_rejects_conflicting_article_acquisition() -> None:
         FetchEnvelope(
             doi=article.doi,
             source=article.source,
-            has_fulltext=True,
             article=article,
             acquisition=conflicting,
+            quality=Quality(has_fulltext=True),
         )
 
 

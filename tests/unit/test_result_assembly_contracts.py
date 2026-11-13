@@ -1,7 +1,4 @@
 from pathlib import Path
-
-import pytest
-
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers.base import (
@@ -10,12 +7,11 @@ from paper_fetch.providers.base import (
     ProviderFailure,
     RawFulltextPayload,
 )
-from paper_fetch.providers.raw_adapter import RawProviderAdapter
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_event
 
 
-class RawRecorder:
+class RawRecorder(ProviderClient):
     name = "pnas"
 
     def __init__(self, *, failure=False, pdf=False):
@@ -78,18 +74,15 @@ class RawRecorder:
         return "asset warning"
 
 
-class MainRecorder(RawRecorder, ProviderClient):
+class MainRecorder(RawRecorder):
     def finalize_fetch_result_article(self, article, **kwargs):
         self.finalized = article
         return article
 
 
-@pytest.mark.parametrize("raw", [False, True])
-def test_single_assembly_preserves_interface_calls_and_restores_context(
-    tmp_path: Path, raw
-):
-    recorder = RawRecorder(pdf=True) if raw else MainRecorder()
-    client = RawProviderAdapter(recorder) if raw else recorder
+def test_single_assembly_preserves_interface_calls_and_restores_context(tmp_path: Path):
+    recorder = MainRecorder()
+    client = recorder
     store = ArtifactStore.from_download_dir(tmp_path)
     with RuntimeContext(env={}, asset_profile="none") as context:
         previous_store = context.artifact_store
@@ -102,52 +95,31 @@ def test_single_assembly_preserves_interface_calls_and_restores_context(
             context=context,
         )
         assert all(
-            seen_context is context and seen_store is store
-            for _, seen_context, seen_store in recorder.calls
+            (
+                seen_context is context and seen_store is store
+                for _, seen_context, seen_store in recorder.calls
+            )
         )
         assert context.asset_profile == "none"
         assert context.artifact_store is previous_store
-    if raw:
-        assert [stage for stage, *_ in recorder.calls] == [
-            "raw",
-            "article",
-            "assets",
-            "article",
-        ]
-        assert recorder.articles == [([], []), ([], [])]
-        assert result.artifacts.assets == [{"kind": "figure", "path": "extracted.png"}]
-        assert result.warnings == ["asset-stage warning"]
-        assert result.trace == recorder.payload.trace
-    else:
-        assert [stage for stage, *_ in recorder.calls] == ["raw", "article", "assets"]
-        assert recorder.articles == [(None, None)]
-        assert result.article is recorder.finalized
+    assert [stage for stage, *_ in recorder.calls] == ["raw", "article", "assets"]
+    assert recorder.articles == [(None, None)]
+    assert result.article is recorder.finalized
 
 
-@pytest.mark.parametrize("raw", [False, True])
-def test_asset_exception_contract_and_request_restoration(tmp_path, raw):
-    recorder = RawRecorder(failure=True) if raw else MainRecorder(failure=True)
-    client = RawProviderAdapter(recorder) if raw else recorder
+def test_asset_exception_contract_and_request_restoration(tmp_path):
+    recorder = MainRecorder(failure=True)
+    client = recorder
     with RuntimeContext(env={}, asset_profile="body") as context:
         original_store = context.artifact_store
-        if raw:
-            with pytest.raises(ProviderFailure, match="asset failed"):
-                client.fetch_result(
-                    "10.1073/example",
-                    {"doi": "10.1073/example"},
-                    tmp_path,
-                    asset_profile="all",
-                    context=context,
-                )
-        else:
-            result = client.fetch_result(
-                "10.1073/example",
-                {"doi": "10.1073/example"},
-                tmp_path,
-                asset_profile="all",
-                context=context,
-            )
-            assert result.warnings == ["asset warning"]
+        result = client.fetch_result(
+            "10.1073/example",
+            {"doi": "10.1073/example"},
+            tmp_path,
+            asset_profile="all",
+            context=context,
+        )
+        assert result.warnings == ["asset warning"]
         assert context.asset_profile == "body"
         assert context.artifact_store is original_store
 

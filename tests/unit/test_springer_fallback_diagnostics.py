@@ -1,5 +1,8 @@
 """Springer PDF recovery must retain the HTML failure's concrete diagnostics."""
 
+from paper_fetch.tracing import trace_event
+
+
 import pytest
 
 from paper_fetch.failure import FailureDiagnostics
@@ -10,7 +13,6 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
 from tests.support._paper_fetch_support import RecordingTransport
 
 
@@ -47,7 +49,7 @@ def test_successful_pdf_recovery_preserves_structured_html_failure(
             body=b"%PDF",
             markdown_text="opaque converter output",
         ),
-        trace=trace_from_markers(["fulltext:springer_pdf_fallback_ok"]),
+        trace=[trace_event("fulltext", "springer_pdf_fallback", "ok")],
     )
     monkeypatch.setattr(
         client, "_fetch_pdf_payload_from_html_attempt", lambda *a, **k: pdf

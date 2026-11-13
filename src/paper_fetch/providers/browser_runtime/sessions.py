@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import threading
 from dataclasses import dataclass, field
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 if TYPE_CHECKING:
@@ -68,11 +67,6 @@ class BrowserSessions:
                 self.managers.pop(key, None)
             manager.close()
             raise
-
-    def note_browser_json_export(self, path: Path) -> None:
-        for key, manager in list(self.managers.items()):
-            if key[0] == threading.get_ident():
-                manager.note_json_export(path)
 
     def refresh_browser_profiles(self) -> None:
         for key, manager in list(self.managers.items()):

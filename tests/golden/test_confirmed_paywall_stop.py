@@ -1,7 +1,9 @@
 """Captured article gates and route-scoped API entitlement with local fallback."""
 
-import pytest
 from dataclasses import replace
+
+
+import pytest
 from types import SimpleNamespace
 from paper_fetch.providers.base import (
     ProviderFailure,

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...tracing import extend_trace
+
 from ...quality.access_boundary import propagate_paywall
 
 from dataclasses import replace
@@ -19,8 +21,7 @@ from ...models.schema import SourceKind
 from ...publisher_identity import normalize_doi
 from ...runtime import RuntimeContext
 from ...tracing import (
-    fulltext_marker,
-    trace_from_markers,
+    fulltext_event,
 )
 from ...utils import dedupe_authors, extend_unique, normalize_text
 from ...reason_codes import ABSTRACT_ONLY, PDF_FALLBACK
@@ -118,9 +119,11 @@ def merge_provider_owned_authors(
     if (
         not extracted_authors
         and fallback_extractor is not None
-        and "html" in normalize_text(raw_payload.content_type).lower()
+        and "html" in normalize_text(raw_payload.content.content_type).lower()
     ):
-        html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace")
+        html_text = bytes(raw_payload.content.body or b"").decode(
+            "utf-8", errors="replace"
+        )
         extracted_authors = _normalized_authors(fallback_extractor(html_text))
     if not extracted_authors:
         return article_metadata
@@ -155,18 +158,20 @@ def browser_workflow_article_from_payload(
         if route == PDF_FALLBACK
         else list(downloaded_assets or [])
     )
-    content_type = str(raw_payload.content_type or "").lower()
+    content_type = str(raw_payload.content.content_type or "").lower()
 
     if not markdown_text and "html" in content_type:
         html_text = (
-            bytes(raw_payload.body or b"").decode("utf-8", errors="replace").strip()
+            bytes(raw_payload.content.body or b"")
+            .decode("utf-8", errors="replace")
+            .strip()
         )
         if html_text:
             try:
                 markdown_text, extraction = _cached_browser_workflow_markdown(
                     client,
                     html_text,
-                    raw_payload.source_url
+                    raw_payload.content.source_url
                     or str(metadata.get("landing_page_url") or ""),
                     metadata=metadata,
                     context=context,
@@ -210,9 +215,7 @@ def browser_workflow_article_from_payload(
             warnings=warnings,
             trace=[
                 *trace,
-                *trace_from_markers(
-                    [fulltext_marker(client.name, "fail", route="parse")]
-                ),
+                *[fulltext_event(client.name, "fail", route="parse")],
             ],
         )
     if asset_failures and getattr(client, "article_asset_failure_warning", True):
@@ -342,7 +345,7 @@ def _finalize_abstract_only_provider_article(
     *,
     warnings: list[str] | None = None,
 ):
-    marker = fulltext_marker(provider_name, ABSTRACT_ONLY)
-    extend_unique(article.quality.source_trail, [marker])
+    marker = fulltext_event(provider_name, ABSTRACT_ONLY)
+    extend_trace(article.trace, [marker])
     extend_unique(article.quality.warnings, list(warnings or []))
     return article

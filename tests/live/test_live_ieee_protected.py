@@ -91,7 +91,7 @@ class LiveIeeeProtectedAssetTests(unittest.TestCase):
                 context.close()
 
             self.assertIsNotNone(envelope.article)
-            self.assertTrue(envelope.has_fulltext)
+            self.assertTrue(envelope.quality.has_fulltext)
             acceptance = evaluate_fetch_acceptance(
                 envelope,
                 asset_profile="body",

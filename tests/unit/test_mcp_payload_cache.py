@@ -1,9 +1,12 @@
 from __future__ import annotations
+from tests.support._mcp_support import retained_view
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import asyncio
 import json
 import tempfile
 import unittest
-from dataclasses import asdict, replace
 from pathlib import Path
 from unittest import mock
 from paper_fetch.mcp import fetch_tool as mcp_fetch_tool
@@ -15,7 +18,6 @@ from paper_fetch.mcp.cache_index import (
 )
 from paper_fetch.mcp.cache_payloads import list_cached_payload
 from paper_fetch.mcp.fetch_cache import (
-    FETCH_ENVELOPE_CACHE_VERSION,
     PUBLIC_CREDENTIAL_SCOPE,
     FetchCache,
     article_from_payload,
@@ -45,7 +47,7 @@ from paper_fetch.models import (
 from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy
-from paper_fetch.tracing import TraceContext, trace_event
+from paper_fetch.tracing import TraceContext
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.support._mcp_support import (
     create_cached_downloads,
@@ -174,57 +176,14 @@ class McpPayloadCacheTests(unittest.TestCase):
         payload = payload_from_envelope(envelope, request)
         round_trip = envelope_from_payload(payload)
 
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(len(payload["trace"]), 2)
         self.assertNotIn("trace", payload["quality"])
-        self.assertNotIn("trace", payload["article"]["quality"])
+        self.assertNotIn("quality", payload["article"])
         self.assertEqual(
             [event.attempt_id for event in round_trip.trace],
             ["html-1", "html-2"],
         )
-
-    def test_v5_sidecar_reader_projects_legacy_quality_fields_to_one_owner(
-        self,
-    ) -> None:
-        request = FetchPaperRequest(
-            query="10.1000/quality-owner",
-            modes=["article", "markdown"],
-        )
-        envelope = sample_envelope(
-            modes={"article", "markdown"},
-            doi=request.query,
-        )
-
-        with tempfile.TemporaryDirectory() as tmpdir:
-            download_dir = Path(tmpdir)
-            FetchCache(download_dir).write_fetch_envelope(envelope, request)
-            sidecar = json.loads(
-                fetch_envelope_cache_path(download_dir, request.query).read_text(
-                    encoding="utf-8"
-                )
-            )
-
-        self.assertEqual(FETCH_ENVELOPE_CACHE_VERSION, 5)
-        self.assertEqual(sidecar["version"], 5)
-        self.assertEqual(sidecar["payload"]["schema_version"], 2)
-        self.assertIn("has_fulltext", sidecar["payload"])
-        self.assertIn("token_estimate_breakdown", sidecar["payload"])
-
-        round_trip = envelope_from_payload(sidecar["payload"])
-        assert round_trip.article is not None
-        self.assertIs(round_trip.quality, round_trip.article.quality)
-        self.assertIs(round_trip.warnings, round_trip.quality.warnings)
-        self.assertIs(round_trip.source_trail, round_trip.quality.source_trail)
-        self.assertIs(
-            round_trip.token_estimate_breakdown,
-            round_trip.quality.token_estimate_breakdown,
-        )
-
-        round_trip.warnings.append("cache projection mutation")
-        round_trip.article.quality.token_estimate = 654
-
-        self.assertIn("cache projection mutation", round_trip.article.quality.warnings)
-        self.assertEqual(round_trip.token_estimate, 654)
 
     def test_build_server_omits_output_schemas_for_all_tools(self) -> None:
         server = build_server()
@@ -247,6 +206,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "idempotent_hint": False,
                 "open_world_hint": True,
             },
+            "read_content": {"read_only_hint": True, "open_world_hint": False},
             "list_cached": {"read_only_hint": True, "open_world_hint": False},
             "get_cached": {"read_only_hint": True, "open_world_hint": False},
             "batch_resolve": {"read_only_hint": True, "open_world_hint": True},
@@ -280,6 +240,7 @@ class McpPayloadCacheTests(unittest.TestCase):
             "ELSEVIER_API_KEY": "",
         }
         missing_dependencies = {
+            "runtime_valid": False,
             "probe": "unit_test",
             "packages": {"playwright": False, "camoufox": False},
         }
@@ -349,14 +310,14 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertEqual(captured["query"], "10.1000/example")
-        self.assertEqual(captured["modes"], {"article", "markdown"})
-        self.assertEqual(captured["context"].download_dir, default_download_dir)
-        self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
+        self.assertEqual(captured["modes"], {"markdown", "metadata"})
+        self.assertEqual(captured["context"].download_dir, None)
+        self.assertEqual(captured["context"].artifact_mode, "none")
         self.assertEqual(captured["context"].env, runtime_env)
         self.assertEqual(
             captured["render"],
             RenderOptions(
-                include_refs=None, asset_profile=None, max_tokens="full_text"
+                include_refs="all", asset_profile="none", max_tokens="full_text"
             ),
         )
         self.assertEqual(
@@ -364,7 +325,7 @@ class McpPayloadCacheTests(unittest.TestCase):
             FetchStrategy(
                 allow_metadata_only_fallback=True,
                 preferred_providers=None,
-                asset_profile=None,
+                asset_profile="none",
             ),
         )
 
@@ -382,6 +343,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                     return sample_envelope(modes=kwargs["modes"], doi=query)
 
                 payload = fetch_paper_payload(
+                    no_download=False,
                     query="10.1000/example",
                     artifact_mode=artifact_mode,
                     download_dir=download_dir,
@@ -407,6 +369,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
             payload = fetch_paper_payload(
+                no_download=False,
                 query="10.1000/example",
                 artifact_mode="none",
                 download_dir=download_dir,
@@ -440,6 +403,7 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         mocked_resolve = mock.Mock()
         fetch_paper_payload(
+            no_download=False,
             query="10.1000/example",
             download_dir=explicit_download_dir,
             deps=mcp_test_deps(
@@ -468,6 +432,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 return_value=sample_envelope(modes={"markdown"}, doi="10.1000/example")
             )
             payload = fetch_paper_payload(
+                no_download=False,
                 query="10.1000/example",
                 modes=["markdown"],
                 download_dir=download_dir,
@@ -531,13 +496,16 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
 
             saved_path = download_dir / "custom.md"
-            self.assertIsNone(payload["markdown"])
-            self.assertIsNone(payload["article"])
+            self.assertNotIn("markdown", payload)
+            self.assertNotIn("article", payload)
             self.assertEqual(payload["metadata"]["title"], "Example Article")
             self.assertTrue(saved_path.exists())
             self.assertIn("# Example Article", saved_path.read_text(encoding="utf-8"))
-            self.assertEqual(captured["modes"], {"article", "markdown"})
-            self.assertIn("download:markdown_saved", payload["source_trail"])
+            self.assertEqual(captured["modes"], {"article", "markdown", "metadata"})
+            self.assertIn(
+                trace_facts(trace_event("download", "markdown", "saved")),
+                trace_facts(retained_view(payload, "diagnostics")["trace"]),
+            )
 
     def test_fetch_paper_payload_auto_filename_extracts_year_from_english_date(
         self,
@@ -576,7 +544,10 @@ class McpPayloadCacheTests(unittest.TestCase):
             self.assertTrue(saved_path.exists())
             self.assertIn(f"# {title}", saved_path.read_text(encoding="utf-8"))
             self.assertEqual(payload["metadata"]["published"], "20 October 2020")
-            self.assertIn("download:markdown_saved", payload["source_trail"])
+            self.assertIn(
+                trace_facts(trace_event("download", "markdown", "saved")),
+                trace_facts(retained_view(payload, "diagnostics")["trace"]),
+            )
 
     def test_fetch_paper_payload_save_markdown_skips_when_fulltext_markdown_unavailable(
         self,
@@ -584,14 +555,16 @@ class McpPayloadCacheTests(unittest.TestCase):
         envelope = FetchEnvelope(
             doi="10.1000/example",
             source="metadata_only",
-            has_fulltext=False,
-            content_kind="metadata_only",
-            warnings=[],
-            source_trail=["fallback:metadata_only"],
-            token_estimate=0,
             article=None,
             markdown=None,
             metadata=Metadata(title="Metadata Only"),
+            quality=Quality(
+                has_fulltext=False,
+                content_kind="metadata_only",
+                warnings=[],
+                token_estimate=0,
+            ),
+            trace=[trace_event("fallback", "metadata_only", "info")],
         )
 
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -606,13 +579,16 @@ class McpPayloadCacheTests(unittest.TestCase):
                 ),
             )
 
-            self.assertIsNone(payload["markdown"])
-            self.assertIsNone(payload["article"])
+            self.assertNotIn("markdown", payload)
+            self.assertNotIn("article", payload)
             self.assertFalse(
                 (download_dir / "unknown_unknown_Metadata_Only.md").exists()
             )
             self.assertIn(
-                "download:markdown_skipped_no_fulltext", payload["source_trail"]
+                trace_facts(
+                    trace_event("download", "markdown_skipped_no_fulltext", "info")
+                ),
+                trace_facts(retained_view(payload, "diagnostics")["trace"]),
             )
             self.assertTrue(
                 any(
@@ -652,8 +628,8 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
             self.assertFalse((download_dir / "10.1000_example.xml").exists())
             self.assertFalse((download_dir / "10.1000_example_assets").exists())
-            self.assertIsNone(payload["markdown"])
-            self.assertIsNone(payload["article"])
+            self.assertNotIn("markdown", payload)
+            self.assertNotIn("article", payload)
             listed = list_cached_payload(download_dir=download_dir)
             self.assertEqual(
                 [entry["kind"] for entry in listed["entries"]], ["markdown"]
@@ -778,9 +754,12 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
 
         self.assertEqual(payload["doi"], "10.1000/example")
-        self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
+        self.assertEqual(
+            retained_view(payload, "markdown"), "# Example Article\n\nExample body.\n"
+        )
         self.assertIn(
-            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"]
+            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+            retained_view(payload, "diagnostics")["quality"]["flags"],
         )
         mocked_fetch.assert_not_called()
 
@@ -810,7 +789,9 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
 
         self.assertEqual(payload["doi"], "10.1000/example")
-        self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
+        self.assertEqual(
+            retained_view(payload, "markdown"), "# Example Article\n\nExample body.\n"
+        )
         mocked_fetch.assert_not_called()
 
     def test_fetch_paper_payload_save_markdown_compacts_cached_sidecar_response(
@@ -818,7 +799,9 @@ class McpPayloadCacheTests(unittest.TestCase):
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
-            create_cached_fetch_envelope(download_dir, "10.1000/example")
+            create_cached_fetch_envelope(
+                download_dir, "10.1000/example", modes=["article", "markdown"]
+            )
 
             mocked_fetch = mock.Mock()
             payload = fetch_paper_payload(
@@ -838,11 +821,12 @@ class McpPayloadCacheTests(unittest.TestCase):
 
             saved_path = download_dir / "Example_2026_Example_Article.md"
             self.assertTrue(saved_path.exists())
-        self.assertIsNone(payload["markdown"])
-        self.assertIsNone(payload["article"])
+        self.assertNotIn("markdown", payload)
+        self.assertNotIn("article", payload)
         self.assertEqual(payload["metadata"]["title"], "Example Article")
         self.assertIn(
-            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"]
+            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+            retained_view(payload, "diagnostics")["quality"]["flags"],
         )
         mocked_fetch.assert_not_called()
 
@@ -871,7 +855,7 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
 
         self.assertEqual(payload["doi"], "10.1000/example")
-        self.assertIsNotNone(payload["article"])
+        self.assertIsNotNone(retained_view(payload, "article"))
         mocked_fetch.assert_called_once()
 
     def test_article_payload_preserves_asset_download_diagnostics(self) -> None:
@@ -884,6 +868,7 @@ class McpPayloadCacheTests(unittest.TestCase):
             "conversion_degraded",
             "conversion_degraded",
         ]
+        payload["assets"][0]["preview_accepted"] = False
         payload["assets"][0]["browser_backend"] = "camoufox"
         payload["assets"][0]["final_fetcher"] = "camoufox"
         payload["assets"][0]["recovery_attempts"] = [
@@ -894,7 +879,6 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "reason": "recovered",
             },
         ]
-        payload["quality"] = asdict(Quality())
         article = article_from_payload(payload)
 
         self.assertIsNotNone(article)
@@ -1006,7 +990,8 @@ class McpPayloadCacheTests(unittest.TestCase):
 
         self.assertEqual(payload["doi"], "10.1000/example")
         self.assertNotIn(
-            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION, payload["quality"]["flags"]
+            QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+            retained_view(payload, "diagnostics")["quality"]["flags"],
         )
         mocked_fetch.assert_called_once()
 
@@ -1017,13 +1002,18 @@ class McpPayloadCacheTests(unittest.TestCase):
             with self.subTest(source=source), tempfile.TemporaryDirectory() as tmpdir:
                 download_dir = Path(tmpdir)
                 doi = "10.1000/example"
-                create_cached_fetch_envelope(download_dir, doi, extraction_revision=5)
+                create_cached_fetch_envelope(
+                    download_dir,
+                    doi,
+                    modes=["article", "markdown"],
+                    extraction_revision=5,
+                )
                 path = fetch_envelope_cache_path(download_dir, doi)
                 cached = json.loads(path.read_text())
                 cached["payload"]["source"] = source
                 cached["payload"]["article"]["source"] = source
                 cached["payload"]["quality"]["extraction_revision"] = 5
-                cached["payload"]["article"]["quality"]["extraction_revision"] = 5
+                cached["payload"]["quality"]["extraction_revision"] = 5
                 path.write_text(json.dumps(cached))
                 inspection = FetchCache(download_dir)._inspect_fetch_envelope_sidecar(
                     doi, FetchPaperRequest(query=doi, modes=["article", "markdown"])
@@ -1051,9 +1041,14 @@ class McpPayloadCacheTests(unittest.TestCase):
                 fresh.assert_called_once()
                 self.assertNotIn(
                     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
-                    payload["quality"]["flags"],
+                    retained_view(payload, "diagnostics")["quality"]["flags"],
                 )
-                self.assertGreater(payload["quality"]["extraction_revision"], 5)
+                self.assertGreater(
+                    retained_view(payload, "diagnostics")["quality"][
+                        "extraction_revision"
+                    ],
+                    5,
+                )
 
     def test_fetch_cache_write_refreshes_index_with_scoped_entries(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:

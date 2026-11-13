@@ -1,4 +1,7 @@
 from __future__ import annotations
+from dataclasses import asdict
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 
 import json
 import os
@@ -206,7 +209,7 @@ def test_catalog_provider_sample_live_body_acceptance(
         },
         "preflight": None,
         "source": None,
-        "source_trail": [],
+        "trace": [],
         "acceptance": {
             "overall": "failed",
             "reason_code": "terminated_before_acceptance",
@@ -269,7 +272,7 @@ def test_catalog_provider_sample_live_body_acceptance(
             terminal_record["terminal"] = {
                 "status": "failed",
                 "reason_code": exc.status,
-                "stage": exc.stage,
+                "stage": exc.diagnostics.stage,
                 "message": redact_text_for_diagnostics(exc.reason)[:1000],
             }
             terminal_record["performance"] = {
@@ -277,8 +280,8 @@ def test_catalog_provider_sample_live_body_acceptance(
                 "fetch_wall_seconds": fetch_telemetry["fetch_wall_seconds"],
                 "total_seconds": round(time.monotonic() - sample_started_at, 3),
             }
-            terminal_record["source_trail"] = list(exc.source_trail or [])
-            terminal_record["failure_details"] = exc.details
+            terminal_record["trace"] = [asdict(event) for event in exc.trace]
+            terminal_record["failure_details"] = exc.diagnostics.details
             terminal_record["fetch_diagnostics"] = fetch_browser_diagnostics(
                 provider_output_dir,
                 provider=sample.provider,
@@ -296,8 +299,8 @@ def test_catalog_provider_sample_live_body_acceptance(
         )
         record_property("fetch_source", article.source)
         record_property(
-            "fetch_source_trail",
-            json.dumps(article.quality.source_trail, ensure_ascii=False),
+            "fetch_events",
+            json.dumps([asdict(event) for event in article.trace], ensure_ascii=False),
         )
         record_property("fetch_acceptance", acceptance.to_json())
         total_seconds = round(time.monotonic() - sample_started_at, 3)
@@ -338,7 +341,7 @@ def test_catalog_provider_sample_live_body_acceptance(
             "preflight": None,
             "fetch_diagnostics": fetch_diagnostics,
             "source": article.source,
-            "source_trail": list(article.quality.source_trail),
+            "trace": [asdict(event) for event in article.trace],
             "acceptance": acceptance.model_dump(mode="json"),
             "performance": {
                 "preflight_seconds": preflight_seconds,
@@ -388,8 +391,8 @@ def test_catalog_provider_sample_live_body_acceptance(
         assert article.sections
         assert sample.accepts_live_result(
             source=article.source,
-            source_trail=article.quality.source_trail,
-        ), article.quality.source_trail
+            events=article.trace,
+        ), article.trace
         assert acceptance.identity.status == IdentityAcceptanceStatus.RESOLVED
         assert acceptance.fetch.status == FetchAcceptanceStatus.OK
         assert acceptance.content.status == ContentAcceptanceStatus.FULLTEXT
@@ -458,13 +461,11 @@ def test_aip_cold_start_stability_uses_html_for_five_fresh_profiles(
             )
             article = envelope.article
             source = article.source if article is not None else None
-            source_trail = list(
-                article.quality.source_trail if article is not None else []
-            )
+            events = list(article.trace if article is not None else [])
             if not (
                 source == "aip_html"
-                and "fulltext:aip_html_ok" in source_trail
-                and "fulltext:aip_pdf_fallback_ok" not in source_trail
+                and trace_event("fulltext", "aip_html", "ok") in events
+                and trace_event("fulltext", "aip_pdf_fallback", "ok") not in events
                 and acceptance.overall == OverallAcceptanceStatus.COMPLETE
                 and acceptance.identity.status == IdentityAcceptanceStatus.RESOLVED
                 and acceptance.fetch.status == FetchAcceptanceStatus.OK
@@ -475,7 +476,7 @@ def test_aip_cold_start_stability_uses_html_for_five_fresh_profiles(
                     {
                         "attempt": attempt,
                         "source": source,
-                        "source_trail": source_trail,
+                        "trace": events,
                         "acceptance": acceptance.model_dump(mode="json"),
                     }
                 )
@@ -526,9 +527,9 @@ class LivePublisherTests(unittest.TestCase):
         self.assertTrue(
             sample.accepts_live_result(
                 source=article.source,
-                source_trail=article.quality.source_trail,
+                events=article.trace,
             ),
-            article.quality.source_trail,
+            article.trace,
         )
 
     def test_elsevier_url_live_recovers_doi_and_uses_official_fulltext(self) -> None:
@@ -541,8 +542,14 @@ class LivePublisherTests(unittest.TestCase):
 
         self.assertEqual(article.doi, ELSEVIER_SAMPLE.doi)
         self._assert_matches_sample(article, ELSEVIER_SAMPLE)
-        self.assertIn("resolve:url", article.quality.source_trail)
-        self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("resolve", "url", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
 
     def test_elsevier_old_doi_live_uses_official_pdf_fallback(self) -> None:
         self._require_env(*ELSEVIER_SAMPLE.required_env)
@@ -559,7 +566,10 @@ class LivePublisherTests(unittest.TestCase):
         self.assertEqual(article.doi, "10.1016/0304-4165(96)00054-2")
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_xml", "fail")),
+            trace_facts(article.trace),
+        )
         acquisition = article.acquisition
         self.assertIsNotNone(acquisition)
         self.assertEqual(acquisition.provider, "elsevier")
@@ -567,16 +577,24 @@ class LivePublisherTests(unittest.TestCase):
         self.assertIn(acquisition.route, {"pdf_api", "browser_pdf"})
         if acquisition.route == "pdf_api":
             self.assertEqual(acquisition.transport, "api")
-            self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
             self.assertIn(
-                "fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail
+                trace_facts(trace_event("fulltext", "elsevier_pdf_api", "ok")),
+                trace_facts(article.trace),
+            )
+            self.assertIn(
+                trace_facts(trace_event("fulltext", "elsevier_pdf_fallback", "ok")),
+                trace_facts(article.trace),
             )
         else:
             self.assertEqual(acquisition.transport, "browser")
             self.assertIn(
-                "fulltext:elsevier_browser_pdf_ok", article.quality.source_trail
+                trace_facts(trace_event("fulltext", "elsevier_browser_pdf", "ok")),
+                trace_facts(article.trace),
             )
-        self.assertNotIn("fulltext:elsevier_html_ok", article.quality.source_trail)
+        self.assertNotIn(
+            trace_facts(trace_event("fulltext", "elsevier_html", "ok")),
+            trace_facts(article.trace),
+        )
 
 
 if __name__ == "__main__":

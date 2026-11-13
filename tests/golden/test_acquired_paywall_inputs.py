@@ -92,7 +92,7 @@ def test_ieee_purchase_landing_preserves_real_abstract_without_fulltext_claim():
         acquisition_source="camoufox_browser",
     )
     client = ieee.IeeeClient(None, {})
-    payload = client._abstract_only_payload(landing, warnings=[], trace_markers=[])
+    payload = client._abstract_only_payload(landing, warnings=[], trace_events=[])
     article = client.to_article_model(metadata, payload)
     assert not article.quality.has_fulltext
     assert article.quality.content_kind == "abstract_only"

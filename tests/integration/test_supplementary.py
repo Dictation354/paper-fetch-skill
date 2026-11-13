@@ -124,7 +124,7 @@ def test_cli_single_downloads_only_material_and_writes_index(
     assert len(outputs) == 1
     payload = json.loads(outputs[0].read_text())
     assert payload["target"] == "supplementary"
-    assert payload["article"] is None and not payload["has_fulltext"]
+    assert payload["article"] is None and not payload["quality"]["has_fulltext"]
     materials = payload["supplementary"]["assets"]
     assert len(materials) == 1
     assert Path(materials[0]["path"]).read_bytes() == b"a,b\n1,2\n"
@@ -188,6 +188,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
     payload = fetch_paper_payload(
         query=DOI,
         target="supplementary",
+        preset="archive",
         download_dir=tmp_path / "single",
         save_markdown=True,
         env={},
@@ -201,6 +202,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
         batch_fetch_tool_async(
             queries=[DOI],
             target="supplementary",
+            preset="archive",
             download_dir=tmp_path / "batch",
             env={},
         )
@@ -277,11 +279,10 @@ def test_browser_index_accepts_paywalled_abstract_without_body(monkeypatch, tmp_
                 artifact_dir=tmp_path,
                 headless=True,
                 user_agent=None,
-                persist_storage_state=False,
             ),
             readiness=BrowserHtmlReadiness(wait_for_article_body=False),
             options=BrowserHtmlFetchOptions(supplementary_index=True),
         )
         assert result.final_url == abstract_url
         assert "support.csv" in result.html
-        assert result.staged_storage_state is None
+        assert not hasattr(result, "staged_storage_state")

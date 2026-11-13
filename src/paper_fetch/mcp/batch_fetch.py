@@ -59,15 +59,18 @@ from .acceptance_payloads import compact_acceptance_payload
 from .batch import _mcp_batch_failure, report_progress
 from .cache_payloads import (
     _MCP_DEFAULT_DOWNLOAD_DIR,
-    _resolve_download_dir,
 )
 from .fetch_tool import (
     SavedMarkdownResult,
     _call_service_resolve_paper,
+    resolve_fetch_scope,
     _markdown_output_dir_for_fetch_request,
     _save_markdown_result_for_fetch_request,
 )
 from .log_bridge import PaperFetchLogBridge
+from .content_store import DEFAULT_CONTENT_STORE, ContentStore, ContentSnapshot
+from .content_delivery import content_snapshot, attach_content_ref
+from .output_artifacts import artifact_payload
 from .provider_catalog import runtime_tool_version
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BatchFetchRequest, FetchStrategyInput
@@ -172,9 +175,12 @@ def _resolved_cache_dir(
     download_arg: Path | object,
     deps: MCPDeps,
 ) -> Path | None:
-    if request.no_download and not request.prefer_cache:
-        return None
-    return _resolve_download_dir(runtime_env, download_arg, deps=deps)
+    return resolve_fetch_scope(
+        request.to_fetch_request(request.queries[0]),
+        runtime_env=runtime_env,
+        download_dir=download_arg,
+        deps=deps,
+    )
 
 
 def _resolved_markdown_dir(
@@ -277,7 +283,7 @@ def _record_from_batch_result(
         if outcome.saved_markdown is not None:
             artifacts = (
                 ManifestOutputArtifactSpec(
-                    path=str(outcome.saved_markdown.path),
+                    path=str(outcome.saved_markdown.path.resolve()),
                     kind="saved_markdown",
                 ),
             )
@@ -413,49 +419,7 @@ def _compact_messages(values: Sequence[str]) -> list[str]:
 
 
 def _artifact_payloads(record: ManifestRecord) -> list[dict[str, Any]]:
-    payloads: list[dict[str, Any]] = []
-    for artifact in record.output_artifacts:
-        payload = {
-            "path": artifact.path,
-            "kind": artifact.kind,
-            "route": artifact.route,
-            "failure_code": artifact.failure_code,
-            "size": artifact.size,
-            "sha256": artifact.sha256,
-            "completed_at": artifact.completed_at.isoformat(),
-            "verification_status": artifact.verification_status.value,
-        }
-        payloads.append(payload)
-    return payloads
-
-
-def _bounded_content_by_record(
-    records: Sequence[ManifestRecord],
-    *,
-    envelopes: Mapping[tuple[int, int], FetchEnvelope],
-    limit: int,
-) -> tuple[dict[tuple[int, int], dict[str, Any]], int]:
-    eligible = [
-        record
-        for record in records
-        if (envelope := envelopes.get((record.index, record.attempt))) is not None
-        and envelope.markdown is not None
-    ]
-    remaining = limit
-    result: dict[tuple[int, int], dict[str, Any]] = {}
-    for position, record in enumerate(eligible):
-        markdown = envelopes[(record.index, record.attempt)].markdown or ""
-        slots = len(eligible) - position
-        share = remaining // slots if slots else 0
-        returned = markdown[:share]
-        remaining -= len(returned)
-        result[(record.index, record.attempt)] = {
-            "content": returned,
-            "content_available_chars": len(markdown),
-            "content_returned_chars": len(returned),
-            "content_truncated": len(returned) < len(markdown),
-        }
-    return result, limit - remaining
+    return [artifact_payload(artifact) for artifact in record.output_artifacts]
 
 
 def _compact_run_payload(
@@ -466,17 +430,9 @@ def _compact_run_payload(
     state: _CompactRunState,
     execution_count: int,
     cancelled: bool,
+    content_refs: Mapping[tuple[int, int], dict[str, Any] | None] | None = None,
 ) -> dict[str, Any]:
     ordered_records = sorted(records, key=lambda record: record.index)
-    content_payloads: dict[tuple[int, int], dict[str, Any]] = {}
-    content_returned_chars = 0
-    if request.detail == "bounded":
-        content_payloads, content_returned_chars = _bounded_content_by_record(
-            ordered_records,
-            envelopes=state.envelopes,
-            limit=request.content_max_chars,
-        )
-
     results: list[dict[str, Any]] = []
     for record in ordered_records:
         key = (record.index, record.attempt)
@@ -517,18 +473,14 @@ def _compact_run_payload(
         ):
             item["target"] = envelope.target
             item["supplementary"] = asdict(envelope.supplementary)
-        if request.detail == "bounded":
-            item.update(
-                content_payloads.get(
-                    key,
-                    {
-                        "content": None,
-                        "content_available_chars": None,
-                        "content_returned_chars": 0,
-                        "content_truncated": False,
-                    },
-                )
+        if envelope is not None:
+            metadata = (
+                envelope.article.metadata if envelope.article else envelope.metadata
             )
+            item["metadata"] = asdict(metadata) if metadata else None
+            attach_content_ref(item, (content_refs or {}).get(key))
+        else:
+            item["content_ref"] = None
         results.append(item)
 
     latest_sequences = sorted(
@@ -589,9 +541,15 @@ def _compact_run_payload(
             "not_scheduled_count": len(
                 state.prepared_indices - state.submitted_indices
             ),
-            "detail": request.detail,
-            "content_max_chars": request.content_max_chars,
-            "content_returned_chars": content_returned_chars,
+            "preset": request.preset,
+            "effective_options": request.effective_options(
+                download_dir=Path(records[0].request.parameters["download_dir"])
+                if records and records[0].request.parameters.get("download_dir")
+                else None,
+                markdown_dir=Path(records[0].request.parameters["markdown_output_dir"])
+                if records and records[0].request.parameters.get("markdown_output_dir")
+                else None,
+            ),
             "results": results,
             "completion_order": completion_order,
             "summary": {
@@ -622,6 +580,7 @@ async def _execute_batch_fetch(
     manifest_deps: ManifestBuilderDependencies,
     requested_run_id: UUID | None,
     tool_version: str,
+    content_store: ContentStore | None,
 ) -> dict[str, Any]:
     runtime_env = deps.build_runtime_env(env)
     download_arg = _download_argument(request)
@@ -862,6 +821,38 @@ async def _execute_batch_fetch(
             )
         ),
     )
+    content_refs = {}
+    owner_by_index = {
+        duplicate.index: owner
+        for owner, duplicates in duplicates_by_owner.items()
+        for duplicate in duplicates
+    }
+    snapshot_keys = {}
+    snapshots: list[ContentSnapshot] = []
+    for record in ordered_records:
+        key = (record.index, record.attempt)
+        envelope = envelopes.get(key)
+        if envelope is None:
+            continue
+        owner = owner_by_index.get(record.index, record.index)
+        if owner not in snapshot_keys:
+            snapshot_keys[owner] = len(snapshots)
+            snapshots.append(
+                content_snapshot(
+                    envelope,
+                    request.to_fetch_request(record.query),
+                    acceptance=record.acceptance.model_dump(mode="json"),
+                )
+            )
+    refs = (
+        content_store.register_many(snapshots)
+        if content_store is not None
+        else [None] * len(snapshots)
+    )
+    for record in ordered_records:
+        owner = owner_by_index.get(record.index, record.index)
+        if owner in snapshot_keys:
+            content_refs[(record.index, record.attempt)] = refs[snapshot_keys[owner]]
     return _compact_run_payload(
         request,
         run_id=active_run_id,
@@ -876,6 +867,7 @@ async def _execute_batch_fetch(
         ),
         execution_count=execution_count,
         cancelled=was_cancelled,
+        content_refs=content_refs,
     )
 
 
@@ -883,23 +875,23 @@ async def batch_fetch_tool_async(
     *,
     queries: list[str],
     target: str = "paper",
+    preset: str = "temporary_read",
     concurrency: int = 1,
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
-    max_tokens: int | str = "full_text",
-    prefer_cache: bool = False,
-    no_download: bool = False,
-    artifact_mode: ArtifactMode = "markdown-assets",
-    save_markdown: bool = False,
+    max_tokens: int | str | None = None,
+    prefer_cache: bool | None = None,
+    no_download: bool | None = None,
+    artifact_mode: ArtifactMode | None = None,
+    save_markdown: bool | None = None,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
-    detail: str = "compact",
-    content_max_chars: int = 20_000,
     continue_on_error: bool = True,
     batch_results: str | None = None,
     overwrite: bool = False,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
     deps: MCPDeps = default_mcp_deps(),
@@ -911,7 +903,7 @@ async def batch_fetch_tool_async(
     request_payload: dict[str, Any] = {
         name: input_values[name]
         for name in BatchFetchRequest.model_fields
-        if name != "download_dir"
+        if name != "download_dir" and input_values[name] is not None
     }
     if download_dir is not _MCP_DEFAULT_DOWNLOAD_DIR:
         request_payload["download_dir"] = (
@@ -936,6 +928,7 @@ async def batch_fetch_tool_async(
                 manifest_deps=manifest_deps,
                 requested_run_id=run_id,
                 tool_version=tool_version or runtime_tool_version(),
+                content_store=content_store,
             )
         return _tool_result(payload, is_error=False)
     except asyncio.CancelledError:

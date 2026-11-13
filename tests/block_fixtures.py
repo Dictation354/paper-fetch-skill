@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.providers import _springer_markdown
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -8,7 +9,6 @@ from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import (
-    _springer_html as springer_html,
     annualreviews as annualreviews_provider,
     pnas as pnas_provider,
     science as science_provider,
@@ -151,7 +151,7 @@ def _execute_html_block_fixture(fixture: BlockFixture) -> BlockReplayResult:
         "title": fixture.title,
     }
     if fixture.provider == "springer":
-        extraction = springer_html.extract_html_payload(
+        extraction = _springer_markdown.extract_html_payload(
             html_text,
             title=fixture.title,
             source_url=fixture.source_url,

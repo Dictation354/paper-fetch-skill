@@ -46,7 +46,10 @@ IncludeRefsMode = Literal["none", "top10", "all"]
 BatchCheckMode = Literal["metadata"]
 CacheDetail = Literal["full", "compact"]
 BrowserPreflightDetail = Literal["full", "compact"]
-BatchFetchDetail = Literal["compact", "bounded"]
+FetchPresetInput = Literal["temporary_read", "cacheable_read", "archive"]
+ContentViewInput = Literal["markdown", "article", "diagnostics"]
+ContentOffsetInput: TypeAlias = Annotated[int, Field(strict=True, ge=0)]
+ContentMaxCharsInput: TypeAlias = Annotated[int, Field(strict=True, ge=1, le=20_000)]
 
 ALLOWED_INCLUDE_REFS = set(get_args(IncludeRefsMode))
 
@@ -59,7 +62,7 @@ ALLOWED_ASSET_PROFILES = _allowed_values_from_literal(AssetProfile)
 ALLOWED_ARTIFACT_MODES = _allowed_values_from_literal(ArtifactMode)
 ALLOWED_OUTPUT_MODES = _allowed_values_from_literal(OutputMode)
 ALLOWED_BATCH_CHECK_MODES = set(get_args(BatchCheckMode))
-DEFAULT_MCP_MODES = ["article", "markdown"]
+DEFAULT_MCP_MODES = ["markdown"]
 DEFAULT_MCP_ARTIFACT_MODE: ArtifactMode = "markdown-assets"
 DEFAULT_INLINE_IMAGE_MAX_IMAGES = 3
 DEFAULT_INLINE_IMAGE_MAX_BYTES_PER_IMAGE = 2 * 1024 * 1024
@@ -67,7 +70,6 @@ DEFAULT_INLINE_IMAGE_MAX_TOTAL_BYTES = 8 * 1024 * 1024
 MAX_BATCH_QUERIES = 50
 
 ConcurrencyInput: TypeAlias = Annotated[int, Field(ge=1, le=8)]
-BatchContentMaxCharsInput: TypeAlias = Annotated[int, Field(ge=1, le=100_000)]
 
 
 def _coerce_optional_string_list(value: Any) -> Any:
@@ -190,18 +192,6 @@ def _normalize_browser_preflight_detail(value: Any) -> str:
     return normalized
 
 
-def _normalize_batch_fetch_detail(value: Any) -> str:
-    normalized = normalize_text(str(value or "")).lower()
-    allowed = set(get_args(BatchFetchDetail))
-    if normalized not in allowed:
-        raise ValueError(
-            f"unsupported batch_fetch detail {value!r}. Expected one of: "
-            + ", ".join(sorted(allowed))
-            + "."
-        )
-    return normalized
-
-
 def _normalize_max_tokens(value: Any) -> int | str:
     if isinstance(value, str):
         normalized = normalize_text(value).lower()
@@ -261,10 +251,6 @@ BrowserPreflightProviderInput: TypeAlias = Annotated[
 BrowserPreflightDetailInput: TypeAlias = Annotated[
     BrowserPreflightDetail,
     BeforeValidator(_normalize_browser_preflight_detail),
-]
-BatchFetchDetailInput: TypeAlias = Annotated[
-    BatchFetchDetail,
-    BeforeValidator(_normalize_batch_fetch_detail),
 ]
 BrowserPreflightTimeoutInput: TypeAlias = Annotated[int, Field(ge=1, le=600_000)]
 MaxTokensInput: TypeAlias = Annotated[
@@ -554,13 +540,53 @@ class _RenderOptionsRequest(BaseModel):
 class _FetchOptionsRequest(_RenderOptionsRequest):
     """Shared single- and batch-fetch fields and validation."""
 
+    include_refs: IncludeRefsInput | None = "all"
     target: Literal["paper", "supplementary"] = "paper"
+    preset: FetchPresetInput = "temporary_read"
     prefer_cache: bool = False
-    no_download: bool = False
-    artifact_mode: ArtifactModeInput = DEFAULT_MCP_ARTIFACT_MODE
+    no_download: bool = True
+    artifact_mode: ArtifactModeInput = "none"
     save_markdown: bool = False
     markdown_output_dir: str | None = None
     markdown_filename: str | None = None
+
+    @model_validator(mode="before")
+    @classmethod
+    def expand_preset(cls, value: Any) -> Any:
+        if not isinstance(value, dict):
+            return value
+        supplied = {key: val for key, val in value.items() if val is not None}
+        preset = supplied.get("preset", "temporary_read")
+        defaults = {
+            "modes": ["markdown"],
+            "include_refs": "all",
+            "max_tokens": "full_text",
+            "prefer_cache": preset in {"cacheable_read", "archive"},
+            "no_download": preset != "cacheable_read",
+            "artifact_mode": "none",
+            "save_markdown": preset == "archive",
+        }
+        strategy = supplied.get("strategy", {})
+        if isinstance(strategy, BaseModel):
+            strategy = strategy.model_dump(exclude_unset=True)
+        strategy = {"asset_profile": "none", **strategy}
+        if strategy["asset_profile"] in {"body", "all"}:
+            defaults.update(no_download=False, artifact_mode="markdown-assets")
+        if supplied.get("target") == "supplementary" and preset == "archive":
+            defaults.update(no_download=False, artifact_mode="markdown-assets")
+        return {**defaults, **supplied, "strategy": strategy}
+
+    def effective_options(
+        self, *, download_dir: Path | None = None, markdown_dir: Path | None = None
+    ) -> dict[str, Any]:
+        fields = set(_FetchOptionsRequest.model_fields) - {"preset"}
+        return {
+            **self.model_dump(mode="json", include=fields),
+            "download_dir": str(download_dir) if download_dir is not None else None,
+            "markdown_output_dir": str(markdown_dir)
+            if markdown_dir is not None
+            else self.markdown_output_dir,
+        }
 
     @field_validator("artifact_mode")
     @classmethod
@@ -592,6 +618,15 @@ class _FetchOptionsRequest(_RenderOptionsRequest):
                 else {"article", "markdown"}
             )
         return requested
+
+
+class ReadContentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    content_id: str = Field(min_length=1)
+    view: ContentViewInput = "markdown"
+    offset: ContentOffsetInput = 0
+    max_chars: ContentMaxCharsInput = 6000
 
 
 class FetchPaperRequest(_FetchOptionsRequest, _RequiredQueryRequest):
@@ -643,8 +678,6 @@ class BatchFetchRequest(_FetchOptionsRequest):
     queries: BatchQueriesInput
     concurrency: ConcurrencyInput = 1
     download_dir: str | None = None
-    detail: BatchFetchDetailInput = "compact"
-    content_max_chars: BatchContentMaxCharsInput = 20_000
     continue_on_error: bool = True
     batch_results: str | None = None
     overwrite: bool = False
@@ -653,11 +686,6 @@ class BatchFetchRequest(_FetchOptionsRequest):
     @classmethod
     def normalize_queries(cls, value: Any) -> list[str]:
         return _normalize_query_list(value)
-
-    @field_validator("detail")
-    @classmethod
-    def normalize_detail(cls, value: Any) -> str:
-        return _normalize_batch_fetch_detail(value)
 
     @field_validator(
         "download_dir",
@@ -722,11 +750,13 @@ class GetCachedRequest(_RenderOptionsRequest):
         return _normalize_cache_detail(value)
 
     def to_fetch_request(self) -> FetchPaperRequest:
-        request_fields = set(FetchPaperRequest.model_fields)
         return FetchPaperRequest.model_validate(
             {
                 "query": self.doi,
-                **self.model_dump(mode="python", include=request_fields),
+                "modes": self.modes,
+                "strategy": self.strategy.model_dump(exclude_unset=True),
+                "include_refs": self.include_refs,
+                "max_tokens": self.max_tokens,
             }
         )
 
@@ -751,11 +781,7 @@ class BrowserPreflightRequest(BaseModel):
     test_url: str | None = None
     timeout_ms: BrowserPreflightTimeoutInput | None = None
     browser_user_agent: str | None = None
-    storage_state_path: str | None = None
-    save_storage_state: bool = Field(
-        default=True,
-        description="Export a compatibility JSON snapshot; native persistent profiles are updated even when false.",
-    )
+    profile_dir: str | None = None
     detail: BrowserPreflightDetailInput = "full"
 
     @field_validator("test_url", "browser_user_agent", mode="before")
@@ -766,9 +792,9 @@ class BrowserPreflightRequest(BaseModel):
         normalized = normalize_text(str(value))
         return normalized or None
 
-    @field_validator("storage_state_path", mode="before")
+    @field_validator("profile_dir", mode="before")
     @classmethod
-    def normalize_storage_state_path(cls, value: Any) -> str | None:
+    def normalize_profile_dir(cls, value: Any) -> str | None:
         return _normalize_optional_string(value)
 
     @field_validator("test_url")
@@ -790,12 +816,10 @@ class BrowserPreflightRequest(BaseModel):
 
     @model_validator(mode="after")
     def validate_scoped_options(self) -> BrowserPreflightRequest:
-        if (self.test_url is not None or self.storage_state_path is not None) and (
+        if (self.test_url is not None or self.profile_dir is not None) and (
             self.provider is None
         ):
-            raise ValueError(
-                "test_url and storage_state_path require one explicit provider."
-            )
+            raise ValueError("test_url and profile_dir require one explicit provider.")
         return self
 
 
@@ -808,6 +832,7 @@ MCP_TOOL_REQUEST_MODELS: dict[str, type[BaseModel]] = {
     "batch_check": BatchCheckRequest,
     "batch_fetch": BatchFetchRequest,
     "provider_status": ProviderStatusRequest,
+    "read_content": ReadContentRequest,
     "browser_preflight": BrowserPreflightRequest,
 }
 

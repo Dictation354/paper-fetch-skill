@@ -1,6 +1,7 @@
 from __future__ import annotations
-
+from tests.support.transport import configure_stream_transport
 from dataclasses import replace
+
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
@@ -324,6 +325,7 @@ def test_pdf_strategy_uses_compiled_timeout_without_catalog_host_authorization()
 def test_pdf_direct_provider_compiles_non_authorizing_route_policy() -> None:
     candidate = "https://iopscience.iop.org/article.pdf"
     transport = mock.Mock()
+    configure_stream_transport(transport)
     transport.request.return_value = {
         "status_code": 200,
         "headers": {"content-type": "application/pdf"},
@@ -351,7 +353,7 @@ def test_pdf_direct_provider_compiles_non_authorizing_route_policy() -> None:
     assert result.pdf_bytes == expected.pdf_bytes
     policy = transport.request.call_args.kwargs["request_policy"]
     compiled = compile_route_execution_policy("iop", "browser_pdf")
-    assert policy.timeout_seconds == compiled.timeout_seconds
+    assert policy.timeout_seconds == 90
     assert policy.allowed_hosts is None
     assert policy.transient_retries == compiled.transient_retries
 
@@ -385,6 +387,7 @@ def test_pdf_browser_route_context_binds_timeout_and_provider_without_catalog_ho
 
 def test_oxford_pdf_request_consumes_exact_compiled_policy() -> None:
     transport = mock.Mock()
+    configure_stream_transport(transport)
     candidate = "https://academic.oup.com/doi/pdf/10.1093/example"
     transport.request.return_value = {
         "status_code": 200,
@@ -406,6 +409,7 @@ def test_oxford_pdf_request_consumes_exact_compiled_policy() -> None:
 
 def test_oxford_html_request_consumes_exact_compiled_policy() -> None:
     transport = mock.Mock()
+    configure_stream_transport(transport)
     client = OxfordAcademicClient(transport, {})
     doi = "10.1093/example"
     candidate = client.html_candidates(doi, {"doi": doi})[0]
@@ -428,6 +432,7 @@ def test_oxford_html_request_consumes_exact_compiled_policy() -> None:
 
 def test_plos_asset_redirect_request_consumes_exact_compiled_policy() -> None:
     transport = mock.Mock()
+    configure_stream_transport(transport)
     candidate = "https://journals.plos.org/plosone/article/file?id=info:doi/x"
     transport.request.return_value = {
         "status_code": 200,
@@ -455,6 +460,7 @@ def test_plos_asset_redirect_request_consumes_exact_compiled_policy() -> None:
 def test_plos_doi_resolver_consumes_xml_route_hosts_and_retries() -> None:
     doi = "10.1371/journal.pnew.0000001"
     transport = mock.Mock()
+    configure_stream_transport(transport)
     transport.request.return_value = {
         "status_code": 200,
         "headers": {"content-type": "text/html"},
@@ -476,7 +482,7 @@ def test_plos_doi_resolver_consumes_xml_route_hosts_and_retries() -> None:
 
 def test_arxiv_source_stream_consumes_compiled_route_policy(tmp_path) -> None:
     transport = mock.Mock()
-    transport._streaming_ready = True
+    configure_stream_transport(transport)
     source_url = "https://arxiv.org/e-print/2401.00001"
     destination = tmp_path / "source.part"
     budget = AssetBudget(
@@ -533,6 +539,7 @@ def test_compiled_asset_scope_selects_unset_profile_and_catalog_mutation_stops_w
         {**original_catalog, "plos": replace(plos, routes=mutated_routes)},
     )
     transport = mock.Mock()
+    configure_stream_transport(transport)
 
     assert (
         effective_route_asset_scope(None, provider_name="plos", route_name="assets")

@@ -21,7 +21,7 @@ def _preflight_result(
     ok: bool,
     reason: str | None = None,
     message: str | None = None,
-    storage_state_path: Path | None = None,
+    profile_dir: Path | None = None,
     storage_saved: bool = False,
 ) -> BrowserPreflightResult:
     return BrowserPreflightResult(
@@ -47,11 +47,11 @@ def _preflight_result(
         target_url=f"https://{provider}.example.test/article",
         final_url=f"https://{provider}.example.test/final" if ok else None,
         title=f"{provider} sample" if ok else None,
-        storage_state_path=storage_state_path,
+        profile_dir=profile_dir,
         diagnostics={
             "browser_runtime_trace": {
                 "storage_state_save": {
-                    "attempted": storage_state_path is not None,
+                    "attempted": profile_dir is not None,
                     "saved": storage_saved,
                 }
             }
@@ -63,15 +63,15 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
     tmp_path: Path,
 ) -> None:
     captured: dict[str, object] = {}
-    state_path = tmp_path / "wiley-state.json"
+    state_path = tmp_path / "wiley"
 
     def fake_preflight(**kwargs):
         captured.update(kwargs)
-        state_path.write_text('{"cookies": []}\n', encoding="utf-8")
+        state_path.mkdir()
         result = _preflight_result(
             "wiley",
             ok=True,
-            storage_state_path=state_path,
+            profile_dir=state_path,
             storage_saved=True,
         )
         kwargs["on_result"](result, 1, 1)
@@ -82,7 +82,7 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
         provider=" WILEY ",
         test_url="https://onlinelibrary.wiley.com/doi/full/10.1111/example",
         timeout_ms=45000,
-        storage_state_path=str(state_path),
+        profile_dir=str(state_path),
         detail="full",
         on_result=lambda result, completed, total: progress.append(
             (result.provider, completed, total)
@@ -93,26 +93,20 @@ def test_browser_preflight_payload_passes_scoped_live_and_storage_options(
         ),
     )
 
-    assert state_path.is_file()
+    assert state_path.is_dir()
     assert captured["providers"] == ["wiley"]
     assert captured["target_url"] == (
         "https://onlinelibrary.wiley.com/doi/full/10.1111/example"
     )
-    assert captured["storage_state_path"] == state_path
-    assert captured["save_storage_state"] is True
+    assert captured["profile_dir"] == state_path
+    assert "save_storage_state" not in captured
     assert captured["cancel_as_result"] is True
     assert captured["runtime_options"].env == {}
     assert progress == [("wiley", 1, 1)]
     assert payload["status"] == "ready"
     assert payload["pdf_fallback_attempted"] is False
     assert payload["auth_attempted"] is False
-    assert payload["results"][0]["storage_state"] == {
-        "path": str(state_path),
-        "save_requested": True,
-        "attempted": True,
-        "saved": True,
-        "reason": None,
-    }
+    assert payload["results"][0]["profile_dir"] == str(state_path)
 
 
 def test_browser_preflight_payload_keeps_per_provider_action_states() -> None:
@@ -169,7 +163,6 @@ def test_browser_preflight_compact_has_only_routing_fields() -> None:
     payload = browser_preflight_payload(
         provider="wiley",
         detail="compact",
-        save_storage_state=False,
         deps=mcp_test_deps(
             run_browser_provider_preflight=lambda **_kwargs: [
                 _preflight_result("wiley", ok=True)
@@ -187,7 +180,7 @@ def test_browser_preflight_compact_has_only_routing_fields() -> None:
             "next_action": "run the requested fetch",
         }
     ]
-    assert payload["storage_state_write_enabled"] is False
+    assert payload["native_profile_write_enabled"] is True
 
 
 @pytest.mark.parametrize(
@@ -199,7 +192,7 @@ def test_browser_preflight_compact_has_only_routing_fields() -> None:
             "test_url": "https://user:pass@example.test/article",
         },
         {"test_url": "https://example.test/article"},
-        {"storage_state_path": "/tmp/wiley.json"},
+        {"profile_dir": "/tmp/wiley.json"},
     ],
 )
 def test_browser_preflight_invalid_scoped_input_never_invokes_shared_core(

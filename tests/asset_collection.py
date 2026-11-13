@@ -1,5 +1,8 @@
 """Offline discovery of the fixed asset collection using existing provider owners."""
 
+from paper_fetch.providers import _springer_markdown
+
+
 import json
 from pathlib import Path
 from paper_fetch.providers import (
@@ -128,7 +131,6 @@ def source_markdown(row):
     from paper_fetch.providers import (
         copernicus,
         frontiers,
-        _springer_html,
         _oxfordacademic_html,
         _royalsocietypublishing_html,
         _ieee_html,
@@ -176,9 +178,9 @@ def source_markdown(row):
             markdown = frontiers._replace_markdown_urls(markdown, replacements)
         return markdown
     if provider == "springer":
-        return _springer_html.extract_html_payload(raw, url, title=metadata["title"])[
-            "markdown_text"
-        ]
+        return _springer_markdown.extract_html_payload(
+            raw, url, title=metadata["title"]
+        )["markdown_text"]
     if provider == "oxfordacademic":
         return _oxfordacademic_html.extract_markdown(
             raw, url, metadata=metadata

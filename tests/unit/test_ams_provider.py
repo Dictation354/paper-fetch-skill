@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.transport import configure_stream_transport
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from functools import cache
 import tempfile
 import unittest
@@ -24,7 +27,7 @@ from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._atypon_browser_workflow_provider_support import (
     AtyponBrowserWorkflowProviderTestCase,
     _payload_route,
-    _payload_source_trail,
+    _payload_events,
     _typed_raw_payload,
     fulltext_pdf_bytes,
 )
@@ -103,6 +106,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "ams", AMS_DOI)
             transport = mock.Mock()
+            configure_stream_transport(transport)
             client = AmsClient(transport=transport, env={})
             mocked_load_runtime = mock.Mock(return_value=runtime)
             mocked_ensure_runtime = mock.Mock()
@@ -140,7 +144,10 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(raw_payload.content.fetcher, "byparr")
         self.assertEqual(article.source, "ams_html")
-        self.assertIn("fulltext:ams_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ams_html", "ok")),
+            trace_facts(article.trace),
+        )
         mocked_load_runtime.assert_called_once_with(
             {},
             provider="ams",
@@ -216,7 +223,8 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertEqual(article.source, "ams_pdf")
         self.assertIn(
-            "fulltext:ams_pdf_fallback_ok", _payload_source_trail(raw_payload)
+            trace_facts(trace_event("fulltext", "ams_pdf_fallback", "ok")),
+            trace_facts(_payload_events(raw_payload)),
         )
 
     def test_ams_old_style_doi_builds_html_candidate_and_uses_explicit_pdf_candidates(
@@ -308,7 +316,7 @@ class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
             )
 
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-        self.assertEqual(raw_payload.source_url, citation_pdf_url)
+        self.assertEqual(raw_payload.content.source_url, citation_pdf_url)
         mocked_pdf.assert_called_once()
         self.assertEqual(
             mocked_pdf.call_args.kwargs["pdf_candidates"][0],

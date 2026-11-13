@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from .tracing import extend_trace
+
+from .tracing import TraceEvent
+
 import contextlib
 from dataclasses import dataclass, field
 import hashlib
@@ -19,7 +23,7 @@ from .config import APP_NAME
 from .extraction.html.assets.dom import preview_dimensions_are_acceptable
 from .models import ArticleModel, AssetProfile, AssetQualitySummary
 from .reason_codes import PDF_FALLBACK
-from .tracing import download_marker
+from .tracing import download_event
 from .utils import (
     _extract_year,
     build_output_path,
@@ -339,7 +343,7 @@ class ArtifactStore:
         content: Any,
         doi: str | None,
         metadata: Mapping[str, Any],
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[TraceEvent]]:
         if content is None or not content.needs_local_copy:
             return [], []
         provider_slug = (
@@ -350,7 +354,7 @@ class ArtifactStore:
         if self.download_dir is None:
             return [
                 f"{provider_label} official PDF/binary was not written to disk because artifact mode is none."
-            ], [download_marker(provider_slug, "skipped")]
+            ], [download_event(provider_slug, "skipped")]
         if not self.policy.allows_provider_payload(content):
             return [], []
         naming_metadata = _payload_naming_metadata(content, metadata)
@@ -367,10 +371,10 @@ class ArtifactStore:
             saved_path = self.write_bytes_file(output_path, content.body)
             return [
                 f"{provider_label} official full text was downloaded as PDF/binary to {saved_path}."
-            ], [download_marker(provider_slug, "saved")]
+            ], [download_event(provider_slug, "saved")]
         return [
             f"{provider_label} official full text was available only as PDF/binary and could not be written to disk."
-        ], [download_marker(f"{provider_slug}_save_failed")]
+        ], [download_event(f"{provider_slug}_save_failed")]
 
     def provider_html_output_path(
         self,
@@ -416,7 +420,7 @@ class ArtifactStore:
         content: Any,
         doi: str | None,
         metadata: Mapping[str, Any],
-    ) -> tuple[list[str], list[str]]:
+    ) -> tuple[list[str], list[TraceEvent]]:
         output_path = self.provider_html_output_path(
             provider_name,
             content=content,
@@ -427,7 +431,7 @@ class ArtifactStore:
             return [], []
         self.write_bytes_file(output_path, content.body)
         return [], [
-            download_marker(f"{normalize_text(provider_name).lower()}_html", "saved")
+            download_event(f"{normalize_text(provider_name).lower()}_html", "saved")
         ]
 
     def apply_provider_artifacts(
@@ -437,30 +441,28 @@ class ArtifactStore:
         artifacts: Any,
         asset_profile: AssetProfile,
         warnings: list[str],
-        source_trail: list[str],
+        events: list[TraceEvent],
     ) -> None:
         if self.asset_download_dir is None:
             return
         if asset_profile == "none":
-            extend_unique(
-                source_trail,
-                [download_marker(f"{provider_name}_assets_skipped_profile_none")],
+            extend_trace(
+                events,
+                [download_event(f"{provider_name}_assets_skipped_profile_none")],
             )
             return
-        skip_trace_markers = [
-            event.marker() for event in artifacts.skip_trace if event.marker()
-        ]
+        skip_trace_events = artifacts.skip_trace
         if artifacts.skip_warning:
             extend_unique(warnings, [artifacts.skip_warning])
-        if skip_trace_markers:
-            extend_unique(source_trail, skip_trace_markers)
+        if skip_trace_events:
+            extend_trace(events, skip_trace_events)
         if artifacts.skip_warning or artifacts.text_only:
             return
         if artifacts.assets:
-            extend_unique(
-                source_trail,
+            extend_trace(
+                events,
                 [
-                    download_marker(
+                    download_event(
                         f"{provider_name}_assets_saved_profile_{asset_profile}"
                     )
                 ],
@@ -475,9 +477,9 @@ class ArtifactStore:
             )
             preview_fallback_count = len(preview_assets) - preview_accepted_count
             if preview_accepted_count:
-                extend_unique(
-                    source_trail,
-                    [download_marker(f"{provider_name}_assets_preview", "accepted")],
+                extend_trace(
+                    events,
+                    [download_event(f"{provider_name}_assets_preview", "accepted")],
                 )
             if preview_fallback_count:
                 extend_unique(
@@ -489,9 +491,9 @@ class ArtifactStore:
                         )
                     ],
                 )
-                extend_unique(
-                    source_trail,
-                    [download_marker(f"{provider_name}_assets_preview_fallback")],
+                extend_trace(
+                    events,
+                    [download_event(f"{provider_name}_assets_preview_fallback")],
                 )
         if artifacts.asset_failures:
             asset_failure_message = (
@@ -503,9 +505,7 @@ class ArtifactStore:
                 warnings,
                 [f"{asset_failure_message}({len(artifacts.asset_failures)} failed)."],
             )
-            extend_unique(
-                source_trail, [download_marker(f"{provider_name}_asset_failures")]
-            )
+            extend_trace(events, [download_event(f"{provider_name}_asset_failures")])
 
     def audit_article_assets(
         self,

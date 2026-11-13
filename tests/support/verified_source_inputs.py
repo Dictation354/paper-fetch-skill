@@ -1,6 +1,8 @@
 """Identity checks on captured publisher originals, without network or conversion."""
 
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+
 
 from urllib.parse import urlsplit
 import unicodedata
@@ -266,7 +268,6 @@ def build_verified_source_article(row: dict):
     from paper_fetch.providers import _ieee_html, _ieee_metadata
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
     from paper_fetch.providers.ieee import IeeeClient
-    from paper_fetch.tracing import trace_from_markers
 
     landing_path = row.get("identity_companion") or row["source"]
     metadata = _ieee_metadata._parse_landing_metadata(
@@ -295,7 +296,7 @@ def build_verified_source_article(row: dict):
             },
             extracted_assets=extraction.extracted_assets,
         ),
-        trace=trace_from_markers(["fulltext:ieee_html_ok"]),
+        trace=[trace_event("fulltext", "ieee_html", "ok")],
     )
     return IeeeClient(HttpTransport(), {}).to_article_model(
         {"doi": row["doi"]}, payload

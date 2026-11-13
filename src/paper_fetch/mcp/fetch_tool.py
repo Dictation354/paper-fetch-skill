@@ -1,6 +1,8 @@
 """MCP fetch, resolve, probe, and provider-status payload shaping."""
 
 from __future__ import annotations
+from ..capability_scope import CapabilityScopeBuilder
+from ..config import DOWNLOAD_DIR_ENV_VAR
 
 import asyncio
 import base64
@@ -35,19 +37,26 @@ from .acceptance_payloads import (
     expected_doi_from_query,
 )
 from .batch import report_progress, run_blocking_call
+from .content_store import DEFAULT_CONTENT_STORE, ContentStore
+from .content_delivery import handle_payload
+from .output_artifacts import fetch_output_artifacts
 from .cache_payloads import _MCP_DEFAULT_DOWNLOAD_DIR, _resolve_download_dir
 from .cache_index import read_scoped_file
 from ._deps import MCPDeps, default_mcp_deps
 from .fetch_cache import (
     FetchCache,
     FetchCacheDependencies,
-    credential_scope_from_env,
     envelope_capability_scope,
     mark_envelope_capability_scope,
     payload_from_envelope as _payload_from_envelope,
 )
 from .log_bridge import PaperFetchLogBridge
-from .results import _tool_result, error_payload_from_exception, with_schema_version
+from .results import (
+    ToolArgumentError,
+    _tool_result,
+    error_payload_from_exception,
+    with_schema_version,
+)
 from .schemas import (
     FetchPaperRequest,
     FetchStrategyInput,
@@ -66,6 +75,7 @@ def _service_modes_for_fetch_request(
     include_article_for_assets: bool,
 ) -> set[str]:
     requested_modes = request.requested_modes()
+    requested_modes.add("metadata")
     if (
         request.target == "paper"
         and include_article_for_assets
@@ -80,6 +90,19 @@ def _needs_download_dir_for_fetch(request: FetchPaperRequest) -> bool:
     return not request.no_download or request.prefer_cache
 
 
+def _configured_fetch_dir(
+    runtime_env: Mapping[str, str],
+    download_dir: Path | None | object,
+    *,
+    deps: MCPDeps,
+) -> Path | None:
+    if download_dir is _MCP_DEFAULT_DOWNLOAD_DIR and not normalize_text(
+        runtime_env.get(DOWNLOAD_DIR_ENV_VAR)
+    ):
+        return None
+    return _resolve_download_dir(runtime_env, download_dir, deps=deps)
+
+
 def _markdown_output_dir_for_fetch_request(
     request: FetchPaperRequest,
     *,
@@ -89,13 +112,41 @@ def _markdown_output_dir_for_fetch_request(
 ) -> Path:
     if request.markdown_output_dir is not None:
         return Path(request.markdown_output_dir).expanduser()
-    resolved_download_dir = _resolve_download_dir(runtime_env, download_dir, deps=deps)
-    if resolved_download_dir is not None:
-        return resolved_download_dir
-    return (
-        _resolve_download_dir(runtime_env, _MCP_DEFAULT_DOWNLOAD_DIR, deps=deps)
-        or Path.cwd()
+    resolved_download_dir = _configured_fetch_dir(runtime_env, download_dir, deps=deps)
+    if resolved_download_dir is None:
+        raise ToolArgumentError(
+            "save_markdown requires markdown_output_dir or download_dir."
+        )
+    return resolved_download_dir
+
+
+def resolve_fetch_scope(
+    request: FetchPaperRequest,
+    *,
+    runtime_env: Mapping[str, str],
+    download_dir: Path | None | object,
+    deps: MCPDeps = default_mcp_deps(),
+) -> Path | None:
+    if request.save_markdown:
+        _markdown_output_dir_for_fetch_request(
+            request, runtime_env=runtime_env, download_dir=download_dir, deps=deps
+        )
+    if not _needs_download_dir_for_fetch(request):
+        return None
+    scope = (
+        Path(request.markdown_output_dir).expanduser()
+        if download_dir is _MCP_DEFAULT_DOWNLOAD_DIR
+        and request.save_markdown
+        and request.markdown_output_dir
+        else _configured_fetch_dir(runtime_env, download_dir, deps=deps)
     )
+    if scope is None and request.save_markdown and request.markdown_output_dir:
+        scope = Path(request.markdown_output_dir).expanduser()
+    if scope is None:
+        raise ToolArgumentError(
+            "This request requires download_dir or a configured cache scope."
+        )
+    return scope.resolve()
 
 
 @dataclass(frozen=True)
@@ -146,7 +197,7 @@ def _save_markdown_result_for_fetch_request(
             credential_scope = (
                 capability_scope_from_runtime_context(context)
                 if context is not None
-                else credential_scope_from_env(runtime_env)
+                else CapabilityScopeBuilder(runtime_env).build()
             )
         FetchCache(
             saved_path.parent,
@@ -249,10 +300,8 @@ def _fetch_paper_envelope(
 ) -> FetchEnvelope:
     with context.fetch_browser_preparation():
         runtime_env = dict(context.env or {})
-        cache_download_dir = (
-            _resolve_download_dir(runtime_env, download_dir, deps=deps)
-            if _needs_download_dir_for_fetch(request)
-            else None
+        cache_download_dir = resolve_fetch_scope(
+            request, runtime_env=runtime_env, download_dir=download_dir, deps=deps
         )
         service_download_dir = None if request.no_download else cache_download_dir
 
@@ -263,6 +312,7 @@ def _fetch_paper_envelope(
             deps=deps,
         )
         if cached_envelope is not None:
+            cached_envelope.__dict__["_effective_download_dir"] = cache_download_dir
             return cached_envelope
 
         previous_store = context.artifact_store
@@ -304,6 +354,7 @@ def _fetch_paper_envelope(
                 credential_scope=final_scope,
                 deps=deps,
             )
+        envelope.__dict__["_effective_download_dir"] = cache_download_dir
         return envelope
 
 
@@ -328,26 +379,38 @@ def _fetch_request_from_inputs(
     *,
     query: str,
     target: str = "paper",
+    preset: str = "temporary_read",
     modes: list[str] | None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None,
     include_refs: str | None,
-    max_tokens: int | str,
-    prefer_cache: bool,
-    no_download: bool,
-    artifact_mode: ArtifactMode,
-    save_markdown: bool,
+    max_tokens: int | str | None,
+    prefer_cache: bool | None,
+    no_download: bool | None,
+    artifact_mode: ArtifactMode | None,
+    save_markdown: bool | None,
     markdown_output_dir: str | None,
     markdown_filename: str | None,
 ) -> FetchPaperRequest:
     # The adapter signature intentionally mirrors the public tool. Strict model
     # validation makes its parameter names the only remaining duplicated contract.
-    return FetchPaperRequest.model_validate(locals())
+    return FetchPaperRequest.model_validate(
+        {key: value for key, value in locals().items() if value is not None}
+    )
 
 
 def _response_payload_from_envelope(
-    envelope: FetchEnvelope, request: FetchPaperRequest
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+    *,
+    saved_path: Path | None = None,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
+    response_warnings: list[str] | None = None,
 ) -> dict[str, Any]:
     payload = _payload_from_envelope(envelope, request)
+    if response_warnings:
+        warnings = list(payload.get("warnings") or [])
+        extend_unique(warnings, response_warnings)
+        payload["warnings"] = warnings
     acceptance = evaluate_fetch_acceptance(
         envelope,
         asset_profile=effective_asset_profile(
@@ -367,15 +430,15 @@ def _response_payload_from_envelope(
         else "ok"
     )
     payload["acceptance"] = compact_acceptance_payload(acceptance)
-    if not request.save_markdown:
-        return payload
-
-    article_payload = payload.get("article")
-    if payload.get("metadata") is None and isinstance(article_payload, Mapping):
-        payload["metadata"] = article_payload.get("metadata")
-    payload["markdown"] = None
-    payload["article"] = None
-    return payload
+    payload["output_artifacts"] = fetch_output_artifacts(
+        saved_path, envelope.diagnostic_artifacts
+    )
+    payload["preset"] = request.preset
+    payload["effective_options"] = request.effective_options(
+        download_dir=getattr(envelope, "_effective_download_dir", None),
+        markdown_dir=saved_path.parent if saved_path else None,
+    )
+    return handle_payload(payload, envelope, request, content_store)
 
 
 def resolve_paper_payload(
@@ -414,16 +477,18 @@ def fetch_paper_payload(
     *,
     query: str,
     target: str = "paper",
+    preset: str = "temporary_read",
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
-    max_tokens: int | str = "full_text",
-    prefer_cache: bool = False,
-    no_download: bool = False,
-    artifact_mode: ArtifactMode = "markdown-assets",
-    save_markdown: bool = False,
+    max_tokens: int | str | None = None,
+    prefer_cache: bool | None = None,
+    no_download: bool | None = None,
+    artifact_mode: ArtifactMode | None = None,
+    save_markdown: bool | None = None,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     transport: HttpTransport | None = None,
@@ -433,6 +498,7 @@ def fetch_paper_payload(
     request = _fetch_request_from_inputs(
         query=query,
         target=target,
+        preset=preset,
         modes=modes,
         strategy=strategy,
         include_refs=include_refs,
@@ -445,10 +511,8 @@ def fetch_paper_payload(
         markdown_filename=markdown_filename,
     )
     runtime_env = deps.build_runtime_env(env)
-    cache_download_dir = (
-        _resolve_download_dir(runtime_env, download_dir, deps=deps)
-        if _needs_download_dir_for_fetch(request)
-        else None
+    cache_download_dir = resolve_fetch_scope(
+        request, runtime_env=runtime_env, download_dir=download_dir, deps=deps
     )
     owns_context = context is None
     runtime_context = context or RuntimeContext(
@@ -466,7 +530,7 @@ def fetch_paper_payload(
             deps=deps,
         )
         runtime_context.raise_if_cancelled()
-        _save_markdown_for_fetch_request(
+        saved_path = _save_markdown_for_fetch_request(
             envelope,
             request,
             env=runtime_env,
@@ -474,7 +538,9 @@ def fetch_paper_payload(
             context=runtime_context,
             deps=deps,
         )
-        payload = _response_payload_from_envelope(envelope, request)
+        payload = _response_payload_from_envelope(
+            envelope, request, saved_path=saved_path, content_store=content_store
+        )
         return with_schema_version(payload)
     finally:
         if owns_context:
@@ -607,9 +673,11 @@ def build_fetch_tool_result(
     request: FetchPaperRequest,
     *,
     download_dir: Path | None = None,
+    saved_path: Path | None = None,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
 ) -> CallToolResult:
-    payload = _response_payload_from_envelope(envelope, request)
     extra_content: list[TextContent | ImageContent] = []
+    image_warnings: list[str] = []
 
     resolved_asset_profile = effective_asset_profile(
         request.strategy.asset_profile,
@@ -621,10 +689,14 @@ def build_fetch_tool_result(
             budget=request.strategy.resolved_inline_image_budget(),
             download_dir=download_dir,
         )
-        warnings = list(payload.get("warnings") or [])
-        extend_unique(warnings, image_warnings)
-        payload["warnings"] = warnings
 
+    payload = _response_payload_from_envelope(
+        envelope,
+        request,
+        saved_path=saved_path,
+        content_store=content_store,
+        response_warnings=image_warnings,
+    )
     return _tool_result(payload, is_error=False, extra_content=extra_content)
 
 
@@ -689,6 +761,9 @@ def _fetch_error_payload(
                 asset_profile="all",
                 failure_code=payload.get("status", "error"),
                 expected_doi=expected_doi_from_query(query),
+                doi=payload.get("doi"),
+                source=payload.get("provider"),
+                candidate_count=len(payload.get("candidates") or []),
             )
         )
     return payload
@@ -698,16 +773,18 @@ async def fetch_paper_tool_async(
     *,
     query: str,
     target: str = "paper",
+    preset: str = "temporary_read",
     modes: list[str] | None = None,
     strategy: FetchStrategyInput | Mapping[str, Any] | None = None,
     include_refs: str | None = None,
-    max_tokens: int | str = "full_text",
-    prefer_cache: bool = False,
-    no_download: bool = False,
-    artifact_mode: ArtifactMode = "markdown-assets",
-    save_markdown: bool = False,
+    max_tokens: int | str | None = None,
+    prefer_cache: bool | None = None,
+    no_download: bool | None = None,
+    artifact_mode: ArtifactMode | None = None,
+    save_markdown: bool | None = None,
     markdown_output_dir: str | None = None,
     markdown_filename: str | None = None,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
     env: Mapping[str, str] | None = None,
     download_dir: Path | None | object = _MCP_DEFAULT_DOWNLOAD_DIR,
     ctx: Context | None = None,
@@ -720,6 +797,7 @@ async def fetch_paper_tool_async(
         request = _fetch_request_from_inputs(
             query=query,
             target=target,
+            preset=preset,
             modes=modes,
             strategy=strategy,
             include_refs=include_refs,
@@ -742,13 +820,11 @@ async def fetch_paper_tool_async(
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
     cancelled = threading.Event()
     runtime_context: RuntimeContext | None = None
-    markdown_saved = False
+    saved_path: Path | None = None
     try:
         runtime_env = deps.build_runtime_env(env)
-        cache_download_dir = (
-            _resolve_download_dir(runtime_env, download_dir, deps=deps)
-            if _needs_download_dir_for_fetch(request)
-            else None
+        cache_download_dir = resolve_fetch_scope(
+            request, runtime_env=runtime_env, download_dir=download_dir, deps=deps
         )
         runtime_context = RuntimeContext(
             env=runtime_env,
@@ -758,7 +834,7 @@ async def fetch_paper_tool_async(
         )
 
         def fetch_and_save() -> FetchEnvelope:
-            nonlocal markdown_saved
+            nonlocal saved_path
             assert runtime_context is not None
             try:
                 envelope = deps.fetch_paper_envelope(
@@ -769,16 +845,13 @@ async def fetch_paper_tool_async(
                     deps=deps,
                 )
                 runtime_context.raise_if_cancelled()
-                markdown_saved = (
-                    _save_markdown_for_fetch_request(
-                        envelope,
-                        request,
-                        env=runtime_env,
-                        download_dir=download_dir,
-                        context=runtime_context,
-                        deps=deps,
-                    )
-                    is not None
+                saved_path = _save_markdown_for_fetch_request(
+                    envelope,
+                    request,
+                    env=runtime_env,
+                    download_dir=download_dir,
+                    context=runtime_context,
+                    deps=deps,
                 )
                 return envelope
             finally:
@@ -807,8 +880,10 @@ async def fetch_paper_tool_async(
             envelope,
             request,
             download_dir=resolved_download_dir,
+            saved_path=saved_path,
+            content_store=content_store,
         )
-        result.meta = {"paper_fetch": {"markdown_saved": markdown_saved}}
+        result.meta = {"paper_fetch": {"markdown_saved": saved_path is not None}}
         await report_progress(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper complete"
         )

@@ -1,6 +1,6 @@
 from __future__ import annotations
-from tests.support.browser_preflight import _runtime_config
 from dataclasses import replace
+from tests.support.browser_preflight import _runtime_config
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -90,7 +90,10 @@ def test_static_browser_capabilities_never_claims_live_health() -> None:
                 "playwright_dependency",
                 "ok",
                 "dependencies import",
-                details={"packages": {"playwright": True, "camoufox": True}},
+                details={
+                    "runtime_valid": True,
+                    "packages": {"playwright": True, "camoufox": True},
+                },
             ),
         ],
     )
@@ -171,12 +174,8 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
     assert (
         result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322"
     )
-    assert result.storage_state_path == (
-        tmp_path
-        / "paper-fetch"
-        / "publisher-browser-profiles"
-        / "wiley-camoufox"
-        / "storage-state.json"
+    assert result.profile_dir == (
+        tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
     )
     assert captured["publisher"] == "wiley"
     assert captured["candidate_urls"] == [
@@ -187,7 +186,7 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
     assert isinstance(runtime, BrowserRuntimeConfig)
     assert (
         runtime.user_data_dir
-        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley-camoufox"
+        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
     )
     ensure_runtime_ready.assert_called_once_with(runtime)
     runtime_env = captured["env"]
@@ -268,7 +267,6 @@ def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
 
     runtime = replace(
         _runtime_config(tmp_path, provider="wiley", doi="10.1111/gcb.15322"),
-        persist_storage_state=False,
     )
     context = Context()
 
@@ -309,7 +307,6 @@ def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
         result = browser_preflight.preflight_browser_provider(
             "wiley",
             env={},
-            save_storage_state=False,
         )
 
     assert result.status == "ready", (result.message, result.diagnostics)
@@ -371,13 +368,12 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
             "wiley",
             env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
             target_url=target_url,
-            storage_state_path=state_path,
-            save_storage_state=False,
+            profile_dir=state_path,
         )
 
     assert result.ready is True
     assert result.target_url == target_url
-    assert result.storage_state_path == state_path
+    assert result.profile_dir == state_path
     assert captured["doi"] == "10.1111/custom.123"
     assert captured["publisher"] == "wiley"
     candidate_urls = captured["candidate_urls"]
@@ -385,10 +381,8 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
     assert candidate_urls[0] == target_url
     runtime = captured["config"]
     assert isinstance(runtime, BrowserRuntimeConfig)
-    assert runtime.storage_state_path == state_path
+    assert runtime.profile_dir == state_path
     assert runtime.user_data_dir is None
-    assert runtime.profile_dir is None
-    assert runtime.persist_storage_state is False
 
 
 def test_ieee_preflight_requires_matching_article_with_full_readiness_window(
@@ -430,7 +424,6 @@ def test_ieee_preflight_requires_matching_article_with_full_readiness_window(
         result = browser_preflight.preflight_browser_provider(
             "ieee",
             env={XDG_DATA_HOME_ENV_VAR: str(tmp_path)},
-            save_storage_state=False,
         )
 
     assert result.ready is True
@@ -493,7 +486,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
     def fetch_html_with_browser(candidate_urls, *, publisher, config, **kwargs):
         del publisher, kwargs
         captured["candidate_urls"] = list(candidate_urls)
-        captured["persist_storage_state"] = config.persist_storage_state
+        captured["profile_dir"] = config.profile_dir
         return BrowserFetchedHtml(
             source_url=candidate_urls[1],
             final_url=(
@@ -536,7 +529,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
 
     assert result.ready is True
     assert result.provider == "aip"
-    assert result.storage_state_path.name == "storage-state.json"
+    assert result.profile_dir.name == "aip"
     assert captured["candidate_urls"] == [
         (
             "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/"
@@ -545,7 +538,7 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
         "https://pubs.aip.org/doi/full/10.1063/5.0129134",
         "https://pubs.aip.org/doi/10.1063/5.0129134",
     ]
-    assert captured["persist_storage_state"] is True
+    assert captured["profile_dir"] in (None, result.profile_dir)
 
 
 def test_browser_preflight_uses_provider_html_candidates_for_royal_society(
@@ -684,10 +677,7 @@ def test_browser_preflight_records_failure_and_continues(tmp_path: Path) -> None
     diagnostic = results[0].diagnostics["failure_diagnostic"]
     assert diagnostic["stage"] == "browser_context_create"
     assert diagnostic["raw_html"] is None
-    assert (
-        results[0].storage_state_path
-        == tmp_path / "profiles" / "science" / "storage-state.json"
-    )
+    assert results[0].profile_dir == tmp_path / "profiles" / "science"
     assert results[1].ready is True
 
 

@@ -5,7 +5,6 @@ from __future__ import annotations
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, cast
-from .schema import EXTRACTION_REVISION
 from . import (
     ArticleModel,
     Asset,
@@ -14,19 +13,11 @@ from . import (
     Quality,
     Reference,
     Section,
-    TokenEstimateBreakdown,
-    build_token_estimate_breakdown,
-    coerce_asset_failure_diagnostics,
     coerce_asset_provenance,
     coerce_asset_timing,
-    coerce_asset_quality_summary,
     coerce_acquisition_provenance,
-    coerce_body_quality_metrics,
-    coerce_semantic_losses,
-    coerce_token_estimate_breakdown,
 )
-from ..reason_codes import METADATA_ONLY
-from ..tracing import TraceContext, TraceEvent, trace_event
+from ..tracing import TraceEvent
 from ..utils import normalize_text
 
 
@@ -58,71 +49,12 @@ def metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
     )
 
 
-def derived_breakdown(
-    *,
-    metadata: Metadata | None,
-    sections: Sequence[Section],
-    references: Sequence[Reference],
-) -> TokenEstimateBreakdown:
-    return build_token_estimate_breakdown(
-        abstract_text=metadata.abstract if metadata is not None else None,
-        sections=sections,
-        references=references,
-    )
-
-
 def trace_from_payload(value: Any) -> list[TraceEvent]:
-    if not isinstance(value, list):
-        return []
-    trace: list[TraceEvent] = []
-    for entry in value:
-        if not isinstance(entry, Mapping):
-            continue
-        trace.append(
-            trace_event(
-                normalize_text(entry.get("stage")) or "trace",
-                normalize_text(entry.get("component")) or "unknown",
-                normalize_text(entry.get("outcome")) or "info",
-                code=normalize_text(entry.get("code")) or None,
-                message=normalize_text(entry.get("message")) or None,
-                context=TraceContext(
-                    provider=normalize_text(entry.get("provider")) or None,
-                    route=normalize_text(entry.get("route")) or None,
-                    span_id=normalize_text(entry.get("span_id")) or None,
-                    attempt_id=normalize_text(entry.get("attempt_id")) or None,
-                    parent_span_id=normalize_text(entry.get("parent_span_id")) or None,
-                    attempt=_coerce_cached_int(entry.get("attempt")),
-                    http_status=_coerce_cached_int(entry.get("http_status")),
-                    error_category=normalize_text(entry.get("error_category")) or None,
-                    retryable=(
-                        entry.get("retryable")
-                        if isinstance(entry.get("retryable"), bool)
-                        else None
-                    ),
-                    retry_after_seconds=_coerce_cached_int(
-                        entry.get("retry_after_seconds")
-                    ),
-                    target=normalize_text(entry.get("target")) or None,
-                    target_sha256=normalize_text(entry.get("target_sha256")) or None,
-                    started_at=(
-                        float(entry["started_at"])
-                        if isinstance(entry.get("started_at"), int | float)
-                        else None
-                    ),
-                    finished_at=(
-                        float(entry["finished_at"])
-                        if isinstance(entry.get("finished_at"), int | float)
-                        else None
-                    ),
-                    duration_ms=(
-                        float(entry["duration_ms"])
-                        if isinstance(entry.get("duration_ms"), int | float)
-                        else None
-                    ),
-                ),
-            )
-        )
-    return trace
+    if not isinstance(value, list) or any(
+        not isinstance(entry, Mapping) for entry in value
+    ):
+        raise ValueError("trace must be a list of structured TraceEvent objects")
+    return [TraceEvent(**dict(entry)) for entry in value]
 
 
 def dedupe_quality_flags(values: Sequence[str] | None) -> list[str]:
@@ -138,64 +70,10 @@ def _coerce_cached_int(value: Any) -> int | None:
     return int(text) if text.isdigit() else None
 
 
-def _cached_preview_accepted(entry: Mapping[str, Any]) -> bool:
-    value = entry.get("preview_accepted")
-    if isinstance(value, bool):
-        return value
-    if normalize_text(entry.get("download_tier")).lower() != "preview":
-        return False
-    from ..extraction.html.assets.dom import preview_dimensions_are_acceptable
-
-    return preview_dimensions_are_acceptable(
-        _coerce_cached_int(entry.get("width")) or 0,
-        _coerce_cached_int(entry.get("height")) or 0,
-    )
-
-
 def quality_from_payload(value: Mapping[str, Any] | None) -> Quality:
-    payload = value or {}
-    from .schema import ContentKind, QualityConfidence
-
-    return Quality(
-        has_fulltext=bool(payload.get("has_fulltext")),
-        content_kind=cast(
-            ContentKind, normalize_text(payload.get("content_kind")) or METADATA_ONLY
-        ),
-        has_abstract=bool(payload.get("has_abstract")),
-        token_estimate=int(payload.get("token_estimate") or 0),
-        warnings=[
-            normalize_text(item)
-            for item in payload.get("warnings") or []
-            if normalize_text(item)
-        ],
-        source_trail=[
-            normalize_text(item)
-            for item in payload.get("source_trail") or []
-            if normalize_text(item)
-        ],
-        token_estimate_breakdown=coerce_token_estimate_breakdown(
-            payload.get("token_estimate_breakdown")
-        ),
-        confidence=cast(
-            QualityConfidence, normalize_text(payload.get("confidence")) or "low"
-        ),
-        flags=dedupe_quality_flags(payload.get("flags") or []),
-        body_metrics=coerce_body_quality_metrics(
-            payload.get("body_metrics")
-            if isinstance(payload.get("body_metrics"), Mapping)
-            else None
-        ),
-        semantic_losses=coerce_semantic_losses(
-            payload.get("semantic_losses")
-            if isinstance(payload.get("semantic_losses"), Mapping)
-            else None
-        ),
-        asset_failures=coerce_asset_failure_diagnostics(payload.get("asset_failures")),
-        asset_summary=coerce_asset_quality_summary(payload.get("asset_summary")),
-        extraction_revision=int(
-            payload.get("extraction_revision") or EXTRACTION_REVISION
-        ),
-    )
+    if not isinstance(value, Mapping):
+        raise ValueError("quality is required")
+    return Quality(**dict(value))
 
 
 def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None:
@@ -227,12 +105,6 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
     quality = quality_from_payload(
         value.get("quality") if isinstance(value.get("quality"), Mapping) else None
     )
-    if quality.token_estimate_breakdown == TokenEstimateBreakdown():
-        quality.token_estimate_breakdown = derived_breakdown(
-            metadata=metadata,
-            sections=sections,
-            references=references,
-        )
     from .schema import SourceKind
 
     return ArticleModel(
@@ -262,7 +134,7 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
                 downloaded_bytes=_coerce_cached_int(entry.get("downloaded_bytes")),
                 width=_coerce_cached_int(entry.get("width")),
                 height=_coerce_cached_int(entry.get("height")),
-                preview_accepted=_cached_preview_accepted(entry),
+                preview_accepted=bool(entry["preview_accepted"]),
                 browser_backend=normalize_text(entry.get("browser_backend")) or None,
                 final_fetcher=normalize_text(entry.get("final_fetcher")) or None,
                 recovery_attempts=[
@@ -277,78 +149,58 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
             if isinstance(entry, Mapping)
         ],
         quality=quality,
+        trace=trace_from_payload(value["trace"]),
     )
 
 
 def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
-    article = article_from_payload(
-        payload.get("article") if isinstance(payload.get("article"), Mapping) else None
-    )
-    metadata = metadata_from_payload(
-        payload.get("metadata")
-        if isinstance(payload.get("metadata"), Mapping)
-        else None
-    )
-    breakdown = coerce_token_estimate_breakdown(payload.get("token_estimate_breakdown"))
-    raw_quality_payload = payload.get("quality")
-    quality_payload: Mapping[str, Any] | None = (
-        raw_quality_payload if isinstance(raw_quality_payload, Mapping) else None
-    )
-    trace = trace_from_payload(payload.get("trace"))
-    quality = (
-        article.quality
-        if article is not None
-        else quality_from_payload(quality_payload)
-    )
-    if breakdown == TokenEstimateBreakdown():
-        if article is not None:
-            breakdown = article.quality.token_estimate_breakdown
-        elif metadata is not None:
-            breakdown = derived_breakdown(metadata=metadata, sections=[], references=[])
-    if quality.token_estimate_breakdown == TokenEstimateBreakdown():
-        quality.token_estimate_breakdown = breakdown
-    if quality.token_estimate == 0:
-        quality.token_estimate = int(payload.get("token_estimate") or 0)
-    from .schema import ContentKind, SourceKind
-
     from .schema import SupplementaryResult
 
+    forbidden = {
+        "has_fulltext",
+        "content_kind",
+        "has_abstract",
+        "warnings",
+        "source_trail",
+        "token_estimate",
+        "token_estimate_breakdown",
+    }
+    if forbidden.intersection(payload) or not isinstance(
+        payload.get("quality"), Mapping
+    ):
+        raise ValueError("Unsupported fetch-envelope structure.")
+    quality = quality_from_payload(payload["quality"])
+    acquisition = coerce_acquisition_provenance(payload["acquisition"])
+    trace = trace_from_payload(payload["trace"])
+    article_payload = payload.get("article")
+    if isinstance(article_payload, Mapping):
+        if {"quality", "acquisition", "trace"}.intersection(article_payload):
+            raise ValueError("Envelope article must contain content fields only.")
+        article = article_from_payload(
+            {
+                **article_payload,
+                "quality": payload["quality"],
+                "acquisition": payload["acquisition"],
+                "trace": payload["trace"],
+            }
+        )
+    else:
+        article = None
     supplementary = payload.get("supplementary")
     return FetchEnvelope(
-        target=payload.get("target", "paper"),
+        doi=payload["doi"],
+        source=payload["source"],
+        target=payload["target"],
         supplementary=SupplementaryResult(**supplementary)
         if isinstance(supplementary, Mapping)
         else None,
-        doi=normalize_text(payload.get("doi")) or None,
-        source=cast(SourceKind, normalize_text(payload.get("source")) or METADATA_ONLY),
-        has_fulltext=bool(payload.get("has_fulltext")),
-        acquisition=coerce_acquisition_provenance(payload.get("acquisition")),
-        content_kind=cast(
-            ContentKind, normalize_text(payload.get("content_kind")) or METADATA_ONLY
-        ),
-        has_abstract=bool(payload.get("has_abstract")),
-        warnings=[
-            normalize_text(item)
-            for item in payload.get("warnings") or []
-            if normalize_text(item)
-        ],
-        source_trail=[
-            normalize_text(item)
-            for item in payload.get("source_trail") or []
-            if normalize_text(item)
-        ],
-        trace=trace,
-        token_estimate=int(payload.get("token_estimate") or 0),
-        token_estimate_breakdown=breakdown,
         quality=quality,
+        acquisition=acquisition,
+        trace=trace,
         article=article,
-        markdown=payload.get("markdown"),
-        metadata=metadata,
-        diagnostic_artifacts=[
-            dict(item)
-            for item in payload.get("diagnostic_artifacts") or []
-            if isinstance(item, Mapping)
-        ],
+        markdown=payload["markdown"],
+        metadata=metadata_from_payload(payload.get("metadata")),
+        diagnostic_artifacts=[dict(item) for item in payload["diagnostic_artifacts"]],
     )
 
 
@@ -356,4 +208,8 @@ def model_to_payload(
     model: Metadata | Quality | ArticleModel | FetchEnvelope,
 ) -> dict[str, Any]:
     """Encode exactly the public dataclass wire shape."""
-    return asdict(model)
+    payload = asdict(model)
+    if isinstance(model, FetchEnvelope) and payload["article"] is not None:
+        for key in ("quality", "acquisition", "trace"):
+            payload["article"].pop(key)
+    return payload

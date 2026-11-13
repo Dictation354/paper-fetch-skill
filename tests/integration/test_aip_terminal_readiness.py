@@ -156,7 +156,6 @@ def test_aip_terminal_challenge_saves_diagnostic_and_advances_candidate(
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
-            persist_storage_state=False,
         )
         with RuntimeContext(
             env={}, download_dir=tmp_path, artifact_mode="all"

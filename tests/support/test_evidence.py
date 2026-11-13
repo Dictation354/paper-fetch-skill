@@ -7,6 +7,7 @@ same read set, including the cross-worker canonical build envelope.
 
 from __future__ import annotations
 
+
 import ast
 from collections import defaultdict
 from contextlib import contextmanager

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from functools import cache
 import json
 from pathlib import Path
@@ -27,7 +29,6 @@ from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
 from paper_fetch.providers.tandf import TandfClient
-from paper_fetch.tracing import trace_from_markers
 
 
 STRUCTURE_DOI = "10.1080/15481603.2026.2667034"
@@ -77,21 +78,23 @@ def _render_article_markdown(doi: str) -> str:
     )
     payload = RawFulltextPayload(
         provider="tandf",
-        source_url=source_url,
-        content_type="text/html",
-        body=html_text.encode("utf-8"),
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=html_text.encode("utf-8"),
+                markdown_text=markdown,
+                diagnostics={
+                    "extraction": extraction,
+                    "availability_diagnostics": extraction["availability_diagnostics"],
+                },
+            ),
             source_url=source_url,
             content_type="text/html",
             body=html_text.encode("utf-8"),
-            markdown_text=markdown,
-            diagnostics={
-                "extraction": extraction,
-                "availability_diagnostics": extraction["availability_diagnostics"],
-            },
         ),
-        trace=trace_from_markers(["fulltext:tandf_html_ok"]),
+        trace=[trace_event("fulltext", "tandf_html", "ok")],
     )
     article = TandfClient(None, {}).to_article_model(metadata, payload)
     return article.to_ai_markdown(include_refs="all", max_tokens="full_text")
@@ -592,15 +595,17 @@ def test_tandf_download_related_assets_contract_marker(monkeypatch, tmp_path) ->
         {"doi": STRUCTURE_DOI},
         RawFulltextPayload(
             provider="tandf",
-            source_url=f"https://www.tandfonline.com/doi/full/{STRUCTURE_DOI}",
-            content_type="text/html",
-            body=b"<html></html>",
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=f"https://www.tandfonline.com/doi/full/{STRUCTURE_DOI}",
+                    content_type="text/html",
+                    body=b"<html></html>",
+                    markdown_text="# Taylor & Francis Online",
+                ),
                 source_url=f"https://www.tandfonline.com/doi/full/{STRUCTURE_DOI}",
                 content_type="text/html",
                 body=b"<html></html>",
-                markdown_text="# Taylor & Francis Online",
             ),
         ),
         tmp_path,
@@ -617,15 +622,17 @@ def test_tandf_download_related_assets_contract_marker(monkeypatch, tmp_path) ->
 def test_tandf_article_source_tracks_pdf_fallback_payload() -> None:
     payload = RawFulltextPayload(
         provider="tandf",
-        source_url=f"https://www.tandfonline.com/doi/pdf/{STRUCTURE_DOI}",
-        content_type="application/pdf",
-        body=b"%PDF-1.7",
-        content=ProviderContent(
-            route_kind="pdf_fallback",
+        content=replace(
+            ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"https://www.tandfonline.com/doi/pdf/{STRUCTURE_DOI}",
+                content_type="application/pdf",
+                body=b"%PDF-1.7",
+                markdown_text="# PDF text",
+            ),
             source_url=f"https://www.tandfonline.com/doi/pdf/{STRUCTURE_DOI}",
             content_type="application/pdf",
             body=b"%PDF-1.7",
-            markdown_text="# PDF text",
         ),
     )
 

@@ -1,3 +1,4 @@
+from paper_fetch.tracing import trace_event
 from dataclasses import replace
 from types import SimpleNamespace
 from unittest import mock
@@ -228,11 +229,11 @@ def test_index_save_and_cache_round_trip(tmp_path):
         )
 
 
-def test_target_cache_isolation_and_default_fingerprint_compatibility():
+def test_target_cache_isolation_has_explicit_request_target():
     paper = FetchPaperRequest(query=DOI)
     supplementary = FetchPaperRequest(query=DOI, target="supplementary")
     payload = request_cache_payload(paper)
-    assert "target" not in payload
+    assert payload["target"] == "paper"
     assert cache_request_fingerprint(DOI, payload) != cache_request_fingerprint(
         DOI, request_cache_payload(supplementary)
     )
@@ -398,3 +399,101 @@ def test_browser_discovery_preserves_failures_and_recovered_assets(
     if archive and has_attachment:
         assert result.assets[0]["path"] == "support.csv"
     assert transport.calls == []
+
+
+@pytest.mark.parametrize("provider_failure", [True, False])
+def test_supplementary_failure_preserves_resolved_identity_and_provenance(
+    monkeypatch, provider_failure
+):
+    from paper_fetch.workflow import supplementary as workflow
+    from paper_fetch.mcp.fetch_tool import _fetch_error_payload
+    from tests.support._mcp_support import sample_resolved_query
+
+    client = mock.Mock()
+    client.fetch_supplementary.side_effect = ProviderFailure(
+        "not_supported", "No materials route"
+    )
+    resolved = sample_resolved_query(DOI)
+    monkeypatch.setattr(
+        workflow, "resolve_query_with_session_cache", lambda *a, **k: resolved
+    )
+    monkeypatch.setattr(
+        workflow,
+        "fetch_metadata_for_resolved_query",
+        lambda *a, **k: (
+            {"doi": DOI},
+            "crossref",
+            [trace_event("metadata", "crossref", "info")],
+        ),
+    )
+    monkeypatch.setattr(
+        workflow,
+        "_ranked_fulltext_provider_candidates",
+        lambda **k: [("crossref", None, None)] if provider_failure else [],
+    )
+    with RuntimeContext(env={}, clients={"crossref": client}) as context:
+        with pytest.raises(service.PaperFetchFailure) as caught:
+            workflow.fetch_supplementary(
+                DOI,
+                strategy=service.FetchStrategy(),
+                context=context,
+                modes={"markdown"},
+                resolve_paper_fn=mock.Mock(),
+            )
+        failure = caught.value
+        assert context.fetch_trace == failure.trace
+    payload = _fetch_error_payload(failure, target="supplementary", query=DOI)
+    assert payload["doi"] == DOI
+    assert payload["provider"] == "crossref"
+    assert payload["stage"] == "supplementary"
+    assert payload["target"] == "supplementary"
+    assert payload["route"] is None
+    assert payload["retryable"] is False
+    assert payload["trace"] and "source_trail" not in payload
+    assert payload["acceptance"]["identity"] == "resolved"
+    from paper_fetch.manifest import build_manifest_record
+
+    record = build_manifest_record(
+        tool_version="test",
+        index=1,
+        attempt=1,
+        query=DOI,
+        request_parameters={"target": "supplementary"},
+        asset_profile="all",
+        error=payload,
+        expected_doi=DOI,
+    )
+    assert record.identity.status == "resolved"
+    assert record.doi == DOI
+
+
+def test_supplementary_metadata_failure_keeps_resolved_doi_and_collected_trace(
+    monkeypatch,
+):
+    from paper_fetch.workflow import supplementary as workflow
+    from tests.support._mcp_support import sample_resolved_query
+    from paper_fetch.tracing import trace_event
+
+    resolved = sample_resolved_query(DOI)
+    event = trace_event("metadata", "crossref", "fail", code="not_supported")
+    monkeypatch.setattr(
+        workflow, "resolve_query_with_session_cache", lambda *a, **k: resolved
+    )
+
+    def fail(*args, context, **kwargs):
+        context.fetch_trace.append(event)
+        raise ProviderFailure("not_supported", "No metadata route")
+
+    monkeypatch.setattr(workflow, "fetch_metadata_for_resolved_query", fail)
+    with RuntimeContext(env={}, clients={}) as context:
+        with pytest.raises(service.PaperFetchFailure) as caught:
+            workflow.fetch_supplementary(
+                DOI,
+                strategy=service.FetchStrategy(),
+                context=context,
+                modes={"markdown"},
+                resolve_paper_fn=mock.Mock(),
+            )
+    assert caught.value.doi == DOI
+    assert event in caught.value.trace
+    assert caught.value.trace

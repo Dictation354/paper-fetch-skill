@@ -23,6 +23,7 @@ from .cache_payloads import (
     get_cached_tool,
     list_cached_tool,
 )
+from .content_store import ContentStore, read_content_tool
 from .fetch_tool import (
     fetch_paper_tool_async,
     provider_status_tool,
@@ -36,14 +37,16 @@ from .schemas import (
     MCP_TOOL_REQUEST_MODELS,
     ArtifactModeInput,
     BatchCheckModeInput,
-    BatchContentMaxCharsInput,
-    BatchFetchDetailInput,
     BatchQueriesInput,
     BrowserPreflightDetailInput,
     BrowserPreflightProviderInput,
     BrowserPreflightTimeoutInput,
     CacheDetailInput,
     ConcurrencyInput,
+    FetchPresetInput,
+    ContentViewInput,
+    ContentOffsetInput,
+    ContentMaxCharsInput,
     FetchStrategyToolInput,
     IncludeRefsInput,
     MaxTokensInput,
@@ -151,6 +154,7 @@ def _browser_preflight_annotations() -> ToolAnnotations:
 
 def build_server() -> PaperFetchMCPServer:
     deps = default_mcp_deps()
+    content_store = ContentStore()
     server = PaperFetchMCPServer(
         name="paper-fetch",
         instructions=server_instructions(),
@@ -199,14 +203,15 @@ def build_server() -> PaperFetchMCPServer:
     async def fetch_paper(
         query: str,
         target: Literal["paper", "supplementary"] = "paper",
+        preset: FetchPresetInput = "temporary_read",
         modes: OutputModesInput | None = None,
         strategy: FetchStrategyToolInput | None = None,
         include_refs: IncludeRefsInput | None = None,
-        max_tokens: MaxTokensInput = "full_text",
-        prefer_cache: bool = False,
-        no_download: bool = False,
-        artifact_mode: ArtifactModeInput = "markdown-assets",
-        save_markdown: bool = False,
+        max_tokens: MaxTokensInput | None = None,
+        prefer_cache: bool | None = None,
+        no_download: bool | None = None,
+        artifact_mode: ArtifactModeInput | None = None,
+        save_markdown: bool | None = None,
         markdown_output_dir: str | None = None,
         markdown_filename: str | None = None,
         download_dir: str | None = None,
@@ -220,6 +225,8 @@ def build_server() -> PaperFetchMCPServer:
         return await fetch_paper_tool_async(
             query=query,
             target=target,
+            preset=preset,
+            content_store=content_store,
             modes=[str(mode) for mode in modes] if modes is not None else None,
             strategy=strategy,
             include_refs=include_refs,
@@ -237,6 +244,26 @@ def build_server() -> PaperFetchMCPServer:
             ctx=ctx,
             deps=deps,
             **tool_kwargs,
+        )
+
+    @server.tool(
+        name="read_content",
+        description="Read a retained markdown, article JSON, or diagnostics JSON snapshot without network or file writes. Offsets use Unicode code points; continue with next_offset. eof completes this representation, not necessarily an untruncated original rendering.",
+        annotations=_read_only_annotations(open_world=False),
+        structured_output=False,
+    )
+    def read_content(
+        content_id: str,
+        view: ContentViewInput = "markdown",
+        offset: ContentOffsetInput = 0,
+        max_chars: ContentMaxCharsInput = 6000,
+    ) -> CallToolResult:
+        return read_content_tool(
+            content_store,
+            content_id=content_id,
+            view=view,
+            offset=offset,
+            max_chars=max_chars,
         )
 
     @server.tool(
@@ -313,13 +340,11 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="batch_fetch",
         description=(
-            "Fetch 1..50 papers with bounded concurrency and input-ordered compact "
-            "manifest/acceptance results. It may access remote services and write the "
-            "same cache, artifacts, or Markdown as fetch_paper. detail=bounded returns "
-            "only a batch-wide bounded text sample. batch_results atomically writes "
-            "the final input-ordered JSONL result; overwrite defaults false. "
-            "Each batch checks managed Camoufox once at start, including HTTP/cache "
-            "hits (default official/prerelease allows stable and prerelease builds; official/stable excludes prereleases; explicit channel/pins take priority)."
+            "Fetch up to 50 known papers with the same presets and explicit overrides as fetch_paper. "
+            "Return input-ordered metadata, acceptance, content_ref handles and output_artifacts. "
+            "Canonical aliases share one acquisition and content handle. "
+            "batch_results explicitly opts into an atomic input-ordered JSONL manifest. "
+            "Use read_content for body content."
         ),
         annotations=_fetch_annotations(),
         structured_output=False,
@@ -327,20 +352,19 @@ def build_server() -> PaperFetchMCPServer:
     async def batch_fetch(
         queries: BatchQueriesInput,
         target: Literal["paper", "supplementary"] = "paper",
+        preset: FetchPresetInput = "temporary_read",
         concurrency: ConcurrencyInput = 1,
         modes: OutputModesInput | None = None,
         strategy: FetchStrategyToolInput | None = None,
         include_refs: IncludeRefsInput | None = None,
-        max_tokens: MaxTokensInput = "full_text",
-        prefer_cache: bool = False,
-        no_download: bool = False,
-        artifact_mode: ArtifactModeInput = "markdown-assets",
-        save_markdown: bool = False,
+        max_tokens: MaxTokensInput | None = None,
+        prefer_cache: bool | None = None,
+        no_download: bool | None = None,
+        artifact_mode: ArtifactModeInput | None = None,
+        save_markdown: bool | None = None,
         markdown_output_dir: str | None = None,
         markdown_filename: str | None = None,
         download_dir: str | None = None,
-        detail: BatchFetchDetailInput = "compact",
-        content_max_chars: BatchContentMaxCharsInput = 20_000,
         continue_on_error: bool = True,
         batch_results: str | None = None,
         overwrite: bool = False,
@@ -354,6 +378,8 @@ def build_server() -> PaperFetchMCPServer:
         return await batch_fetch_tool_async(
             queries=queries,
             target=target,
+            preset=preset,
+            content_store=content_store,
             concurrency=concurrency,
             modes=[str(mode) for mode in modes] if modes is not None else None,
             strategy=strategy,
@@ -369,8 +395,6 @@ def build_server() -> PaperFetchMCPServer:
                 else None
             ),
             markdown_filename=markdown_filename,
-            detail=detail,
-            content_max_chars=content_max_chars,
             continue_on_error=continue_on_error,
             batch_results=batch_results,
             overwrite=overwrite,
@@ -411,7 +435,7 @@ def build_server() -> PaperFetchMCPServer:
         description=(
             "Live-check the shared browser HTML path for one provider or all browser "
             "providers. This prepares managed Camoufox before launch, opens publisher "
-            "pages, and updates native publisher profiles. save_storage_state controls only "
+            "pages, and updates native publisher profiles. "
             "JSON snapshot export; it never runs PDF fallback "
             "or automatic authentication."
         ),
@@ -423,8 +447,7 @@ def build_server() -> PaperFetchMCPServer:
         test_url: str | None = None,
         timeout_ms: BrowserPreflightTimeoutInput | None = None,
         browser_user_agent: str | None = None,
-        storage_state_path: str | None = None,
-        save_storage_state: bool = True,
+        profile_dir: str | None = None,
         detail: BrowserPreflightDetailInput = "full",
         ctx: Context | None = None,
     ) -> CallToolResult:
@@ -433,8 +456,7 @@ def build_server() -> PaperFetchMCPServer:
             test_url=test_url,
             timeout_ms=timeout_ms,
             browser_user_agent=browser_user_agent,
-            storage_state_path=storage_state_path,
-            save_storage_state=save_storage_state,
+            profile_dir=profile_dir,
             detail=detail,
             ctx=ctx,
             deps=deps,

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from tests.support.markdown_presentation import visible_markdown
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from tests.block_fixtures import block_asset
@@ -16,7 +18,6 @@ from paper_fetch.providers import _annualreviews_html, browser_runtime
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers.annualreviews import AnnualreviewsClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.tracing import trace_from_markers
 from tests.support.captured_images import download_captured_images
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
@@ -75,17 +76,19 @@ def test_pdf_fallback_contract_uses_pdf_magic_and_annualreviews_pdf_source() -> 
     body = golden_criteria_asset(PDF_FALLBACK_DOI, "original.pdf").read_bytes()
     raw_payload = RawFulltextPayload(
         provider="annualreviews",
-        source_url=f"https://www.annualreviews.org/doi/pdf/{PDF_FALLBACK_DOI}",
-        content_type="application/pdf",
-        body=body,
-        content=ProviderContent(
-            route_kind="pdf_fallback",
+        content=replace(
+            ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"https://www.annualreviews.org/doi/pdf/{PDF_FALLBACK_DOI}",
+                content_type="application/pdf",
+                body=body,
+                markdown_text="# Annual Reviews PDF\n\nBody text",
+            ),
             source_url=f"https://www.annualreviews.org/doi/pdf/{PDF_FALLBACK_DOI}",
             content_type="application/pdf",
             body=body,
-            markdown_text="# Annual Reviews PDF\n\nBody text",
         ),
-        trace=trace_from_markers(["fulltext:annualreviews_pdf_fallback_ok"]),
+        trace=[trace_event("fulltext", "annualreviews_pdf_fallback", "ok")],
     )
 
     assert body.startswith(b"%PDF")
@@ -209,21 +212,25 @@ def test_article_model_uses_extracted_html_title_instead_of_doi_placeholder() ->
     )
     raw_payload = RawFulltextPayload(
         provider="annualreviews",
-        source_url=HTML_SOURCE_URL,
-        content_type="text/html",
-        body=html.encode("utf-8"),
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=HTML_SOURCE_URL,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                markdown_text=markdown,
+                diagnostics={
+                    "extraction": extraction,
+                    "availability_diagnostics": extraction.get(
+                        "availability_diagnostics"
+                    ),
+                },
+            ),
             source_url=HTML_SOURCE_URL,
             content_type="text/html",
             body=html.encode("utf-8"),
-            markdown_text=markdown,
-            diagnostics={
-                "extraction": extraction,
-                "availability_diagnostics": extraction.get("availability_diagnostics"),
-            },
         ),
-        trace=trace_from_markers(["fulltext:annualreviews_html_ok"]),
+        trace=[trace_event("fulltext", "annualreviews_html", "ok")],
     )
 
     article = client.to_article_model(

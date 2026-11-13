@@ -1,5 +1,8 @@
 """Real formula bytes remain tied to their JATS objects through final output."""
 
+from paper_fetch.models import Quality
+
+
 import pytest
 
 from paper_fetch.models import FetchEnvelope, RenderOptions
@@ -53,7 +56,10 @@ def test_captured_plos_partial_formulas_keep_identity_in_saved_markdown(
     saved = rewrite_markdown_asset_links(
         markdown,
         FetchEnvelope(
-            doi=fixture.doi, source=article.source, article=article, has_fulltext=True
+            doi=fixture.doi,
+            source=article.source,
+            article=article,
+            quality=Quality(has_fulltext=True),
         ),
         target_path=tmp_path / "article.md",
         render=RenderOptions(),

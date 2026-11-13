@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support._mcp_support import retained_view
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 import asyncio
 import tempfile
 import threading
@@ -25,11 +28,10 @@ from paper_fetch.mcp.fetch_tool import (
 from paper_fetch.mcp.results import error_payload_from_exception
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.mcp.server import build_server
-from paper_fetch.models import EXTRACTION_REVISION, RenderOptions
+from paper_fetch.models import RenderOptions
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, HasFulltextProbeResult, PaperFetchFailure
-from paper_fetch.tracing import trace_event
 from tests.support._mcp_support import (
     assert_mcp_tool_omits_output_schema,
     create_cached_downloads,
@@ -80,6 +82,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         fetch_paper_payload(
             query="10.1000/example",
+            download_dir=Path("/tmp/downloads"),
             strategy={"asset_profile": "body"},
             max_tokens="full_text",
             deps=mcp_test_deps(
@@ -92,7 +95,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(
             captured["render"],
             RenderOptions(
-                include_refs=None, asset_profile="body", max_tokens="full_text"
+                include_refs="all", asset_profile="body", max_tokens="full_text"
             ),
         )
         self.assertEqual(captured["strategy"], FetchStrategy(asset_profile="body"))
@@ -125,6 +128,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         fetch_paper_payload(
             query="10.1000/example",
+            download_dir=Path("/tmp/downloads"),
             strategy={
                 "asset_profile": "body",
                 "inline_image_budget": {
@@ -144,7 +148,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
     def test_fetch_paper_tool_success_preserves_fixed_top_level_fields_and_null_payloads(
         self,
     ) -> None:
-        envelope = sample_envelope(modes={"markdown"})
+        envelope = sample_envelope(modes={"markdown", "metadata"})
 
         result = asyncio.run(
             fetch_paper_tool_async(
@@ -160,21 +164,14 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         payload = result.structured_content
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["source"], "elsevier_xml")
-        self.assertTrue(payload["has_fulltext"])
+        self.assertTrue(payload["acceptance"]["has_fulltext"])
         self.assertEqual(payload["warnings"], ["example warning"])
-        self.assertEqual(payload["source_trail"], ["source:ok"])
-        self.assertEqual(
-            payload["token_estimate_breakdown"],
-            {"abstract": 32, "body": 96, "refs": 24},
-        )
-        self.assertEqual(payload["quality"]["extraction_revision"], EXTRACTION_REVISION)
-        self.assertEqual(payload["quality"]["confidence"], "medium")
-        self.assertEqual(payload["article"], None)
-        self.assertIsNotNone(payload["markdown"])
-        self.assertEqual(payload["metadata"], None)
-        self.assertIn('"source": "elsevier_xml"', result.content[0].text)
+        self.assertNotIn("article", payload)
+        self.assertTrue(retained_view(payload, "markdown"))
+        self.assertEqual(payload["metadata"]["title"], "Example Article")
+        self.assertEqual(result.content, [])
 
     def test_fetch_paper_tool_metadata_mode_populates_metadata_field(self) -> None:
         envelope = sample_envelope(modes={"metadata"})
@@ -193,14 +190,21 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         payload = result.structured_content
-        self.assertEqual(payload["article"], None)
-        self.assertEqual(payload["markdown"], None)
+        self.assertNotIn("article", payload)
+        self.assertNotIn("markdown", payload)
         self.assertEqual(payload["metadata"]["title"], "Example Article")
         self.assertEqual(
-            payload["token_estimate_breakdown"],
+            retained_view(payload, "diagnostics")["quality"][
+                "token_estimate_breakdown"
+            ],
             {"abstract": 32, "body": 96, "refs": 24},
         )
-        self.assertEqual(payload["quality"]["body_metrics"]["figure_count"], 0)
+        self.assertEqual(
+            retained_view(payload, "diagnostics")["quality"]["body_metrics"][
+                "figure_count"
+            ],
+            0,
+        )
 
     def test_fetch_paper_tool_returns_ambiguous_error_payload(self) -> None:
         error = PaperFetchFailure(
@@ -218,7 +222,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "ambiguous")
-        self.assertEqual(result.structured_content["schema_version"], 2)
+        self.assertEqual(result.structured_content["schema_version"], 3)
         self.assertEqual(result.structured_content["code"], "ambiguous")
         self.assertEqual(
             result.structured_content["candidates"][0]["doi"], "10.1000/example"
@@ -231,7 +235,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             "no_access",
             "Provider request failed.",
             warnings=["provider warning"],
-            source_trail=["fulltext:provider_failed"],
+            trace=[trace_event("fulltext", "provider_failed", "info")],
         )
         result = asyncio.run(
             fetch_paper_tool_async(
@@ -241,7 +245,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
 
         self.assertTrue(result.is_error)
-        self.assertEqual(result.structured_content["schema_version"], 2)
+        self.assertEqual(result.structured_content["schema_version"], 3)
         self.assertEqual(result.structured_content["status"], "no_access")
         self.assertEqual(result.structured_content["code"], "no_access")
         self.assertEqual(result.structured_content["error_category"], "no_access")
@@ -250,7 +254,8 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
         self.assertEqual(result.structured_content["warnings"], ["provider warning"])
         self.assertEqual(
-            result.structured_content["source_trail"], ["fulltext:provider_failed"]
+            trace_facts(result.structured_content["trace"]),
+            trace_facts([trace_event("fulltext", "provider_failed", "info")]),
         )
         self.assertIsNone(result.structured_content["missing_env"])
 
@@ -263,17 +268,20 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 "Provider returned no full text.",
                 retry_after_seconds=7,
                 warnings=["temporary provider issue"],
-                source_trail=["fulltext:provider_no_result"],
+                trace=[trace_event("fulltext", "provider_no_result", "info")],
             )
         )
 
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["code"], "no_result")
         self.assertEqual(payload["error_category"], "no_result")
         self.assertEqual(payload["retry_after_seconds"], 7)
         self.assertEqual(payload["warnings"], ["temporary provider issue"])
-        self.assertEqual(payload["source_trail"], ["fulltext:provider_no_result"])
+        self.assertEqual(
+            trace_facts(payload["trace"]),
+            trace_facts([trace_event("fulltext", "provider_no_result", "info")]),
+        )
 
     def test_error_payload_from_exception_exposes_missing_env_and_promotes_not_configured(
         self,
@@ -296,7 +304,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             RequestFailure(429, "HTTP 429 for provider", retry_after_seconds=4)
         )
 
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["status"], "rate_limited")
         self.assertEqual(payload["code"], "http_429")
         self.assertEqual(payload["http_status"], 429)
@@ -337,6 +345,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                 return sample_envelope(modes=kwargs["modes"], doi=query)
 
             payload = fetch_paper_payload(
+                no_download=False,
                 query="10.1000/example",
                 download_dir=download_dir,
                 deps=mcp_test_deps(
@@ -397,7 +406,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
                     "rate_limited",
                     "Slow down.",
                     retry_after_seconds=3,
-                    source_trail=["fulltext:rate_limited"],
+                    trace=[trace_event("fulltext", "rate_limited", "info")],
                 )
             return sample_resolved_query(query)
 
@@ -407,12 +416,13 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
 
         self.assertTrue(payload["aborted"])
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
         self.assertEqual(payload["abort_reason"]["code"], "rate_limited")
         self.assertEqual(payload["abort_reason"]["retry_after_seconds"], 3)
         self.assertEqual(
-            payload["abort_reason"]["source_trail"], ["fulltext:rate_limited"]
+            trace_facts(payload["abort_reason"]["trace"]),
+            trace_facts([trace_event("fulltext", "rate_limited", "info")]),
         )
         self.assertEqual(len(payload["results"]), 3)
         self.assertEqual([item["index"] for item in payload["results"]], [1, 2, 3])
@@ -518,7 +528,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "metadata")
         self.assertFalse(payload["aborted"])
         self.assertEqual(len(payload["results"]), 2)
-        self.assertEqual(payload["results"][0]["schema_version"], 2)
+        self.assertEqual(payload["results"][0]["schema_version"], 3)
         self.assertEqual(payload["results"][0]["query"], "10.1000/one")
         self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
         self.assertEqual(payload["results"][0]["title"], "Title for 10.1000/one")
@@ -526,7 +536,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertTrue(payload["results"][0]["likely_has_fulltext"])
         self.assertEqual(payload["results"][0]["probe_state"], "likely_yes")
         self.assertEqual(payload["results"][0]["source"], None)
-        self.assertEqual(payload["results"][0]["source_trail"], [])
+        self.assertEqual(payload["results"][0]["trace"], [])
         self.assertEqual(payload["results"][0]["token_estimate"], None)
         self.assertEqual(payload["results"][0]["token_estimate_breakdown"], None)
         self.assertEqual(len(set(transport_ids)), 1)
@@ -785,7 +795,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         payload = result.structured_content
-        self.assertEqual(payload["schema_version"], 2)
+        self.assertEqual(payload["schema_version"], 3)
         self.assertEqual(payload["mode"], "metadata")
         self.assertEqual(
             payload["progress"],

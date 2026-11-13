@@ -31,7 +31,7 @@ class _FakeAuthPage:
 class _FakeAuthContext:
     def __init__(self) -> None:
         self.page = _FakeAuthPage()
-        self.storage_state_path: str | None = None
+        self.profile_dir: str | None = None
         self.closed = False
         self.route_handler = None
         self.state_payload = {
@@ -76,7 +76,7 @@ class _FakeAuthContext:
     def storage_state(self, *, path: str | None = None):
         if path is None:
             return self.state_payload
-        self.storage_state_path = path
+        self.profile_dir = path
         Path(path).write_text(json.dumps(self.state_payload), encoding="utf-8")
 
     def close(self) -> None:
@@ -136,51 +136,6 @@ def _patch_auth_runtime(
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda _runtime: None)
 
 
-def test_authenticate_provider_profile_ams_saves_filtered_browser_state(
-    monkeypatch, tmp_path
-) -> None:
-    fake_manager = _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-
-    result = auth.authenticate_provider_profile(
-        provider="ams",
-        confirm=lambda _prompt: None,
-    )
-
-    profile_dir = (
-        tmp_path / "xdg" / "paper-fetch" / "publisher-browser-profiles" / "ams-camoufox"
-    )
-    storage_state_path = profile_dir / "storage-state.json"
-    assert result.provider == "ams"
-    assert result.profile_dir == profile_dir
-    assert result.storage_state_path == storage_state_path
-    assert result.final_url == auth.AUTH_TARGETS["ams"].url
-    manager = fake_manager.instances[0]
-    assert manager.user_data_dir == str(profile_dir)
-    assert manager.context.page.goto_calls == [
-        (
-            auth.AUTH_TARGETS["ams"].url,
-            {"wait_until": "domcontentloaded", "timeout": 120000},
-        )
-    ]
-    assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
-        "cookies": [
-            {
-                "name": "sid",
-                "value": "ams",
-                "domain": ".ametsoc.org",
-                "path": "/",
-            }
-        ],
-        "origins": [
-            {
-                "origin": "https://journals.ametsoc.org",
-                "localStorage": [{"name": "ams", "value": "1"}],
-            }
-        ],
-    }
-
-
 def test_browser_auth_provider_names_uses_runtime_catalog() -> None:
     names = auth.browser_auth_provider_names()
 
@@ -202,60 +157,6 @@ def test_provider_label_uses_catalog_display_name() -> None:
     assert auth._provider_label("aip") == "AIP Publishing"
     assert auth._provider_label("mdpi") == "MDPI"
     assert auth._provider_label("annualreviews") == "Annual Reviews"
-
-
-def test_authenticate_provider_profile_uses_sample_headed_profile_and_storage(
-    monkeypatch, tmp_path
-) -> None:
-    fake_manager = _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-    prompts: list[str] = []
-
-    result = auth.authenticate_provider_profile(
-        provider="wiley",
-        confirm=lambda prompt: prompts.append(prompt),
-    )
-
-    profile_dir = (
-        tmp_path
-        / "xdg"
-        / "paper-fetch"
-        / "publisher-browser-profiles"
-        / "wiley-camoufox"
-    )
-    storage_state_path = profile_dir / "storage-state.json"
-    assert result.provider == "wiley"
-    assert result.profile_dir == profile_dir
-    assert result.storage_state_path == storage_state_path
-    assert result.final_url == auth.AUTH_TARGETS["wiley"].url
-    manager = fake_manager.instances[0]
-    assert manager.user_data_dir == str(profile_dir)
-    assert manager.closed is True
-    assert "storage_state" not in manager.new_context_kwargs
-    assert manager.context.page.goto_calls == [
-        (
-            auth.AUTH_TARGETS["wiley"].url,
-            {"wait_until": "domcontentloaded", "timeout": 120000},
-        )
-    ]
-    assert prompts and str(profile_dir) in prompts[0]
-    assert str(storage_state_path) in prompts[0]
-    assert json.loads(storage_state_path.read_text(encoding="utf-8")) == {
-        "cookies": [
-            {
-                "name": "cf_clearance",
-                "value": "wiley",
-                "domain": ".wiley.com",
-                "path": "/",
-            }
-        ],
-        "origins": [
-            {
-                "origin": "https://onlinelibrary.wiley.com",
-                "localStorage": [{"name": "ok", "value": "1"}],
-            }
-        ],
-    }
 
 
 def test_authenticate_provider_profile_url_override(monkeypatch, tmp_path) -> None:
@@ -300,41 +201,6 @@ def test_authenticate_provider_profile_rejects_non_browser_provider() -> None:
         assert "wiley" in str(exc)
     else:
         raise AssertionError("expected non-browser provider auth to fail")
-
-
-def test_auth_json_save_failure_preserves_native_verification_and_old_snapshot(
-    monkeypatch, tmp_path
-) -> None:
-    _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-    state_path = (
-        tmp_path
-        / "xdg"
-        / "paper-fetch"
-        / "publisher-browser-profiles"
-        / "wiley-camoufox"
-        / "storage-state.json"
-    )
-    state_path.parent.mkdir(parents=True)
-    old_bytes = b'{"cookies":[{"name":"old"}],"origins":[]}\n'
-    state_path.write_bytes(old_bytes)
-    monkeypatch.setattr(
-        auth,
-        "commit_staged_storage_state",
-        lambda _stage, _runtime: {
-            "attempted": True,
-            "saved": False,
-            "reason": "save_failed",
-        },
-    )
-
-    result = auth.authenticate_provider_profile(
-        provider="wiley", confirm=lambda _prompt: None
-    )
-    assert result.verified
-    assert result.json_export["saved"] is False
-    assert result.json_export["reason"] == "save_failed"
-    assert state_path.read_bytes() == old_bytes
 
 
 def test_auth_page_left_on_sso_host_does_not_modify_old_state(
@@ -401,26 +267,6 @@ def test_auth_context_does_not_install_context_wide_network_route(
     assert context.route_handler is None
 
 
-def test_auth_json_export_exception_does_not_invalidate_native_replay(
-    monkeypatch, tmp_path
-):
-    fake = _install_fake_browser_manager(monkeypatch)
-    _patch_auth_runtime(monkeypatch, tmp_path)
-
-    def export_failure(*args, **kwargs):
-        raise OSError("disk full")
-
-    monkeypatch.setattr(auth, "commit_staged_storage_state", export_failure)
-    result = auth.authenticate_provider_profile(
-        provider="wiley", confirm=lambda prompt: None
-    )
-    assert result.verified
-    assert result.json_export["reason"] == "export_failed"
-    assert [manager.headless for manager in fake.instances] == [False, True]
-    assert fake.instances[0].user_data_dir == fake.instances[1].user_data_dir
-    assert all(manager.closed for manager in fake.instances)
-
-
 @pytest.mark.parametrize("value", ["0", " false "])
 def test_auth_replay_uses_configured_fetch_window_mode(monkeypatch, tmp_path, value):
     from paper_fetch.config import BROWSER_HEADLESS_ENV_VAR
@@ -434,27 +280,20 @@ def test_auth_replay_uses_configured_fetch_window_mode(monkeypatch, tmp_path, va
     assert [manager.headless for manager in fake.instances] == [False, False]
 
 
-def test_auth_explicit_json_path_is_refreshed_without_reimporting_stale_state(
-    monkeypatch, tmp_path
-):
-    import hashlib
-    from paper_fetch.config import WILEY_STORAGE_STATE_JSON_ENV_VAR
-    from paper_fetch.providers.browser_runtime.profile import METADATA_FILENAME
-
-    _install_fake_browser_manager(monkeypatch)
-    snapshot = tmp_path / "explicit.json"
-    snapshot.write_text('{"cookies": [], "origins": []}')
-    _patch_auth_runtime(
-        monkeypatch, tmp_path, {WILEY_STORAGE_STATE_JSON_ENV_VAR: str(snapshot)}
-    )
+@pytest.mark.parametrize("provider", ["pnas", "elsevier", "wiley", "ams"])
+def test_auth_replays_same_native_profile_without_json(provider, monkeypatch, tmp_path):
+    managers = _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
     result = auth.authenticate_provider_profile(
-        provider="wiley", confirm=lambda prompt: None
+        provider=provider, confirm=lambda _: None
     )
     assert result.verified
-    assert result.storage_state_path == snapshot
-    metadata = json.loads((result.profile_dir / METADATA_FILENAME).read_text())
+    assert result.profile_dir.name == provider
+    assert len(managers.instances) == 2
     assert (
-        metadata["migrations"][str(snapshot.resolve())]
-        == hashlib.sha256(snapshot.read_bytes()).hexdigest()
+        managers.instances[0].profile_dir
+        == managers.instances[1].profile_dir
+        == result.profile_dir
     )
-    assert result.json_export["saved"]
+    assert all(manager.closed for manager in managers.instances)
+    assert not (result.profile_dir / "storage-state.json").exists()

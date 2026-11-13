@@ -59,7 +59,6 @@ from .runtime import (
     RuntimeContext,
 )
 from .service import FetchStrategy, PaperFetchFailure, fetch_paper, resolve_paper
-from .tracing import merge_trace, trace_from_markers
 from .utils import (
     _extract_year,
     format_paper_stem,
@@ -646,31 +645,31 @@ def _error_payload(error: Exception) -> dict[str, Any]:
             "status": error.status,
             "reason": error.reason,
             "candidates": error.candidates or None,
-            "provider": error.provider,
-            "route": error.route,
-            "stage": error.stage,
-            "http_status": error.http_status,
-            "error_category": error.error_category,
-            "retryable": error.retryable,
+            "provider": error.diagnostics.provider,
+            "route": error.diagnostics.route,
+            "stage": error.diagnostics.stage,
+            "http_status": error.diagnostics.http_status,
+            "error_category": error.diagnostics.error_category,
+            "retryable": error.diagnostics.retryable,
             "retry_after_seconds": error.retry_after_seconds,
-            "details": error.details,
+            "details": error.diagnostics.details,
             "warnings": error.warnings,
-            "source_trail": error.source_trail,
+            "events": error.trace,
         }
     if isinstance(error, ProviderFailure):
         return {
             "status": error.code,
             "reason": error.message,
-            "provider": error.provider,
-            "route": error.route,
-            "stage": error.stage,
-            "http_status": error.http_status,
-            "error_category": error.error_category,
-            "retryable": error.retryable,
+            "provider": error.diagnostics.provider,
+            "route": error.diagnostics.route,
+            "stage": error.diagnostics.stage,
+            "http_status": error.diagnostics.http_status,
+            "error_category": error.diagnostics.error_category,
+            "retryable": error.diagnostics.retryable,
             "retry_after_seconds": error.retry_after_seconds,
-            "details": error.details,
+            "details": error.diagnostics.details,
             "warnings": error.warnings,
-            "source_trail": error.source_trail,
+            "events": error.trace,
         }
     return {"status": ERROR, "reason": str(error)}
 
@@ -1029,11 +1028,7 @@ def _build_cli_manifest_record(
                 code=code,
             )
         warnings = tuple(str(item) for item in (getattr(error, "warnings", ()) or ()))
-        source_trail = tuple(
-            str(item) for item in (getattr(error, "source_trail", ()) or ())
-        )
-        structured_error_trace = list(getattr(error, "trace", ()) or ())
-        trace = merge_trace(trace_from_markers(source_trail), structured_error_trace)
+        trace = list(getattr(error, "trace", ()) or ())
         if not trace:
             trace = None
         candidate_count = (
@@ -1915,11 +1910,6 @@ def _write_auth_result(provider_key: str, provider_label: str, result) -> None:
     sys.stdout.write(
         f"{provider_label} native profile verified: {bool(result.verified)}\n"
     )
-    export = getattr(result, "json_export", None) or {}
-    sys.stdout.write(f"{provider_label} storage state: {result.storage_state_path}\n")
-    sys.stdout.write(
-        f"JSON snapshot export: {'saved' if export.get('saved') else export.get('reason', 'unavailable')}\n"
-    )
 
 
 def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> None:
@@ -1929,8 +1919,8 @@ def _write_browser_preflight_results(results: list[BrowserPreflightResult]) -> N
         sys.stdout.write(f"- {status}: {result.provider_label} ({result.provider})\n")
         if result.final_url:
             sys.stdout.write(f"  Final URL: {result.final_url}\n")
-        if result.storage_state_path is not None:
-            sys.stdout.write(f"  Storage state: {result.storage_state_path}\n")
+        if result.profile_dir is not None:
+            sys.stdout.write(f"  Profile directory: {result.profile_dir}\n")
         if not result.ready:
             detail = result.message or "Browser preflight failed."
             sys.stdout.write(f"  Code: {result.reason_code}\n")

@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..tracing import extend_trace
+
+from ..tracing import TraceEvent
+
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
 from typing import Any, cast
@@ -15,7 +19,7 @@ from ..metadata.types import (
 from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
-from ..tracing import metadata_marker, route_marker
+from ..tracing import metadata_event, route_event
 from ..utils import (
     choose_public_landing_page_url,
     extend_unique,
@@ -29,10 +33,10 @@ from .routing import (
     get_cached_landing_page_citation_pdf_probe,
     provider_allowed,
     probe_official_provider,
-    route_signal_markers,
+    route_signal_events,
     select_route_probe,
 )
-from .shared import source_trail_for_failure
+from .shared import events_for_failure
 from .types import FetchStrategy
 
 
@@ -128,10 +132,10 @@ def fetch_metadata_for_resolved_query(
     clients: Mapping[str, object],
     strategy: FetchStrategy,
     context: RuntimeContext | None = None,
-) -> tuple[ProviderMetadata, str | None, list[str]]:
+) -> tuple[ProviderMetadata, str | None, list[TraceEvent]]:
     official_metadata: ProviderMetadata | None = None
     crossref_metadata: ProviderMetadata | None = None
-    source_trail: list[str] = []
+    events: list[TraceEvent] = []
     provider_name: str | None = None
     routing_metadata: ProviderMetadata | None = None
     crossref_is_public_source = crossref_allowed_as_source(strategy)
@@ -191,17 +195,15 @@ def fetch_metadata_for_resolved_query(
         routing_metadata = crossref_result
         crossref_metadata = routing_metadata
         if crossref_is_public_source:
-            source_trail.append(metadata_marker("crossref", "ok"))
+            events.append(metadata_event("crossref", "ok"))
         else:
-            source_trail.append(route_marker("crossref_signal", "ok"))
+            events.append(route_event("crossref_signal", "ok"))
     elif crossref_failure is not None and crossref_is_public_source:
-        source_trail.append(
-            source_trail_for_failure("metadata", "crossref", crossref_failure)
-        )
+        events.append(events_for_failure("metadata", "crossref", crossref_failure))
 
-    extend_unique(
-        source_trail,
-        route_signal_markers(
+    extend_trace(
+        events,
+        route_signal_events(
             landing_urls=[
                 resolved.landing_url,
                 safe_text((routing_metadata or {}).get("landing_page_url")),
@@ -227,9 +229,7 @@ def fetch_metadata_for_resolved_query(
                     context=context,
                 )
             probes.append(probe)
-            source_trail.append(
-                route_marker(f"probe_{candidate_provider}", probe.state)
-            )
+            events.append(route_event(f"probe_{candidate_provider}", probe.state))
             if probe.state == "positive":
                 break
 
@@ -237,12 +237,12 @@ def fetch_metadata_for_resolved_query(
     if selected_probe is not None:
         provider_name = selected_probe.provider
         official_metadata = cast(ProviderMetadata | None, selected_probe.metadata)
-        source_trail.append(route_marker(f"provider_selected_{provider_name}"))
+        events.append(route_event(f"provider_selected_{provider_name}"))
     elif crossref_metadata:
         provider_name = "crossref"
     elif resolved.provider_hint and provider_allowed(resolved.provider_hint, strategy):
         provider_name = resolved.provider_hint
-        source_trail.append(route_marker(f"provider_selected_{provider_name}"))
+        events.append(route_event(f"provider_selected_{provider_name}"))
 
     provider_identifiers = getattr(resolved, "provider_identifiers", {}) or {}
     provider_metadata_client = clients.get(provider_name) if provider_name else None
@@ -261,18 +261,16 @@ def fetch_metadata_for_resolved_query(
                     provider_metadata_query_from_resolution(resolved)
                 ),
             )
-            source_trail.append(metadata_marker(provider_name, "ok"))
+            events.append(metadata_event(provider_name, "ok"))
         except ProviderFailure as exc:
-            source_trail.append(
-                source_trail_for_failure("metadata", provider_name, exc)
-            )
+            events.append(events_for_failure("metadata", provider_name, exc))
 
     if official_metadata or crossref_metadata:
         if (
             official_metadata
-            and metadata_marker(provider_name or "provider", "ok") not in source_trail
+            and metadata_event(provider_name or "provider", "ok") not in events
         ):
-            source_trail.append(metadata_marker(provider_name or "provider", "ok"))
+            events.append(metadata_event(provider_name or "provider", "ok"))
         metadata = merge_primary_secondary_metadata(
             official_metadata, crossref_metadata
         )
@@ -288,10 +286,10 @@ def fetch_metadata_for_resolved_query(
         metadata = _merge_cached_landing_probe_links(
             metadata, resolved, context=context
         )
-        return metadata, provider_name, source_trail
+        return metadata, provider_name, events
 
-    source_trail.append(metadata_marker("resolution_only"))
+    events.append(metadata_event("resolution_only"))
     metadata = _merge_cached_landing_probe_links(
         metadata_from_resolution(resolved), resolved, context=context
     )
-    return metadata, provider_name, source_trail
+    return metadata, provider_name, events

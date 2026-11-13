@@ -29,10 +29,8 @@ from .providers.browser_runtime import (
     fetch_html_with_browser,
     load_runtime_config,
     probe_runtime_status,
-    storage_state_path as runtime_storage_state_path,
 )
-from .providers.browser_runtime.paths import runtime_with_default_storage_profile
-from .providers.browser_runtime.paths import commit_staged_storage_state
+from .providers.browser_runtime.paths import runtime_with_default_profile
 from .providers.browser_workflow.client import BrowserWorkflowClient
 from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
@@ -134,7 +132,7 @@ class BrowserPreflightResult:
     target_url: str | None = None
     final_url: str | None = None
     title: str | None = None
-    storage_state_path: Path | None = None
+    profile_dir: Path | None = None
     diagnostics: dict[str, Any] | None = None
 
     @property
@@ -204,33 +202,29 @@ def browser_preflight_next_action(provider: str, status: BrowserPreflightStatus)
     return f"inspect provider_status for {provider} and fix the local runtime"
 
 
-def _runtime_with_preflight_storage(
+def _runtime_with_preflight_profile(
     runtime: BrowserRuntimeConfig,
     *,
     env: Mapping[str, str],
     provider: str,
-    storage_state_path: Path | None = None,
-    save_storage_state: bool = True,
+    profile_dir: Path | None = None,
 ) -> BrowserRuntimeConfig:
-    if storage_state_path is not None:
+    if profile_dir is not None:
         runtime = replace(
             runtime,
-            storage_state_path=storage_state_path.expanduser(),
+            profile_dir=profile_dir.expanduser(),
         )
     else:
-        runtime = runtime_with_default_storage_profile(
+        runtime = runtime_with_default_profile(
             runtime,
             env=env,
             provider=provider,
         )
-    return replace(
-        runtime,
-        persist_storage_state=save_storage_state,
-    )
+    return runtime
 
 
-def _storage_state_path(runtime: BrowserRuntimeConfig) -> Path | None:
-    return runtime_storage_state_path(runtime)
+def _profile_dir(runtime: BrowserRuntimeConfig) -> Path | None:
+    return runtime.profile_dir or runtime.user_data_dir
 
 
 def _dedupe_providers(providers: Iterable[str]) -> tuple[str, ...]:
@@ -334,11 +328,9 @@ def static_browser_capabilities(
             "binary_path_configured",
             "profile_dir_configured",
             "user_data_dir_configured",
-            "storage_state_json_configured",
-            "storage_state_json_exists",
             "backend",
             "browser_user_agent_ignored",
-            "storage_state_path",
+            "profile_dir",
             "download_required",
             "runtime_state",
             "runtime_version",
@@ -382,7 +374,7 @@ def _failure_result(
     target_url: str | None = None,
     final_url: str | None = None,
     title: str | None = None,
-    storage_state_path: Path | None = None,
+    profile_dir: Path | None = None,
     reason_code: str | None = None,
     stage: str | None = None,
     message: str | None = None,
@@ -459,7 +451,7 @@ def _failure_result(
         else None,
         final_url=diagnostic_url_payload(final_url).get("url") if final_url else None,
         title=normalize_text(title) or None,
-        storage_state_path=storage_state_path,
+        profile_dir=profile_dir,
         diagnostics=diagnostic_payload,
     )
 
@@ -470,7 +462,7 @@ def _ready_result(
     target_url: str | None,
     final_url: str | None,
     title: str | None,
-    storage_state_path: Path | None,
+    profile_dir: Path | None,
     diagnostics: Mapping[str, Any] | None,
 ) -> BrowserPreflightResult:
     diagnostic_payload = dict(diagnostics or {})
@@ -496,7 +488,7 @@ def _ready_result(
         else None,
         final_url=diagnostic_url_payload(final_url).get("url") if final_url else None,
         title=title,
-        storage_state_path=storage_state_path,
+        profile_dir=profile_dir,
         diagnostics=diagnostic_payload,
     )
 
@@ -520,8 +512,7 @@ def _preflight_generic_browser_route(
     target: AuthTarget,
     *,
     env: Mapping[str, str],
-    storage_state_path: Path | None,
-    save_storage_state: bool,
+    profile_dir: Path | None,
     cancel_check: Callable[[], bool] | None,
     download_dir: Path | None,
     artifact_mode: ArtifactMode,
@@ -539,12 +530,11 @@ def _preflight_generic_browser_route(
     runtime: BrowserRuntimeConfig | None = None
     try:
         runtime = load_runtime_config(env, provider=provider_key, doi=target.doi)
-        runtime = _runtime_with_preflight_storage(
+        runtime = _runtime_with_preflight_profile(
             runtime,
             env=env,
             provider=provider_key,
-            storage_state_path=storage_state_path,
-            save_storage_state=save_storage_state,
+            profile_dir=profile_dir,
         )
         ensure_runtime_ready(runtime)
         ieee_article_match = (
@@ -571,45 +561,12 @@ def _preflight_generic_browser_route(
             runtime_context=context,
         )
         diagnostics = dict(html_result.diagnostics or {})
-        if save_storage_state and html_result.staged_storage_state is not None:
-            save_result = commit_staged_storage_state(
-                html_result.staged_storage_state,
-                runtime,
-                runtime_context=context,
-            )
-            diagnostics["storage_state_save"] = save_result
-            runtime_trace = diagnostics.get("browser_runtime_trace")
-            runtime_trace = (
-                dict(runtime_trace) if isinstance(runtime_trace, Mapping) else {}
-            )
-            runtime_trace["storage_state_save"] = dict(save_result)
-            diagnostics["browser_runtime_trace"] = runtime_trace
-            if not save_result.get("saved"):
-                return _failure_result(
-                    provider_key,
-                    target_url=target.url,
-                    final_url=html_result.final_url,
-                    storage_state_path=_storage_state_path(runtime),
-                    reason_code="state_save_failed",
-                    stage="storage_state_save",
-                    message=(
-                        "Publisher page passed preflight, but the accepted browser "
-                        "storage state could not be saved."
-                    ),
-                    diagnostics=diagnostics,
-                    diagnostic_context=context,
-                )
-            html_result = replace(
-                html_result,
-                diagnostics=diagnostics,
-                staged_storage_state=None,
-            )
         return _ready_result(
             provider_key,
             target_url=target.url,
             final_url=html_result.final_url,
             title=html_result.title,
-            storage_state_path=_storage_state_path(runtime),
+            profile_dir=_profile_dir(runtime),
             diagnostics=diagnostics,
         )
     except RequestCancelledError:
@@ -626,11 +583,7 @@ def _preflight_generic_browser_route(
             target_url=target.url,
             final_url=final_url or None,
             title=normalize_text(str(exc.details.get("title_summary") or "")) or None,
-            storage_state_path=(
-                _storage_state_path(runtime)
-                if runtime is not None
-                else storage_state_path
-            ),
+            profile_dir=(_profile_dir(runtime) if runtime is not None else profile_dir),
             reason_code=exc.kind,
             stage=normalize_text(str(exc.details.get("stage") or "")) or None,
             message=exc.message,
@@ -641,26 +594,18 @@ def _preflight_generic_browser_route(
         return _failure_result(
             provider_key,
             target_url=target.url,
-            storage_state_path=(
-                _storage_state_path(runtime)
-                if runtime is not None
-                else storage_state_path
-            ),
+            profile_dir=(_profile_dir(runtime) if runtime is not None else profile_dir),
             reason_code=exc.code,
-            stage=exc.stage,
+            stage=exc.diagnostics.stage,
             message=exc.message,
-            diagnostics=exc.details,
+            diagnostics=exc.diagnostics.details,
             diagnostic_context=context,
         )
     except Exception as exc:  # noqa: BLE001 - preserve one provider result.
         return _failure_result(
             provider_key,
             target_url=target.url,
-            storage_state_path=(
-                _storage_state_path(runtime)
-                if runtime is not None
-                else storage_state_path
-            ),
+            profile_dir=(_profile_dir(runtime) if runtime is not None else profile_dir),
             reason_code=ERROR,
             stage="preflight",
             message=normalize_text(str(exc)) or exc.__class__.__name__,
@@ -690,30 +635,11 @@ def _preflight_title_from_payload(raw_payload: Any) -> str | None:
     return None
 
 
-def _preflight_storage_state_save(
-    raw_payload: Any,
-) -> Mapping[str, Any] | None:
-    content = getattr(raw_payload, "content", None)
-    diagnostics = getattr(content, "diagnostics", None)
-    runtime_trace = (
-        diagnostics.get("browser_runtime_trace")
-        if isinstance(diagnostics, Mapping)
-        else None
-    )
-    save_result = (
-        runtime_trace.get("storage_state_save")
-        if isinstance(runtime_trace, Mapping)
-        else None
-    )
-    return save_result if isinstance(save_result, Mapping) else None
-
-
 def _preflight_deps(
     env: Mapping[str, str],
     *,
     storage_path: dict[str, Path | None],
-    explicit_storage_state_path: Path | None = None,
-    save_storage_state: bool = True,
+    explicit_profile_dir: Path | None = None,
 ) -> BrowserWorkflowDeps:
     base_deps = default_browser_workflow_deps()
 
@@ -721,14 +647,13 @@ def _preflight_deps(
         runtime_env: Mapping[str, str], *, provider: str, doi: str
     ) -> BrowserRuntimeConfig:
         runtime = load_runtime_config(runtime_env, provider=provider, doi=doi)
-        runtime = _runtime_with_preflight_storage(
+        runtime = _runtime_with_preflight_profile(
             runtime,
             env=env,
             provider=provider,
-            storage_state_path=explicit_storage_state_path,
-            save_storage_state=save_storage_state,
+            profile_dir=explicit_profile_dir,
         )
-        storage_path["value"] = _storage_state_path(runtime)
+        storage_path["value"] = _profile_dir(runtime)
         return runtime
 
     return replace(
@@ -759,8 +684,7 @@ def preflight_browser_provider(
     *,
     env: Mapping[str, str],
     target_url: str | None = None,
-    storage_state_path: Path | None = None,
-    save_storage_state: bool = True,
+    profile_dir: Path | None = None,
     cancel_check: Callable[[], bool] | None = None,
     download_dir: Path | None = None,
     artifact_mode: ArtifactMode = "none",
@@ -782,7 +706,6 @@ def preflight_browser_provider(
         )
 
     # Native profiles always persist; this flag controls JSON export only.
-    effective_save_storage_state = bool(save_storage_state)
 
     storage_path: dict[str, Path | None] = {"value": None}
     context: RuntimeContext | None = None
@@ -792,8 +715,7 @@ def preflight_browser_provider(
                 provider_key,
                 target,
                 env=env,
-                storage_state_path=storage_state_path,
-                save_storage_state=effective_save_storage_state,
+                profile_dir=profile_dir,
                 cancel_check=cancel_check,
                 download_dir=download_dir,
                 artifact_mode=artifact_mode,
@@ -802,8 +724,7 @@ def preflight_browser_provider(
         deps = _preflight_deps(
             env,
             storage_path=storage_path,
-            explicit_storage_state_path=storage_state_path,
-            save_storage_state=effective_save_storage_state,
+            explicit_profile_dir=profile_dir,
         )
         context = RuntimeContext(
             env=dict(env),
@@ -819,7 +740,7 @@ def preflight_browser_provider(
             deps=deps,
         )
         if bootstrap.runtime is not None:
-            storage_path["value"] = _storage_state_path(bootstrap.runtime)
+            storage_path["value"] = _profile_dir(bootstrap.runtime)
         raw_payload = bootstrap.html_payload
         if raw_payload is None:
             failure_diagnostics = dict(bootstrap.html_failure_diagnostics or {})
@@ -844,30 +765,11 @@ def preflight_browser_provider(
                 or None,
                 title=normalize_text(str(page_diagnostic.get("title_summary") or ""))
                 or None,
-                storage_state_path=storage_path["value"],
+                profile_dir=storage_path["value"],
                 reason_code=bootstrap.html_failure_reason,
                 stage=failure_stage,
                 message=bootstrap.html_failure_message,
                 diagnostics=failure_diagnostics,
-                diagnostic_context=context,
-            )
-        save_result = _preflight_storage_state_save(raw_payload)
-        if (
-            effective_save_storage_state
-            and save_result is not None
-            and not save_result.get("saved")
-        ):
-            return _failure_result(
-                provider_key,
-                target_url=target.url,
-                storage_state_path=storage_path["value"],
-                reason_code="state_save_failed",
-                stage="storage_state_save",
-                message=(
-                    "Publisher page passed preflight, but the accepted browser "
-                    "storage state could not be saved."
-                ),
-                diagnostics={"storage_state_save": dict(save_result)},
                 diagnostic_context=context,
             )
     except RequestCancelledError:
@@ -876,7 +778,7 @@ def preflight_browser_provider(
         return _failure_result(
             provider_key,
             target_url=target.url,
-            storage_state_path=storage_path["value"],
+            profile_dir=storage_path["value"],
             reason_code=exc.kind,
             stage=normalize_text(str(exc.details.get("stage") or "")) or None,
             message=exc.message,
@@ -887,11 +789,11 @@ def preflight_browser_provider(
         return _failure_result(
             provider_key,
             target_url=target.url,
-            storage_state_path=storage_path["value"],
+            profile_dir=storage_path["value"],
             reason_code=exc.code,
-            stage=exc.stage,
+            stage=exc.diagnostics.stage,
             message=exc.message,
-            diagnostics=exc.details,
+            diagnostics=exc.diagnostics.details,
             diagnostic_context=context,
         )
     except Exception as exc:  # noqa: BLE001 - preflight records per-provider failures.
@@ -899,7 +801,7 @@ def preflight_browser_provider(
         return _failure_result(
             provider_key,
             target_url=target.url,
-            storage_state_path=storage_path["value"],
+            profile_dir=storage_path["value"],
             reason_code=ERROR,
             stage="preflight",
             message=message,
@@ -913,9 +815,9 @@ def preflight_browser_provider(
     return _ready_result(
         provider_key,
         target_url=target.url,
-        final_url=normalize_text(raw_payload.source_url) or None,
+        final_url=normalize_text(raw_payload.content.source_url) or None,
         title=_preflight_title_from_payload(raw_payload),
-        storage_state_path=storage_path["value"],
+        profile_dir=storage_path["value"],
         diagnostics=dict(
             getattr(getattr(raw_payload, "content", None), "diagnostics", {}) or {}
         ),
@@ -929,8 +831,7 @@ def run_browser_provider_preflight(
     browser_user_agent: str | None = None,
     cancel_check: Callable[[], bool] | None = None,
     target_url: str | None = None,
-    storage_state_path: Path | None = None,
-    save_storage_state: bool = True,
+    profile_dir: Path | None = None,
     cancel_as_result: bool = False,
     on_result: Callable[[BrowserPreflightResult, int, int], None] | None = None,
     runtime_options: BrowserPreflightRuntimeOptions | None = None,
@@ -946,12 +847,12 @@ def run_browser_provider_preflight(
         if providers is not None
         else browser_preflight_provider_names()
     )
-    if (target_url is not None or storage_state_path is not None) and len(
+    if (target_url is not None or profile_dir is not None) and len(
         selected_providers
     ) != 1:
         raise ProviderFailure(
             ERROR,
-            "target_url and storage_state_path require exactly one preflight provider.",
+            "target_url and profile_dir require exactly one preflight provider.",
         )
     results: list[BrowserPreflightResult] = []
     total = len(selected_providers)
@@ -975,8 +876,7 @@ def run_browser_provider_preflight(
                 provider,
                 env=runtime_env,
                 target_url=target_url,
-                storage_state_path=storage_state_path,
-                save_storage_state=save_storage_state,
+                profile_dir=profile_dir,
                 cancel_check=cancel_check,
                 download_dir=active_runtime_options.download_dir,
                 artifact_mode=active_runtime_options.artifact_mode,
@@ -987,7 +887,7 @@ def run_browser_provider_preflight(
             result = _failure_result(
                 provider,
                 target_url=target_url,
-                storage_state_path=storage_state_path,
+                profile_dir=profile_dir,
                 reason_code="request_cancelled",
                 stage="preflight",
                 message="Browser preflight was cancelled while this provider ran.",

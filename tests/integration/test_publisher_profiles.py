@@ -1,8 +1,9 @@
 """Real native persistence and directory lease concurrency contracts."""
 
 from __future__ import annotations
-
 from dataclasses import replace
+
+
 import json
 import os
 from pathlib import Path
@@ -282,7 +283,9 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
         html_result = fetch_html_with_playwright(
             [asset_root + "/body"],
             publisher="pnas",
-            config=replace(config, persist_storage_state=False),
+            config=replace(
+                config,
+            ),
             runtime_context=runtime,
             wait_seconds=0,
             readiness=BrowserHtmlReadiness(wait_for_article_body=False),
@@ -291,14 +294,12 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
         assert html_result.diagnostics["browser_runtime_trace"]["persistent_profile"][
             "context_reused"
         ]
-        assert not html_result.diagnostics["browser_runtime_trace"][
-            "storage_state_load"
-        ]["used"]
+        assert (
+            "storage_state_load" not in html_result.diagnostics["browser_runtime_trace"]
+        )
         with browser_context(config, runtime_context=runtime) as html:
             assert html.context is context
-        _, pdf = _open_pdf_browser_context(
-            _PdfBrowserLaunch(runtime, config), sanitized_storage_state_path=None
-        )
+        _, pdf = _open_pdf_browser_context(_PdfBrowserLaunch(runtime, config))
         assert pdf is context
         response = pdf.request.get(asset_root + "/article.pdf")
         assert response.body() == assets["/article.pdf"][1]
@@ -332,11 +333,14 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
                 probe.evaluate("localStorage.getItem('profile-test')") == "persistent"
             )
             probe.close()
-    # Reopen with JSON export disabled: only native files can restore this state.
+    # Reopen the native directory to restore cookies and local storage.
     assert not (profile.profile_path(config) / "storage-state.json").exists()
     with RuntimeContext(env={}) as runtime:
         _, context = open_browser_context(
-            replace(config, persist_storage_state=False), runtime_context=runtime
+            replace(
+                config,
+            ),
+            runtime_context=runtime,
         )
         context.route(
             "https://www.pnas.org/**",
@@ -390,9 +394,7 @@ def test_external_native_os_lock_is_reported_without_removing_files(
 
 
 @pytest.mark.browser
-def test_auth_reopens_same_native_profile_and_json_failure_is_auxiliary(
-    native_config, monkeypatch
-):
+def test_auth_reopens_same_native_profile(native_config, monkeypatch):
     if (
         os.name != "nt"
         and not os.environ.get("DISPLAY")
@@ -422,15 +424,6 @@ def test_auth_reopens_same_native_profile_and_json_failure_is_auxiliary(
 
     monkeypatch.setattr(profile.ByparrManager, "new_context", routed_context)
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda runtime: None)
-    monkeypatch.setattr(
-        auth,
-        "commit_staged_storage_state",
-        lambda *args, **kwargs: {
-            "attempted": True,
-            "saved": False,
-            "reason": "save_failed",
-        },
-    )
     result = auth.authenticate_provider_profile(
         provider="pnas",
         confirm=lambda prompt: None,
@@ -441,7 +434,7 @@ def test_auth_reopens_same_native_profile_and_json_failure_is_auxiliary(
         },
     )
     assert result.verified
-    assert result.json_export["saved"] is False
+    assert not (result.profile_dir / "storage-state.json").exists()
     assert launches == [
         (str(profile.profile_path(native_config)), False),
         (str(profile.profile_path(native_config)), True),

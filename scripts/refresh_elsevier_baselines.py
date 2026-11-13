@@ -1,11 +1,12 @@
 """Rebuild only the derived Elsevier outputs from the saved source captures.
 
-PYTHONPATH=src:. uv run python scripts/refresh_elsevier_baselines.py
+PYTHONPATH=src:. .venv/bin/python scripts/refresh_elsevier_baselines.py
 Original sources, assets, acquisition facts and historical api-fetch files remain
 unchanged. Existing final HTML articles retain their asset request and options.
 """
 
 from concurrent.futures import ProcessPoolExecutor
+from paper_fetch.tracing import fulltext_event
 import hashlib
 import json
 import os
@@ -83,7 +84,7 @@ def refresh_html(path):
                 merged_metadata=metadata,
                 diagnostics={"extraction": extraction},
                 warnings=old["quality"]["warnings"],
-                trace_markers=old["quality"]["source_trail"],
+                trace=[fulltext_event("elsevier", "ok", route="html")],
             )
             # These thirteen captures requested no assets; do not discover or
             # download new assets while refreshing derived text.
@@ -103,8 +104,8 @@ def refresh_html(path):
                 source=article.source,
                 article=article,
                 markdown=final,
-                has_fulltext=article.quality.has_fulltext,
                 quality=article.quality,
+                trace=article.trace,
                 acquisition=article.acquisition,
             )
             old_acceptance = json.loads(path.with_name("acceptance.json").read_text())

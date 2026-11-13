@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
 from tests.support.test_evidence import evidence_cache as cache
 import unittest
 from paper_fetch.models import article_from_markdown
@@ -71,7 +72,7 @@ def _fixture_html_payload(doi: str):
         content_type="text/html",
         body=html.encode("utf-8"),
         route="html",
-        source_trail=["fulltext:mdpi_html_ok"],
+        events=[trace_event("fulltext", "mdpi_html", "ok")],
     )
 
 

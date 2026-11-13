@@ -18,7 +18,6 @@ import logging
 import time
 import urllib.parse
 from collections.abc import Callable, Mapping
-from pathlib import Path
 from typing import TYPE_CHECKING, Any
 
 from bs4 import BeautifulSoup
@@ -68,7 +67,6 @@ from .browser_runtime.types import (
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
-    BrowserStagedStorageState,
     BrowserWarmResult,
 )
 from .browser_workflow.fetchers.context import (
@@ -81,7 +79,6 @@ from .browser_workflow.fetchers.readiness import (
     wait_for_atypon_body_dom_ready,
 )
 from .browser_workflow.fetchers.scripts import _LOADED_IMAGE_CANVAS_EXPORT_SCRIPT
-from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 
 if TYPE_CHECKING:
     from ..runtime import RuntimeContext
@@ -874,30 +871,6 @@ def _safe_close(value: Any) -> None:
         value.close()
 
 
-def _storage_state_path(config: PlaywrightRuntimeConfig) -> Path | None:
-    return _runtime_paths().storage_state_path(config)
-
-
-def _stage_storage_state(
-    context: Any,
-    config: PlaywrightRuntimeConfig,
-    *,
-    filter_url: str | None = None,
-) -> tuple[BrowserStagedStorageState | None, dict[str, Any]]:
-    stage, result = _runtime_paths().stage_storage_state(
-        context,
-        config,
-        filter_url=filter_url,
-    )
-    if result.get("attempted") and not result.get("staged"):
-        logger.debug(
-            "browser_storage_state provider=%s action=stage_failed path=%s",
-            config.provider,
-            result.get("path"),
-        )
-    return stage, result
-
-
 def _navigate_browser_page(
     page: Any,
     *,
@@ -1246,15 +1219,6 @@ def _candidate_deadline_failure(
     *,
     trace: Mapping[str, Any],
 ) -> PlaywrightBrowserFailure:
-    if (
-        trace.get(
-            "state_mode", "json" if trace.get("backend") == "byparr" else "native"
-        )
-        == "json"
-        and last_failure is not None
-    ):
-        last_failure.details.setdefault("browser_runtime_trace", dict(trace))
-        return last_failure
     timeout_failure = PlaywrightBrowserFailure(
         "browser_connect_timeout",
         "Browser HTML request deadline was exhausted before another candidate.",
@@ -1372,7 +1336,6 @@ def _seed_browser_html_context(
 def _active_browser_resource_types(
     *,
     backend_name: str,
-    state_mode: str = "native",
     disable_media: bool,
     options: BrowserHtmlFetchOptions,
 ) -> set[str]:
@@ -1385,14 +1348,7 @@ def _active_browser_resource_types(
     }
     if not disable_media:
         return configured
-    if options.blocked_resource_types is None and state_mode != "native":
-        # Preserve the established Playwright fast-attempt policy for profiles
-        # (including Science) that did not opt into provider-specific blocking.
-        configured.update(BROWSER_HTML_BLOCKED_RESOURCE_TYPES)
-    else:
-        # Camoufox's existing default only blocks media; explicit provider
-        # policies remain exact on either backend.
-        configured.add("media")
+    configured.add("media")
     return configured
 
 
@@ -1632,34 +1588,9 @@ def _assemble_browser_html_result(
     *, browser_context, config, trace, options, **captured
 ):
     """Stage accepted state and assemble the captured result without owning cleanup."""
-    staged_storage_state = None
-    if (
-        config.persist_storage_state
-        and not options.return_image_payload
-        and not options.supplementary_index
-    ):
-        staged_storage_state, storage_state_result = _stage_storage_state(
-            browser_context,
-            config,
-            filter_url=captured["final_url"],
-        )
-        trace["storage_state_save"] = storage_state_result
-    else:
-        trace["storage_state_save"] = {
-            "attempted": False,
-            "staged": False,
-            "saved": False,
-            "path": str(_storage_state_path(config) or "") or None,
-            "reason": (
-                "non_article_payload"
-                if options.return_image_payload
-                else "storage_state_write_disabled"
-            ),
-        }
     return BrowserFetchedHtml(
         **captured,
         diagnostics={"browser_runtime_trace": trace},
-        staged_storage_state=staged_storage_state,
     )
 
 
@@ -1713,7 +1644,6 @@ def fetch_html_with_playwright(
     backend_name = config.backend
     active_blocked_resource_types = _active_browser_resource_types(
         backend_name=backend_name,
-        state_mode=config.state_mode,
         disable_media=disable_media,
         options=options,
     )
@@ -1744,11 +1674,9 @@ def fetch_html_with_playwright(
     artifact_dir = config.artifact_dir / backend_name
     configured_user_agent = normalize_text(config.user_agent)
     normalized_wait_for_selector = normalize_text(readiness.selector)
-    configured_storage_state_path = _storage_state_path(config)
     trace: dict[str, Any] = {
         "backend": backend_name,
         "engine": "camoufox",
-        "state_mode": config.state_mode,
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "navigation_count": 0,
@@ -1763,18 +1691,7 @@ def fetch_html_with_playwright(
         "article_body_wait_enabled": bool(readiness.wait_for_article_body),
         "selector_wait_enabled": bool(normalized_wait_for_selector),
         "wait_for_selector": normalized_wait_for_selector or None,
-        "storage_state_path": str(configured_storage_state_path or ""),
-        "storage_state_load": {
-            "path": str(configured_storage_state_path or "") or None,
-            "exists": bool(
-                configured_storage_state_path is not None
-                and configured_storage_state_path.is_file()
-            ),
-            "used": False,
-        },
-        "storage_state_write_enabled": config.persist_storage_state,
-        "json_export_enabled": config.persist_storage_state,
-        "native_profile_write_enabled": config.state_mode == "native",
+        "native_profile_write_enabled": True,
         "readiness_budget_seconds": readiness_budget_seconds,
         "runtime_page_reuse_enabled": bool(reuse_runtime_page),
     }
@@ -1818,25 +1735,11 @@ def fetch_html_with_playwright(
             shared_page_session=shared_page_session,
             trace=trace,
         )
-        storage_state_load = trace.get("storage_state_load")
-        if isinstance(storage_state_load, dict):
-            profile_trace = (
-                runtime_context.browser_profile_diagnostics(browser_context)
-                if runtime_context is not None
-                and hasattr(runtime_context, "browser_profile_diagnostics")
-                else dict(getattr(manager, "diagnostics", {}))
-            )
-            if trace.get("runtime_page_reused"):
-                profile_trace.update(
-                    context_reused=True,
-                    native_profile_loaded=False,
-                    json_imported=False,
-                )
-            trace["persistent_profile"] = profile_trace
-            storage_state_load["used"] = bool(
-                profile_trace.get("json_imported")
-                or profile_trace.get("state_restored")
-            )
+        trace["persistent_profile"] = (
+            runtime_context.browser_profile_diagnostics(browser_context)
+            if runtime_context is not None
+            else dict(getattr(manager, "diagnostics", {}))
+        )
         if trace.get("runtime_page_reused"):
             trace["browser_context_seed"] = {
                 "provided": browser_context_seed is not None,
@@ -2087,13 +1990,6 @@ def fetch_html_with_playwright(
                     ) or browser_context_seed.get("browser_user_agent"):
                         latest_browser_context_seed = browser_context_seed
                     candidate_trace["result"] = "success"
-                    trace["storage_state_save"] = {
-                        "attempted": False,
-                        "staged": False,
-                        "saved": False,
-                        "path": str(_storage_state_path(config) or "") or None,
-                        "reason": "lightweight_navigation_not_accepted",
-                    }
                     return BrowserFetchedHtml(
                         source_url=normalized_url,
                         final_url=final_url,
@@ -2509,18 +2405,6 @@ def fetch_html_with_playwright(
             if result is not None:
                 return result
     finally:
-        if "storage_state_save" not in trace:
-            trace["storage_state_save"] = {
-                "attempted": False,
-                "staged": False,
-                "saved": False,
-                "path": str(_storage_state_path(config) or "") or None,
-                "reason": (
-                    "provider_acceptance_not_reached"
-                    if config.persist_storage_state
-                    else "storage_state_write_disabled"
-                ),
-            }
         trace["duration_seconds"] = round(time.monotonic() - overall_started, 3)
         trace["remaining_ms"] = remaining_timeout_ms()
         _remove_page_diagnostic_listeners(page, page_diagnostic_listeners)

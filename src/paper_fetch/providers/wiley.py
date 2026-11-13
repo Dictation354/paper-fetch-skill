@@ -40,7 +40,7 @@ from ..pdf_limits import pdf_max_bytes
 from ..quality.html_signals import WILEY_SIGNAL_SET
 from ..runtime import RuntimeContext
 from ..models import AssetProfile
-from ..tracing import fulltext_marker, trace_event
+from ..tracing import fulltext_event, trace_event
 from ..utils import normalize_text
 from . import _wiley_html, browser_workflow
 from .browser_workflow.shared import BrowserWorkflowDeps, default_browser_workflow_deps
@@ -422,7 +422,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     html_failure_message=bootstrap.html_failure_message,
                     html_failure_diagnostics=bootstrap.html_failure_diagnostics,
                     warnings=[],
-                    success_source_trail=[],
+                    success_events=[],
                     success_warning=(
                         "Full text was extracted from the Wiley publisher PDF/ePDF fallback after the HTML path was not usable."
                     ),
@@ -512,19 +512,23 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                 + " ".join(failure_parts),
                 missing_env=missing_env,
                 warnings=state.warnings,
-                source_trail=state.source_trail,
                 trace=(
                     [
-                        trace_event(
-                            "fulltext",
-                            f"{self.name}_html",
-                            "fail",
-                            code=bootstrap.html_failure_reason,
-                            message=bootstrap.html_failure_message,
-                        )
+                        *(state.events or []),
+                        *(
+                            [
+                                trace_event(
+                                    "fulltext",
+                                    f"{self.name}_html",
+                                    "fail",
+                                    code=bootstrap.html_failure_reason,
+                                    message=bootstrap.html_failure_message,
+                                )
+                            ]
+                            if bootstrap.html_failure_reason
+                            else [] or []
+                        ),
                     ]
-                    if bootstrap.html_failure_reason
-                    else []
                 ),
             )
 
@@ -532,10 +536,10 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             label="browser_pdf",
             route_name="browser_pdf",
             run=run_browser_pdf,
-            failure_marker=fulltext_marker(self.name, "fail", route="pdf_browser"),
-            success_markers=(
-                fulltext_marker(self.name, "ok", route="pdf_browser"),
-                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            failure_event=fulltext_event(self.name, "fail", route="pdf_browser"),
+            success_events=(
+                fulltext_event(self.name, "ok", route="pdf_browser"),
+                fulltext_event(self.name, "ok", route=PDF_FALLBACK),
             ),
             failure_warning=browser_failure_warning,
         )
@@ -543,10 +547,10 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             label="pdf_api",
             route_name="tdm_pdf",
             run=run_tdm_api,
-            failure_marker=fulltext_marker(self.name, "fail", route="pdf_api"),
-            success_markers=(
-                fulltext_marker(self.name, "ok", route="pdf_api"),
-                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            failure_event=fulltext_event(self.name, "fail", route="pdf_api"),
+            success_events=(
+                fulltext_event(self.name, "ok", route="pdf_api"),
+                fulltext_event(self.name, "ok", route=PDF_FALLBACK),
             ),
             continue_codes=(NO_RESULT, NOT_CONFIGURED),
             failure_warning=tdm_failure_warning,
@@ -573,7 +577,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
             context=context,
             client=self,
             initial_warnings=initial_warnings,
-            initial_source_trail=[fulltext_marker(self.name, "fail", route="html")],
+            initial_events=[fulltext_event(self.name, "fail", route="html")],
             final_failure_factory=final_failure,
         )
 

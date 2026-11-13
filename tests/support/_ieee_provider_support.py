@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import json
 from pathlib import Path
 import tempfile
@@ -11,7 +13,7 @@ from paper_fetch.providers._pdf_common import PdfFetchFailure, PdfFetchResult
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.ieee import IeeeClient
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
+from paper_fetch.tracing import merge_trace
 from paper_fetch.workflow.types import FetchStrategy
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -78,7 +80,7 @@ def _raw_ieee_html_payload(
     article_number: str,
     html_text: str,
     source_url: str,
-    trace_markers: list[str] | None = None,
+    trace_events: list[str] | None = None,
 ) -> RawFulltextPayload:
     metadata = {
         "doi": doi,
@@ -93,29 +95,31 @@ def _raw_ieee_html_payload(
     body = extraction.html_text.encode("utf-8")
     return RawFulltextPayload(
         provider="ieee",
-        source_url=source_url,
-        content_type="text/html",
-        body=body,
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=body,
+                markdown_text=extraction.markdown_text,
+                merged_metadata=dict(metadata),
+                diagnostics={
+                    "extraction": {
+                        "abstract_sections": extraction.abstract_sections,
+                        "section_hints": extraction.section_hints,
+                        "marker_counts": extraction.marker_counts,
+                    }
+                },
+                reason="Downloaded full text from the IEEE Xplore clean-browser HTML fallback route.",
+                fetcher="playwright_html",
+                extracted_assets=extraction.extracted_assets,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=body,
-            markdown_text=extraction.markdown_text,
-            merged_metadata=dict(metadata),
-            diagnostics={
-                "extraction": {
-                    "abstract_sections": extraction.abstract_sections,
-                    "section_hints": extraction.section_hints,
-                    "marker_counts": extraction.marker_counts,
-                }
-            },
-            reason="Downloaded full text from the IEEE Xplore clean-browser HTML fallback route.",
-            fetcher="playwright_html",
-            extracted_assets=extraction.extracted_assets,
+            merged_metadata=metadata,
         ),
-        trace=trace_from_markers(trace_markers or ["fulltext:ieee_html_ok"]),
-        merged_metadata=metadata,
+        trace=trace_events or [trace_event("fulltext", "ieee_html", "ok")],
     )
 
 
@@ -264,28 +268,30 @@ def _real_ieee_fixture_article(
     body = extraction.html_text.encode("utf-8")
     raw_payload = RawFulltextPayload(
         provider="ieee",
-        source_url=source_url,
-        content_type="text/html",
-        body=body,
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=body,
+                markdown_text=extraction.markdown_text,
+                merged_metadata=metadata,
+                diagnostics={
+                    "extraction": {
+                        "abstract_sections": extraction.abstract_sections,
+                        "section_hints": extraction.section_hints,
+                        "marker_counts": extraction.marker_counts,
+                    }
+                },
+                reason="Loaded IEEE real HTML fixture.",
+                extracted_assets=extraction.extracted_assets,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=body,
-            markdown_text=extraction.markdown_text,
             merged_metadata=metadata,
-            diagnostics={
-                "extraction": {
-                    "abstract_sections": extraction.abstract_sections,
-                    "section_hints": extraction.section_hints,
-                    "marker_counts": extraction.marker_counts,
-                }
-            },
-            reason="Loaded IEEE real HTML fixture.",
-            extracted_assets=extraction.extracted_assets,
         ),
-        trace=trace_from_markers(["fulltext:ieee_html_ok"]),
-        merged_metadata=metadata,
+        trace=[trace_event("fulltext", "ieee_html", "ok")],
     )
     client = IeeeClient(RecordingTransport({}), {})
     article = client.to_article_model(

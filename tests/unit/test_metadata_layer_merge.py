@@ -1,11 +1,12 @@
 from __future__ import annotations
+from paper_fetch.providers import _springer_dom
 
 from paper_fetch.metadata.types import (
     MetadataMergeRule,
     merge_metadata_layers,
     merge_primary_secondary_metadata,
 )
-from paper_fetch.providers import _arxiv_metadata, _ieee_metadata, _springer_html
+from paper_fetch.providers import _arxiv_metadata, _ieee_metadata
 
 
 def test_merge_metadata_layers_respects_field_precedence_and_default_fill_empty() -> (
@@ -220,7 +221,7 @@ def test_arxiv_merge_keeps_html_author_list_and_api_bibliographic_metadata() -> 
 
 
 def test_springer_merge_preserves_base_first_and_html_abstract_behavior() -> None:
-    merged = _springer_html.merge_html_metadata(
+    merged = _springer_dom.merge_html_metadata(
         {
             "title": "Base title",
             "abstract": "Base abstract",

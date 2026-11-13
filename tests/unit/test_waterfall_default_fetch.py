@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers.base import ProviderContent
 
 from typing import Any
 from collections.abc import Mapping
@@ -39,9 +41,12 @@ def test_default_fetch_raw_fulltext_runs_declared_waterfall_steps() -> None:
         seen["context"] = context
         return RawFulltextPayload(
             provider=client.name,
-            source_url="https://example.test/fulltext",
-            content_type="text/plain",
-            body=b"full text",
+            content=ProviderContent(
+                route_kind="raw",
+                source_url="https://example.test/fulltext",
+                content_type="text/plain",
+                body=b"full text",
+            ),
         )
 
     class DeclarativeWaterfallClient(ProviderClient):
@@ -50,7 +55,9 @@ def test_default_fetch_raw_fulltext_runs_declared_waterfall_steps() -> None:
             WaterfallStep(
                 label="html",
                 run=fetch_step,
-                success_markers=("fulltext:declarative_waterfall_html_ok",),
+                success_events=(
+                    trace_event("fulltext", "declarative_waterfall_html", "ok"),
+                ),
             ),
         )
 
@@ -64,7 +71,7 @@ def test_default_fetch_raw_fulltext_runs_declared_waterfall_steps() -> None:
 
     assert isinstance(payload, RawFulltextPayload)
     assert payload.provider == "declarative_waterfall"
-    assert payload.body == b"full text"
+    assert payload.content.body == b"full text"
     assert seen == {
         "client": client,
         "doi": "10.0000/waterfall",

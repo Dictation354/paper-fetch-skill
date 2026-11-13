@@ -1,5 +1,10 @@
 """Real access evidence, independent of PDF conversion/formatting quality."""
 
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.tracing import trace_event
+
+
 import json
 from types import SimpleNamespace
 from urllib.parse import unquote
@@ -108,7 +113,7 @@ def test_legacy_elsevier_real_full_view_failures_exhaust_current_api_waterfall(d
     assert len(responses) == 3
     calls = []
 
-    class CapturedTransport(HttpTransport):
+    class CapturedTransport(RecordedStreamTransport, HttpTransport):
         def request(self, method, url, **kwargs):
             record = responses[len(calls)]
             assert method == "GET"
@@ -138,7 +143,9 @@ def test_legacy_elsevier_real_full_view_failures_exhaust_current_api_waterfall(d
     assert not envelope.article.quality.has_fulltext
     assert envelope.article.quality.content_kind == "abstract_only"
     # Preserve the current error classification; do not relabel HTTP400 as 403.
-    assert "fulltext:elsevier_pdf_api_fail" in envelope.article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "elsevier_pdf_api", "fail")
+    ) in trace_facts(envelope.article.trace)
 
 
 @pytest.mark.parametrize("doi", ELSEVIER_DOIS)

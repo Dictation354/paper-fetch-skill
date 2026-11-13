@@ -470,25 +470,27 @@ def download_ieee_related_assets(
         and normalize_text(str(item.get("section") or "")).lower() != "supplementary"
     ]
     merged_metadata = (
-        content.merged_metadata if content is not None else raw_payload.merged_metadata
+        content.merged_metadata
+        if content is not None
+        else raw_payload.content.merged_metadata
     )
     article_id = (
         normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
         or normalize_doi(doi)
         or normalize_text(str(metadata.get("title") or ""))
-        or raw_payload.source_url
+        or raw_payload.content.source_url
     )
     landing_or_source_url = normalize_text(
         str(
             (merged_metadata or {}).get("landing_page_url")
-            or raw_payload.source_url
+            or raw_payload.content.source_url
             or ""
         )
     )
     article_number = (
         _article_number_from_metadata(merged_metadata)
         or _article_number_from_metadata(metadata)
-        or _article_number_from_url(raw_payload.source_url)
+        or _article_number_from_url(raw_payload.content.source_url)
         or _article_number_from_url(landing_or_source_url)
     )
     canonical_landing_url = (

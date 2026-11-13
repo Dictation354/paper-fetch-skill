@@ -7,6 +7,7 @@ function aliases captured during collection.
 """
 
 from __future__ import annotations
+
 from functools import wraps
 import importlib
 import importlib.util

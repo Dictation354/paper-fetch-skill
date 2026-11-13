@@ -25,7 +25,6 @@ PROVIDERS = [
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
-@pytest.mark.parametrize("alias", ["auto", "camoufox", "byparr"])
 @pytest.mark.parametrize(
     "system,machine",
     [
@@ -37,32 +36,18 @@ PROVIDERS = [
     ],
 )
 def test_all_providers_share_backend_but_keep_state_binding(
-    monkeypatch, tmp_path, provider, alias, system, machine
+    monkeypatch, tmp_path, provider, system, machine
 ):
-    from paper_fetch.providers.browser_runtime import selection
-
-    monkeypatch.setattr(selection, "sys", SimpleNamespace(platform=system))
-    monkeypatch.setattr(selection, "platform", SimpleNamespace(machine=lambda: machine))
     config = load_runtime_config(
         {
             "XDG_DATA_HOME": str(tmp_path),
-            f"PAPER_FETCH_{provider.upper()}_BROWSER_BACKEND": alias,
         },
         provider=provider,
         doi="test",
     )
-    legacy_json = (
-        provider in {"pnas", "elsevier"}
-        and system in {"linux", "win32"}
-        and machine in {"x86_64", "AMD64"}
-        and alias != "camoufox"
-    )
     assert config.backend == "byparr"
-    assert config.state_mode == ("json" if legacy_json else "native")
-    assert (
-        config.user_data_dir.name
-        == f"{provider}-{'byparr' if legacy_json else 'camoufox'}"
-    )
+    assert config.user_data_dir.name == provider
+    assert config.user_data_dir.parent.name == "publisher-browser-profiles"
 
 
 @pytest.mark.parametrize("provider", PROVIDERS)
@@ -76,7 +61,6 @@ def test_native_overrides_stay_bound_without_migration(tmp_path, provider):
         provider=provider,
         doi="test",
     )
-    assert config.state_mode == "native"
     assert config.profile_dir == tmp_path / "profile"
     assert config.user_data_dir == tmp_path / "data"
     assert not list(tmp_path.iterdir())

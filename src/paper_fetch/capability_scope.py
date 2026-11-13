@@ -23,17 +23,6 @@ UNCACHEABLE_CAPABILITY_SCOPE = "browser-state-unavailable"
 _CREDENTIAL_ENV_TOKENS = ("API_KEY", "APIKEY", "TOKEN", "ACCESS_KEY", "SECRET")
 
 
-def _file_sha256(path: Path) -> str | None:
-    digest = hashlib.sha256()
-    try:
-        with path.open("rb") as handle:
-            for block in iter(lambda: handle.read(1024 * 1024), b""):
-                digest.update(block)
-    except OSError:
-        return None
-    return digest.hexdigest()
-
-
 def browser_profile_digest(path: Path, provider: str) -> str | None:
     from .providers.browser_runtime.profile import trusted_profile_digest
 
@@ -50,7 +39,7 @@ class BrowserStateCapabilityUse:
 
     provider: str
     backend: str
-    storage_state_path: str
+    profile_dir: str
     content_sha256: str | None
     used: bool = True
 
@@ -60,18 +49,16 @@ class BrowserStateCapabilityUse:
         *,
         provider: str,
         backend: str,
-        storage_state_path: Path | str,
+        profile_dir: Path | str,
         used: bool = True,
     ) -> BrowserStateCapabilityUse:
-        path = _resolved_path(storage_state_path)
+        path = _resolved_path(profile_dir)
         return cls(
             provider=normalize_text(provider).lower(),
             backend=normalize_text(backend).lower(),
-            storage_state_path=str(path),
+            profile_dir=str(path),
             content_sha256=(
-                browser_profile_digest(path, provider)
-                if path.is_dir()
-                else _file_sha256(path)
+                browser_profile_digest(path, provider) if path.is_dir() else None
             ),
             used=bool(used),
         )
@@ -95,13 +82,13 @@ class CapabilityScopeBuilder:
         if isinstance(use, BrowserStateCapabilityUse):
             normalized = use
         else:
-            path = normalize_text(str(use.get("storage_state_path") or ""))
+            path = normalize_text(str(use.get("profile_dir") or ""))
             if not path:
                 return self
             normalized = BrowserStateCapabilityUse(
                 provider=normalize_text(str(use.get("provider") or "")).lower(),
                 backend=normalize_text(str(use.get("backend") or "")).lower(),
-                storage_state_path=str(_resolved_path(path)),
+                profile_dir=str(_resolved_path(path)),
                 content_sha256=(
                     normalize_text(str(use.get("content_sha256") or "")) or None
                 ),
@@ -139,8 +126,8 @@ class CapabilityScopeBuilder:
         for use in reversed(self._browser_uses):
             if not use.used:
                 continue
-            path = _resolved_path(use.storage_state_path)
-            digest = use.content_sha256 if path.is_dir() else _file_sha256(path)
+            path = _resolved_path(use.profile_dir)
+            digest = use.content_sha256 if path.is_dir() else None
             digest = digest or "unavailable"
             key = (use.provider, use.backend, str(path))
             if key in seen:
@@ -150,7 +137,7 @@ class CapabilityScopeBuilder:
                 {
                     "provider": use.provider,
                     "backend": use.backend,
-                    "storage_state_path": str(path),
+                    "profile_dir": str(path),
                     "content_sha256": digest,
                     "used": True,
                 }
@@ -163,7 +150,7 @@ class CapabilityScopeBuilder:
                 key=lambda item: (
                     item["provider"],
                     item["backend"],
-                    item["storage_state_path"],
+                    item["profile_dir"],
                 ),
             ),
         }
@@ -190,46 +177,24 @@ class CapabilityScopeBuilder:
 def _provider_storage_state_use(
     env: Mapping[str, str], *, provider: str, backend: str
 ) -> BrowserStateCapabilityUse | None:
-    from .providers.browser_runtime.selection import selected_state_mode
-
-    if selected_state_mode(env, provider=provider) == "json":
-        state = (
-            browser_paths.default_provider_user_data_dir(
-                env, provider=provider, backend=backend
-            )
-            / "storage-state.json"
-        )
-        if not state.is_file():
-            return None
-        return BrowserStateCapabilityUse(
-            provider=provider,
-            backend=backend,
-            storage_state_path=str(state),
-            content_sha256=_file_sha256(state),
-        )
     from .providers.browser_runtime.profile import trusted_profile_digest
 
     profile = browser_paths.configured_profile_dir(
-        env, provider=provider, backend=backend
-    ) or browser_paths.configured_user_data_dir(env, backend=backend)
+        env, provider=provider
+    ) or browser_paths.configured_user_data_dir(env)
     if profile is None:
-        profile = browser_paths.default_provider_user_data_dir(
-            env, provider=provider, backend="camoufox"
-        )
+        profile = browser_paths.default_provider_user_data_dir(env, provider=provider)
     resolved = _resolved_path(profile)
     digest = trusted_profile_digest(
         resolved,
         provider,
-        explicit_state_path=browser_paths.configured_storage_state_path(
-            env, provider=provider
-        ),
     )
     if digest is None:
         return None
     return BrowserStateCapabilityUse(
         provider=provider,
         backend=backend,
-        storage_state_path=str(resolved),
+        profile_dir=str(resolved),
         content_sha256=digest,
     )
 

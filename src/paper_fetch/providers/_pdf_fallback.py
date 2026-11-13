@@ -36,9 +36,7 @@ from ..http import (
 from ..artifacts import ArtifactStore
 from ..http.headers import header_value
 from ..extraction.html.assets.requester import (
-    build_cookie_seeded_opener as _build_cookie_seeded_opener,
     cookie_header_for_url as _cookie_header_for_url,
-    request_with_opener as _request_with_opener,
 )
 from ..extraction.html.shared import html_text_snippet, html_title_snippet
 from ..extraction.html.signals import detect_html_block, summarize_html
@@ -276,18 +274,9 @@ class _PdfBrowserLaunch:
 
 def _open_pdf_browser_context(
     launch: _PdfBrowserLaunch,
-    *,
-    sanitized_storage_state_path: Path | None,
-    capability_storage_state_path: Path | None = None,
 ) -> tuple[Any | None, Any]:
     active_config = replace(
         launch.browser_config,
-        persist_storage_state=False,
-        capability_storage_state_path=(
-            capability_storage_state_path
-            or launch.browser_config.capability_storage_state_path
-            or launch.browser_config.storage_state_path
-        ),
     )
     return open_browser_context(
         active_config,
@@ -964,8 +953,6 @@ def fetch_pdf_with_browser(
                 runtime=context,
                 browser_config=launch_config,
             ),
-            sanitized_storage_state_path=None,
-            capability_storage_state_path=browser_config.storage_state_path,
         )
         existing_pages = getattr(browser_context, "pages", None)
         if isinstance(existing_pages, list):
@@ -977,8 +964,6 @@ def fetch_pdf_with_browser(
             seed_urls=normalized_seed_urls,
             request=active_request,
         )
-        if browser_config.state_mode == "json" and seed_failure is not None:
-            raise seed_failure
         last_failure = seed_failure or last_failure
         for attempt_index, url in enumerate(candidate_urls):
             if context is not None:
@@ -1393,27 +1378,10 @@ def fetch_pdf_over_http(
             maximum=timeout,
         )
 
-    streaming = bool(
-        getattr(transport, "_streaming_ready", False) is True
-        and callable(getattr(transport, "stream_to_file", None))
-    )
     route_policy = _compile_pdf_direct_route_policy(
         request,
         maximum_pdf_bytes=maximum_pdf_bytes,
     )
-    opener = (
-        None
-        if streaming
-        else _build_cookie_seeded_opener(
-            seed_urls,
-            headers=request_headers,
-            timeout=timeout_provider(),
-            timeout_provider=timeout_provider,
-            browser_cookies=browser_cookies,
-            cancel_check=lambda: _pdf_cancelled(context, transport),
-        )
-    )
-
     for attempt_index, url in enumerate(candidate_urls):
         try:
             active_timeout = timeout_provider()
@@ -1425,37 +1393,14 @@ def fetch_pdf_over_http(
         if cookie_header:
             per_request_headers["Cookie"] = cookie_header
         try:
-            response = (
-                _stream_pdf_candidate(
-                    transport,
-                    url,
-                    headers=per_request_headers,
-                    timeout=active_timeout,
-                    artifact_dir=artifact_dir,
-                    maximum_pdf_bytes=maximum_pdf_bytes,
-                    request_policy=route_policy.request_policy,
-                )
-                if streaming
-                else _request_with_opener(
-                    opener,
-                    url,
-                    headers=per_request_headers,
-                    timeout=active_timeout,
-                    failure_label="PDF fallback candidate",
-                    max_response_bytes=maximum_pdf_bytes,
-                    cancel_check=lambda: _pdf_cancelled(context, transport),
-                )
-                if opener is not None
-                else transport.request(
-                    "GET",
-                    url,
-                    headers=per_request_headers,
-                    timeout=active_timeout,
-                    # This branch is a compatibility path for explicitly
-                    # injected, non-streaming transports. Identified provider
-                    # routes still consume the exact compiled policy.
-                    request_policy=route_policy.request_policy,
-                )
+            response = _stream_pdf_candidate(
+                transport,
+                url,
+                headers=per_request_headers,
+                timeout=active_timeout,
+                artifact_dir=artifact_dir,
+                maximum_pdf_bytes=maximum_pdf_bytes,
+                request_policy=route_policy.request_policy,
             )
         except RequestFailure as exc:
             raise_for_api_entitlement(

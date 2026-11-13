@@ -569,7 +569,7 @@ PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive --skip-browser-prepa
   --skip-smoke \
   "$INSTALL_USER_CONFIG_FLAG"
 
-[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Install left the legacy Codex skill."
+[ -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Install touched an unrelated legacy skill path."
 mkdir -p "$FAKE_HOME/.codex/skills/paper-fetch-skill"
 printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
 printf '%s\n' stale > "$FAKE_HOME/.agents/skills/paper-fetch-skill/stale.md"
@@ -594,7 +594,7 @@ PATH="$GUARD_DIR:$PATH" "$INSTALLER_PATH" --non-interactive --skip-browser-prepa
   --preset=headless \
   "$INSTALL_USER_CONFIG_FLAG"
 
-[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Upgrade left the legacy Codex skill."
+[ -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Upgrade touched an unrelated legacy skill path."
 [ ! -e "$FAKE_HOME/.agents/skills/paper-fetch-skill/stale.md" ] || die "Upgrade left stale skill content."
 log "Verifying installed runtime package layout"
 "$RUNTIME_PYTHON" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --non-interactive
@@ -794,7 +794,7 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   fi
 fi
 [ ! -d "$FAKE_HOME/.agents/skills/paper-fetch-skill" ] || die "Codex skill was not removed."
-[ ! -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Legacy Codex skill was not removed."
+[ -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Uninstall touched an unrelated legacy skill path."
 [ ! -d "$FAKE_HOME/.claude/skills/paper-fetch-skill" ] || die "Claude skill was not removed."
 [ ! -d "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill" ] || die "Antigravity skill was not removed."
 grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"

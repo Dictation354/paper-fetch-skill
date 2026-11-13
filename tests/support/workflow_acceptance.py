@@ -1,6 +1,7 @@
 """Shared test support; contains no collected tests."""
 
 from __future__ import annotations
+
 from paper_fetch.models import (
     AcquisitionProvenance,
     ArticleModel,
@@ -15,7 +16,6 @@ from paper_fetch.models import (
 from paper_fetch.tracing import (
     TraceContext,
     acquisition_fallback_used,
-    source_trail_from_trace,
     trace_event,
 )
 
@@ -87,7 +87,7 @@ def _envelope(
         fallback_used=acquisition_fallback_used(events),
     )
     article.quality.asset_failures = list(asset_failures or [])
-    article.quality.source_trail = source_trail_from_trace(events)
+    article.trace = events
     apply_quality_assessment(
         article,
         semantic_losses=losses or SemanticLosses(),
@@ -101,13 +101,7 @@ def _envelope(
     return FetchEnvelope(
         doi=article.doi,
         source=article.source,
-        has_fulltext=article.quality.has_fulltext,
-        content_kind=article.quality.content_kind,
-        has_abstract=article.quality.has_abstract,
-        warnings=article.quality.warnings,
-        source_trail=article.quality.source_trail,
         trace=events,
-        token_estimate=article.quality.token_estimate,
         quality=article.quality,
         article=article if include_article else None,
         markdown=markdown,

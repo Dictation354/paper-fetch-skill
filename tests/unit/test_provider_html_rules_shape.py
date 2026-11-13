@@ -1,27 +1,19 @@
 from __future__ import annotations
+from dataclasses import replace
 
 
 import pytest
 
-from dataclasses import replace
 from paper_fetch.providers._definitions import (
     PROVIDER_DEFINITIONS,
     validate_provider_definitions,
 )
 from paper_fetch.extraction.html.provider_rules import (
     GENERIC_HTML_RULES,
-    _reset_provider_html_rules_cache,
     cleanup_policy_for_profile,
     provider_html_rules,
     require_provider_html_rules,
 )
-
-
-@pytest.fixture(autouse=True)
-def _reset_provider_rule_caches() -> None:
-    _reset_provider_html_rules_cache()
-    yield
-    _reset_provider_html_rules_cache()
 
 
 def test_provider_html_rules_generic_returns_generic_rules() -> None:

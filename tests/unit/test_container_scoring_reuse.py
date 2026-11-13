@@ -1,5 +1,5 @@
-from collections import Counter
 from dataclasses import replace
+from collections import Counter
 from unittest import mock
 
 from bs4 import BeautifulSoup

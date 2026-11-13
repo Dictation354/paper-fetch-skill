@@ -1,5 +1,8 @@
 """Historical signed bodies with separately captured publisher image bytes."""
 
+from paper_fetch.models import Quality
+
+
 import hashlib
 import json
 from pathlib import Path
@@ -109,9 +112,9 @@ def test_historical_body_uses_captured_current_assets(provider, doi, count, tmp_
     envelope = FetchEnvelope(
         doi=doi,
         source=article.source,
-        has_fulltext=True,
         article=article,
         markdown=markdown,
+        quality=Quality(has_fulltext=True),
     )
     acceptance = evaluate_fetch_acceptance(
         envelope, asset_profile="body", require_local_body_assets=True
@@ -143,9 +146,9 @@ def test_royal_historical_body_uses_both_captured_viewers_and_keeps_missing_scop
     envelope = FetchEnvelope(
         doi=article.doi,
         source=article.source,
-        has_fulltext=True,
         article=article,
         markdown=markdown,
+        quality=Quality(has_fulltext=True),
     )
     acceptance = evaluate_fetch_acceptance(
         envelope, asset_profile="body", require_local_body_assets=True

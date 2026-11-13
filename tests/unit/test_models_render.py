@@ -1,5 +1,5 @@
 from __future__ import annotations
-from __future__ import annotations
+from paper_fetch.tracing import trace_event
 import unittest
 from tests.golden_criteria import golden_criteria_scenario_asset
 from paper_fetch.models import (
@@ -551,10 +551,10 @@ class ModelsRenderTests(unittest.TestCase):
             "[Supplementary Data](downloads/supplement.csv)", envelope.markdown
         )
         self.assertIs(envelope.quality, article.quality)
-        self.assertIs(envelope.warnings, article.quality.warnings)
-        self.assertIs(envelope.source_trail, article.quality.source_trail)
+        self.assertIs(envelope.quality.warnings, article.quality.warnings)
+        self.assertIs(envelope.trace, article.trace)
         self.assertIs(
-            envelope.token_estimate_breakdown,
+            envelope.quality.token_estimate_breakdown,
             article.quality.token_estimate_breakdown,
         )
         self.assertTrue(
@@ -563,7 +563,7 @@ class ModelsRenderTests(unittest.TestCase):
                 "content_kind",
                 "has_abstract",
                 "warnings",
-                "source_trail",
+                "events",
                 "token_estimate",
                 "token_estimate_breakdown",
             }.isdisjoint(vars(envelope))
@@ -571,8 +571,8 @@ class ModelsRenderTests(unittest.TestCase):
         self.assertEqual(envelope.quality.extraction_revision, EXTRACTION_REVISION)
         self.assertEqual(envelope.quality.content_kind, article.quality.content_kind)
 
-        envelope.warnings.append("projected warning")
-        envelope.token_estimate = 321
+        envelope.quality.warnings.append("projected warning")
+        envelope.quality.token_estimate = 321
 
         self.assertIn("projected warning", article.quality.warnings)
         self.assertEqual(article.quality.token_estimate, 321)
@@ -583,16 +583,16 @@ class ModelsRenderTests(unittest.TestCase):
             ("custom_runtime_source", [], "custom_runtime_source"),
             (
                 "custom_runtime_source",
-                ["fallback:metadata_only"],
+                [trace_event("fallback", "metadata_only", "info")],
                 "metadata_only",
             ),
         )
 
-        for source, source_trail, expected in cases:
-            with self.subTest(source=source, source_trail=source_trail):
+        for source, events, expected in cases:
+            with self.subTest(source=source, events=events):
                 article = sample_article()
                 article.source = source
-                article.quality.source_trail = source_trail
+                article.trace = events
 
                 envelope = paper_fetch.build_fetch_envelope(
                     article, modes={"article"}, render=RenderOptions()

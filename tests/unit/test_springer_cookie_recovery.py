@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from unittest import mock
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import springer
@@ -163,8 +165,12 @@ def test_springer_second_cookie_error_enters_existing_pdf_waterfall() -> None:
     assert request.call_count == 2
     pdf_fallback.assert_called_once()
     assert result.article.source == "springer_pdf"
-    assert "fulltext:springer_html_fail" in result.article.quality.source_trail
-    assert "fulltext:springer_pdf_fallback_ok" in result.article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "springer_html", "fail")) in trace_facts(
+        result.article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "springer_pdf_fallback", "ok")
+    ) in trace_facts(result.article.trace)
 
 
 def test_springer_cookie_sessions_are_not_shared_between_fetches() -> None:

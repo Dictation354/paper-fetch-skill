@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import extend_trace
+
 from ..models.markdown import replace_markdown_image_url
 
 import os
@@ -23,11 +25,9 @@ from ..models.markdown import (
 from ..reason_codes import FULLTEXT, METADATA_ONLY
 from ..tracing import (
     TraceEvent,
-    download_marker,
-    fallback_marker,
-    project_source_trail_trace,
-    source_trail_from_trace,
-    trace_from_markers,
+    download_event,
+    fallback_event,
+    merge_trace,
 )
 from ..utils import (
     _extract_year,
@@ -44,21 +44,16 @@ def finalize_article(
     article: ArticleModel,
     *,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     extend_unique(article.quality.warnings, list(warnings or []))
-    if source_trail or trace:
-        projected = project_source_trail_trace(
-            [*article.quality.source_trail, *list(source_trail or [])],
-            trace,
-        )
-        article.quality.source_trail = source_trail_from_trace(projected)
+    article.trace = merge_trace(article.trace, events, trace)
     return article
 
 
 def public_source_for_article(article: ArticleModel) -> str:
-    if fallback_marker(METADATA_ONLY) in article.quality.source_trail:
+    if fallback_event(METADATA_ONLY) in article.trace:
         return METADATA_ONLY
     return article.source
 
@@ -373,10 +368,10 @@ def _extend_envelope_status(
     envelope: FetchEnvelope,
     *,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
 ) -> None:
     extend_unique(envelope.quality.warnings, warnings)
-    extend_unique(envelope.quality.source_trail, source_trail)
+    extend_trace(envelope.trace, events)
 
 
 def save_markdown_to_disk(
@@ -396,7 +391,9 @@ def save_markdown_to_disk(
             and envelope.markdown is not None
         )
         or (
-            envelope.content_kind == FULLTEXT and envelope.markdown and envelope.article
+            envelope.quality.content_kind == FULLTEXT
+            and envelope.markdown
+            and envelope.article
         )
     )
     if not has_usable_fulltext:
@@ -405,7 +402,7 @@ def save_markdown_to_disk(
             warnings=[
                 f"{request_label} was set but full text was not available; nothing written to disk."
             ],
-            source_trail=[download_marker("markdown_skipped_no_fulltext")],
+            events=[download_event("markdown_skipped_no_fulltext")],
         )
         return None
 
@@ -426,7 +423,7 @@ def save_markdown_to_disk(
     _extend_envelope_status(
         envelope,
         warnings=[message],
-        source_trail=[download_marker("markdown", "saved")],
+        events=[download_event("markdown", "saved")],
     )
     return target
 
@@ -455,10 +452,8 @@ def build_fetch_envelope(
     return FetchEnvelope(
         doi=article.doi,
         source=public_source_for_article(article),
-        has_fulltext=article.quality.has_fulltext,
         acquisition=article.acquisition,
-        source_trail=list(article.quality.source_trail),
-        trace=list(trace or trace_from_markers(article.quality.source_trail)),
+        trace=list(trace or article.trace),
         quality=article.quality,
         article=article if "article" in modes else None,
         markdown=markdown,

@@ -1,9 +1,10 @@
 """Fetch entrypoint contracts with runtime/download/browser boundaries mocked."""
 
 from __future__ import annotations
+from dataclasses import replace
+
 
 import asyncio
-from dataclasses import replace
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -101,7 +102,9 @@ def test_http_entrypoints_do_not_prepare(prepare, monkeypatch, tmp_path, entrypo
 
 
 @pytest.mark.parametrize("failure", [False, True])
-def test_mcp_cache_hit_does_not_prepare(prepare, monkeypatch, failure, capsys):
+def test_mcp_cache_hit_does_not_prepare(
+    prepare, monkeypatch, failure, capsys, tmp_path
+):
     if failure:
         prepare.side_effect = RuntimeError("runtime unavailable")
     cached = sample_envelope(modes={"markdown"})
@@ -118,7 +121,7 @@ def test_mcp_cache_hit_does_not_prepare(prepare, monkeypatch, failure, capsys):
         prefer_cache=True,
         no_download=True,
         env={},
-        download_dir=None,
+        download_dir=tmp_path,
         deps=deps,
     )
     assert payload["source"] == cached.source

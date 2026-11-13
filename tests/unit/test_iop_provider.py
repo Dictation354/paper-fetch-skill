@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from tests.support.iop_provider import (
     _FakeIopSupplementaryIndexFetcher,
     _iop_supplementary_test_deps,
@@ -25,7 +27,6 @@ from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
 from paper_fetch.quality.html_availability import HtmlQualityAssessor
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
 
 
 IOP_SAMPLE_DOI = "10.1088/1748-9326/ab7d02"
@@ -217,27 +218,29 @@ def _iop_html_raw_payload(
     body = html.encode("utf-8")
     return RawFulltextPayload(
         provider="iop",
-        source_url=source_url,
-        content_type="text/html",
-        body=body,
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=body,
+                markdown_text="# Example IOP article\n",
+                browser_context_seed={
+                    "browser_user_agent": "UnitTestAgent/1.0",
+                    "browser_final_url": source_url,
+                    "browser_cookies": [
+                        {
+                            "name": "iop-session",
+                            "value": "test",
+                            "domain": ".iopscience.iop.org",
+                            "path": "/",
+                        }
+                    ],
+                },
+            ),
             source_url=source_url,
             content_type="text/html",
             body=body,
-            markdown_text="# Example IOP article\n",
-            browser_context_seed={
-                "browser_user_agent": "UnitTestAgent/1.0",
-                "browser_final_url": source_url,
-                "browser_cookies": [
-                    {
-                        "name": "iop-session",
-                        "value": "test",
-                        "domain": ".iopscience.iop.org",
-                        "path": "/",
-                    }
-                ],
-            },
         ),
     )
 
@@ -779,17 +782,19 @@ def test_iop_pdf_fallback_contract_uses_pdf_magic_and_source() -> None:
     body = b"%PDF-1.7\n% IOP PDF fixture\n"
     raw_payload = RawFulltextPayload(
         provider="iop",
-        source_url=f"{IOP_SAMPLE_LANDING}/pdf",
-        content_type="application/pdf",
-        body=body,
-        content=ProviderContent(
-            route_kind="pdf_fallback",
+        content=replace(
+            ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"{IOP_SAMPLE_LANDING}/pdf",
+                content_type="application/pdf",
+                body=body,
+                markdown_text="# IOP PDF\n\nBody text",
+            ),
             source_url=f"{IOP_SAMPLE_LANDING}/pdf",
             content_type="application/pdf",
             body=body,
-            markdown_text="# IOP PDF\n\nBody text",
         ),
-        trace=trace_from_markers(["fulltext:iop_pdf_fallback_ok"]),
+        trace=[trace_event("fulltext", "iop_pdf_fallback", "ok")],
     )
 
     assert body.startswith(b"%PDF")

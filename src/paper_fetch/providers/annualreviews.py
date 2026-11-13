@@ -172,10 +172,10 @@ class AnnualreviewsClient(browser_workflow.BrowserWorkflowClient):
         normalized_doi = normalize_doi(str(metadata.get("doi") or doi or ""))
         if not normalized_doi:
             return empty_asset_results()
-        html_text = raw_payload.body.decode("utf-8", errors="replace")
+        html_text = raw_payload.content.body.decode("utf-8", errors="replace")
         assets = _annualreviews_html.extract_scoped_html_assets(
             html_text,
-            raw_payload.source_url,
+            raw_payload.content.source_url,
             asset_profile=asset_profile,
         )
         if not assets:

@@ -1,7 +1,9 @@
 """Seven captured LaTeXML articles: node identity, in-place figures and title."""
 
-import base64
 from dataclasses import replace
+
+
+import base64
 from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urljoin

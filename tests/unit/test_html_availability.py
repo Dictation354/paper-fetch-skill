@@ -7,7 +7,7 @@ from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers import browser_workflow
 from paper_fetch.quality import html_availability as html_availability_module
-from paper_fetch.quality import reason_codes as quality_reason_codes
+from paper_fetch import reason_codes as quality_reason_codes
 from paper_fetch.quality.html_availability import (
     HTML_CONTAINER_SCOPE_PAGE,
     HtmlContainerEvidence,
@@ -16,7 +16,7 @@ from paper_fetch.quality.html_availability import (
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
 )
-from paper_fetch.quality.reason_codes import (
+from paper_fetch.reason_codes import (
     ABSTRACT_ONLY,
     CITATION_ABSTRACT_HTML_URL,
     DATA_ARTICLE_ACCESS_NO,
@@ -322,7 +322,7 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertEqual(diagnostics.reason, "body_sufficient")
         self.assertEqual(diagnostics.figure_count, 0)
 
-    def test_assess_html_rejects_large_page_shell_with_empty_fulltext_marker(
+    def test_assess_html_rejects_large_page_shell_with_empty_fulltext_event(
         self,
     ) -> None:
         recommendation = (

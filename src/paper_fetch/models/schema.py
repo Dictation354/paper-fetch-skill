@@ -12,7 +12,7 @@ from ..acquisition import (
     AcquisitionTransport,
     coerce_acquisition_provenance,
 )
-from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
+from ..tracing import TraceEvent
 from ..utils import normalize_text
 
 SourceKind = Literal[
@@ -284,7 +284,6 @@ class Quality:
     content_kind: ContentKind = "metadata_only"
     has_abstract: bool = False
     warnings: list[str] = field(default_factory=list)
-    source_trail: list[str] = field(default_factory=list)
     token_estimate_breakdown: TokenEstimateBreakdown = field(
         default_factory=TokenEstimateBreakdown
     )
@@ -307,7 +306,6 @@ class Quality:
         from .tokens import coerce_token_estimate_breakdown
 
         self.warnings = _dedupe_strings(self.warnings)
-        self.source_trail = _dedupe_strings(self.source_trail)
         self.flags = _dedupe_strings(self.flags)
         self.body_metrics = coerce_body_quality_metrics(self.body_metrics)
         self.semantic_losses = coerce_semantic_losses(self.semantic_losses)
@@ -381,19 +379,6 @@ class RenderContext:
             self.warnings.append(TRUNCATION_WARNING)
 
 
-_FETCH_ENVELOPE_QUALITY_FIELDS = frozenset(
-    {
-        "has_fulltext",
-        "content_kind",
-        "has_abstract",
-        "warnings",
-        "source_trail",
-        "token_estimate",
-        "token_estimate_breakdown",
-    }
-)
-
-
 @dataclass
 class SupplementaryResult:
     assets: list[dict[str, Any]] = field(default_factory=list)
@@ -431,41 +416,15 @@ class SupplementaryResult:
 class FetchEnvelope:
     doi: str | None
     source: str
-    has_fulltext: bool
     target: Literal["paper", "supplementary"] = "paper"
     supplementary: SupplementaryResult | None = None
-    content_kind: ContentKind = "metadata_only"
-    has_abstract: bool = False
-    warnings: list[str] = field(default_factory=list)
-    source_trail: list[str] = field(default_factory=list)
     trace: list[TraceEvent] = field(default_factory=list)
-    token_estimate: int = 0
-    token_estimate_breakdown: TokenEstimateBreakdown = field(
-        default_factory=TokenEstimateBreakdown
-    )
     quality: Quality = field(default_factory=Quality)
     article: ArticleModel | None = None
     markdown: str | None = None
     metadata: Metadata | None = None
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
     acquisition: AcquisitionProvenance | None = None
-
-    def __getattribute__(self, name: str) -> Any:
-        if name in _FETCH_ENVELOPE_QUALITY_FIELDS:
-            state = object.__getattribute__(self, "__dict__")
-            quality = state.get("quality")
-            if quality is not None:
-                return getattr(quality, name)
-        return object.__getattribute__(self, name)
-
-    def __setattr__(self, name: str, value: Any) -> None:
-        if name in _FETCH_ENVELOPE_QUALITY_FIELDS:
-            state = object.__getattribute__(self, "__dict__")
-            quality = state.get("quality")
-            if quality is not None and name not in state:
-                setattr(quality, name, value)
-                return
-        object.__setattr__(self, name, value)
 
     def to_dict(self) -> dict[str, Any]:
         from .codec import model_to_payload
@@ -476,17 +435,6 @@ class FetchEnvelope:
         return json.dumps(self.to_dict(), ensure_ascii=False, indent=2)
 
     def __post_init__(self) -> None:
-        from .quality import _dedupe_strings
-        from .tokens import coerce_token_estimate_breakdown
-
-        state = object.__getattribute__(self, "__dict__")
-        has_fulltext = bool(state["has_fulltext"])
-        content_kind = state["content_kind"]
-        has_abstract = bool(state["has_abstract"])
-        warnings = state["warnings"]
-        source_trail = state["source_trail"]
-        token_estimate = int(state["token_estimate"])
-        token_estimate_breakdown = state["token_estimate_breakdown"]
         self.acquisition = coerce_acquisition_provenance(self.acquisition)
         if self.article is not None:
             self.quality = self.article.quality
@@ -498,38 +446,7 @@ class FetchEnvelope:
                 raise ValueError(
                     "FetchEnvelope and ArticleModel acquisition provenance must match."
                 )
-        if self.trace and not source_trail:
-            source_trail = source_trail_from_trace(self.trace)
-        elif source_trail and not self.trace:
-            self.trace = trace_from_markers(source_trail)
-        if content_kind == "fulltext":
-            has_fulltext = True
-        elif content_kind == "abstract_only":
-            has_fulltext = False
-            has_abstract = True
-        elif has_fulltext:
-            content_kind = "fulltext"
-        elif has_abstract:
-            content_kind = "abstract_only"
-        self.quality.has_fulltext = self.quality.has_fulltext or has_fulltext
-        if content_kind != "metadata_only":
-            self.quality.content_kind = content_kind
-        self.quality.has_abstract = self.quality.has_abstract or has_abstract
-        self.quality.warnings = _dedupe_strings([*self.quality.warnings, *warnings])
-        self.quality.source_trail = _dedupe_strings(
-            [*self.quality.source_trail, *source_trail]
-        )
-        if token_estimate and not self.quality.token_estimate:
-            self.quality.token_estimate = token_estimate
-        if (
-            token_estimate_breakdown != TokenEstimateBreakdown()
-            and self.quality.token_estimate_breakdown == TokenEstimateBreakdown()
-        ):
-            self.quality.token_estimate_breakdown = coerce_token_estimate_breakdown(
-                token_estimate_breakdown
-            )
-        for name in _FETCH_ENVELOPE_QUALITY_FIELDS:
-            state.pop(name, None)
+            self.article.trace = self.trace
 
 
 @dataclass(kw_only=True)
@@ -543,6 +460,7 @@ class ArticleModel:
     quality: Quality = field(
         default_factory=lambda: Quality(has_fulltext=False, token_estimate=0)
     )
+    trace: list[TraceEvent] = field(default_factory=list)
     acquisition: AcquisitionProvenance | None = None
 
     def to_dict(self) -> dict[str, Any]:

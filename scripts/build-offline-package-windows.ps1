@@ -456,7 +456,7 @@ The offline build does not bundle Ghostscript/libvips from the build host PATH; 
 It bundles pinned Byparr source/private dependencies under `runtime/browser-components/byparr/`.
 Camoufox binaries and fingerprint models are prepared after core installation, including silent installs.
 Use `/SKIPBROWSERPREPARE` to skip. single-backend failure preserves core installation.
-See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers all`.
+See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers`.
 Successful online checks are reused for 24 hours; failed/cancelled checks allow retry.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
 Upgrades preserve credentials and optional tools. Uninstall keeps optional tools by default; interactive cleanup removes only recorded owned tools via the official Ghostscript uninstaller or individually recorded libvips files, preserving user additions. Shared Camoufox caches remain.

@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers.base import ProviderContent
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
 
@@ -15,38 +18,36 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
 
-        metadata, provider_name, source_trail = (
-            paper_fetch.fetch_metadata_for_resolved_query(
-                resolved,
-                clients={
-                    "elsevier": FixtureProvider(
-                        metadata={
-                            "provider": "elsevier",
-                            "official_provider": True,
-                            "doi": "10.1006/jaer.1996.0085",
-                            "title": "Official Elsevier Title",
-                            "landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
-                            "authors": ["Alice Example"],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1006/jaer.1996.0085",
-                            "title": "Crossref Title",
-                            "publisher": "Elsevier BV",
-                            "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
-                            "authors": ["Alice Example"],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
-                strategy=paper_fetch.FetchStrategy(preferred_providers=["elsevier"]),
-            )
+        metadata, provider_name, events = paper_fetch.fetch_metadata_for_resolved_query(
+            resolved,
+            clients={
+                "elsevier": FixtureProvider(
+                    metadata={
+                        "provider": "elsevier",
+                        "official_provider": True,
+                        "doi": "10.1006/jaer.1996.0085",
+                        "title": "Official Elsevier Title",
+                        "landing_page_url": "https://api.elsevier.com/content/abstract/scopus_id/0012465826",
+                        "authors": ["Alice Example"],
+                        "fulltext_links": [],
+                        "references": [],
+                    }
+                ),
+                "crossref": FixtureProvider(
+                    metadata={
+                        "provider": "crossref",
+                        "official_provider": False,
+                        "doi": "10.1006/jaer.1996.0085",
+                        "title": "Crossref Title",
+                        "publisher": "Elsevier BV",
+                        "landing_page_url": "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
+                        "authors": ["Alice Example"],
+                        "fulltext_links": [],
+                        "references": [],
+                    }
+                ),
+            },
+            strategy=paper_fetch.FetchStrategy(preferred_providers=["elsevier"]),
         )
 
         self.assertEqual(provider_name, "elsevier")
@@ -55,13 +56,32 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             metadata["landing_page_url"],
             "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
         )
-        self.assertIn("route:crossref_signal_ok", source_trail)
-        self.assertIn("route:signal_domain_elsevier", source_trail)
-        self.assertIn("route:signal_publisher_elsevier", source_trail)
-        self.assertIn("route:probe_elsevier_positive", source_trail)
-        self.assertIn("route:provider_selected_elsevier", source_trail)
-        self.assertIn("metadata:elsevier_ok", source_trail)
-        self.assertNotIn("metadata:crossref_ok", source_trail)
+        self.assertIn(
+            trace_facts(trace_event("route", "crossref_signal", "ok")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "signal_domain_elsevier", "info")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "signal_publisher_elsevier", "info")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "probe_elsevier", "positive")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "provider_selected_elsevier", "info")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("metadata", "elsevier", "ok")), trace_facts(events)
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("metadata", "crossref", "ok")), trace_facts(events)
+        )
 
     def test_fetch_metadata_records_unknown_probe_and_uses_crossref_public_metadata(
         self,
@@ -74,37 +94,43 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             confidence=1.0,
         )
 
-        metadata, provider_name, source_trail = (
-            paper_fetch.fetch_metadata_for_resolved_query(
-                resolved,
-                clients={
-                    "springer": FixtureProvider(
-                        metadata=paper_fetch.ProviderFailure(
-                            "not_supported", "Springer metadata probe is not supported."
-                        )
-                    ),
-                    "crossref": FixtureProvider(
-                        metadata={
-                            "provider": "crossref",
-                            "official_provider": False,
-                            "doi": "10.1007/test",
-                            "title": "Crossref Fallback",
-                            "landing_page_url": "https://example.test/article",
-                            "authors": [],
-                            "fulltext_links": [],
-                            "references": [],
-                        }
-                    ),
-                },
-                strategy=paper_fetch.FetchStrategy(),
-            )
+        metadata, provider_name, events = paper_fetch.fetch_metadata_for_resolved_query(
+            resolved,
+            clients={
+                "springer": FixtureProvider(
+                    metadata=paper_fetch.ProviderFailure(
+                        "not_supported", "Springer metadata probe is not supported."
+                    )
+                ),
+                "crossref": FixtureProvider(
+                    metadata={
+                        "provider": "crossref",
+                        "official_provider": False,
+                        "doi": "10.1007/test",
+                        "title": "Crossref Fallback",
+                        "landing_page_url": "https://example.test/article",
+                        "authors": [],
+                        "fulltext_links": [],
+                        "references": [],
+                    }
+                ),
+            },
+            strategy=paper_fetch.FetchStrategy(),
         )
 
         self.assertEqual(provider_name, "springer")
         self.assertEqual(metadata["title"], "Crossref Fallback")
-        self.assertIn("route:probe_springer_unknown", source_trail)
-        self.assertIn("route:provider_selected_springer", source_trail)
-        self.assertIn("metadata:crossref_ok", source_trail)
+        self.assertIn(
+            trace_facts(trace_event("route", "probe_springer", "unknown")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "provider_selected_springer", "info")),
+            trace_facts(events),
+        )
+        self.assertIn(
+            trace_facts(trace_event("metadata", "crossref", "ok")), trace_facts(events)
+        )
 
     def test_fetch_paper_model_routes_10_1006_doi_to_elsevier_via_crossref_signal(
         self,
@@ -141,9 +167,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=official_article,
                         ),
@@ -168,10 +197,22 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         assert article is not None
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("route:crossref_signal_ok", article.quality.source_trail)
-        self.assertIn("route:provider_selected_elsevier", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
-        self.assertNotIn("metadata:crossref_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("route", "crossref_signal", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "provider_selected_elsevier", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("metadata", "crossref", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_model_weak_negative_metadata_probe_still_attempts_official_fulltext(
         self,
@@ -197,9 +238,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         ),
                         raw_payload=RawFulltextPayload(
                             provider="elsevier",
-                            source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
-                            content_type="text/xml",
-                            body=b"<xml/>",
+                            content=ProviderContent(
+                                route_kind="raw",
+                                source_url="https://api.elsevier.com/content/article/doi/10.1006%2Fjaer.1996.0085",
+                                content_type="text/xml",
+                                body=b"<xml/>",
+                            ),
                         ),
                         article=official_article,
                     ),
@@ -222,10 +266,22 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
 
         self.assertEqual(article.source, "elsevier_xml")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("route:probe_elsevier_negative", article.quality.source_trail)
-        self.assertIn("route:provider_selected_elsevier", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_attempt", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_article_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("route", "probe_elsevier", "negative")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("route", "provider_selected_elsevier", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "attempt")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "article_ok")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_crossref_only_strategy_skips_official_probes(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -258,9 +314,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=sample_article(),
                         ),
@@ -283,12 +342,17 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
 
         assert envelope.article is not None
         self.assertEqual(envelope.article.source, "crossref_meta")
-        self.assertIn("metadata:crossref_ok", envelope.article.quality.source_trail)
-        self.assertNotIn(
-            "route:probe_elsevier_positive", envelope.article.quality.source_trail
+        self.assertIn(
+            trace_facts(trace_event("metadata", "crossref", "ok")),
+            trace_facts(envelope.article.trace),
         )
         self.assertNotIn(
-            "fulltext:elsevier_attempt", envelope.article.quality.source_trail
+            trace_facts(trace_event("route", "probe_elsevier", "positive")),
+            trace_facts(envelope.article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fulltext", "elsevier", "attempt")),
+            trace_facts(envelope.article.trace),
         )
 
     def test_fetch_paper_returns_fixed_envelope_shape_with_public_source_mapping(
@@ -320,9 +384,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             ),
                             raw_payload=RawFulltextPayload(
                                 provider="wiley",
-                                source_url="https://example.test/wiley.pdf",
-                                content_type="application/pdf",
-                                body=b"%PDF-1.4",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://example.test/wiley.pdf",
+                                    content_type="application/pdf",
+                                    body=b"%PDF-1.4",
+                                ),
                             ),
                             article=official_article,
                         ),
@@ -351,15 +418,8 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "doi",
                 "source",
                 "acquisition",
-                "has_fulltext",
-                "content_kind",
-                "has_abstract",
-                "warnings",
-                "source_trail",
                 "trace",
                 "diagnostic_artifacts",
-                "token_estimate",
-                "token_estimate_breakdown",
                 "quality",
                 "article",
                 "markdown",
@@ -370,7 +430,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertIsNone(envelope.article)
         self.assertIsNone(envelope.metadata)
         self.assertTrue(envelope.markdown)
-        self.assertTrue(envelope.has_fulltext)
+        self.assertTrue(envelope.quality.has_fulltext)
 
     def test_fetch_paper_only_populates_envelope_metadata_when_requested(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -403,9 +463,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=official_article,
                         ),
@@ -441,9 +504,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                             },
                             raw_payload=RawFulltextPayload(
                                 provider="elsevier",
-                                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
-                                content_type="text/xml",
-                                body=b"<xml/>",
+                                content=ProviderContent(
+                                    route_kind="raw",
+                                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Ftest",
+                                    content_type="text/xml",
+                                    body=b"<xml/>",
+                                ),
                             ),
                             article=official_article,
                         ),
@@ -506,9 +572,18 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
-        self.assertNotIn("fallback:html_attempt", article.quality.source_trail)
-        self.assertNotIn("fallback:html_abstract_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "attempt")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "abstract_only")),
+            trace_facts(article.trace),
+        )
 
     def test_fetch_paper_raises_when_metadata_only_fallback_is_disabled(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -605,9 +680,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                         },
                         raw_payload=RawFulltextPayload(
                             provider="springer",
-                            source_url="https://link.springer.com/article/test",
-                            content_type="text/html",
-                            body=b"<article>full text</article>",
+                            content=ProviderContent(
+                                route_kind="raw",
+                                source_url="https://link.springer.com/article/test",
+                                content_type="text/html",
+                                body=b"<article>full text</article>",
+                            ),
                         ),
                         article=springer_article,
                     ),
@@ -618,12 +696,16 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
 
         self.assertEqual(article.source, "springer_html")
         self.assertIn(
-            "route:provider_candidate_elsevier_rejected",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event("route", "provider_candidate_elsevier_rejected", "info")
+            ),
+            trace_facts(article.trace),
         )
         self.assertIn(
-            "route:provider_candidate_springer_accepted",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event("route", "provider_candidate_springer_accepted", "info")
+            ),
+            trace_facts(article.trace),
         )
 
     def test_weak_conflicting_access_boundary_continues_to_strong_doi_provider(
@@ -663,9 +745,12 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
             },
             raw_payload=RawFulltextPayload(
                 provider="springer",
-                source_url="https://link.springer.com/article/test",
-                content_type="text/html",
-                body=b"<article>full text</article>",
+                content=ProviderContent(
+                    route_kind="raw",
+                    source_url="https://link.springer.com/article/test",
+                    content_type="text/html",
+                    body=b"<article>full text</article>",
+                ),
             ),
             article=springer_article,
         )
@@ -696,12 +781,22 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertEqual(article.source, "springer_html")
         self.assertEqual(second.raw_calls, 1)
         self.assertIn(
-            "route:provider_candidate_elsevier_access_boundary_weak_continue",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event(
+                    "route",
+                    "provider_candidate_elsevier_access_boundary_weak_continue",
+                    "info",
+                )
+            ),
+            trace_facts(article.trace),
         )
         self.assertIn(
-            "route:provider_candidate_springer_identity_strong",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event(
+                    "route", "provider_candidate_springer_identity_strong", "info"
+                )
+            ),
+            trace_facts(article.trace),
         )
 
     def test_strong_doi_provider_access_boundary_stops_weaker_candidate(self) -> None:
@@ -754,6 +849,10 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
         self.assertEqual(article.source, "crossref_meta")
         self.assertEqual(second.raw_calls, 0)
         self.assertIn(
-            "route:provider_candidate_elsevier_access_boundary_stop",
-            article.quality.source_trail,
+            trace_facts(
+                trace_event(
+                    "route", "provider_candidate_elsevier_access_boundary_stop", "info"
+                )
+            ),
+            trace_facts(article.trace),
         )

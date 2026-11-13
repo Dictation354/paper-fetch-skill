@@ -1,6 +1,7 @@
 """Shared test support; contains no collected tests."""
 
 from __future__ import annotations
+
 from pathlib import Path
 from paper_fetch.providers.browser_runtime import (
     BrowserRuntimeConfig,

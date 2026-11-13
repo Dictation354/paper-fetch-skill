@@ -836,7 +836,7 @@ PNAS 的 supplementary 资产范围见 [明确附件 scope](#rule-supplementary-
 ### AMS HTML 必须保留完整正文并把图表图片回填原位
 
 - AMS HTML 要从 `#articleBody` / `.container-fulltext-display` 等完整正文容器抽取正文，保留后部 section、Acknowledgments 和 Data availability；正文中的 figure 与 image-only `.tableWrap` 要在原始位置渲染图片块与 caption；MathJax 渲染层旁边的扁平 fallback 文本不能和结构化公式重复出现；display equation 编号只来自源站明确 label 或 AMS `E...` 公式 id，`UE...` 无编号公式不合成 `Equation n.`；AMS 专用 inline renderer 要在正文和 caption 中保留 MathML、上下标和斜体变量，并保守修复上下标后 prose 括注的空格。
-- AMS 默认用 selected-browser 请求 `journals.ametsoc.org/view/...xml`；浏览器 HTML 失败或正文质量门槛不通过时，沿用同一 runtime/storage-state 和页面 seed 尝试 AMS `downloadpdf` PDF fallback。
+- AMS 默认用 selected-browser 请求 `journals.ametsoc.org/view/...xml`；浏览器 HTML 失败或正文质量门槛不通过时，沿用同一 runtime/profile 和页面 seed 尝试 AMS `downloadpdf` PDF fallback。
 - AMS figure 资产候选必须优先使用源 HTML 的 `Download Figure` EPS/TIFF 链接，并保留网页 full-size JPG/PNG 作为回退；PowerPoint 下载项不是图片资产。EPS/TIFF 下载请求必须继承浏览器 UA/Referer，下载成功后应通过图片转换后端转成 PNG 用于 Markdown，本地同时保留原始源文件和转换元数据。
 - 代表性 HTML：
   - [`../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html`](../tests/fixtures/golden_criteria/10.1175_bams-d-24-0223.1/original.html)

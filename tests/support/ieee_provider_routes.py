@@ -3,6 +3,7 @@
 """Shared test support; contains no collected tests."""
 
 from __future__ import annotations
+
 from paper_fetch.providers import (
     _ieee_html,
 )

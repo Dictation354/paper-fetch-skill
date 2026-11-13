@@ -16,7 +16,7 @@ from ..metadata.types import MetadataMergeRule, merge_metadata_layers
 from ..models import SourceKind, article_from_markdown, metadata_only_article
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
-from ..tracing import fulltext_marker, trace_from_markers
+from ..tracing import fulltext_event
 from ..utils import dedupe_authors, normalize_text, strip_html_tags
 from ._html_authors import AuthorExtractionPipeline, AuthorStep
 from ._ieee_url import (
@@ -528,7 +528,9 @@ def build_ieee_article_model(
 
     content = raw_payload.content
     merged_metadata = (
-        content.merged_metadata if content is not None else raw_payload.merged_metadata
+        content.merged_metadata
+        if content is not None
+        else raw_payload.content.merged_metadata
     )
     article_metadata = (
         merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -539,10 +541,7 @@ def build_ieee_article_model(
     if route != PDF_FALLBACK:
         markdown_text = markdown_text.strip()
     source: SourceKind = "ieee_pdf" if route == PDF_FALLBACK else "ieee_html"
-    trace = list(
-        raw_payload.trace
-        or trace_from_markers([fulltext_marker("ieee", "ok", route="html")])
-    )
+    trace = list(raw_payload.trace or [fulltext_event("ieee", "ok", route="html")])
     warnings = list(raw_payload.warnings)
     if asset_failures:
         if downloaded_assets:

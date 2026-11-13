@@ -389,7 +389,11 @@ def _identity_facet(
     if identity_status is None:
         if failure_code == "ambiguous":
             status = IdentityAcceptanceStatus.AMBIGUOUS
-        elif normalized_expected_doi and resolved_doi != normalized_expected_doi:
+        elif failure_code == "identity_mismatch" or (
+            normalized_expected_doi
+            and resolved_doi
+            and resolved_doi != normalized_expected_doi
+        ):
             status = IdentityAcceptanceStatus.MISMATCH
         elif resolved_doi or has_verified_landing_identity:
             status = IdentityAcceptanceStatus.RESOLVED
@@ -445,8 +449,8 @@ def _content_facet(
         status = ContentAcceptanceStatus.UNAVAILABLE
         has_abstract = False
     else:
-        status = ContentAcceptanceStatus(envelope.content_kind)
-        has_abstract = bool(envelope.has_abstract)
+        status = ContentAcceptanceStatus(envelope.quality.content_kind)
+        has_abstract = bool(envelope.quality.has_abstract)
     losses: SemanticLosses = quality.semantic_losses
     return ContentAcceptanceFacet(
         status=status,
@@ -1032,8 +1036,7 @@ def _provenance_facet(
         elif normalized_source == METADATA_ONLY:
             acquisition_consistent = acquisition.provider == "crossref"
         acquisition_consistent = acquisition_consistent and (
-            acquisition.fallback_used
-            == acquisition_fallback_used(trace, source_trail=quality.source_trail)
+            acquisition.fallback_used == acquisition_fallback_used(trace)
         )
     has_resolve = any(
         normalize_text(event.stage).lower() == "resolve" for event in trace

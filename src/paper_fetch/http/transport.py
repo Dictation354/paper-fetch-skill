@@ -255,7 +255,6 @@ class HttpTransport(CacheMixin, RetryMixin, BodyMixin):
         )
         # Instance-scoped so lightweight injected transports that do not run
         # this initializer are not mistaken for production streaming support.
-        self._streaming_ready = True
 
     def close(self) -> None:
         """Release pooled connections owned by this transport."""

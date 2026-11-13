@@ -1,6 +1,8 @@
 """Real Camoufox page-click contracts against locally fulfilled responses."""
 
 from __future__ import annotations
+from tests.support.transport import configure_stream_transport
+
 
 import hashlib
 from html import escape
@@ -177,6 +179,7 @@ def test_each_provider_downloads_existing_link_serially(
             for name in ("first.pdf", "second.pdf")
         ]
         transport = mock.Mock()
+        configure_stream_transport(transport)
         result = download_assets(
             SUPPLEMENTARY_KIND,
             transport,

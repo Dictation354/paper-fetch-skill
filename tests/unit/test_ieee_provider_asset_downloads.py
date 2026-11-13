@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.transport import configure_stream_transport
 from paper_fetch.providers import _ieee_asset_identity
 from paper_fetch.providers import _ieee_asset_recovery
 from paper_fetch.providers import _ieee_supplementary
@@ -202,6 +203,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             _ieee_asset_recovery._MemoizedImageDocumentFetcher(BrowserFetcher())
         )
         transport = mock.Mock()
+        configure_stream_transport(transport)
         transport.request.side_effect = RequestFailure(
             403,
             "forbidden",
@@ -327,6 +329,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             _ieee_asset_recovery._MemoizedImageDocumentFetcher(BrowserFetcher())
         )
         transport = mock.Mock()
+        configure_stream_transport(transport)
         transport.request.side_effect = RequestFailure(
             403,
             "forbidden",

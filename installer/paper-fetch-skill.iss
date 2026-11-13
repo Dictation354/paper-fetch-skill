@@ -407,7 +407,7 @@ function BrowserPreparationCommand: String;
 begin
   Result := '"' + ExpandConstant('{app}\runtime\python.exe') +
     '" -X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
-    '" --env-file "' + ExpandConstant('{app}\offline.env') + '" --prepare-browsers all';
+    '" --env-file "' + ExpandConstant('{app}\offline.env') + '" --prepare-browsers';
 end;
 
 function BrowserPreparationReady(Text: String): Boolean;
@@ -428,7 +428,7 @@ begin
   BrowserPreparationResult := 'Browser preparation: skipped';
   if SkipBrowserPrepare then exit;
   Params := '-X utf8 -m paper_fetch.offline_setup --install-root "' + ExpandConstant('{app}') +
-    '" --prepare-browsers all --non-interactive --result "' + ResultPath + '"';
+    '" --prepare-browsers --non-interactive --result "' + ResultPath + '"';
   WindowMode := SW_SHOW;
   if WizardSilent then WindowMode := SW_HIDE;
   if not WizardSilent then OptionalProgress.Show;

@@ -10,11 +10,9 @@ from typing import Any
 from collections.abc import Callable, Mapping
 
 from .config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
     build_runtime_env,
     browser_env_value,
 )
@@ -27,16 +25,11 @@ from .provider_catalog import (
 )
 from .providers.browser_runtime import (
     BrowserRuntimeConfig,
-    BrowserStagedStorageState,
     ensure_runtime_ready,
     load_runtime_config,
-    storage_state_path,
 )
 from .providers.browser_runtime.paths import (
-    commit_staged_storage_state,
-    configured_storage_state_path,
-    runtime_with_default_storage_profile,
-    stage_storage_state,
+    runtime_with_default_profile,
 )
 from .providers.browser_runtime.profile import PublisherProfileManager, profile_path
 from .providers.base import ProviderFailure
@@ -109,21 +102,14 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
     ),
 }
 
-_LEGACY_AUTH_STORAGE_STATE_ENV_VARS = {
-    "ams": AMS_STORAGE_STATE_JSON_ENV_VAR,
-    "wiley": WILEY_STORAGE_STATE_JSON_ENV_VAR,
-}
-
 
 @dataclass(frozen=True)
 class AuthResult:
     provider: str
-    storage_state_path: Path
     profile_dir: Path | None
     verified: bool
     final_url: str | None
     title: str | None
-    json_export: Mapping[str, Any] | None = None
 
 
 def browser_auth_provider_names() -> tuple[str, ...]:
@@ -173,7 +159,6 @@ def _manual_auth_prompt(
     provider_label: str,
     url: str,
     profile_dir: Path | None,
-    storage_state_path: Path | None,
 ) -> str:
     lines = [
         f"{provider_label} authentication browser is open.",
@@ -181,8 +166,6 @@ def _manual_auth_prompt(
     ]
     if profile_dir is not None:
         lines.append(f"Profile directory: {profile_dir}")
-    if storage_state_path is not None:
-        lines.append(f"Storage-state JSON: {storage_state_path}")
     lines.extend(
         [
             "Complete any publisher login or verification in the browser.",
@@ -197,7 +180,6 @@ def _wait_for_manual_completion(
     provider_label: str,
     url: str,
     profile_dir: Path | None,
-    storage_state_path: Path | None,
     confirm: Callable[[str], object] | None,
 ) -> None:
     if confirm is None:
@@ -206,7 +188,6 @@ def _wait_for_manual_completion(
         provider_label=provider_label,
         url=url,
         profile_dir=profile_dir,
-        storage_state_path=storage_state_path,
     )
     try:
         confirm(prompt)
@@ -217,25 +198,19 @@ def _wait_for_manual_completion(
         ) from exc
 
 
-def _runtime_with_auth_storage(
+def _runtime_with_auth_profile(
     runtime: BrowserRuntimeConfig,
     *,
     env: Mapping[str, str],
     provider: str,
-    storage_state_path: Path | None = None,
 ) -> BrowserRuntimeConfig:
     if runtime.profile_dir is None and runtime.user_data_dir is None:
-        runtime = runtime_with_default_storage_profile(
+        runtime = runtime_with_default_profile(
             runtime,
             env=env,
             provider=provider,
         )
-    if storage_state_path is None:
-        return runtime
-    return replace(
-        runtime,
-        storage_state_path=storage_state_path.expanduser().resolve(),
-    )
+    return runtime
 
 
 def _browser_page_snapshot(
@@ -332,12 +307,6 @@ def authenticate_provider_profile(
         "off",
     }
     runtime_env[BROWSER_HEADLESS_ENV_VAR] = "0"
-    explicit_storage_path = configured_storage_state_path(
-        runtime_env, provider=provider_key
-    )
-    legacy_storage_env_var = _LEGACY_AUTH_STORAGE_STATE_ENV_VARS.get(provider_key)
-    if legacy_storage_env_var is not None:
-        runtime_env.pop(legacy_storage_env_var, None)
     if timeout_ms is not None:
         runtime_env[BROWSER_TIMEOUT_MS_ENV_VAR] = str(timeout_ms)
     if browser_user_agent:
@@ -348,22 +317,19 @@ def authenticate_provider_profile(
         provider=provider_key,
         doi=auth_target.doi,
     )
-    runtime = _runtime_with_auth_storage(
+    runtime = _runtime_with_auth_profile(
         runtime,
         env=runtime_env,
         provider=provider_key,
-        storage_state_path=explicit_storage_path,
     )
     ensure_runtime_ready(runtime)
 
     profile_dir = profile_path(runtime)
-    resolved_storage_state_path = storage_state_path(runtime)
     manager: Any | None = None
     context = None
     page = None
     final_url: str | None = None
     title: str | None = None
-    staged_state: BrowserStagedStorageState | None = None
     try:
         if browser_user_agent:
             raise ProviderFailure(
@@ -376,14 +342,7 @@ def authenticate_provider_profile(
                 "Camoufox authentication requires a provider profile directory.",
             )
         profile_dir.mkdir(parents=True, exist_ok=True)
-        if runtime.state_mode == "json":
-            from .providers.browser_runtime.byparr_manager import (
-                ByparrManager,
-            )
-
-            manager = ByparrManager(runtime)
-        else:
-            manager = PublisherProfileManager(runtime)
+        manager = PublisherProfileManager(runtime)
         context = manager.new_context()
         page = context.new_page()
         from .providers.browser_runtime.navigation import navigate_page
@@ -398,7 +357,6 @@ def authenticate_provider_profile(
             provider_label=provider_label,
             url=active_url,
             profile_dir=profile_dir,
-            storage_state_path=resolved_storage_state_path,
             confirm=confirm,
         )
         final_url, title = _require_accepted_auth_page(
@@ -407,17 +365,6 @@ def authenticate_provider_profile(
             provider_label=provider_label,
             fallback_url=active_url,
         )
-        if runtime.state_mode == "json":
-            staged_state, stage_result = stage_storage_state(
-                context, runtime, filter_url=final_url
-            )
-            if staged_state is None or not commit_staged_storage_state(
-                staged_state, runtime
-            ).get("saved"):
-                raise ProviderFailure(
-                    ERROR,
-                    f"Cannot save accepted {provider_label} browser authentication state.",
-                )
     except ProviderFailure:
         raise
     except Exception as exc:
@@ -433,19 +380,12 @@ def authenticate_provider_profile(
             except Exception:
                 pass
 
-    # Native replay is the auth condition; JSON export is an auxiliary snapshot.
+    # Verify authentication by reopening the same native profile.
     replay_runtime = replace(runtime, headless=fetch_headless)
     manager = None
     page = None
     try:
-        if replay_runtime.state_mode == "json":
-            from .providers.browser_runtime.byparr_manager import (
-                ByparrManager,
-            )
-
-            manager = ByparrManager(replay_runtime)
-        else:
-            manager = PublisherProfileManager(replay_runtime)
+        manager = PublisherProfileManager(replay_runtime)
         context = manager.new_context()
         page = context.new_page()
         from .providers.browser_runtime.navigation import navigate_page
@@ -464,28 +404,11 @@ def authenticate_provider_profile(
         )
         digest = manager.refresh()
         manager.metadata["auth"] = {
-            "native_profile_verified": runtime.state_mode == "native",
+            "native_profile_verified": True,
             "state_replay_verified": True,
             "headless": fetch_headless,
             "state_sha256": digest,
         }
-        try:
-            staged_state, stage_result = stage_storage_state(
-                context, runtime, filter_url=final_url
-            )
-            if staged_state is None:
-                save_result = {**stage_result, "saved": False}
-            else:
-                save_result = commit_staged_storage_state(staged_state, runtime)
-                if save_result.get("saved"):
-                    manager.note_json_export(staged_state.path)
-        except Exception as exc:
-            save_result = {
-                "attempted": True,
-                "saved": False,
-                "reason": "export_failed",
-                "error": normalize_text(str(exc)),
-            }
     except ProviderFailure:
         raise
     except Exception as exc:
@@ -501,10 +424,8 @@ def authenticate_provider_profile(
 
     return AuthResult(
         provider=provider_key,
-        storage_state_path=resolved_storage_state_path,
         profile_dir=profile_dir,
         verified=True,
         final_url=final_url,
         title=title,
-        json_export=save_result,
     )

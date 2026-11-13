@@ -1,9 +1,9 @@
 from __future__ import annotations
+from dataclasses import replace
 import asyncio
 import json
 import threading
 import time
-from dataclasses import replace
 from pathlib import Path
 from mcp.types.version import LATEST_HANDSHAKE_VERSION
 from paper_fetch.mcp._deps import MCPDeps, default_mcp_deps
@@ -14,6 +14,7 @@ from paper_fetch.mcp.cache_index import (
 from paper_fetch.mcp.fetch_cache import (
     FETCH_ENVELOPE_CACHE_VERSION,
     fetch_envelope_cache_path,
+    cache_request_fingerprint,
 )
 from paper_fetch.models import (
     EXTRACTION_REVISION,
@@ -71,7 +72,6 @@ def sample_article() -> ArticleModel:
             has_fulltext=True,
             token_estimate=128,
             warnings=["example warning"],
-            source_trail=["source:ok"],
             token_estimate_breakdown=TokenEstimateBreakdown(
                 abstract=32, body=96, refs=24
             ),
@@ -95,9 +95,6 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
     return FetchEnvelope(
         doi=doi,
         source="elsevier_xml",
-        has_fulltext=True,
-        warnings=["example warning"],
-        source_trail=["source:ok"],
         trace=[
             trace_event("resolve", "doi_selected", "ok"),
             trace_event(
@@ -113,8 +110,6 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
                 context=TraceContext(provider="elsevier", route="xml_api"),
             ),
         ],
-        token_estimate=article.quality.token_estimate,
-        token_estimate_breakdown=article.quality.token_estimate_breakdown,
         quality=article.quality,
         article=article if "article" in modes else None,
         markdown="# Example Article\n\nExample body.\n"
@@ -210,18 +205,20 @@ def create_cached_fetch_envelope(
     extraction_revision: int = EXTRACTION_REVISION,
 ) -> None:
     request = {
-        "modes": list(modes or ["article", "markdown"]),
+        "target": "paper",
+        "modes": list(modes or ["markdown"]),
         "strategy": {
             "allow_metadata_only_fallback": True,
             "preferred_providers": None,
-            "asset_profile": None,
+            "asset_profile": "none",
             "require_local_body_assets": False,
             "require_full_size_body_assets": False,
         },
-        "include_refs": None,
+        "include_refs": "all",
         "max_tokens": "full_text",
     }
     payload = sample_envelope(modes=set(request["modes"]), doi=doi).to_dict()
+    payload["schema_version"] = 3
     path = fetch_envelope_cache_path(download_dir, doi)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(
@@ -229,6 +226,8 @@ def create_cached_fetch_envelope(
             {
                 "version": FETCH_ENVELOPE_CACHE_VERSION,
                 "extraction_revision": extraction_revision,
+                "credential_scope": "public",
+                "request_fingerprint": cache_request_fingerprint(doi, request),
                 "request": request,
                 "payload": payload,
             },
@@ -285,3 +284,23 @@ class FakeContext:
 
 
 __all__ = [name for name in globals() if not name.startswith("__")]
+
+
+def retained_view(payload, view):
+    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
+    from paper_fetch.mcp.schemas import ReadContentRequest
+
+    ref = payload["content_ref"]
+    text, offset = [], 0
+    while True:
+        part = DEFAULT_CONTENT_STORE.read(
+            ReadContentRequest(
+                content_id=ref["content_id"], view=view, offset=offset, max_chars=20000
+            )
+        )
+        text.append(part["text"])
+        offset = part["next_offset"]
+        if part["eof"]:
+            break
+    result = "".join(text)
+    return result if view == "markdown" else json.loads(result)

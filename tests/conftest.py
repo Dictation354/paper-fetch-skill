@@ -7,6 +7,7 @@ browser/runtime launch, or an unapproved subprocess.
 
 from __future__ import annotations
 
+
 import os
 from pathlib import Path
 import shutil

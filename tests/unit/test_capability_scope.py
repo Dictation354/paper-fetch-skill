@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.capability_scope import CapabilityScopeBuilder
 import hashlib
 import json
 from pathlib import Path
@@ -6,14 +7,12 @@ import pytest
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
     UNCACHEABLE_CAPABILITY_SCOPE,
-    CapabilityScopeBuilder,
     capability_scope_from_runtime_context,
     capability_scopes_for_query,
 )
 from paper_fetch.mcp.cache_index import list_cache_entries
 from paper_fetch.mcp.fetch_cache import (
     PUBLIC_CREDENTIAL_SCOPE,
-    credential_scope_from_env,
     envelope_capability_scope,
     fetch_envelope_cache_path,
 )
@@ -23,108 +22,62 @@ from paper_fetch.mcp.fetch_tool import (
 )
 from paper_fetch.mcp.schemas import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.providers.browser_runtime.profile import trusted_profile_digest
 from tests.support._mcp_support import mcp_test_deps, sample_envelope
 
 
-def _write_state(path: Path, *, value: str = "session") -> Path:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
+def _write_state(
+    path: Path, *, value: str = "session", provider: str = "wiley"
+) -> Path:
+    from paper_fetch.providers.browser_runtime.profile import (
+        _native_stamp,
+        METADATA_FILENAME,
+    )
+
+    path.mkdir(parents=True, exist_ok=True)
+    (path / "cookies.sqlite").write_text(value)
+    (path / METADATA_FILENAME).write_text(
         json.dumps(
             {
-                "cookies": [
-                    {
-                        "name": "session",
-                        "value": value,
-                        "domain": ".onlinelibrary.wiley.com",
-                        "path": "/",
-                    }
-                ],
-                "origins": [],
+                "provider": provider,
+                "state_sha256": hashlib.sha256(value.encode()).hexdigest(),
+                "native_stamp": _native_stamp(path),
             }
-        ),
-        encoding="utf-8",
+        )
     )
     return path
 
 
 @pytest.mark.parametrize(
-    ("env_factory", "expected_path_factory"),
-    [
-        (
-            lambda root, state: {"XDG_DATA_HOME": str(root)},
-            lambda root, state: (
-                root
-                / "paper-fetch"
-                / "publisher-browser-profiles"
-                / "wiley-camoufox"
-                / "storage-state.json"
-            ),
-        ),
-        (
-            lambda root, state: {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(root)},
-            lambda root, state: root / "storage-state.json",
-        ),
-        (
-            lambda root, state: {"PAPER_FETCH_BROWSER_USER_DATA_DIR": str(root)},
-            lambda root, state: root / "storage-state.json",
-        ),
-        (
-            lambda root, state: {"PAPER_FETCH_WILEY_STORAGE_STATE_JSON": str(state)},
-            lambda root, state: state,
-        ),
-    ],
-    ids=("default", "profile_dir", "user_data_dir", "explicit"),
+    "profile_env",
+    [None, "PAPER_FETCH_BROWSER_PROFILE_DIR", "PAPER_FETCH_BROWSER_USER_DATA_DIR"],
 )
 def test_capability_scope_binds_final_browser_state_path_and_digest(
-    tmp_path: Path,
-    env_factory,
-    expected_path_factory,
-) -> None:
-    state_argument = tmp_path / "explicit.json"
-    env = env_factory(tmp_path / "runtime", state_argument)
-    expected_path = expected_path_factory(tmp_path / "runtime", state_argument)
+    tmp_path, profile_env
+):
     from paper_fetch.providers.browser_runtime import load_runtime_config
-    from paper_fetch.providers.browser_runtime.profile import (
-        profile_path,
-        _native_stamp,
-        METADATA_FILENAME,
-    )
+    from paper_fetch.providers.browser_runtime.profile import profile_path
 
-    _write_state(expected_path)
+    env = {"XDG_DATA_HOME": str(tmp_path)}
+    if profile_env:
+        env[profile_env] = str(tmp_path / "explicit")
     native = profile_path(load_runtime_config(env, provider="wiley", doi="test"))
-    native.mkdir(parents=True, exist_ok=True)
-    digest = "a" * 64
-    (native / METADATA_FILENAME).write_text(
-        json.dumps(
-            {
-                "provider": "wiley",
-                "state_sha256": digest,
-                "native_stamp": _native_stamp(native),
-                "migrations": {
-                    str(expected_path.resolve()): hashlib.sha256(
-                        expected_path.read_bytes()
-                    ).hexdigest()
-                },
-            }
-        )
-    )
+    _write_state(native)
     scopes = capability_scopes_for_query(env, "10.1002/unit-test")
     use = BrowserStateCapabilityUse.from_path(
-        provider="wiley", backend="byparr", storage_state_path=native
+        provider="wiley", backend="byparr", profile_dir=native
     )
     builder = CapabilityScopeBuilder(env).add_browser_state_use(use)
     assert scopes[0] == builder.build()
     assert scopes[-1] == PUBLIC_CREDENTIAL_SCOPE
-    facts = builder.facts()["browser_states"]
-    assert facts[0]["storage_state_path"] == str(native.resolve())
-    assert facts[0]["content_sha256"] == digest
+    assert builder.facts()["browser_states"][0]["profile_dir"] == str(native.resolve())
 
 
 def test_env_only_scope_uses_current_capability_facts() -> None:
     env = {"ELSEVIER_API_KEY": "unit-secret", "CROSSREF_MAILTO": "x@example.test"}
 
-    assert credential_scope_from_env(env) == CapabilityScopeBuilder(env).build()
-    assert credential_scope_from_env(env).startswith("credential:")
+    assert CapabilityScopeBuilder(env).build() == CapabilityScopeBuilder(env).build()
+    assert CapabilityScopeBuilder(env).build().startswith("credential:")
 
 
 def test_runtime_scope_only_records_browser_state_after_actual_use(
@@ -135,8 +88,9 @@ def test_runtime_scope_only_records_browser_state_after_actual_use(
         assert capability_scope_from_runtime_context(context) == PUBLIC_CREDENTIAL_SCOPE
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="camoufox",
-            storage_state_path=state,
+            backend="byparr",
+            profile_dir=state,
+            content_sha256=trusted_profile_digest(state, "wiley"),
         )
         scope = capability_scope_from_runtime_context(context)
 
@@ -145,8 +99,8 @@ def test_runtime_scope_only_records_browser_state_after_actual_use(
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="wiley",
-                backend="camoufox",
-                storage_state_path=state,
+                backend="byparr",
+                profile_dir=state,
             )
         )
         .build()
@@ -160,10 +114,13 @@ def test_actually_used_state_never_degrades_to_public_if_file_disappears(
     with RuntimeContext(env={}) as context:
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="camoufox",
-            storage_state_path=state,
+            backend="byparr",
+            profile_dir=state,
+            content_sha256=trusted_profile_digest(state, "wiley"),
         )
-        state.unlink()
+        import shutil
+
+        shutil.rmtree(state)
         scope = capability_scope_from_runtime_context(context)
 
     assert scope == UNCACHEABLE_CAPABILITY_SCOPE
@@ -186,8 +143,8 @@ def test_scope_builder_ignores_incomplete_unused_and_missing_state_facts(
     )
     unused = BrowserStateCapabilityUse.from_path(
         provider="wiley",
-        backend="camoufox",
-        storage_state_path=tmp_path / "unused.json",
+        backend="byparr",
+        profile_dir=tmp_path / "unused.json",
         used=False,
     )
 
@@ -202,8 +159,8 @@ def test_scope_builder_deduplicates_used_state_and_handles_static_context(
     state = _write_state(tmp_path / "state.json")
     use = BrowserStateCapabilityUse.from_path(
         provider="wiley",
-        backend="camoufox",
-        storage_state_path=state,
+        backend="byparr",
+        profile_dir=state,
     )
     builder = CapabilityScopeBuilder({})
     builder.add_browser_state_uses((use, use))
@@ -229,9 +186,7 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
     )
 
     for provider in ("wiley", "science"):
-        native = (
-            root / "paper-fetch" / "publisher-browser-profiles" / f"{provider}-camoufox"
-        )
+        native = root / "paper-fetch" / "publisher-browser-profiles" / provider
         native.mkdir(parents=True)
         (native / METADATA_FILENAME).write_text(
             json.dumps(
@@ -253,12 +208,9 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="science",
-                backend="camoufox",
-                storage_state_path=(
-                    root
-                    / "paper-fetch"
-                    / "publisher-browser-profiles"
-                    / "science-camoufox"
+                backend="byparr",
+                profile_dir=(
+                    root / "paper-fetch" / "publisher-browser-profiles" / "science"
                 ),
             )
         )
@@ -273,17 +225,17 @@ def test_state_content_and_provider_are_scope_bound(tmp_path: Path) -> None:
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="wiley", backend="camoufox", storage_state_path=state
+                provider="wiley", backend="byparr", profile_dir=state
             )
         )
         .build()
     )
-    state.write_text(state.read_text().replace("first", "second"), encoding="utf-8")
+    _write_state(state, value="second")
     changed = (
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="wiley", backend="camoufox", storage_state_path=state
+                provider="wiley", backend="byparr", profile_dir=state
             )
         )
         .build()
@@ -292,7 +244,7 @@ def test_state_content_and_provider_are_scope_bound(tmp_path: Path) -> None:
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="science", backend="camoufox", storage_state_path=state
+                provider="science", backend="byparr", profile_dir=state
             )
         )
         .build()
@@ -306,15 +258,15 @@ def test_fetch_writer_uses_final_digest_of_actually_loaded_state(
 ) -> None:
     doi = "10.1002/final-state-scope"
     profile = tmp_path / "profile"
-    state = _write_state(profile / "storage-state.json", value="before-fetch")
+    state = _write_state(profile, value="before-fetch")
     env = {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(profile)}
     before_scope = (
         CapabilityScopeBuilder(env)
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="wiley",
-                backend="camoufox",
-                storage_state_path=state,
+                backend="byparr",
+                profile_dir=state,
             )
         )
         .build()
@@ -324,13 +276,20 @@ def test_fetch_writer_uses_final_digest_of_actually_loaded_state(
         del strategy, render
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="camoufox",
-            storage_state_path=state,
+            backend="byparr",
+            profile_dir=state,
+            content_sha256=trusted_profile_digest(state, "wiley"),
         )
         _write_state(state, value="after-fetch")
+        context.record_browser_state_capability_use(
+            provider="wiley",
+            backend="byparr",
+            profile_dir=state,
+            content_sha256=trusted_profile_digest(state, "wiley"),
+        )
         return sample_envelope(modes=set(modes), doi=query)
 
-    request = FetchPaperRequest(query=doi, modes=["markdown"])
+    request = FetchPaperRequest(query=doi, preset="cacheable_read", modes=["markdown"])
     with RuntimeContext(env=env, download_dir=tmp_path) as context:
         _fetch_paper_envelope(
             request,
@@ -348,8 +307,8 @@ def test_fetch_writer_uses_final_digest_of_actually_loaded_state(
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="wiley",
-                backend="camoufox",
-                storage_state_path=state,
+                backend="byparr",
+                profile_dir=state,
             )
         )
         .build()
@@ -362,15 +321,16 @@ def test_no_download_markdown_inherits_actual_browser_state_scope(
     tmp_path: Path,
 ) -> None:
     doi = "10.1002/no-download-private-markdown"
-    state = _write_state(tmp_path / "profile" / "storage-state.json")
-    env = {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(state.parent)}
+    state = _write_state(tmp_path / "profile")
+    env = {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(state)}
 
     def fake_fetch(query, *, modes, strategy, render, context):
         del strategy, render
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="camoufox",
-            storage_state_path=state,
+            backend="byparr",
+            profile_dir=state,
+            content_sha256=trusted_profile_digest(state, "wiley"),
         )
         return sample_envelope(modes=set(modes), doi=query)
 
@@ -414,11 +374,11 @@ def test_unavailable_native_summary_never_writes_a_private_or_public_sidecar(tmp
 
     def fake_fetch(query, *, modes, strategy, render, context):
         context.record_browser_state_capability_use(
-            provider="wiley", backend="byparr", storage_state_path=native
+            provider="wiley", backend="byparr", profile_dir=native
         )
         return sample_envelope(modes=set(modes), doi=query)
 
-    request = FetchPaperRequest(query=doi, modes=["markdown"])
+    request = FetchPaperRequest(query=doi, preset="cacheable_read", modes=["markdown"])
     with RuntimeContext(env={}, download_dir=tmp_path) as context:
         envelope = _fetch_paper_envelope(
             request,

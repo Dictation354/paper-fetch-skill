@@ -263,7 +263,7 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
         / "xdg"
         / "paper-fetch"
         / "publisher-browser-profiles"
-        / "annualreviews-camoufox"
+        / "annualreviews"
     )
 
 
@@ -307,7 +307,6 @@ def test_open_context_delegates_native_profile_without_injecting_json(tmp_path) 
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        storage_state_path=state,
     )
     browser_context = object()
     runtime = SimpleNamespace(
@@ -336,7 +335,6 @@ def test_open_context_failure_does_not_record_storage_state_use(tmp_path) -> Non
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        storage_state_path=state,
     )
     runtime = SimpleNamespace(
         new_browser_context_for_runtime_config=mock.Mock(
@@ -362,8 +360,6 @@ def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
         user_agent=None,
         profile_dir=None,
         user_data_dir=None,
-        storage_state_path=None,
-        persist_storage_state=False,
     )
     browser_context = object()
     runtime = SimpleNamespace(
@@ -956,6 +952,7 @@ def test_camoufox_runtime_readiness_allows_missing_runtime_for_launch_preparatio
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
         lambda: {
+            "runtime_valid": False,
             "packages": {"playwright": True, "camoufox": True},
             "package_ready": True,
             "runtime_installed": False,
@@ -977,6 +974,7 @@ def test_camoufox_status_distinguishes_package_and_runtime_readiness(
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
         lambda: {
+            "runtime_valid": False,
             "packages": {"playwright": True, "camoufox": True},
             "package_ready": True,
             "runtime_installed": False,
@@ -1047,7 +1045,6 @@ def test_browser_candidate_uses_native_navigation_without_context_guard(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     open_context = mock.Mock(return_value=(None, context))
     monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
@@ -1074,7 +1071,6 @@ def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1138,7 +1134,6 @@ def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1186,7 +1181,6 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1297,7 +1291,6 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
             artifact_dir=tmp_path / name,
             headless=True,
             user_agent=None,
-            persist_storage_state=False,
         )
         monkeypatch.setattr(
             _playwright_browser,
@@ -1440,8 +1433,6 @@ def test_camoufox_trace_does_not_report_unimported_json_as_used(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
-        storage_state_path=state,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1461,11 +1452,10 @@ def test_camoufox_trace_does_not_report_unimported_json_as_used(
         wait_seconds=0,
     )
 
-    assert result.diagnostics["browser_runtime_trace"]["storage_state_load"] == {
-        "path": str(state),
-        "exists": True,
-        "used": False,
-    }
+    assert (
+        "storage_state_load" not in result.diagnostics["browser_runtime_trace"]
+        and "storage_state_save" not in result.diagnostics["browser_runtime_trace"]
+    )
 
 
 def test_wiley_body_readiness_defers_login_navigation_paywall_text(
@@ -1488,7 +1478,6 @@ def test_wiley_body_readiness_defers_login_navigation_paywall_text(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1559,8 +1548,6 @@ def test_wiley_403_confirmed_body_and_identity_preserves_status(
         user_agent=None,
         profile_dir=None,
         user_data_dir=None,
-        storage_state_path=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1603,12 +1590,8 @@ def test_wiley_403_confirmed_body_and_identity_preserves_status(
         "accepted": False,
         "reason": "pending_fulltext_acceptance",
     }
-    assert trace["storage_state_load"] == {
-        "path": None,
-        "exists": False,
-        "used": False,
-    }
-    assert trace["storage_state_save"]["reason"] == "storage_state_write_disabled"
+    assert "storage_state_load" not in trace and "storage_state_save" not in trace
+    assert "storage_state_load" not in trace and "storage_state_save" not in trace
     assert not list(tmp_path.rglob("storage-state.json"))
 
 
@@ -1720,7 +1703,6 @@ def test_wiley_403_review_rejects_unconfirmed_candidate(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     readiness_result = (
         _stable_wiley_readiness()
@@ -1793,7 +1775,6 @@ def test_wiley_403_failure_advances_to_next_candidate(monkeypatch, tmp_path) -> 
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     readiness = mock.Mock(return_value=_stable_wiley_readiness())
     monkeypatch.setattr(
@@ -1854,7 +1835,6 @@ def test_wiley_all_http_status_candidates_fail_with_reviews(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1901,7 +1881,6 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -1956,7 +1935,6 @@ def test_exact_script_response_policy_fulfills_only_matching_script(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2026,7 +2004,6 @@ def test_body_readiness_uses_bounded_budget_and_keeps_final_html(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     captured_timeout: list[float] = []
 
@@ -2073,7 +2050,6 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2114,7 +2090,6 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     runtime_context = RuntimeContext(env={})
     readiness = browser_runtime.BrowserHtmlReadiness(wait_for_article_body=False)
@@ -2173,7 +2148,6 @@ def test_camoufox_provider_page_preparation_runs_before_html_capture(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2224,7 +2198,6 @@ def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2288,7 +2261,6 @@ def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2381,7 +2353,6 @@ def test_lightweight_warm_rejects_unusable_navigation(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2410,7 +2381,6 @@ def test_lightweight_warm_reports_no_cookie_change(monkeypatch, tmp_path) -> Non
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2441,7 +2411,6 @@ def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     readiness = mock.Mock()
     monkeypatch.setattr(
@@ -2491,7 +2460,6 @@ def test_camoufox_figure_page_selector_timeout_is_best_effort(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2528,7 +2496,6 @@ def test_camoufox_figure_page_without_selector_uses_fixed_wait(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     body_readiness = mock.Mock()
     monkeypatch.setattr(
@@ -2595,7 +2562,6 @@ def test_ieee_required_selector_waits_for_matching_article_number(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     monkeypatch.setattr(
         _playwright_browser,
@@ -2655,7 +2621,6 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
         artifact_dir=tmp_path,
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
     )
     runtime = RuntimeContext(
         env={},
@@ -2712,7 +2677,6 @@ def test_aip_normal_load_does_not_register_routes(monkeypatch, tmp_path):
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
-            persist_storage_state=False,
         ),
         wait_seconds=0,
         disable_media=profile.fast_html_attempt,
@@ -2742,7 +2706,6 @@ def test_pnas_sidebar_route_is_exact_and_provider_local(
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
-            persist_storage_state=False,
         ),
         wait_seconds=0,
         disable_media=True,
@@ -2865,7 +2828,6 @@ def test_science_final_document_response_ownership(
             artifact_dir=tmp_path,
             headless=True,
             user_agent=None,
-            persist_storage_state=False,
         ),
         wait_seconds=0,
     )
@@ -3465,7 +3427,10 @@ def test_browser_entrypoints_prepare_missing_runtime(
     monkeypatch.setattr(
         byparr,
         "_dependency_details",
-        lambda: {"packages": {"camoufox": True, "playwright": True}},
+        lambda: {
+            "runtime_valid": True,
+            "packages": {"camoufox": True, "playwright": True},
+        },
     )
     # Observe preparation at the manager's component boundary; no process runs.
     launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
@@ -3494,7 +3459,8 @@ def test_browser_entrypoints_prepare_missing_runtime(
             )
     elif route == "preflight":
         result = browser_preflight.preflight_browser_provider(
-            "ieee", env=runtime_env, save_storage_state=False
+            "ieee",
+            env=runtime_env,
         )
         assert result.status == "runtime_error"
         assert expected in result.message
@@ -3511,7 +3477,10 @@ def test_browser_entrypoints_prepare_missing_runtime(
 def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path):
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
-        lambda: {"packages": {"camoufox": False, "playwright": True}},
+        lambda: {
+            "runtime_valid": False,
+            "packages": {"camoufox": False, "playwright": True},
+        },
     )
     config = BrowserRuntimeConfig(
         provider="science",

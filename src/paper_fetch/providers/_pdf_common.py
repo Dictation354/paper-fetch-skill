@@ -8,7 +8,6 @@ from ..models.markdown import replace_markdown_image_url
 from ..quality.access_boundary import raise_for_paywall
 from ..acquisition import PDF_RENDER_REVISION
 
-import json
 import functools
 import os
 import re
@@ -34,7 +33,6 @@ from ..models.markdown import replace_markdown_images
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, validate_extracted_identity
 from ..utils import normalize_text, sanitize_filename
-from .browser_runtime.seed import CLOUDFLARE_COOKIE_NAMES, _CLOUDFLARE_COOKIE_PREFIXES
 from ._pdf_document import non_article_pdf_reason
 
 PdfAssetProfile = Literal["none", "body", "all"]
@@ -311,26 +309,6 @@ def _render_pdf_markdown_result_with_cache(
             cache[cache_key] = _copy_pdf_markdown_render_result(result)
         return result, "miss"
     return result, "disabled"
-
-
-def sanitize_storage_state(path: Path) -> Path:
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    cookies = payload.get("cookies", []) or []
-    filtered_cookies = [
-        cookie
-        for cookie in cookies
-        if cookie.get("name") not in CLOUDFLARE_COOKIE_NAMES
-        and not str(cookie.get("name", "")).startswith(_CLOUDFLARE_COOKIE_PREFIXES)
-    ]
-    payload["cookies"] = filtered_cookies
-
-    fd, temp_path = tempfile.mkstemp(prefix="playwright_state_", suffix=".json")
-    temp_file = Path(temp_path)
-    os.close(fd)
-    temp_file.write_text(
-        json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8"
-    )
-    return temp_file
 
 
 def filename_from_headers(headers: Mapping[str, str] | None) -> str | None:

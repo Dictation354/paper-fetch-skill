@@ -10,15 +10,67 @@
 
 ### 单篇抓取
 
-`fetch_paper(...)` 正文成功响应含 `schema_version=2`、`status="ok"`、`source`、可空 `acquisition={provider,route,representation,transport,fallback_used}`、紧凑 `acceptance`、溯源信息和 `token_estimate_breakdown={abstract,body,refs}`，按 modes 附带 `article`、`markdown`、`metadata`。
+`fetch_paper(...)` 正文成功响应含 preset、effective_options、content_ref、output_artifacts，以及 `schema_version=3`、`status="ok"`、`source`、可空 `acquisition={provider,route,representation,transport,fallback_used}`、紧凑 `acceptance`、溯源信息；完整 quality、trace 和逐公式诊断通过 diagnostics 视图读取。
 
-`save_markdown=true` 时 `article/markdown=null`，保留元数据、验收和诊断字段；单篇响应没有独立保存路径字段。显式指定 `markdown_output_dir`、`markdown_filename` 以确定待检查文件，批量则读取 `output_artifacts`。单篇工具不接受 `concurrency`、`detail`、`content_max_chars` 或 `overwrite`。
+
+
+### 正文句柄与读取
+
+
+`content_ref={content_id, views:{markdown|article|diagnostics:{total_chars}}, idle_ttl_seconds, render_truncated}`。只保留请求的正文表示；Markdown 是最终渲染快照，article 和 diagnostics 是 JSON 文本。diagnostics 含完整质量、来源、trace、warnings、acceptance 和 `formula_locations`。定位以完整数学片段匹配 final_latex：唯一为 located，多候选为 ambiguous，无匹配为 unlocated；范围 start/end 为 Markdown 的 Unicode 码点、左闭右开，section 为所在标题，不猜公式编号、不改正文或重新判断数学正确性。
+
+`read_content(content_id, view="markdown", offset=0, max_chars=6000)` 中 max_chars 为 1..20000，offset 为非负 Unicode 码点。返回 `text/offset/returned_chars/total_chars/next_offset/eof` 和原渲染 `render_truncated`。使用 next_offset 推进，不能用 JavaScript 字符串长度计算偏移；JSON 表示拼完后再解析。eof 只表示此表示读取结束，不能消除渲染本身的截断。
+
+句柄仅属于当前 MCP 服务实例，闲置 24 小时过期，读取刷新期限；总容量 256 MiB，按保留表示的 UTF-8 字节计量并 LRU 淘汰。批量结束后统一注册，优先淘汰旧请求，本批放不下的项 `content_ref=null`、warning `content_store_capacity_exceeded`，真实获取验收不变，不自动内联、落盘或重抓。句柄不写入持久 manifest、JSONL 或缓存。
+
+读取不联网、不准备 runtime、不写论文。`content_handle_expired` 表示失效/淘汰/未知句柄，`content_view_unavailable` 表示没有请求此表示，`content_range_out_of_bounds` 表示 offset 大于 total_chars；offset 等于末尾合法。处理见[失效与截断](failure-handling.md#正文句柄失效与宿主截断)。
+
+下面是宿主代码示例，`callTool(name,args)` 代指当前环境提供的工具调用。只消费 structuredContent 中的业务载荷，不整包 `text(r)`。一次输出一个正文片段，保存身份、句柄和读取进度供后续轮次调用 `readNext`：
+
+```javascript
+function payload(r) {
+  return r.structuredContent;
+}
+const request = {
+  strategy: {asset_profile: "none", allow_metadata_only_fallback: true},
+  include_refs: "all", max_tokens: "full_text",
+  no_download: true, prefer_cache: false,
+  artifact_mode: "none", save_markdown: false
+};
+// 单篇：const r = payload(await callTool("fetch_paper", {query, ...request}));
+// const items = [r];
+const r = payload(await callTool("batch_fetch", {queries, concurrency: 4, ...request}));
+const items = r.results;
+const reading = items.map(item => ({
+  doi: item.doi, source: item.source, acceptance: item.acceptance,
+  ref: item.content_ref, offset: 0, eof: false
+}));
+// 将 reading 保留在会话状态；后续追问直接复用对应句柄。
+async function readNext(state, maxChars = 6000) {
+  if (!state.ref) throw new Error("No retained content handle");
+  const p = payload(await callTool("read_content", {
+    content_id: state.ref.content_id, view: "markdown",
+    offset: state.offset, max_chars: maxChars
+  }));
+  if (p.status !== "ok") throw new Error(p.code + ": " + p.reason);
+  text({text: p.text, eof: p.eof, render_truncated: p.render_truncated});
+  state.pending = {next_offset: p.next_offset, eof: p.eof};
+  // 此调用只交付片段；宿主确认完整收到后，下一轮调用 acceptChunk。
+  // 若宿主截断，不调用 acceptChunk；保持 offset 并缩小 maxChars 重读。
+}
+function acceptChunk(state) {
+  state.offset = state.pending.next_offset;
+  state.eof = state.pending.eof;
+  delete state.pending;
+}
+await readNext(reading[0]);
+```
 
 ### 独立补充材料任务
 
-`fetch_paper` / `batch_fetch` 的 `target` 默认为 `paper`，`target="supplementary"` 只获取材料，不执行正文充分性检查、正文组装或正文 PDF fallback。范围由 provider 定义，含明确补充区、Source Data、Extended Data 和多媒体；普通数据仓库链接不自动纳入。正文付费不影响公开材料发现，不支持的来源返回 `not_supported`。正文的 `asset_profile`、引用和 token 选项不影响材料范围。
+`fetch_paper` / `batch_fetch` 的 `target` 默认为 `paper`，`target="supplementary"` 只获取材料，不执行正文充分性检查、正文组装或正文 PDF fallback。范围由 provider 定义，含明确补充区、Source Data、Extended Data 和多媒体；普通数据仓库链接不自动纳入。正文付费不影响公开材料发现，不支持的来源返回 `not_supported`，保留已解析 DOI、trace 和来源；已知 provider、stage="supplementary"、target 和 retryable=false 明确返回，未执行 route 为 null。缺少实际 DOI 是 identity unavailable，只有显式冲突或实际/期望 DOI 均存在且不同时是 mismatch。正文的 `asset_profile`、引用和 token 选项不影响材料范围。
 
-结果含 `target="supplementary"`、`has_fulltext=false`、`article=null`，以及 `supplementary={assets,asset_failures,discovery_complete,identity_verified,source_urls,...}`。Markdown 是材料索引，默认文件名为 `<paper-stem>_supplementary.md`，显式 `markdown_filename` 可覆盖。`no_download=true` 或 artifact 禁止资产写盘时保留发现清单及 `archive_state="not_archived"`。
+结果含 `target="supplementary"`、材料索引句柄，以及 `supplementary={assets,asset_failures,discovery_complete,identity_verified,source_urls,...}`。Markdown 是材料索引，默认文件名为 `<paper-stem>_supplementary.md`，显式 `markdown_filename` 可覆盖。`no_download=true` 或 artifact 禁止资产写盘时保留发现清单及 `archive_state="not_archived"`。
 
 紧凑 acceptance 附带 `target="supplementary"`、`content_requested=false`、`content="unavailable"`，按身份、发现、文件及来源验收。只有完整检查且未发现材料时返回 `status="no_result"`。正文和材料请求指纹隔离；材料 `prefer_cache=true` 命中要求发现完整、身份匹配且所需文件仍存在。参数组合见[任务目标](presets.md#任务目标)，结论见[补充材料验收](acceptance.md#补充材料验收)。
 
@@ -37,12 +89,14 @@
 ## Browser Preflight Contract
 
 - 只在需要真实页面证据时调用；静态配置问题用 `provider_status` / CLI `doctor`。未传 `provider` 时检查 catalog 中全部 browser provider 的内置样例，诊断已知目标应限定 provider。
-- 参数：`provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, storage_state_path=None, save_storage_state=true, detail="full"`。`test_url` / `storage_state_path` 要求一个显式 provider；URL 必须为无内嵌凭据的 HTTP(S)，`timeout_ms` 为 `1..600000`；非空 `browser_user_agent` 当前被拒绝。
-- 预检自动准备 managed runtime、访问远端页面且可能写 storage-state；不执行 PDF fallback 或自动认证。`save_storage_state=false` 仅关闭 JSON 导出，原生状态目录仍可更新。状态与认证语义见[环境](environment.md#browser-backend-与-storage-state)。
-- 逐 provider 返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`。compact 每项只有 `provider/status/reason_code/stage/message/next_action`；full 另含 label、脱敏 URL/title、状态保存与 browser/page diagnostics。顶层含 `pdf_fallback_attempted=false`、`auth_attempted=false` 及状态汇总。
+- 参数：`provider=None, test_url=None, timeout_ms=None, browser_user_agent=None, profile_dir=None, detail="full"`。`test_url` / `profile_dir` 要求一个显式 provider；URL 必须为无内嵌凭据的 HTTP(S)，`timeout_ms` 为 `1..600000`；非空 `browser_user_agent` 当前被拒绝。
+- 预检自动准备 managed runtime、访问远端页面并复用原生 profile；不执行 PDF fallback 或自动认证。状态与认证语义见[环境](environment.md#browser-backend-与-storage-state)。
+- 逐 provider 返回 `ready`、`challenge`、`auth_required`、`network_timeout`、`extraction_error`、`runtime_error` 或 `cancelled`。compact 每项只有 `provider/status/reason_code/stage/message/next_action`；full 另含 label、脱敏 URL/title、原生 profile 目录与 browser/page diagnostics。顶层含 `pdf_fallback_attempted=false`、`auth_attempted=false` 及状态汇总。
 - 一个 provider 失败不删除其它结果；取消保留已有结果并停止后续调度。支持 progress 的宿主收到开始、逐项和最终通知。读取实际结构化 code，不维护完整错误枚举；`ready` 后继续 fetch，认证需求进入人工 auth，runtime 错误见[运行时准备](environment.md#运行时准备与授权)。
 
 ## Cache Query Contract
+
+MCP 输出为 v3，fetch-envelope sidecar 为 v6，cache index 为 v3。旧缓存返回版本不匹配，不迁移或删除旧文件。
 
 - `download_dir` 是 cache scope。查询只读当前版本注册索引，核对 DOI、scope、stat/hash，不扫描 loose files、不跨目录搜索、不联网；损坏或版本不匹配按 miss 处理。
 - `get_cached` 默认 `detail="full", preferred_only=false`，返回 entries、preferred 和索引字段；`preferred_only=true` 只保留优选 Markdown/primary entries，`preferred.assets=[]`，entry_summary 仍统计全部已证明条目。
@@ -62,14 +116,14 @@ CLI runtime fetch 退出码为 `ambiguous=2`、`no_access=3`、`rate_limited=4`�
 
 ## 输入与返回契约
 
-- 九个工具返回带 `schema_version=2` 的 structured payload；`tools/list` 不发布协议级 `outputSchema`。
+- 工具返回带 `schema_version=3` 的 structured payload；`tools/list` 不发布协议级 `outputSchema`。
 - 输入枚举：`modes=article|markdown|metadata`、`include_refs=none|top10|all`、`strategy.asset_profile=none|body|all`、`artifact_mode=markdown-assets|all|none`、cache `detail=full|compact`。以当前工具公开 schema 为准。
 - batch `queries` 为 `1..50` 项，`concurrency` 为 `1..8`、默认 `1`。输入对象及嵌套 strategy/budget 拒绝未知字段；字符串枚举去空白和规范大小写不放宽值域。
 
 ## Batch Probe Contract
 
 - `batch_check` 的 mode 仅支持 `"metadata"`（默认）。`probe_state=likely_yes|unknown` 是可用性信号，不是已取得正文；单篇传 `queries=[query]`，读 `results[0]`。
-- 顶层含 `mode/results/aborted/abort_reason/progress`。成功项 `likely_has_fulltext` 仅在 likely_yes 时为 true，否则 null；`has_fulltext/content_kind/has_abstract/source/acquisition/token_estimate/token_estimate_breakdown=null`，`source_trail/trace=[]`。
+- 顶层含 `mode/results/aborted/abort_reason/progress`。成功项 `likely_has_fulltext` 仅在 likely_yes 时为 true，否则 null；`has_fulltext/content_kind/has_abstract/source/acquisition/token_estimate/token_estimate_breakdown=null`，`trace=[]`。
 - `batch_resolve` / `batch_check` 的 results 与输入等长并保持顺序；每项有稳定 1-based `index/query/status/error/provider_lane`，歧义候选在逐项 error。progress 区分 `terminal/completed/not_scheduled`；错误、取消和未调度项不计作完成。
 - 调度采用解析后的 provider lane；同批规范 DOI 相同的检查执行一次再映射回全部输入。更大批量遵循[分块规则](presets.md#批量分块与证据等级)，限流和重试遵循[失败处理](failure-handling.md)。
 
@@ -82,7 +136,6 @@ batch_fetch(
     modes=["article"],
     include_refs="all",
     max_tokens="full_text",
-    detail="compact",
     save_markdown=False,
     no_download=True,
     prefer_cache=False,
@@ -91,33 +144,33 @@ batch_fetch(
 )
 ```
 
-不传 `batch_results`。上述 compact 不交付阅读正文；完整阅读用[单篇阅读预设](presets.md#1-临时阅读)或读合格文件。
+不传 `batch_results`。上述调用返回正文句柄；完整阅读用[阅读预设](presets.md#1-临时阅读)、批量句柄或读合格文件。
 
 ## Batch Fetch Contract
 
 - 输入沿用单篇的 target、modes、strategy、渲染、cache、artifact、Markdown 和 download_dir 语义；多条输入不能共用一个 markdown_filename。
-- 默认 `detail="compact"`。逐项含 index/query、attempt、完成序号、run/record ID、request fingerprint、DOI/source/acquisition、acceptance、error、warning/code 摘要及 output_artifacts。快照有 path/kind/size/SHA-256，route/failure_code 不可用时为 null。results 按输入 index，completion_order 保留实际完成顺序。
-- `detail="bounded", content_max_chars=N` 返回 Markdown 片段；`N` 是整批共享的 `1..100000` 字符上限（默认 `20000`）。检查逐项 content_truncated/content_available_chars/content_returned_chars；compact 无正文，bounded 不保证完整阅读。
+- 正文始终通过句柄读取。逐项含 index/query、attempt、完成序号、run/record ID、request fingerprint、DOI/source/acquisition、acceptance、error、warning/code 摘要及 output_artifacts。快照有 path/kind/size/SHA-256，route/failure_code 不可用时为 null。results 按输入 index，completion_order 保留实际完成顺序。
 - 可选 `batch_results=<path>` 在整批结束后按输入顺序原子写最终 schema-v2 JSONL，每项一条 terminal record；文件已存在时默认拒绝，`overwrite=true` 允许替换。它不提供 journal 或恢复语义。
 - 同 provider/resource lane 限流只停止该 lane 的新项。`continue_on_error=true` 默认继续其它目标，false 停止新的全批提交。支持 progress/cancel；取消保留已完成产物及 cancelled/not-scheduled 结果，取消提交边界后的 worker 不再提交文件。
 - Resolve 后以规范 DOI 去重当前批次的 DOI/URL/title aliases，再按原 index/query fan-out；不同请求不共享执行。归档与 cache 参数组合见[落盘矩阵](presets.md#mcp-输出落盘矩阵)。
 
-## 运行时默认值（不是任务预设）
+## 默认临时阅读参数
 
 | 参数 | 默认值 |
 | --- | --- |
 | `target` | `"paper"` |
-| `modes` | `["article", "markdown"]` |
-| `strategy.asset_profile` | `null` |
+| `modes` | `["markdown"]` |
+| `preset` | `"temporary_read"` |
+| `strategy.asset_profile` | `"none"` |
 | `strategy.require_local_body_assets` | `false` |
 | `strategy.require_full_size_body_assets` | `false` |
 | `strategy.allow_metadata_only_fallback` | `true` |
-| `include_refs` | `null` |
+| `include_refs` | `"all"` |
 | `max_tokens` | `"full_text"` |
 | `prefer_cache` | `false` |
-| `no_download` | `false` |
+| `no_download` | `true` |
 | `save_markdown` | `false` |
-| `artifact_mode` | `"markdown-assets"` |
+| `artifact_mode` | `"none"` |
 | `markdown_output_dir` | `null` |
 | `markdown_filename` | `null` |
 
@@ -143,7 +196,7 @@ batch_fetch(
 
 ## Static Provider Catalog
 
-`resource://paper-fetch/provider-catalog` 是 provider/source/capability 权威入口，含 schema_version、tool_version、sources、带 transport 的 routes、asset_default、browser/runtime/status/preflight capabilities 和 source_provider_map。选择 provider_hint/preferred_providers 或解释 source 时读取，不另维护静态名单。catalog 不证明依赖就绪或远端可访问：静态状态用 provider_status，真实页面用 browser_preflight。
+`resource://paper-fetch/provider-catalog` 是 provider/source/capability 权威入口，含 schema_version、tool_version、sources、带 transport 的 routes、asset_default、browser/runtime/status/preflight capabilities 和 source_provider_map。另含只读 `browser_runtime`：当前 backend、manifest 中的 byparr_version、platform_engine、按需 preparation、请求/批量准备复用范围及 update_check_interval_seconds。读取 catalog 不准备或下载组件。选择 provider_hint/preferred_providers 或解释 source 时读取，不另维护静态名单。catalog 不证明依赖就绪或远端可访问：静态状态用 provider_status，真实页面用 browser_preflight。
 
 ## 内部一致性诊断
 
@@ -151,4 +204,6 @@ batch_fetch(
 
 - 完整 acceptance schema 为 v2，单篇/批量紧凑摘要由同一报告投影；不要要求紧凑摘要具有完整报告全部字段。对照同一请求、产物与顶层 trace，保留每个 retry event；不从 warning、source 名或 has_fulltext 重建 acquisition/结论。
 - 资产计数和 preview 别名合并由工具负责；accepted preview 可合格，fallback preview 为 fidelity 降级。严格 local/full-size 直接读取 *_satisfied，不能由 agent 重新合并资产或手算分母。
-- request_satisfied 包含 sidecar version、extraction revision、DOI、acquisition、scope 和全部请求 modes 匹配。当前 sidecar version=5；不合格按 miss 重新抓取并保留已有 Markdown。读取返回状态和 fingerprint 解释 mismatch，不手算替代工具判断。
+- request_satisfied 包含 sidecar version、extraction revision、DOI、acquisition、scope 和全部请求 modes 匹配。当前 sidecar version=6、cache index version=3；不合格按 miss 重新抓取并保留已有 Markdown。读取返回状态和 fingerprint 解释 mismatch，不手算替代工具判断。
+
+原生 fetch 预设：temporary_read（默认）、cacheable_read、archive。先展开预设，再合并显式参数；正文始终通过 content_ref / read_content 消费。业务载荷仅位于 structuredContent；content 数组仅保留独立媒体。完整 envelope 只序列化一份 quality、acquisition 和 trace；article 部分仅含内容字段。独立 ArticleModel 包含完整质量和来源信息。MCP v3、fetch-envelope v6、cache index v3；旧缓存报告版本不匹配，不迁移或删除。

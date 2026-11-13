@@ -37,12 +37,12 @@ metadata/probe 请求失败的 warnings 表达证据不足或环境受限，不�
 batch_check(queries=["10.1186/1471-2105-11-421"], mode="metadata", concurrency=1)
 ```
 
-- 顶层包含 `schema_version=2`、`mode="metadata"`、按输入顺序的 `results`、
+- 顶层包含 `schema_version=3`、`mode="metadata"`、按输入顺序的 `results`、
   `aborted`、`abort_reason` 和 `progress`。
 - 每项保留稳定 1-based `index`、`query`、`status`、`error`、`provider_lane`，
   从 `probe_state`、`evidence`、`warnings` 读取预判；歧义候选在 `error.candidates`。
 - 成功项的 `has_fulltext/content_kind/has_abstract/source/acquisition/token_estimate/`
-  `token_estimate_breakdown` 保持 null，`source_trail/trace` 为空数组。
+  `token_estimate_breakdown` 保持 null，`trace` 为空数组。
   `likely_has_fulltext` 仅在 `likely_yes` 时为 true，否则为 null。
 - progress 区分 `terminal/completed/not_scheduled`；不能把没有调度或失败项算成
   已确认可读，也不能把 `likely_has_fulltext` 当作最终 `has_fulltext`。

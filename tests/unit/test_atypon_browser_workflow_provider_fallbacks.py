@@ -1,4 +1,7 @@
 from __future__ import annotations
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from paper_fetch.providers.base import ProviderFailure
 from tests.support._atypon_browser_workflow_provider_support import *
 # ruff: noqa: F403,F405
@@ -32,14 +35,20 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                 "browser_user_agent": "Mozilla/5.0",
             }
             mocked_warm = mock.Mock(
-                return_value={
-                    "browser_cookies": [
-                        seed["browser_cookies"][0],
-                        preflight_seed["browser_cookies"][0],
-                    ],
-                    "browser_user_agent": "Mozilla/5.0",
-                    "browser_final_url": f"https://www.science.org/doi/{SCIENCE_SAMPLE.doi}",
-                }
+                return_value=BrowserWarmResult(
+                    seed={
+                        "browser_cookies": [
+                            seed["browser_cookies"][0],
+                            preflight_seed["browser_cookies"][0],
+                        ],
+                        "browser_user_agent": "Mozilla/5.0",
+                        "browser_final_url": f"https://www.science.org/doi/{SCIENCE_SAMPLE.doi}",
+                    },
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
             )
             mocked_pdf = mock.Mock(
                 return_value=mock.Mock(
@@ -91,9 +100,12 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             list(mocked_pdf.call_args.args[0]),
         )
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-        self.assertTrue(raw_payload.needs_local_copy)
+        self.assertTrue(raw_payload.content.needs_local_copy)
         self.assertEqual(article.source, "science")
-        self.assertIn("fulltext:science_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "science_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_pnas_provider_prefers_html_route(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -137,7 +149,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         mocked_pdf.assert_not_called()
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "pnas")
-        self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "pnas_html", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_pnas_provider_uses_normal_browser_html_path(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -214,7 +229,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertEqual(raw_payload.content.fetcher, "byparr")
         self.assertEqual(raw_payload.content.diagnostics["html_fetcher"], "byparr")
         self.assertEqual(raw_payload.content.browser_context_seed, seed)
-        self.assertIn("fulltext:pnas_html_ok", _payload_source_trail(raw_payload))
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "pnas_html", "ok")),
+            trace_facts(_payload_events(raw_payload)),
+        )
 
     def test_pnas_html_uses_one_normal_browser_fetcher_attempt(self) -> None:
         client = pnas_provider.PnasClient(transport=None, env={})
@@ -277,7 +295,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             body=b"<html></html>",
             route="html",
             markdown_text=f"# {title}\n\n## Abstract\n\nWiley abstract only.",
-            source_trail=["fulltext:wiley_html_ok"],
+            events=[trace_event("fulltext", "wiley_html", "ok")],
             browser_context_seed={
                 "browser_cookies": [
                     {
@@ -314,12 +332,17 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
 
         self.assertEqual(result.article.source, "wiley_browser")
         self.assertEqual(result.article.quality.content_kind, "abstract_only")
-        self.assertIn("fulltext:wiley_html_ok", result.article.quality.source_trail)
         self.assertIn(
-            "fulltext:wiley_abstract_only", result.article.quality.source_trail
+            trace_facts(trace_event("fulltext", "wiley_html", "ok")),
+            trace_facts(result.article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley", "abstract_only")),
+            trace_facts(result.article.trace),
         )
         self.assertNotIn(
-            "fulltext:wiley_pdf_fallback_ok", result.article.quality.source_trail
+            trace_facts(trace_event("fulltext", "wiley_pdf_fallback", "ok")),
+            trace_facts(result.article.trace),
         )
         self.assertTrue(
             any(
@@ -389,12 +412,17 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             "challenge", mocked_pdf.call_args.kwargs["html_failure_message"].lower()
         )
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-        self.assertIn("fulltext:wiley_html_fail", _payload_source_trail(raw_payload))
         self.assertIn(
-            "fulltext:wiley_pdf_browser_ok", _payload_source_trail(raw_payload)
+            trace_facts(trace_event("fulltext", "wiley_html", "fail")),
+            trace_facts(_payload_events(raw_payload)),
         )
         self.assertIn(
-            "fulltext:wiley_pdf_fallback_ok", _payload_source_trail(raw_payload)
+            trace_facts(trace_event("fulltext", "wiley_pdf_browser", "ok")),
+            trace_facts(_payload_events(raw_payload)),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_fallback", "ok")),
+            trace_facts(_payload_events(raw_payload)),
         )
 
     def test_wiley_access_gate_remains_no_access_when_pdf_fallback_fails(
@@ -462,14 +490,20 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                 "browser_user_agent": "Mozilla/5.0",
             }
             mocked_warm = mock.Mock(
-                return_value={
-                    "browser_cookies": [
-                        seed["browser_cookies"][0],
-                        preflight_seed["browser_cookies"][0],
-                    ],
-                    "browser_user_agent": "Mozilla/5.0",
-                    "browser_final_url": f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
-                }
+                return_value=BrowserWarmResult(
+                    seed={
+                        "browser_cookies": [
+                            seed["browser_cookies"][0],
+                            preflight_seed["browser_cookies"][0],
+                        ],
+                        "browser_user_agent": "Mozilla/5.0",
+                        "browser_final_url": f"https://www.pnas.org/doi/{PNAS_SAMPLE.doi}",
+                    },
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
             )
             mocked_pdf = mock.Mock(
                 return_value=mock.Mock(
@@ -525,6 +559,9 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             ],
         )
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
-        self.assertTrue(raw_payload.needs_local_copy)
+        self.assertTrue(raw_payload.content.needs_local_copy)
         self.assertEqual(article.source, "pnas")
-        self.assertIn("fulltext:pnas_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "pnas_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )

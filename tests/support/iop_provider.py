@@ -1,6 +1,7 @@
 """Shared test support; contains no collected tests."""
 
 from __future__ import annotations
+
 from collections.abc import Mapping
 from types import SimpleNamespace
 from unittest import mock

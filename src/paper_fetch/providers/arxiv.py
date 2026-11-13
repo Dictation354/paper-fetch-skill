@@ -43,7 +43,7 @@ from ..models import (
     metadata_only_article,
 )
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, normalize_text
 from ._arxiv_assets import (
     ARXIV_IMAGE_ACCEPT,
@@ -285,7 +285,9 @@ class ArxivClient(ProviderClient):
             return payload
         content = payload.content
         content_metadata = (
-            content.merged_metadata if content is not None else payload.merged_metadata
+            content.merged_metadata
+            if content is not None
+            else payload.content.merged_metadata
         )
         references = (
             list(content_metadata.get("references") or [])
@@ -363,7 +365,7 @@ class ArxivClient(ProviderClient):
             reason="Downloaded full text from arXiv official HTML.",
             extracted_assets=extraction.extracted_assets,
             warnings=extraction.warnings,
-            trace_markers=[fulltext_marker(self.name, "ok", route="html")],
+            trace_events=[fulltext_event(self.name, "ok", route="html")],
         )
 
     def _fetch_pdf_payload(
@@ -491,8 +493,8 @@ class ArxivClient(ProviderClient):
                     label="html",
                     route_name="official_html",
                     run=run_html,
-                    failure_marker=fulltext_marker(self.name, "fail", route="html"),
-                    success_markers=(fulltext_marker(self.name, "ok", route="html"),),
+                    failure_event=fulltext_event(self.name, "fail", route="html"),
+                    success_events=(fulltext_event(self.name, "ok", route="html"),),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         "arXiv official HTML route was not usable "
@@ -503,9 +505,9 @@ class ArxivClient(ProviderClient):
                     label="pdf",
                     route_name="direct_pdf",
                     run=run_pdf,
-                    failure_marker=fulltext_marker(self.name, "fail", route="pdf"),
-                    success_markers=(
-                        fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+                    failure_event=fulltext_event(self.name, "fail", route="pdf"),
+                    success_events=(
+                        fulltext_event(self.name, "ok", route=PDF_FALLBACK),
                     ),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
@@ -576,14 +578,14 @@ class ArxivClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         arxiv_id = normalize_arxiv_id(
             str((merged_metadata or {}).get("arxiv_id") or "")
         ) or _arxiv_id_from_metadata_or_doi(doi, merged_metadata or {})
-        article_id = arxiv_id or normalize_text(doi) or raw_payload.source_url
+        article_id = arxiv_id or normalize_text(doi) or raw_payload.content.source_url
         article_html = bytes(
-            content.body if content is not None else raw_payload.body or b""
+            content.body if content is not None else raw_payload.content.body or b""
         ).decode("utf-8", errors="replace")
         result = (
             download_arxiv_html_figure_assets(
@@ -595,7 +597,7 @@ class ArxivClient(ProviderClient):
                     source_url=normalize_text(
                         content.source_url
                         if content is not None
-                        else raw_payload.source_url
+                        else raw_payload.content.source_url
                     ),
                     extracted_assets=(
                         content.extracted_assets if content is not None else []
@@ -651,7 +653,7 @@ class ArxivClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_metadata = dict(
             merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -684,10 +686,7 @@ class ArxivClient(ProviderClient):
             )
         default_route = PDF_FALLBACK if route == PDF_FALLBACK else "html"
         trace = list(
-            raw_payload.trace
-            or trace_from_markers(
-                [fulltext_marker(self.name, "ok", route=default_route)]
-            )
+            raw_payload.trace or [fulltext_event(self.name, "ok", route=default_route)]
         )
         warnings = list(raw_payload.warnings)
         if asset_failures:
@@ -784,9 +783,7 @@ class ArxivClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=ancillary is not None,
             text_only=not all_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("arxiv_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("arxiv_assets_skipped_text_only")]
             if not all_assets
             else [],
         )

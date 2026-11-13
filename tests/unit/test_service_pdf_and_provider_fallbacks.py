@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
 
@@ -54,8 +56,14 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertEqual(article.source, "crossref_meta")
-        self.assertIn("fulltext:elsevier_rate_limited", article.quality.source_trail)
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier", "rate_limited")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any("Retry-After: 3s" in warning for warning in article.quality.warnings)
         )
@@ -154,10 +162,10 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                 warnings=[
                                     "Full text was extracted from the Wiley TDM API PDF fallback after the HTML path was not usable."
                                 ],
-                                source_trail=[
-                                    "fulltext:wiley_html_fail",
-                                    "fulltext:wiley_pdf_api_ok",
-                                    "fulltext:wiley_pdf_fallback_ok",
+                                events=[
+                                    trace_event("fulltext", "wiley_html", "fail"),
+                                    trace_event("fulltext", "wiley_pdf_api", "ok"),
+                                    trace_event("fulltext", "wiley_pdf_fallback", "ok"),
                                 ],
                                 needs_local_copy=True,
                             ),
@@ -197,9 +205,18 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
         self.assertTrue(
             any("PDF fallback" in warning for warning in article.quality.warnings)
         )
-        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
-        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
-        self.assertIn("download:wiley_saved", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_api", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("download", "wiley", "saved")),
+            trace_facts(article.trace),
+        )
 
     def test_pdf_only_provider_result_is_not_replaced_by_crossref_metadata_only(
         self,
@@ -235,9 +252,9 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                 warnings=[
                                     "PDF was downloaded but Markdown extraction was not usable."
                                 ],
-                                source_trail=[
-                                    "fulltext:wiley_html_fail",
-                                    "fulltext:wiley_pdf_fallback_ok",
+                                events=[
+                                    trace_event("fulltext", "wiley_html", "fail"),
+                                    trace_event("fulltext", "wiley_pdf_fallback", "ok"),
                                 ],
                                 needs_local_copy=True,
                             ),
@@ -265,8 +282,14 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
 
         self.assertEqual(article.source, "wiley_browser")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
-        self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any(
                 "Markdown extraction was not usable" in warning
@@ -299,9 +322,9 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                     + "\n\n## Discussion\n\n"
                     + ("Discussion text " * 60)
                 ),
-                source_trail=[
-                    "fulltext:wiley_pdf_api_ok",
-                    "fulltext:wiley_pdf_fallback_ok",
+                events=[
+                    trace_event("fulltext", "wiley_pdf_api", "ok"),
+                    trace_event("fulltext", "wiley_pdf_fallback", "ok"),
                 ],
             ),
         )
@@ -371,8 +394,14 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
         finally:
             paper_fetch.resolve_paper = original_resolve
 
-        self.assertIn("download:custompdf_saved", article.quality.source_trail)
-        self.assertNotIn("download:elsevier_saved", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("download", "custompdf", "saved")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("download", "elsevier", "saved")),
+            trace_facts(article.trace),
+        )
 
     def test_wiley_pdf_fallback_can_be_processed_without_download_side_effects(
         self,
@@ -411,10 +440,10 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
                                     + "\n\n## Results\n\n"
                                     + ("Results text " * 60)
                                 ),
-                                source_trail=[
-                                    "fulltext:wiley_html_fail",
-                                    "fulltext:wiley_pdf_api_ok",
-                                    "fulltext:wiley_pdf_fallback_ok",
+                                events=[
+                                    trace_event("fulltext", "wiley_html", "fail"),
+                                    trace_event("fulltext", "wiley_pdf_api", "ok"),
+                                    trace_event("fulltext", "wiley_pdf_fallback", "ok"),
                                 ],
                                 needs_local_copy=True,
                             ),
@@ -443,7 +472,10 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
 
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("download:wiley_skipped", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("download", "wiley", "skipped")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(
             any(
                 "artifact mode is none" in warning
@@ -497,11 +529,20 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_fail", article.quality.source_trail)
         self.assertIn(
-            "fallback:wiley_html_managed_by_provider", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "wiley", "fail")),
+            trace_facts(article.trace),
         )
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(
+                trace_event("fallback", "wiley_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
 
     def test_springer_provider_owned_html_downloads_figure_assets_when_enabled(
         self,
@@ -621,7 +662,13 @@ class ServicePdfAndProviderFallbackTests(unittest.TestCase):
             paper_fetch.resolve_paper = original_resolve
             springer_markdown_helper.extract_article_markdown = original_extract
 
-        self.assertIn("fulltext:springer_html_ok", article.quality.source_trail)
         self.assertIn(
-            "download:springer_assets_saved_profile_body", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "springer_html", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(
+                trace_event("download", "springer_assets_saved_profile_body", "info")
+            ),
+            trace_facts(article.trace),
         )

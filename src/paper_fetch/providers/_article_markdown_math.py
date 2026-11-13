@@ -557,15 +557,6 @@ def formula_inline_markdown(result: FormulaRenderResult) -> str:
     )
 
 
-def render_inline_formula(element: ET.Element | None) -> str:
-    """Compatibility wrapper returning the un-delimited inline expression."""
-
-    result = render_inline_formula_result(element)
-    if result.image_url:
-        return formula_inline_markdown(result)
-    return (result.expression or "").strip()
-
-
 def formula_graphic_url(element: ET.Element | None, *, source_url: str = "") -> str:
     graphic = first_descendant(element, "graphic")
     if graphic is None:

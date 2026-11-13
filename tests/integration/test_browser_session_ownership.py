@@ -1,7 +1,9 @@
 """Real-thread contracts for the request-local browser session owner."""
 
-from concurrent.futures import ThreadPoolExecutor
 from dataclasses import replace
+
+
+from concurrent.futures import ThreadPoolExecutor
 from types import SimpleNamespace
 import threading
 
@@ -29,9 +31,6 @@ def install_backend(monkeypatch, events, *, close_started=None, finish_close=Non
         def new_context(self):
             assert threading.get_ident() == self.owner
             return self.context
-
-        def note_json_export(self, path):
-            events.append(("export", self.config.provider, self.owner))
 
         def refresh(self):
             events.append(("refresh", self.config.provider, self.owner))
@@ -73,7 +72,6 @@ def test_session_reuse_conflicts_and_publisher_switch_close_cached_pages(
         first = runtime.new_browser_context_for_runtime_config(config)
         assert runtime.new_browser_context_for_runtime_config(config) is first
         assert runtime.browser_profile_diagnostics(first) == {"provider": "wiley"}
-        runtime.note_browser_json_export(tmp_path / "state.json")
         runtime.refresh_browser_profiles()
         runtime.session_cache[("page",)] = SimpleNamespace(
             context=first,
@@ -95,7 +93,6 @@ def test_session_reuse_conflicts_and_publisher_switch_close_cached_pages(
         labels = [(kind, provider) for kind, provider, _ in events]
         assert labels == [
             ("create", "wiley"),
-            ("export", "wiley"),
             ("refresh", "wiley"),
             ("page", "wiley"),
             ("manager", "wiley"),

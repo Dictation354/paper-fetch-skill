@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import TraceEvent
+
 from ._definitions import PROVIDER_DEFINITIONS
 
 from ..quality.access_boundary import propagate_paywall, raise_for_paywall
@@ -51,7 +53,7 @@ from ..reason_codes import (
     PDF_FALLBACK,
 )
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import normalize_text
 from . import _ieee_browser_html as ieee_browser_html
 from . import _ieee_html as ieee_html
@@ -354,7 +356,7 @@ class IeeeClient(ProviderClient):
             reason="Downloaded full text from the IEEE Xplore dynamic HTML route.",
             extracted_assets=extracted_assets,
             browser_context_seed=landing_attempt.browser_context_seed,
-            trace_markers=[fulltext_marker("ieee", "ok", route="html")],
+            trace_events=[fulltext_event("ieee", "ok", route="html")],
         )
 
     def _fetch_browser_html_payload(
@@ -389,7 +391,7 @@ class IeeeClient(ProviderClient):
         html_failure_message: str,
         warnings: list[str],
         context: RuntimeContext,
-        html_trace_markers: list[str] | None = None,
+        html_trace_events: list[TraceEvent] | None = None,
     ) -> _RawFulltextPayload:
         document_url = self._document_url(landing_attempt.article_number)
         candidates = ieee_url._pdf_candidates(landing_attempt)
@@ -529,12 +531,11 @@ class IeeeClient(ProviderClient):
             html_failure_message=html_failure_message,
             needs_local_copy=True,
             warnings=[*payload_warnings, *pdf_fetch_result_warnings(pdf_result)],
-            trace_markers=[
+            trace_events=[
                 *list(
-                    html_trace_markers
-                    or [fulltext_marker("ieee", "fail", route="html")]
+                    html_trace_events or [fulltext_event("ieee", "fail", route="html")]
                 ),
-                fulltext_marker("ieee", "ok", route=PDF_FALLBACK),
+                fulltext_event("ieee", "ok", route=PDF_FALLBACK),
             ],
         )
 
@@ -543,7 +544,7 @@ class IeeeClient(ProviderClient):
         landing_attempt: ieee_metadata.IeeeLandingAttempt,
         *,
         warnings: list[str],
-        trace_markers: list[str],
+        trace_events: list[TraceEvent],
         diagnostics: Mapping[str, Any] | None = None,
     ) -> _RawFulltextPayload:
         markdown_text = ieee_metadata._abstract_markdown(
@@ -566,7 +567,7 @@ class IeeeClient(ProviderClient):
             diagnostics=diagnostics,
             reason="IEEE provider route only exposed abstract-level content.",
             warnings=warnings,
-            trace_markers=[*trace_markers, fulltext_marker("ieee", ABSTRACT_ONLY)],
+            trace_events=[*trace_events, fulltext_event("ieee", ABSTRACT_ONLY)],
         )
 
     def fetch_raw_fulltext(
@@ -606,7 +607,7 @@ class IeeeClient(ProviderClient):
                     html_failure_message=html_failure_message,
                     warnings=[],
                     context=runtime_context,
-                    html_trace_markers=state.source_trail,
+                    html_trace_events=state.events,
                 )
             except PdfFetchFailure as exc:
                 propagate_paywall(exc)
@@ -617,7 +618,7 @@ class IeeeClient(ProviderClient):
             return self._abstract_only_payload(
                 landing_attempt,
                 warnings=[],
-                trace_markers=state.source_trail,
+                trace_events=state.events,
                 diagnostics={
                     "html_failure": _provider_failure_diagnostics(
                         state.failure("html")
@@ -656,10 +657,10 @@ class IeeeClient(ProviderClient):
                 combined.code,
                 "IEEE full text could not be retrieved. " + combined.message,
                 warnings=state.warnings,
-                source_trail=[
-                    fulltext_marker("ieee", "fail", route="html"),
-                    fulltext_marker("ieee", "fail", route="browser_html"),
-                    fulltext_marker("ieee", "fail", route="pdf"),
+                trace=[
+                    fulltext_event("ieee", "fail", route="html"),
+                    fulltext_event("ieee", "fail", route="browser_html"),
+                    fulltext_event("ieee", "fail", route="pdf"),
                 ],
             )
 
@@ -671,7 +672,7 @@ class IeeeClient(ProviderClient):
                     run=lambda _state: self._fetch_dynamic_html_payload(
                         landing_attempt, context=runtime_context
                     ),
-                    failure_marker=fulltext_marker("ieee", "fail", route="html"),
+                    failure_event=fulltext_event("ieee", "fail", route="html"),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"IEEE dynamic HTML route was not usable ({failure.message}); "
@@ -688,9 +689,7 @@ class IeeeClient(ProviderClient):
                     condition=lambda state: _ieee_html_browser_recovery_allowed(
                         state.failure("html")
                     ),
-                    failure_marker=fulltext_marker(
-                        "ieee", "fail", route="browser_html"
-                    ),
+                    failure_event=fulltext_event("ieee", "fail", route="browser_html"),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"IEEE browser HTML fallback was not usable ({failure.message}); attempting PDF fallback."
@@ -700,7 +699,7 @@ class IeeeClient(ProviderClient):
                     label="pdf",
                     route_name="direct_pdf",
                     run=run_pdf,
-                    failure_marker=fulltext_marker("ieee", "fail", route="pdf"),
+                    failure_event=fulltext_event("ieee", "fail", route="pdf"),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"IEEE PDF fallback was not usable ({failure.message})."
@@ -819,9 +818,7 @@ class IeeeClient(ProviderClient):
             return artifacts
         pdf_assets = list(content.extracted_assets if content is not None else [])
         skip_trace = (
-            []
-            if pdf_assets
-            else trace_from_markers([download_marker("ieee_assets_skipped_text_only")])
+            [] if pdf_assets else [download_event("ieee_assets_skipped_text_only")]
         )
         return ProviderArtifacts(
             assets=[*list(artifacts.assets), *pdf_assets],

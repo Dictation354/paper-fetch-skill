@@ -27,12 +27,14 @@ from zipfile import ZipFile
 from filelock import FileLock, Timeout as LockTimeout
 
 from ...utils import normalize_text
+from ...browser_runtime_policy import (
+    UPDATE_CHECK_INTERVAL_SECONDS as UPDATE_CHECK_INTERVAL_SECONDS,
+)
 from ...config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
 from ...http import RequestCancelledError
 from .paths import _atomic_write_json
 
 DEFAULT_CHANNEL = "official/prerelease"
-UPDATE_CHECK_INTERVAL_SECONDS = 86400
 UPDATE_CHECK_FILENAME = ".paper-fetch-update-check.json"
 
 

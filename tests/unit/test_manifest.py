@@ -1,4 +1,6 @@
 from __future__ import annotations
+from dataclasses import asdict
+from paper_fetch.tracing import trace_event
 import json
 from dataclasses import dataclass
 from datetime import UTC, datetime
@@ -20,7 +22,6 @@ from paper_fetch.manifest import (
     parse_manifest_record,
 )
 from paper_fetch.reason_codes import METADATA_ONLY, PDF_FALLBACK
-from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import OverallAcceptanceStatus
 from tests.support.workflow_acceptance import _envelope
 
@@ -203,7 +204,7 @@ def test_failed_record_preserves_structured_error() -> None:
         "code": "provider_error",
         "http_status": 503,
         "warnings": ["重试稍后进行"],
-        "source_trail": ["fulltext:provider_fail"],
+        "trace": [asdict(trace_event("fulltext", "provider", "fail"))],
     }
     record = build_manifest_record(
         tool_version="3.1.0",

@@ -33,7 +33,7 @@
 
 顶层 `status=ok` 只表示调用没有抛出运行时失败；`has_fulltext` 是内容事实；`overall` 才是任务验收结论。三者不能互换。摘要或 metadata 可以是成功返回，但最多是 `limited`，不能报告成全文完成。
 
-此表描述完整报告的分面；单篇和批量 MCP 的紧凑 acceptance 将七个分面投影为状态字符串，另含 has_fulltext/has_abstract/token_estimate、acquisition 和 asset_summary。不要把摘要中的 identity/content 等当成嵌套对象；完整报告见 manifest。保留 source、acquisition 及 provenance 降级，不从 provider 名或 URL 补全缺失来源。
+此表描述完整报告的分面；单篇和批量 MCP 的紧凑 acceptance 将七个分面投影为状态字符串，另含 has_fulltext/has_abstract/token_estimate、acquisition 和 asset_summary。不要把摘要中的 identity/content 等当成嵌套对象；完整报告见 manifest 或句柄 diagnostics。保留 source、acquisition 及 provenance 降级，不从 provider 名或 URL 补全缺失来源。
 
 ## 资产验收
 
@@ -46,6 +46,7 @@
 
 - 核对响应的规范 identity 与原始输入映射；歧义、DOI mismatch 或身份不足按 [`workflow.md`](workflow.md) 的 BLOCKING 白名单处理。
 - 核对 `content` 是否满足当前 [`presets.md`](presets.md) 的文本意图；任务只需摘要时可接受 limited，用户明确需要全文时不能升级结论。
+- 工具取得全文、响应返回正文片段、调用方已读完是三个不同事实。handle 模式以 `read_content` 按 next_offset 读完所需范围，检查 eof 和 render_truncated；宿主截断时从同一 offset 缩小范围重读。保存身份、句柄及进度供追问复用。
 - 阅读任务还要取得并读取实际正文：compact 只含验收摘要，不能充当阅读材料；bounded 检查逐项 `content_truncated`、`content_available_chars` 和 `content_returned_chars`，并保留正文自身或宿主的截断提示。即使 acceptance 表明抓取到全文，也不能据截断响应宣称已读全文；完整阅读的获取路径见[临时阅读预设](presets.md#1-临时阅读)。
 - 请求资产时按[资产验收](#资产验收)核对；结构化 asset failure 和 placeholder 保留为对应降级。
 - 核对请求输出集合，保留 table/formula/asset 降级、fallback code 和 source trail。普通 warning 不按字符串猜测类别。
@@ -53,7 +54,7 @@
 
 ## 文件、路径与 hash 验收
 
-任务要求写盘或复用本地文件时，对 CLI `output_path`、批量 `output_artifacts[*].path`、单篇 MCP 请求参数确定的 Markdown 目标或待复用文件执行以下检查：
+任务要求写盘或复用本地文件时，对 CLI `output_path`、单篇/批量 MCP `output_artifacts[*].path` 或待复用文件执行以下检查：
 
 1. 路径位于用户选择/推断的目标目录，文件存在、可读且非空；独立材料任务完整空发现的索引允许为空，以结构化 `no_result` 和发现完整性为准。
 2. 正文 Markdown front matter 或 manifest identity 与规范目标一致；材料索引及附件通过结构化响应或 manifest 的身份、来源和资产路径关联核对。文件名和正文里偶然出现的 DOI 不能证明归属。

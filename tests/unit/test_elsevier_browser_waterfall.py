@@ -1,6 +1,9 @@
 """Minimal Elsevier route contracts; publisher content replays live in golden."""
 
+from tests.support.transport import configure_stream_transport
 from dataclasses import replace
+
+
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -127,6 +130,7 @@ def test_missing_key_skips_both_api_stages(monkeypatch):
 @pytest.mark.parametrize("status", [200, 403])
 def test_api_not_entitled_continues_to_html(monkeypatch, status):
     transport = Mock()
+    configure_stream_transport(transport)
     body = b'{"service-error":{"status":{"statusCode":"NOT_ENTITLED"}}}'
     if status == 403:
         transport.request.side_effect = RequestFailure(403, "denied", body=body)
@@ -180,8 +184,7 @@ def test_macos_keeps_elsevier_browser_stages(monkeypatch, tmp_path):
         {"XDG_DATA_HOME": str(tmp_path)}, provider="elsevier", doi=DOI
     )
     assert selection.selected_backend({}, provider="elsevier") == "byparr"
-    assert config.state_mode == "native"
-    assert config.user_data_dir.name == "elsevier-camoufox"
+    assert (config.profile_dir or config.user_data_dir).name == "elsevier"
 
 
 def test_first_page_api_pdf_is_rejected_before_conversion(monkeypatch):

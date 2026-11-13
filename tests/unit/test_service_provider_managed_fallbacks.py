@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import tempfile
 import unittest
 from pathlib import Path
@@ -13,7 +16,6 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
-from paper_fetch.tracing import trace_from_markers
 from tests.support._paper_fetch_support import (
     FixtureProvider,
     fetch_paper_model,
@@ -37,8 +39,10 @@ def _article_factory_with_source(source: str):
         article.source = source
         article.doi = str(metadata.get("doi") or article.doi)
         article.metadata.title = str(metadata.get("title") or article.metadata.title)
-        article.quality.source_trail = [
-            event.marker() for event in raw_payload.trace if event.marker()
+        article.trace = [
+            trace_event(event.stage, event.component, event.outcome)
+            for event in raw_payload.trace
+            if trace_event(event.stage, event.component, event.outcome)
         ]
         article.quality.warnings = list(raw_payload.warnings)
         return article
@@ -57,8 +61,10 @@ def _abstract_only_article_factory(source: str):
         article.quality.content_kind = "abstract_only"
         article.quality.has_fulltext = False
         article.quality.has_abstract = True
-        article.quality.source_trail = [
-            event.marker() for event in raw_payload.trace if event.marker()
+        article.trace = [
+            trace_event(event.stage, event.component, event.outcome)
+            for event in raw_payload.trace
+            if trace_event(event.stage, event.component, event.outcome)
         ]
         article.quality.warnings = list(raw_payload.warnings)
         return article
@@ -77,8 +83,10 @@ def _metadata_only_article_factory(source: str):
         article.quality.content_kind = "metadata_only"
         article.quality.has_fulltext = False
         article.quality.has_abstract = False
-        article.quality.source_trail = [
-            event.marker() for event in raw_payload.trace if event.marker()
+        article.trace = [
+            trace_event(event.stage, event.component, event.outcome)
+            for event in raw_payload.trace
+            if trace_event(event.stage, event.component, event.outcome)
         ]
         article.quality.warnings = list(raw_payload.warnings)
         return article
@@ -131,9 +139,15 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertIn(
-            "fallback:elsevier_html_managed_by_provider", article.quality.source_trail
+            trace_facts(
+                trace_event("fallback", "elsevier_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
         )
-        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_elsevier_xml_unusable_then_pdf_success_returns_fulltext_without_generic_html_fallback(
         self,
@@ -159,32 +173,36 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         }
         xml_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example",
-            content_type="text/xml",
-            body=b"<xml />",
-            content=ProviderContent(
-                route_kind="official",
+            content=replace(
+                ProviderContent(
+                    route_kind="official",
+                    source_url="https://api.elsevier.com/content/article/doi/example",
+                    content_type="text/xml",
+                    body=b"<xml />",
+                    reason="Downloaded full text from the official Elsevier API.",
+                ),
                 source_url="https://api.elsevier.com/content/article/doi/example",
                 content_type="text/xml",
                 body=b"<xml />",
-                reason="Downloaded full text from the official Elsevier API.",
             ),
         )
         pdf_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example.pdf",
-            content_type="application/pdf",
-            body=fulltext_pdf_bytes(),
-            content=ProviderContent(
-                route_kind="pdf_fallback",
+            content=replace(
+                ProviderContent(
+                    route_kind="pdf_fallback",
+                    source_url="https://api.elsevier.com/content/article/doi/example.pdf",
+                    content_type="application/pdf",
+                    body=fulltext_pdf_bytes(),
+                    reason="Downloaded full text from the official Elsevier API PDF fallback.",
+                    markdown_text="# Elsevier PDF Article\n\n## Results\n\n"
+                    + "Body text " * 80,
+                ),
                 source_url="https://api.elsevier.com/content/article/doi/example.pdf",
                 content_type="application/pdf",
                 body=fulltext_pdf_bytes(),
-                reason="Downloaded full text from the official Elsevier API PDF fallback.",
-                markdown_text="# Elsevier PDF Article\n\n## Results\n\n"
-                + ("Body text " * 80),
+                needs_local_copy=True,
             ),
-            needs_local_copy=True,
         )
         client = elsevier_provider.ElsevierClient(
             transport=mock.Mock(), env={"ELSEVIER_API_KEY": "secret"}
@@ -230,11 +248,26 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
 
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_pdf_api_ok", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_pdf_fallback_ok", article.quality.source_trail)
-        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_xml", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_pdf_api", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_html", "fail")),
+            trace_facts(article.trace),
+        )
 
     def test_elsevier_xml_and_pdf_failures_return_metadata_only_without_generic_html_fallback(
         self,
@@ -260,15 +293,17 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         }
         xml_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example",
-            content_type="text/xml",
-            body=b"<xml />",
-            content=ProviderContent(
-                route_kind="official",
+            content=replace(
+                ProviderContent(
+                    route_kind="official",
+                    source_url="https://api.elsevier.com/content/article/doi/example",
+                    content_type="text/xml",
+                    body=b"<xml />",
+                    reason="Downloaded full text from the official Elsevier API.",
+                ),
                 source_url="https://api.elsevier.com/content/article/doi/example",
                 content_type="text/xml",
                 body=b"<xml />",
-                reason="Downloaded full text from the official Elsevier API.",
             ),
         )
         client = elsevier_provider.ElsevierClient(
@@ -320,14 +355,32 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertFalse(article.quality.has_fulltext)
-        self.assertIn("fulltext:elsevier_xml_fail", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_pdf_api_fail", article.quality.source_trail)
         self.assertIn(
-            "fallback:elsevier_html_managed_by_provider", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "elsevier_xml", "fail")),
+            trace_facts(article.trace),
         )
-        self.assertIn("fallback:metadata_only", article.quality.source_trail)
-        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
-        self.assertIn("fulltext:elsevier_html_fail", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_pdf_api", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(
+                trace_event("fallback", "elsevier_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fallback", "metadata_only", "info")),
+            trace_facts(article.trace),
+        )
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_html", "fail")),
+            trace_facts(article.trace),
+        )
 
     def test_springer_provider_failure_skips_generic_html_fallback(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -373,9 +426,15 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
 
         self.assertEqual(article.source, "crossref_meta")
         self.assertIn(
-            "fallback:springer_html_managed_by_provider", article.quality.source_trail
+            trace_facts(
+                trace_event("fallback", "springer_html_managed_by_provider", "info")
+            ),
+            trace_facts(article.trace),
         )
-        self.assertNotIn("fallback:html_ok", article.quality.source_trail)
+        self.assertNotIn(
+            trace_facts(trace_event("fallback", "html", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_provider_managed_abstract_only_results_return_provider_article_directly(
         self,
@@ -431,19 +490,21 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 }
                 raw_payload = RawFulltextPayload(
                     provider=provider_name,
-                    source_url=resolved.landing_url,
-                    content_type="text/html",
-                    body=b"<html></html>",
-                    content=ProviderContent(
-                        route_kind="html",
+                    content=replace(
+                        ProviderContent(
+                            route_kind="html",
+                            source_url=resolved.landing_url,
+                            content_type="text/html",
+                            body=b"<html></html>",
+                        ),
                         source_url=resolved.landing_url,
                         content_type="text/html",
                         body=b"<html></html>",
                     ),
                     warnings=["Provider abstract-only warning."],
-                    trace=trace_from_markers(
-                        [f"fulltext:{provider_name}_abstract_only"]
-                    ),
+                    trace=[
+                        trace_event("fulltext", f"{provider_name}", "abstract_only")
+                    ],
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
@@ -472,13 +533,24 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 self.assertEqual(article.source, source_name)
                 self.assertEqual(article.quality.content_kind, "abstract_only")
                 self.assertIn(
-                    f"fulltext:{provider_name}_abstract_only",
-                    article.quality.source_trail,
+                    trace_facts(
+                        trace_event("fulltext", f"{provider_name}", "abstract_only")
+                    ),
+                    trace_facts(article.trace),
                 )
-                self.assertNotIn("fallback:metadata_only", article.quality.source_trail)
                 self.assertNotIn(
-                    f"fallback:{provider_name}_html_managed_by_provider",
-                    article.quality.source_trail,
+                    trace_facts(trace_event("fallback", "metadata_only", "info")),
+                    trace_facts(article.trace),
+                )
+                self.assertNotIn(
+                    trace_facts(
+                        trace_event(
+                            "fallback",
+                            f"{provider_name}_html_managed_by_provider",
+                            "info",
+                        )
+                    ),
+                    trace_facts(article.trace),
                 )
 
     def test_provider_managed_metadata_only_results_still_fall_back_to_crossref_metadata(
@@ -535,17 +607,19 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 }
                 raw_payload = RawFulltextPayload(
                     provider=provider_name,
-                    source_url=resolved.landing_url,
-                    content_type="text/html",
-                    body=b"<html></html>",
-                    content=ProviderContent(
-                        route_kind="html",
+                    content=replace(
+                        ProviderContent(
+                            route_kind="html",
+                            source_url=resolved.landing_url,
+                            content_type="text/html",
+                            body=b"<html></html>",
+                        ),
                         source_url=resolved.landing_url,
                         content_type="text/html",
                         body=b"<html></html>",
                     ),
                     warnings=["Provider metadata-only warning."],
-                    trace=trace_from_markers([f"fulltext:{provider_name}_html_fail"]),
+                    trace=[trace_event("fulltext", f"{provider_name}_html", "fail")],
                 )
                 original_resolve = paper_fetch.resolve_paper
                 try:
@@ -574,10 +648,19 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
                 self.assertEqual(article.source, "crossref_meta")
                 self.assertEqual(article.quality.content_kind, "abstract_only")
                 self.assertIn(
-                    f"fallback:{provider_name}_html_managed_by_provider",
-                    article.quality.source_trail,
+                    trace_facts(
+                        trace_event(
+                            "fallback",
+                            f"{provider_name}_html_managed_by_provider",
+                            "info",
+                        )
+                    ),
+                    trace_facts(article.trace),
                 )
-                self.assertIn("fallback:metadata_only", article.quality.source_trail)
+                self.assertIn(
+                    trace_facts(trace_event("fallback", "metadata_only", "info")),
+                    trace_facts(article.trace),
+                )
 
     def test_elsevier_pdf_route_skips_asset_downloads(self) -> None:
         resolved = paper_fetch.ResolvedQuery(
@@ -600,25 +683,25 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url=f"{resolved.landing_url}.pdf",
-            content_type="application/pdf",
-            body=fulltext_pdf_bytes(),
-            content=ProviderContent(
-                route_kind="pdf_fallback",
+            content=replace(
+                ProviderContent(
+                    route_kind="pdf_fallback",
+                    source_url=f"{resolved.landing_url}.pdf",
+                    content_type="application/pdf",
+                    body=fulltext_pdf_bytes(),
+                    markdown_text="# Elsevier PDF Article\n\n## Results\n\n"
+                    + "Body text " * 80,
+                ),
                 source_url=f"{resolved.landing_url}.pdf",
                 content_type="application/pdf",
                 body=fulltext_pdf_bytes(),
-                markdown_text="# Elsevier PDF Article\n\n## Results\n\n"
-                + ("Body text " * 80),
+                needs_local_copy=True,
             ),
-            trace=trace_from_markers(
-                [
-                    "fulltext:elsevier_xml_fail",
-                    "fulltext:elsevier_pdf_api_ok",
-                    "fulltext:elsevier_pdf_fallback_ok",
-                ]
-            ),
-            needs_local_copy=True,
+            trace=[
+                trace_event("fulltext", "elsevier_xml", "fail"),
+                trace_event("fulltext", "elsevier_pdf_api", "ok"),
+                trace_event("fulltext", "elsevier_pdf_fallback", "ok"),
+            ],
         )
         original_resolve = paper_fetch.resolve_paper
         provider_client = elsevier_provider.ElsevierClient(
@@ -667,7 +750,10 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         asset_download.assert_not_called()
         self.assertEqual(article.source, "elsevier_pdf")
         self.assertIn(
-            "download:elsevier_assets_skipped_text_only", article.quality.source_trail
+            trace_facts(
+                trace_event("download", "elsevier_assets_skipped_text_only", "info")
+            ),
+            trace_facts(article.trace),
         )
 
     def test_springer_pdf_route_skips_asset_downloads(self) -> None:
@@ -691,21 +777,24 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="springer",
-            source_url=f"{resolved.landing_url}.pdf",
-            content_type="application/pdf",
-            body=b"%PDF-1.7 fake",
-            content=ProviderContent(
-                route_kind="pdf_fallback",
+            content=replace(
+                ProviderContent(
+                    route_kind="pdf_fallback",
+                    source_url=f"{resolved.landing_url}.pdf",
+                    content_type="application/pdf",
+                    body=b"%PDF-1.7 fake",
+                    markdown_text="# Nature PDF Article\n\n## Results\n\n"
+                    + "Body text " * 80,
+                ),
                 source_url=f"{resolved.landing_url}.pdf",
                 content_type="application/pdf",
                 body=b"%PDF-1.7 fake",
-                markdown_text="# Nature PDF Article\n\n## Results\n\n"
-                + ("Body text " * 80),
+                needs_local_copy=True,
             ),
-            trace=trace_from_markers(
-                ["fulltext:springer_html_fail", "fulltext:springer_pdf_fallback_ok"]
-            ),
-            needs_local_copy=True,
+            trace=[
+                trace_event("fulltext", "springer_html", "fail"),
+                trace_event("fulltext", "springer_pdf_fallback", "ok"),
+            ],
         )
         original_resolve = paper_fetch.resolve_paper
         provider_client = springer_provider.SpringerClient(
@@ -756,7 +845,10 @@ class ProviderManagedFallbackServiceTests(unittest.TestCase):
         asset_download.assert_not_called()
         self.assertEqual(article.source, "springer_pdf")
         self.assertIn(
-            "download:springer_assets_skipped_text_only", article.quality.source_trail
+            trace_facts(
+                trace_event("download", "springer_assets_skipped_text_only", "info")
+            ),
+            trace_facts(article.trace),
         )
 
 

@@ -1,5 +1,8 @@
 """Small scenarios for the N1–N6 refetch findings."""
 
+from paper_fetch.models import Quality
+
+
 from pathlib import Path
 
 from markdown_it import MarkdownIt
@@ -195,7 +198,7 @@ def test_acs_distinct_table_downloads_survive_merging_and_strict_acceptance(
             doi=metadata["doi"],
             source=article.source,
             article=article,
-            has_fulltext=True,
+            quality=Quality(has_fulltext=True),
         ),
         asset_profile="body",
         require_local_body_assets=True,

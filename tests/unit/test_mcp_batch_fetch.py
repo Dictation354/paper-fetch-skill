@@ -1,9 +1,9 @@
 from __future__ import annotations
+from dataclasses import replace
 import asyncio
 import json
 import threading
 import time
-from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any
@@ -83,8 +83,6 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         batch_fetch_tool_async(
             **_temporary_kwargs(
                 deps=_deps(fetch),
-                detail="bounded",
-                content_max_chars=11,
                 ctx=ctx,
             )
         )
@@ -99,13 +97,13 @@ def test_batch_fetch_preserves_input_order_and_completion_metadata_with_bounded_
         "10.1000/two",
     ]
     assert [item["index"] for item in payload["completion_order"]] == [2, 1]
-    assert sum(item["content_returned_chars"] for item in payload["results"]) == 11
-    assert payload["content_returned_chars"] == 11
+    assert all(item["content_ref"] for item in payload["results"])
+    assert "content_returned_chars" not in payload
     assert payload["attempted_count"] == 2
     assert payload["execution_count"] == 2
     assert payload["deduplicated_count"] == 0
     assert payload["not_scheduled_count"] == 0
-    assert all(item["content_truncated"] for item in payload["results"])
+    assert all("content" not in item for item in payload["results"])
     assert set(payload["results"][0]["acceptance"]) == {
         "overall",
         "identity",
@@ -425,8 +423,8 @@ def test_batch_fetch_compact_default_never_returns_full_markdown() -> None:
     assert result.is_error is False
     payload = result.structured_content
     assert payload is not None
-    assert payload["detail"] == "compact"
-    assert payload["content_returned_chars"] == 0
+    assert "detail" not in payload
+    assert "content_returned_chars" not in payload
     assert all("content" not in item for item in payload["results"])
     assert all("article" not in item for item in payload["results"])
     assert all("markdown" not in item for item in payload["results"])
@@ -592,7 +590,6 @@ def test_batch_fetch_no_download_temporary_read_does_not_write_selected_scope(
         batch_fetch_tool_async(
             **_temporary_kwargs(
                 modes=modes,
-                detail="compact",
                 save_markdown=False,
                 prefer_cache=False,
                 download_dir=tmp_path,
@@ -662,7 +659,7 @@ def test_batch_fetch_atomically_writes_input_order_and_refuses_overwrite(
     records = [json.loads(line) for line in results_path.read_text().splitlines()]
     assert [record["index"] for record in records] == [1, 2]
     assert second.is_error is True
-    assert "refusing to overwrite" in second.content[0].text
+    assert "refusing to overwrite" in second.structured_content["reason"]
 
 
 def test_batch_manifest_records_normalized_item_request_parameters(
@@ -732,4 +729,7 @@ def test_batch_fetch_validation_rejects_shared_filename() -> None:
     )
 
     assert filename.is_error is True
-    assert "only valid when batch_fetch has one query" in filename.content[0].text
+    assert (
+        "only valid when batch_fetch has one query"
+        in filename.structured_content["reason"]
+    )

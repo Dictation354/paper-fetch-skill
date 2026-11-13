@@ -105,9 +105,6 @@ def test_one_owned_image_downloads_original_then_only_its_preview(tmp_path, mode
         FetchEnvelope(
             doi=article.doi,
             source=article.source,
-            has_fulltext=article.quality.has_fulltext,
-            content_kind=article.quality.content_kind,
-            has_abstract=article.quality.has_abstract,
             article=article,
             quality=article.quality,
             markdown=markdown,

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
 
 import unittest
 from typing import Any
@@ -7,7 +8,7 @@ from collections.abc import Mapping
 from paper_fetch.extraction.html.landing import fetch_landing_html
 
 
-class FakeLandingTransport:
+class FakeLandingTransport(RecordedStreamTransport):
     def __init__(self, responses: Mapping[str, Mapping[str, Any]]) -> None:
         self.responses = dict(responses)
         self.urls: list[str] = []

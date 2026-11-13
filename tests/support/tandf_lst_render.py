@@ -1,6 +1,7 @@
 """Shared test support; contains no collected tests."""
 
 from __future__ import annotations
+
 import re
 from tests.golden_criteria import golden_criteria_asset
 

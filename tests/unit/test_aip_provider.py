@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 from paper_fetch import publisher_identity
@@ -32,18 +33,18 @@ AIP_TABLE_FORMULA_DOI = "10.1063/5.0188905"
 REPO_ROOT = Path(__file__).resolve().parents[2]
 
 
-def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
+def test_aip_normal_html_load_retains_seed_with_native_profile(
     tmp_path,
 ) -> None:
     client = AipClient(transport=None, env={})
-    state_path = tmp_path / "aip-storage-state.json"
+    profile_dir = tmp_path / "aip"
     runtime = browser_runtime.BrowserRuntimeConfig(
         provider="aip",
         doi=AIP_STRUCTURE_DOI,
         artifact_dir=tmp_path / "artifacts",
         headless=True,
         user_agent=None,
-        storage_state_path=state_path,
+        profile_dir=profile_dir,
     )
     seed = {
         "browser_cookies": [
@@ -56,12 +57,6 @@ def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
         ],
         "browser_final_url": AIP_STRUCTURE_LANDING,
     }
-    second_stage = browser_runtime.BrowserStagedStorageState(
-        path=state_path,
-        provider="aip",
-        filter_url=AIP_STRUCTURE_LANDING,
-        payload={"cookies": list(seed["browser_cookies"]), "origins": []},
-    )
     mocked_browser = mock.Mock(
         side_effect=[
             browser_runtime.BrowserFetchedHtml(
@@ -73,7 +68,6 @@ def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
                 title="AIP article",
                 summary="Full article",
                 browser_context_seed=seed,
-                staged_storage_state=second_stage,
             ),
         ]
     )
@@ -96,18 +90,14 @@ def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
         extract_atypon_browser_workflow_markdown=mocked_extractor,
     )
 
-    with mock.patch(
-        "paper_fetch.providers.browser_runtime.paths.commit_staged_storage_state",
-        return_value={"saved": True, "reason": "saved"},
-    ) as commit_state:
-        raw_payload = client.fetch_raw_fulltext(
-            AIP_STRUCTURE_DOI,
-            {
-                "doi": AIP_STRUCTURE_DOI,
-                "title": "AIP article",
-                "landing_page_url": AIP_STRUCTURE_LANDING,
-            },
-        )
+    raw_payload = client.fetch_raw_fulltext(
+        AIP_STRUCTURE_DOI,
+        {
+            "doi": AIP_STRUCTURE_DOI,
+            "title": "AIP article",
+            "landing_page_url": AIP_STRUCTURE_LANDING,
+        },
+    )
 
     assert mocked_browser.call_count == 1
     for browser_call in mocked_browser.call_args_list:
@@ -116,8 +106,7 @@ def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
         assert not browser_call.kwargs.get("disable_media", False)
     assert "browser_context_seed" not in mocked_browser.call_args_list[0].kwargs
     assert mocked_browser.call_args_list[0].args[0][0] == AIP_STRUCTURE_LANDING
-    commit_state.assert_called_once()
-    assert not state_path.exists()
+    assert mocked_browser.call_args.kwargs["config"].profile_dir == profile_dir
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "html"
     attempts = raw_payload.content.diagnostics["html_attempts"]
@@ -125,12 +114,6 @@ def test_aip_normal_html_load_retains_seed_and_exports_compatible_state(
     assert (
         raw_payload.content.browser_context_seed["browser_cookies"]
         == seed["browser_cookies"]
-    )
-    assert (
-        raw_payload.content.diagnostics["browser_runtime_trace"]["storage_state_save"][
-            "saved"
-        ]
-        is True
     )
 
 
@@ -428,15 +411,17 @@ def test_aip_article_source_tracks_pdf_fallback_payload() -> None:
     client = AipClient(None, {})
     payload = RawFulltextPayload(
         provider="aip",
-        source_url=f"https://pubs.aip.org/doi/pdf/{AIP_STRUCTURE_DOI}",
-        content_type="application/pdf",
-        body=b"%PDF-1.7",
-        content=ProviderContent(
-            route_kind="pdf_fallback",
+        content=replace(
+            ProviderContent(
+                route_kind="pdf_fallback",
+                source_url=f"https://pubs.aip.org/doi/pdf/{AIP_STRUCTURE_DOI}",
+                content_type="application/pdf",
+                body=b"%PDF-1.7",
+                markdown_text="# PDF text",
+            ),
             source_url=f"https://pubs.aip.org/doi/pdf/{AIP_STRUCTURE_DOI}",
             content_type="application/pdf",
             body=b"%PDF-1.7",
-            markdown_text="# PDF text",
         ),
     )
 
@@ -469,15 +454,17 @@ def test_aip_download_related_assets_contract_marker(monkeypatch, tmp_path) -> N
         {"doi": AIP_STRUCTURE_DOI},
         RawFulltextPayload(
             provider="aip",
-            source_url=AIP_STRUCTURE_LANDING,
-            content_type="text/html",
-            body=b"<html></html>",
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=AIP_STRUCTURE_LANDING,
+                    content_type="text/html",
+                    body=b"<html></html>",
+                    markdown_text="# AIP",
+                ),
                 source_url=AIP_STRUCTURE_LANDING,
                 content_type="text/html",
                 body=b"<html></html>",
-                markdown_text="# AIP",
             ),
         ),
         tmp_path,

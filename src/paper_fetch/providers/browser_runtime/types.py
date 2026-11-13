@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterator, Mapping
+from collections.abc import Mapping
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypedDict
@@ -19,11 +19,7 @@ class BrowserRuntimeConfig:
     binary_path: str | None = None
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
-    storage_state_path: Path | None = None
-    persist_storage_state: bool = True
-    capability_storage_state_path: Path | None = None
     backend: str = "byparr"
-    state_mode: str = "native"
     component_cache_dir: Path | None = None
 
 
@@ -61,22 +57,8 @@ class BrowserHtmlFetchOptions:
 
 
 @dataclass(frozen=True)
-class BrowserStagedStorageState:
-    """Provider-scoped browser state captured before an accepted commit."""
-
-    path: Path
-    provider: str
-    filter_url: str
-    payload: Mapping[str, Any]
-
-
-@dataclass(frozen=True)
-class BrowserWarmResult(Mapping[str, Any]):
-    """Typed result for a bounded browser-context refresh attempt.
-
-    Mapping methods proxy the effective seed for compatibility with existing
-    provider adapters while callers migrate to the explicit outcome fields.
-    """
+class BrowserWarmResult:
+    """Typed result for a bounded browser-context refresh attempt."""
 
     seed: Mapping[str, Any]
     changed: bool
@@ -86,15 +68,6 @@ class BrowserWarmResult(Mapping[str, Any]):
     final_url: str | None = None
     cookie_delta: Mapping[str, int] = field(default_factory=dict)
     diagnostics: Mapping[str, Any] = field(default_factory=dict)
-
-    def __getitem__(self, key: str) -> Any:
-        return self.seed[key]
-
-    def __iter__(self) -> Iterator[str]:
-        return iter(self.seed)
-
-    def __len__(self) -> int:
-        return len(self.seed)
 
 
 @dataclass(frozen=True)
@@ -110,7 +83,6 @@ class BrowserFetchedHtml:
     screenshot_b64: str | None = None
     image_payload: Mapping[str, Any] | None = None
     diagnostics: Mapping[str, Any] | None = None
-    staged_storage_state: BrowserStagedStorageState | None = None
 
 
 class BrowserRuntimeFailure(Exception):

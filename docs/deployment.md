@@ -87,7 +87,7 @@ python -m camoufox set official/prerelease/<version>
 完全离线前，在联网环境用安装环境的 Python 预置；此命令也用于失败后重试：
 
 ```bash
-python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all
+python -m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers
 ```
 
 安装汇总以 `Browser preparation: ready|not ready|skipped` 报告本次结果，失败或取消
@@ -97,7 +97,7 @@ fpgen 模型，只复制 executable 不足以使用；fpgen 模型不在 Python 
 核验压缩包及各模型 SHA-256；校验失败不回退。Camoufox 的模型准备先于 Playwright 启动，
 自定义 executable 也遵守此顺序。
 
-`--prepare-browsers all|camoufox|byparr` 和 `--prepare-byparr` 均准备整套组合，
+`--prepare-browsers` 为布尔开关，准备所选平台引擎及 Byparr，
 当前平台引擎与 Byparr 组件分别复用准备结果。`--non-interactive` 允许用户级下载，
 不安装系统软件；Debian/Ubuntu 缺共享库时显示 APT 指引，交互模式经确认后安装。
 无需 Chrome、ChromeDriver、Selenium、Xvfb 或 bubblewrap。
@@ -261,7 +261,7 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的清理复选框，静默卸载（包括升级先卸载）始终保留。清理仅接受 `optional-tools.json` 中本向导拥有的版本目录：Ghostscript 校对注册路径和官方卸载器摘要后调用对应可见卸载器；UAC 取消、路径不符或失败时保留并报告位置。libvips 仅删除清单内摘要未变的文件，新增/修改文件保留。清理报告保存为 `optional-cleanup-results.txt`。Linux/macOS 不卸载 APT/Homebrew 工具；Windows 卸载另清理安装目录内由 runtime 生成的四个 fpgen 指纹模型文件，相关目录仅在为空时删除；用户新增文件保留。任何平台均不清理共享 Camoufox 缓存。
 
 - Windows：在“设置 > 应用 > 已安装的应用”中卸载 `Paper Fetch Skill`，或运行 `%LOCALAPPDATA%\PaperFetchSkill\unins000.exe`。卸载器会删除其管理的 runtime、wrapper、bundled skill 和元数据，删除安装器复制的 Codex / Claude Code / Antigravity skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 MCP 注册；`offline.env`、`downloads/` 内用户文件、其它安装根用户内容及用户手写的其它 Codex / Claude / Antigravity 配置会保留。
-- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 Codex skill 的当前和兼容路径（`~/.agents/skills/paper-fetch-skill` 和 `~/.codex/skills/paper-fetch-skill`）、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 和 Antigravity `mcp_config.json` 移除 MCP；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
+- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 Codex skill 的当前路径 `~/.agents/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并通过可用的 `codex` / `claude` CLI 和 Antigravity `mcp_config.json` 移除 MCP；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
 - macOS：卸载命令与 Linux 相同；如果使用自定义安装目录，运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。卸载只清理 `~/Library/Application Support/paper-fetch/.env` 的 managed block，保留用户自写内容。`--purge` 会在删除任何用户集成之前拒绝 `/`、HOME 及其祖先、尚未安装的当前 bundle root 等危险目标，并要求目标目录中的 schema 3 `offline-manifest.json` 证明 project / entrypoint 所有权且存在 `runtime/python-bin` 安装标记；校验失败时不会做部分卸载。
 
 离线安装约束：
@@ -483,11 +483,11 @@ paper-fetch doctor --group browser --detail compact
 记录完整文件列表、逐文件 SHA-256 与内容摘要。安装器在复制前后校验安装根与三个
 宿主 skill，缺失、多余、链接或摘要不符均无法通过完整性验收。
 
-Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。安装目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定；MCP 配置位置沿用现有契约。副本复制并通过内容校验后，安装器会清理同 scope 的兼容路径 `.codex/skills/paper-fetch-skill`；源码安装器还兼容清理 `CODEX_HOME/skills/paper-fetch-skill`。`--uninstall` 同时处理这些目录，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
+Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。安装目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定；MCP 配置位置沿用现有契约。安装和卸载仅处理当前 skill 路径，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
 
 源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或注销 MCP、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/MCP。
 
-排查本地配置使用 `doctor` / `provider_status`；检查站点访问使用 CLI 或 MCP `browser_preflight`；需要登录或人工验证时运行 `paper-fetch auth <provider>`。live 步骤会访问网络，并按[状态模式](browser-backends.md#状态模式)使用出版社状态；原生模式下 preflight 可更新持久目录，MCP 的 `save_storage_state=false` 仅禁止导出 JSON 快照。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 只表示本地能力可用；站点访问由实际请求验收。
+排查本地配置使用 `doctor` / `provider_status`；检查站点访问使用 CLI 或 MCP `browser_preflight`；需要登录或人工验证时运行 `paper-fetch auth <provider>`。live 步骤会访问网络，并复用[原生 profile](browser-backends.md)，与 auth、fetch 共用持久目录。两种 preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 只表示本地能力可用；站点访问由实际请求验收。
 
 ### CI / GitHub Actions
 
@@ -706,7 +706,7 @@ macOS 使用统一的受管 Camoufox＋Byparr；浏览器和模型可能联网�
 
 本地修改涉及上述边界时，先运行 `python scripts/validate_macos_adaptation.py`，再在当前平台运行对应 contract 入口。原生发布证据只能由 macOS runner 提供。
 
-Codex skill 的 `.agents/skills` 安装与兼容路径清理同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
+Codex skill 的 `.agents/skills` 当前路径安装与卸载同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
 
 `browser.supplementary_index_without_body` 对应的跨平台行为见[补充材料索引](browser-runtime.md#补充材料索引)。
 

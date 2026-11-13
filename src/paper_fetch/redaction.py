@@ -15,12 +15,6 @@ _CREDENTIAL_NAME_TOKENS = (
     "COOKIE",
     "MAILTO",
 )
-_SENSITIVE_CONFIGURATION_NAMES = frozenset(
-    {
-        "PAPER_FETCH_AMS_STORAGE_STATE_JSON",
-        "PAPER_FETCH_WILEY_STORAGE_STATE_JSON",
-    }
-)
 _DIAGNOSTIC_URL_IN_TEXT_RE = re.compile(
     r"(?P<base>(?:https?://|/)[^\s\"'<>?]+)\?[^\s\"'<>]*",
     re.IGNORECASE,
@@ -52,10 +46,7 @@ def is_sensitive_configuration_name(name: str) -> bool:
     """Return whether an environment/configuration name may hold a secret."""
 
     normalized = str(name or "").upper()
-    return (
-        any(token in normalized for token in _CREDENTIAL_NAME_TOKENS)
-        or normalized in _SENSITIVE_CONFIGURATION_NAMES
-    )
+    return any(token in normalized for token in _CREDENTIAL_NAME_TOKENS)
 
 
 @functools.cache

@@ -1,5 +1,7 @@
 """Component preparation results and request scopes, with no browser/network I/O."""
 
+from tests.support.transport import configure_stream_transport
+
 from concurrent.futures import ThreadPoolExecutor
 import json
 import threading
@@ -79,6 +81,7 @@ def test_clients_stay_lazy_and_child_transport_is_borrowed(monkeypatch):
     factory = Mock(return_value={"pnas": object()})
     monkeypatch.setattr(registry, "build_clients", factory)
     transport = Mock()
+    configure_stream_transport(transport)
     monkeypatch.setattr(
         "paper_fetch.runtime.build_http_transport_for_context",
         lambda *a, **kw: transport,
@@ -112,7 +115,7 @@ def test_all_prepares_only_supported_backends(monkeypatch):
 
     monkeypatch.setattr(offline_browsers.sys, "platform", "darwin")
     setup = Mock()
-    offline_browsers.prepare(setup, selection="all", interactive=False)
+    offline_browsers.prepare(setup, interactive=False)
     assert [call.args[0] for call in setup.step.call_args_list] == ["Byparr"]
 
 

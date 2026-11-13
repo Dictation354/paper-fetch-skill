@@ -701,42 +701,18 @@ def _stage_arxiv_source_archive(
             max_compressed_response_bytes=asset_budget.max_bytes_per_asset,
         ),
     )
-    if bool(
-        getattr(transport, "_streaming_ready", False) is True
-        and callable(getattr(transport, "stream_to_file", None))
-    ):
-        transport.stream_to_file(
-            "GET",
-            source_archive_url,
-            source_staging,
-            headers={"Accept": ARXIV_SOURCE_ACCEPT, "User-Agent": user_agent},
-            options=HttpStreamOptions(
-                request_policy=request_policy,
-                on_content_length=reservation.declare_content_length,
-                on_chunk=reservation.consume,
-            ),
-        )
-        reservation.reconcile_actual()
-        return
-
-    # Compatibility path for explicitly injected test transports only.  It
-    # still consumes the exact compiled route policy; production capability is
-    # gated by the strict instance-scoped pinned-streaming marker above.
-    source_response = transport.request(
+    transport.stream_to_file(
         "GET",
         source_archive_url,
+        source_staging,
         headers={"Accept": ARXIV_SOURCE_ACCEPT, "User-Agent": user_agent},
-        request_policy=request_policy,
+        options=HttpStreamOptions(
+            request_policy=request_policy,
+            on_content_length=reservation.declare_content_length,
+            on_chunk=reservation.consume,
+        ),
     )
-    source_body = source_response.get("body")
-    if not isinstance(source_body, (bytes, bytearray)):
-        source_body = b""
-    reservation.declare_content_length(len(source_body))
-    _read_bounded_stream(
-        io.BytesIO(bytes(source_body)),
-        reservation=reservation,
-        destination=source_staging,
-    )
+    reservation.reconcile_actual()
 
 
 def download_arxiv_source_figure_assets(

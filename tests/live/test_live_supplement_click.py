@@ -233,7 +233,7 @@ def test_live_supplement_click(provider, monkeypatch):
             assert envelope.article is not None
             article = envelope.article
             report["source"] = article.source
-            report["source_trail"] = list(article.quality.source_trail)
+            report["events"] = list(article.trace)
             report["asset_failures"] = list(article.quality.asset_failures)
             report["assets"] = [asdict(asset) for asset in article.assets]
             supplements = [

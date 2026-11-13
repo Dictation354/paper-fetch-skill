@@ -336,10 +336,8 @@ class ConfigTests(unittest.TestCase):
         expected_root = (
             Path(tmpdir).expanduser() / "paper-fetch" / "publisher-browser-profiles"
         )
-        self.assertEqual(
-            science_runtime.user_data_dir, expected_root / "science-camoufox"
-        )
-        self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas-camoufox")
+        self.assertEqual(science_runtime.user_data_dir, expected_root / "science")
+        self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas")
         self.assertNotEqual(science_runtime.user_data_dir, pnas_runtime.user_data_dir)
 
     def test_camoufox_runtime_config_does_not_use_shared_tool_user_agent_for_browser(

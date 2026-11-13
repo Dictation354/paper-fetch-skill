@@ -120,7 +120,6 @@ def test_ready_html_snapshot_keeps_delayed_body_math_and_prepared_references(
                 artifact_dir=tmp_path,
                 headless=True,
                 user_agent=None,
-                persist_storage_state=False,
             ),
             readiness=BrowserHtmlReadiness(wait_for_article_body=True),
         )
@@ -180,7 +179,6 @@ def test_snapshot_navigation_race_falls_back_to_current_native_document(
                 artifact_dir=tmp_path,
                 headless=True,
                 user_agent=None,
-                persist_storage_state=False,
             ),
             readiness=BrowserHtmlReadiness(wait_for_article_body=True),
         )
@@ -242,7 +240,6 @@ def test_ready_snapshot_preserves_access_boundaries(
                 artifact_dir=tmp_path,
                 headless=True,
                 user_agent=None,
-                persist_storage_state=False,
             ),
             readiness=BrowserHtmlReadiness(wait_for_article_body=True),
         )

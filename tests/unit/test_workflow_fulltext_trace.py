@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
 
 from types import SimpleNamespace
 from unittest import mock
@@ -65,8 +66,17 @@ def test_official_provider_structured_fallback_trace_reaches_article() -> None:
 
     assert result is article
     assert browser_failure in workflow_trace
-    assert browser_failure.marker() in article.quality.source_trail
-    assert article.quality.source_trail.count(browser_failure.marker()) == 1
+    assert trace_facts(
+        trace_event(
+            browser_failure.stage, browser_failure.component, browser_failure.outcome
+        )
+    ) in trace_facts(article.trace)
+    assert (
+        trace_facts(article.trace).count(
+            (browser_failure.stage, browser_failure.component, browser_failure.outcome)
+        )
+        == 1
+    )
     assert not hasattr(article.quality, "trace")
 
 

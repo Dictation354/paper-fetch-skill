@@ -78,7 +78,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "request_local_browser_session_owner",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",
-            "json_export_optional",
+            "native_profile_only",
         ):
             contract["browser"][key] = False
 
@@ -111,7 +111,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "request_local_browser_session_owner",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",
-            "json_export_optional",
+            "native_profile_only",
         ):
             self.assertIn(f"{key} must be true", diagnostic)
 
@@ -123,7 +123,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["skills"]["codex"]["project_directory"] = (
             ".codex/skills/paper-fetch-skill"
         )
-        contract["skills"]["codex"]["verify_before_legacy_cleanup"] = False
+        contract["skills"]["codex"]["current_skill_path_only"] = False
         contract["skills"]["codex"]["check_is_read_only"] = False
         diagnostics = "\n".join(validator.validate_contract(contract))
         for key in contract["skills"]["codex"]:

@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from unittest import mock
 import tempfile
 import unittest
@@ -155,7 +157,10 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertEqual(raw_payload.content.route_kind, "xml")
         self.assertEqual(article.source, "copernicus_xml")
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:copernicus_xml_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_xml", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertTrue(article.metadata.authors)
         self.assertTrue(article.references)
         self.assertTrue([asset for asset in article.assets if asset.kind == "figure"])
@@ -192,7 +197,7 @@ class CopernicusProviderTests(unittest.TestCase):
             DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
         )
 
-        self.assertEqual(raw_payload.source_url, linked_xml_url)
+        self.assertEqual(raw_payload.content.source_url, linked_xml_url)
         self.assertEqual(raw_payload.content.route_kind, "xml")
 
     def test_xml_response_relative_url_is_normalized_for_relative_assets(self) -> None:
@@ -217,7 +222,7 @@ class CopernicusProviderTests(unittest.TestCase):
         article = client.to_article_model({"doi": DOI}, raw_payload)
         figure_assets = [asset for asset in article.assets if asset.kind == "figure"]
 
-        self.assertEqual(raw_payload.source_url, XML_URL)
+        self.assertEqual(raw_payload.content.source_url, XML_URL)
         self.assertTrue(figure_assets)
         self.assertEqual(
             figure_assets[0].original_url,
@@ -304,9 +309,13 @@ class CopernicusProviderTests(unittest.TestCase):
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "copernicus_pdf")
-        self.assertIn("fulltext:copernicus_xml_fail", article.quality.source_trail)
         self.assertIn(
-            "fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "copernicus_xml", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_pdf_fallback", "ok")),
+            trace_facts(article.trace),
         )
 
     @mock.patch(
@@ -439,8 +448,14 @@ class CopernicusProviderTests(unittest.TestCase):
                 for warning in raw_payload.warnings
             )
         )
-        self.assertIn("fulltext:copernicus_landing_fail", article.quality.source_trail)
-        self.assertIn("fulltext:copernicus_xml_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_landing", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_xml", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertIn(
             ("GET", XML_URL),
             [(call["method"], call["url"]) for call in transport.calls],
@@ -471,10 +486,17 @@ class CopernicusProviderTests(unittest.TestCase):
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
-        self.assertIn("fulltext:copernicus_landing_fail", article.quality.source_trail)
-        self.assertIn("fulltext:copernicus_xml_fail", article.quality.source_trail)
         self.assertIn(
-            "fulltext:copernicus_pdf_fallback_ok", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "copernicus_landing", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_xml", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_pdf_fallback", "ok")),
+            trace_facts(article.trace),
         )
         self.assertIn(
             ("GET", PDF_URL),
@@ -506,8 +528,14 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertIn(
             "Copernicus PDF fallback was not usable", raised.exception.warnings[-1]
         )
-        self.assertIn("fulltext:copernicus_xml_fail", raised.exception.source_trail)
-        self.assertIn("fulltext:copernicus_pdf_fail", raised.exception.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_xml", "fail")),
+            trace_facts(raised.exception.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "copernicus_pdf", "fail")),
+            trace_facts(raised.exception.trace),
+        )
 
     @mock.patch(
         "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
@@ -539,8 +567,15 @@ class CopernicusProviderTests(unittest.TestCase):
         self.assertTrue(result.artifacts.text_only)
         self.assertFalse(result.artifacts.allow_related_assets)
         self.assertIn(
-            "download:copernicus_assets_skipped_text_only",
-            [event.marker() for event in result.artifacts.skip_trace],
+            trace_facts(
+                trace_event("download", "copernicus_assets_skipped_text_only", "info")
+            ),
+            trace_facts(
+                [
+                    trace_event(event.stage, event.component, event.outcome)
+                    for event in result.artifacts.skip_trace
+                ]
+            ),
         )
 
     @mock.patch(
@@ -569,7 +604,7 @@ class CopernicusProviderTests(unittest.TestCase):
         )
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
-        self.assertEqual(raw_payload.source_url, PDF_URL)
+        self.assertEqual(raw_payload.content.source_url, PDF_URL)
         self.assertIn(
             ("GET", PDF_URL),
             [(call["method"], call["url"]) for call in transport.calls],

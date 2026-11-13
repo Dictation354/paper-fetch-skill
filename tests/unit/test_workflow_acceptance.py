@@ -1,6 +1,6 @@
 from __future__ import annotations
-from tests.support.workflow_acceptance import _envelope
 from dataclasses import replace
+from tests.support.workflow_acceptance import _envelope
 import json
 import pytest
 from jsonschema import Draft202012Validator
@@ -1049,3 +1049,34 @@ def test_overall_enum_values_are_stable_contract() -> None:
         "failed",
         "action_required",
     }
+
+
+@pytest.mark.parametrize(
+    ("doi", "expected_doi", "failure", "explicit", "expected"),
+    [
+        (None, "10.1000/expected", "not_supported", None, "unavailable"),
+        ("10.1000/expected", "10.1000/expected", "not_supported", None, "resolved"),
+        ("10.1000/other", "10.1000/expected", "not_supported", None, "mismatch"),
+        (None, "10.1000/expected", "identity_mismatch", None, "mismatch"),
+        (None, "10.1000/expected", "ambiguous", None, "ambiguous"),
+        (
+            "10.1000/other",
+            "10.1000/expected",
+            "not_supported",
+            IdentityAcceptanceStatus.UNAVAILABLE,
+            "unavailable",
+        ),
+    ],
+)
+def test_identity_failure_requires_evidence_of_mismatch(
+    doi, expected_doi, failure, explicit, expected
+):
+    report = evaluate_fetch_acceptance(
+        None,
+        asset_profile="none",
+        failure_code=failure,
+        doi=doi,
+        expected_doi=expected_doi,
+        identity_status=explicit,
+    )
+    assert report.identity.status == expected

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from __future__ import annotations
 from tests.golden_criteria import golden_criteria_scenario_asset
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,

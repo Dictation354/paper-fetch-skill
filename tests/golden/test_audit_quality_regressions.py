@@ -1,5 +1,8 @@
 """Source-backed audit regressions; historical captures are not live evidence."""
 
+from paper_fetch.models import Quality
+
+
 from pathlib import Path
 import re
 
@@ -519,7 +522,10 @@ def test_acs_table_graphic_counts_toward_strict_local_acceptance(
     )
     acceptance = evaluate_fetch_acceptance(
         FetchEnvelope(
-            doi=fixture.doi, source=article.source, article=article, has_fulltext=True
+            doi=fixture.doi,
+            source=article.source,
+            article=article,
+            quality=Quality(has_fulltext=True),
         ),
         asset_profile="body",
         require_local_body_assets=True,

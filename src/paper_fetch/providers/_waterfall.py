@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import extend_trace
+
 from ..quality.access_boundary import propagate_paywall
 
 from dataclasses import dataclass, field, replace
@@ -13,8 +15,6 @@ from ..tracing import (
     TraceContext,
     TraceEvent,
     merge_trace,
-    project_source_trail_trace,
-    source_trail_from_trace,
     trace_event,
 )
 from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
@@ -43,12 +43,12 @@ DEFAULT_WATERFALL_CONTINUE_CODES = (
 class ProviderWaterfallState:
     warnings: list[str] = field(default_factory=list)
     failures: list[tuple[str, ProviderFailure]] = field(default_factory=list)
-    initial_source_trail: list[str] = field(default_factory=list)
-    failure_source_trail: list[str] = field(default_factory=list)
+    initial_events: list[TraceEvent] = field(default_factory=list)
+    failure_events: list[TraceEvent] = field(default_factory=list)
 
     @property
-    def source_trail(self) -> list[str]:
-        return [*self.initial_source_trail, *self.failure_source_trail]
+    def events(self) -> list[TraceEvent]:
+        return [*self.initial_events, *self.failure_events]
 
     def failure(self, label: str) -> ProviderFailure | None:
         for failure_label, failure in reversed(self.failures):
@@ -70,8 +70,8 @@ StepCondition = Callable[[ProviderWaterfallState], bool]
 class WaterfallStep:
     label: str
     run: StepRunner
-    failure_marker: str | None = None
-    success_markers: tuple[str, ...] = ()
+    failure_event: TraceEvent | None = None
+    success_events: tuple[TraceEvent, ...] = ()
     continue_codes: tuple[str, ...] = DEFAULT_WATERFALL_CONTINUE_CODES
     failure_warning: str | WarningFactory | None = None
     success_warning: str | None = None
@@ -107,23 +107,27 @@ def _append_unique_text(target: list[str], values: list[str] | tuple[str, ...]) 
             target.append(normalized)
 
 
-def _trace_with_markers(
-    markers: list[str],
+def _combined_trace(
+    markers: list[TraceEvent],
     payload_trace: list[TraceEvent],
 ) -> list[TraceEvent]:
-    return project_source_trail_trace(markers, payload_trace)
+    return merge_trace(markers, payload_trace)
 
 
-def _failure_with_marker(
-    failure: ProviderFailure, marker: str | None
+def _failure_with_event(
+    failure: ProviderFailure, marker: TraceEvent | None
 ) -> ProviderFailure:
     if not marker:
         return failure
-    source_trail = list(failure.source_trail)
-    if marker not in source_trail:
-        source_trail.append(marker)
+    events = list(failure.trace)
+    if not any(
+        (event.stage, event.component, event.outcome)
+        == (marker.stage, marker.component, marker.outcome)
+        for event in events
+    ):
+        events.append(marker)
     return failure.with_updates(
-        source_trail=source_trail,
+        trace=events,
     )
 
 
@@ -157,16 +161,16 @@ def _failure_with_state(
     state: ProviderWaterfallState,
 ) -> ProviderFailure:
     warnings: list[str] = []
-    source_trail: list[str] = []
+    events: list[TraceEvent] = []
     missing_env: list[str] = []
     retry_after_values: list[int] = []
     state_trace: list[TraceEvent] = []
 
     _append_unique_text(warnings, state.warnings)
     _append_unique_text(warnings, failure.warnings)
-    _append_unique_text(source_trail, state.initial_source_trail)
-    _append_unique_text(source_trail, state.failure_source_trail)
-    _append_unique_text(source_trail, failure.source_trail)
+    extend_trace(events, state.initial_events)
+    extend_trace(events, state.failure_events)
+    extend_trace(events, failure.trace)
     for _label, state_failure in state.failures:
         _append_unique_text(missing_env, state_failure.missing_env)
         state_trace = merge_trace(state_trace, state_failure.trace)
@@ -189,8 +193,7 @@ def _failure_with_state(
         retry_after_seconds=max(retry_after_values) if retry_after_values else None,
         missing_env=missing_env,
         warnings=warnings,
-        source_trail=source_trail,
-        trace=trace,
+        trace=merge_trace(events, trace),
     )
 
 
@@ -208,12 +211,12 @@ def run_provider_waterfall(
     client: Any = None,
     invoke_with_request: bool = False,
     initial_warnings: list[str] | tuple[str, ...] | None = None,
-    initial_source_trail: list[str] | tuple[str, ...] | None = None,
+    initial_events: list[TraceEvent] | tuple[TraceEvent, ...] | None = None,
     final_failure_factory: FinalFailureFactory | None = None,
 ) -> RawFulltextPayload:
     state = ProviderWaterfallState()
     _append_unique_text(state.warnings, list(initial_warnings or []))
-    _append_unique_text(state.initial_source_trail, list(initial_source_trail or []))
+    extend_trace(state.initial_events, list(initial_events or []))
 
     for attempt_index, step in enumerate(steps, start=1):
         if step.condition is not None and not step.condition(state):
@@ -241,9 +244,9 @@ def run_provider_waterfall(
         except ProviderFailure as exc:
             propagate_paywall(exc)
             failure = exc.with_updates(
-                provider=exc.provider or provider_name,
-                route=exc.route or route_name,
-                stage=exc.stage or "fulltext",
+                provider=exc.diagnostics.provider or provider_name,
+                route=exc.diagnostics.route or route_name,
+                stage=exc.diagnostics.stage or "fulltext",
                 trace=merge_trace(
                     exc.trace,
                     [
@@ -261,9 +264,9 @@ def run_provider_waterfall(
                                 span_id=span_id,
                                 attempt_id=attempt_id,
                                 attempt=attempt_index,
-                                http_status=exc.http_status,
-                                error_category=exc.error_category,
-                                retryable=exc.retryable,
+                                http_status=exc.diagnostics.http_status,
+                                error_category=exc.diagnostics.error_category,
+                                retryable=exc.diagnostics.retryable,
                                 retry_after_seconds=exc.retry_after_seconds,
                                 started_at=attempt_started_epoch,
                                 finished_at=time.time(),
@@ -275,14 +278,14 @@ def run_provider_waterfall(
                     ],
                 ),
             )
-            failure = _failure_with_marker(failure, step.failure_marker)
+            failure = _failure_with_event(failure, step.failure_event)
             if failure.code not in step.continue_codes:
                 raise _failure_with_state(failure, state) from exc
             warning = _resolve_failure_warning(step.failure_warning, failure, state)
             failure = _failure_with_warning(failure, warning)
             state.failures.append((step.label, failure))
             _append_unique_text(state.warnings, failure.warnings)
-            _append_unique_text(state.failure_source_trail, failure.source_trail)
+            extend_trace(state.failure_events, failure.trace)
             continue
 
         payload_warnings: list[str] = []
@@ -299,24 +302,24 @@ def run_provider_waterfall(
             else route_name
         )
 
-        source_trail: list[str] = []
-        if step.success_markers:
-            source_trail = list(state.initial_source_trail)
+        events: list[TraceEvent] = []
+        if step.success_events:
+            events = list(state.initial_events)
             if step.include_failure_trail_on_success:
-                _append_unique_text(source_trail, state.failure_source_trail)
-            _append_unique_text(source_trail, list(step.success_markers))
-        elif state.source_trail:
-            source_trail = list(state.source_trail)
-            _append_unique_text(source_trail, source_trail_from_trace(payload.trace))
+                extend_trace(events, state.failure_events)
+            extend_trace(events, list(step.success_events))
+        elif state.events:
+            events = list(state.events)
+            extend_trace(events, payload.trace)
         prior_failure_trace = [
             event for _label, failure in state.failures for event in failure.trace
         ]
         payload.trace = (
-            _trace_with_markers(
-                source_trail,
+            _combined_trace(
+                events,
                 merge_trace(prior_failure_trace, payload.trace),
             )
-            if source_trail
+            if events
             else merge_trace(prior_failure_trace, payload.trace)
         )
         payload.trace = merge_trace(

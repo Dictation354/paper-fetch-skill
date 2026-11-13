@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.providers import _springer_authors
 
 import json
 from collections.abc import Callable
@@ -12,7 +13,6 @@ from paper_fetch.providers import (
     _ieee_metadata,
     _pnas_html,
     _science_html,
-    _springer_html,
     _wiley_html,
 )
 
@@ -85,7 +85,7 @@ def _jsonld(payload: object) -> str:
             ["AMS Meta"],
         ),
         (
-            _springer_html.extract_authors,
+            _springer_authors.extract_authors,
             """
             <html>
               <head><meta name="citation_author" content="Springer Meta"></head>
@@ -164,7 +164,7 @@ def test_provider_author_pipelines_stop_on_first_non_empty_step(
             ["AMS Selector Fallback"],
         ),
         (
-            _springer_html.extract_authors,
+            _springer_authors.extract_authors,
             _jsonld(
                 {
                     "@type": "ScholarlyArticle",
@@ -174,7 +174,7 @@ def test_provider_author_pipelines_stop_on_first_non_empty_step(
             ["Springer JSON"],
         ),
         (
-            _springer_html.extract_authors,
+            _springer_authors.extract_authors,
             """
             <ol class="c-article-author-list">
               <li><span itemprop="name">Springer DOM Fallback</span></li>

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
 from pathlib import Path
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import (
@@ -101,7 +102,7 @@ class FixtureProvider(ProviderClient):
         return empty_asset_results()
 
 
-class FixtureHtmlTransport(HttpTransport):
+class FixtureHtmlTransport(RecordedStreamTransport, HttpTransport):
     def __init__(self, responses):
         self.responses = responses
         self.calls: list[dict[str, object]] = []
@@ -203,7 +204,7 @@ def http_response(
     }
 
 
-class RecordingTransport(HttpTransport):
+class RecordingTransport(RecordedStreamTransport, HttpTransport):
     def __init__(self, responses: dict[tuple[str, str], object]) -> None:
         self.responses = responses
         self.calls: list[dict[str, object]] = []

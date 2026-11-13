@@ -24,7 +24,7 @@ from pydantic import (
 )
 
 from .models import AcquisitionProvenance, AssetProfile, FetchEnvelope
-from .tracing import TraceEvent, trace_from_markers
+from .tracing import TraceEvent
 from .utils import normalize_text
 from .workflow.acceptance import (
     AcceptanceOutputKind,
@@ -352,14 +352,7 @@ def _trace_for_record(
         raw_trace = _trace_from_envelope(envelope)
     elif error is not None:
         trace_payload = _error_extra_sequence(error, "trace")
-        if trace_payload:
-            raw_trace = [
-                ManifestTraceEvent.model_validate(item) for item in trace_payload
-            ]
-        else:
-            raw_trace = trace_from_markers(
-                [str(item) for item in _error_extra_sequence(error, "source_trail")]
-            )
+        raw_trace = [ManifestTraceEvent.model_validate(item) for item in trace_payload]
     else:
         raw_trace = ()
 
@@ -374,7 +367,7 @@ def _warnings_for_record(
     if explicit_warnings is not None:
         values: Sequence[Any] = explicit_warnings
     elif envelope is not None:
-        values = envelope.warnings
+        values = envelope.quality.warnings
     elif error is not None:
         values = _error_extra_sequence(error, "warnings")
     else:
@@ -391,7 +384,7 @@ def _failure_code(error: ManifestError) -> str:
     return normalize_text(error.status).lower()
 
 
-def _snapshot_artifact(
+def snapshot_output_artifact(
     spec: ManifestOutputArtifactSpec,
     *,
     completed_at: datetime,
@@ -511,6 +504,9 @@ def build_manifest_record(
         if require_full_size_body_assets is None
         else require_full_size_body_assets
     )
+    supplementary_error = (
+        manifest_error if request.parameters.get("target") == "supplementary" else None
+    )
     acceptance = evaluate_fetch_acceptance(
         envelope,
         asset_profile=asset_profile,
@@ -523,14 +519,15 @@ def build_manifest_record(
         require_full_size_body_assets=effective_require_full_size,
         failure_code=failure_code,
         candidate_count=candidate_count,
+        doi=getattr(supplementary_error, "doi", None),
         expected_doi=expected_doi,
         title=title,
-        source=source,
+        source=source or getattr(supplementary_error, "provider", None),
     )
     effective_started_at = started_at or deps.clock()
     effective_completed_at = completed_at or deps.clock()
     artifacts = tuple(
-        _snapshot_artifact(
+        snapshot_output_artifact(
             ManifestOutputArtifactSpec.model_validate(spec),
             completed_at=effective_completed_at,
             deps=deps,
@@ -637,4 +634,5 @@ __all__ = [
     "generated_manifest_record_json_schema",
     "manifest_record_json_schema",
     "parse_manifest_record",
+    "snapshot_output_artifact",
 ]

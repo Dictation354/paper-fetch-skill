@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers.base import ProviderContent
 from unittest import mock
 from paper_fetch.providers.protocols import FulltextProvider
 from tests.support._service_support import *
@@ -57,7 +60,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                             route_kind="html",
                             markdown_text="# Example Article\n\n## Results\n\n"
                             + ("Body text " * 80),
-                            source_trail=["fulltext:science_html_ok"],
+                            events=[trace_event("fulltext", "science_html", "ok")],
                         ),
                         article=sample_article(),
                     ),
@@ -116,7 +119,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                             route_kind="html",
                             markdown_text="# Example Article\n\n## Results\n\n"
                             + ("Body text " * 80),
-                            source_trail=["fulltext:science_html_ok"],
+                            events=[trace_event("fulltext", "science_html", "ok")],
                         ),
                         article_factory=lambda metadata, raw_payload, **kwargs: (
                             captured_metadata.append(dict(metadata)) or sample_article()
@@ -265,7 +268,7 @@ class ServiceRuntimeTests(unittest.TestCase):
                                 route_kind="html",
                                 markdown_text="# Example Article\n\n## Results\n\n"
                                 + ("Body text " * 80),
-                                source_trail=["fulltext:science_html_ok"],
+                                events=[trace_event("fulltext", "science_html", "ok")],
                             ),
                             article=sample_article(),
                             related_asset_factory=lambda _doi, _metadata, _payload, output_dir, **_kwargs: (
@@ -355,7 +358,10 @@ class ServiceRuntimeTests(unittest.TestCase):
             )
             saved_paths = list(Path(tmpdir).iterdir())
 
-        self.assertEqual(saved_trail, ["download:arxiv_saved"])
+        self.assertEqual(
+            trace_facts(saved_trail),
+            trace_facts([trace_event("download", "arxiv", "saved")]),
+        )
         self.assertTrue(
             any(
                 "arXiv official full text was downloaded as PDF/binary to" in item
@@ -378,7 +384,7 @@ class ServiceRuntimeTests(unittest.TestCase):
             needs_local_copy=True,
         )
         warnings: list[str] = []
-        source_trail: list[str] = []
+        events: list[str] = []
 
         with tempfile.TemporaryDirectory() as tmpdir:
             store = ArtifactStore.from_download_dir(Path(tmpdir), artifact_mode="none")
@@ -400,12 +406,12 @@ class ServiceRuntimeTests(unittest.TestCase):
                 ),
                 asset_profile="body",
                 warnings=warnings,
-                source_trail=source_trail,
+                events=events,
             )
             saved_paths = list(Path(tmpdir).glob("*"))
 
         self.assertEqual(saved_warnings, [])
         self.assertEqual(saved_trail, [])
         self.assertEqual(warnings, [])
-        self.assertEqual(source_trail, [])
+        self.assertEqual(events, [])
         self.assertEqual(saved_paths, [])

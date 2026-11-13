@@ -36,7 +36,7 @@ from ...reason_codes import (
     REDIRECTED_TO_ABSTRACT,
 )
 from ...runtime import RuntimeContext
-from ...tracing import download_marker, fulltext_marker, trace_event, trace_from_markers
+from ...tracing import download_event, fulltext_event, trace_event
 from ...utils import empty_asset_results, normalize_text, provider_display_name
 from .shared import (
     BrowserWorkflowDeps,
@@ -226,7 +226,7 @@ class BrowserWorkflowClient(ProviderClient):
             pdf_candidates=self.pdf_candidates(normalized_doi, metadata),
             html_candidates=self.html_candidates(normalized_doi, metadata),
             landing_page_url=str(
-                metadata.get("landing_page_url") or raw_payload.source_url or ""
+                metadata.get("landing_page_url") or raw_payload.content.source_url or ""
             )
             or None,
             user_agent=self.user_agent,
@@ -234,10 +234,10 @@ class BrowserWorkflowClient(ProviderClient):
             html_failure_reason=html_failure_reason,
             html_failure_message=html_failure_message,
             warnings=[*raw_payload.warnings, recovery_warning],
-            success_source_trail=[
-                fulltext_marker(self.name, "ok", route="html"),
-                fulltext_marker(self.name, ABSTRACT_ONLY),
-                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            success_events=[
+                fulltext_event(self.name, "ok", route="html"),
+                fulltext_event(self.name, ABSTRACT_ONLY),
+                fulltext_event(self.name, "ok", route=PDF_FALLBACK),
             ],
             context=context,
             deps=self.deps,
@@ -318,19 +318,23 @@ class BrowserWorkflowClient(ProviderClient):
                 warnings=[
                     f"{self.name} HTML route was not usable; skipping PDF fallback."
                 ],
-                source_trail=[fulltext_marker(self.name, "fail", route="html")],
                 trace=(
                     [
-                        trace_event(
-                            "fulltext",
-                            f"{self.name}_html",
-                            "fail",
-                            code=bootstrap.html_failure_reason,
-                            message=bootstrap.html_failure_message,
-                        )
+                        *([fulltext_event(self.name, "fail", route="html")] or []),
+                        *(
+                            [
+                                trace_event(
+                                    "fulltext",
+                                    f"{self.name}_html",
+                                    "fail",
+                                    code=bootstrap.html_failure_reason,
+                                    message=bootstrap.html_failure_message,
+                                )
+                            ]
+                            if bootstrap.html_failure_reason
+                            else [] or []
+                        ),
                     ]
-                    if bootstrap.html_failure_reason
-                    else []
                 ),
             )
 
@@ -355,7 +359,7 @@ class BrowserWorkflowClient(ProviderClient):
                     html_failure_message=bootstrap.html_failure_message,
                     html_failure_diagnostics=bootstrap.html_failure_diagnostics,
                     warnings=[],
-                    success_source_trail=[],
+                    success_events=[],
                     context=context,
                     deps=self.deps,
                 )
@@ -400,8 +404,8 @@ class BrowserWorkflowClient(ProviderClient):
                     label="pdf",
                     route_name="browser_pdf",
                     run=run_pdf_fallback,
-                    success_markers=(
-                        fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+                    success_events=(
+                        fulltext_event(self.name, "ok", route=PDF_FALLBACK),
                     ),
                 )
             ],
@@ -410,7 +414,7 @@ class BrowserWorkflowClient(ProviderClient):
             context=context,
             client=self,
             initial_warnings=[*bootstrap.warnings, initial_warning],
-            initial_source_trail=[fulltext_marker(self.name, "fail", route="html")],
+            initial_events=[fulltext_event(self.name, "fail", route="html")],
         )
 
     def html_to_markdown(
@@ -555,10 +559,10 @@ class BrowserWorkflowClient(ProviderClient):
                 "asset_profile": asset_profile,
             }
             html_text = decode_html(
-                raw_payload.body,
+                raw_payload.content.body,
                 content_type=content.content_type
                 if content is not None
-                else raw_payload.content_type,
+                else raw_payload.content.content_type,
             )
         else:
             plan_profile = {
@@ -572,7 +576,7 @@ class BrowserWorkflowClient(ProviderClient):
                 article_id=normalized_doi,
                 output_dir=Path(output_dir),
                 html_text=html_text,
-                source_url=raw_payload.source_url,
+                source_url=raw_payload.content.source_url,
                 profile=plan_profile,
                 deps=self.deps,
             )
@@ -620,7 +624,7 @@ class BrowserWorkflowClient(ProviderClient):
             active_seed_urls=[
                 normalized
                 for normalized in (
-                    raw_payload.source_url,
+                    raw_payload.content.source_url,
                     normalize_text(
                         str(browser_context_seed.get("browser_final_url") or "")
                     ),
@@ -755,9 +759,7 @@ class BrowserWorkflowClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker(f"{self.name}_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event(f"{self.name}_assets_skipped_text_only")]
             if not pdf_assets
             else [],
         )

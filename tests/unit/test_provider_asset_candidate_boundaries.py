@@ -163,7 +163,6 @@ def test_pnas_direct_download_precedes_browser_in_both_state_modes(
                 tmp_path,
                 True,
                 None,
-                state_mode=state_mode,
             )
         ),
         ensure_runtime_ready=mock.Mock(),

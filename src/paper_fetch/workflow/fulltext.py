@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import extend_trace
+
 from dataclasses import dataclass, field
 import logging
 import time
@@ -25,7 +27,7 @@ from ..provider_catalog import (
 )
 from ..publisher_identity import validate_extracted_identity
 from ..providers.base import ProviderFailure, ProviderFetchResult
-from ..providers.protocols import FulltextProvider, RawFulltextProvider
+from ..providers.protocols import FulltextProvider
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ERROR,
@@ -34,7 +36,6 @@ from ..reason_codes import (
     IDENTITY_MISMATCH,
     NO_ACCESS,
     NOT_CONFIGURED,
-    NOT_SUPPORTED,
     PDF_FALLBACK,
     RATE_LIMITED,
 )
@@ -42,13 +43,11 @@ from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
     acquisition_fallback_used,
-    fallback_marker,
-    fulltext_marker,
+    fallback_event,
+    fulltext_event,
     merge_trace,
-    project_source_trail_trace,
-    resolve_marker,
-    route_marker,
-    trace_from_markers,
+    resolve_event,
+    route_event,
 )
 from ..utils import (
     extend_unique,
@@ -62,7 +61,7 @@ from .routing import (
     provider_allowed,
     resolve_query_with_session_cache,
 )
-from .shared import source_trail_for_failure
+from .shared import events_for_failure
 from .types import FetchStrategy, PaperFetchFailure
 
 logger = logging.getLogger("paper_fetch.service")
@@ -73,7 +72,7 @@ def build_metadata_only_result(
     *,
     resolved,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     from ..publisher_identity import normalize_doi
@@ -83,16 +82,13 @@ def build_metadata_only_result(
         metadata=metadata,
         doi=normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None,
         warnings=list(warnings or []),
-        trace=merge_trace(trace_from_markers(list(source_trail or [])), trace),
+        trace=merge_trace(list(events or []), trace),
     )
-    effective_trace = merge_trace(trace_from_markers(list(source_trail or [])), trace)
+    effective_trace = merge_trace(list(events or []), trace)
     article.acquisition = acquisition_for_provider_route(
         "crossref",
         "metadata",
-        fallback_used=acquisition_fallback_used(
-            effective_trace,
-            source_trail=source_trail or (),
-        ),
+        fallback_used=acquisition_fallback_used([*(effective_trace), *(events or ())]),
     )
     return article
 
@@ -103,16 +99,13 @@ def _apply_article_acquisition(
     provider_name: str,
     content: object | None,
     trace: Sequence[TraceEvent],
-    source_trail: Sequence[str],
+    events: Sequence[TraceEvent],
 ) -> None:
     route_name = safe_text(getattr(content, "route_name", "")) or None
     acquisition = acquisition_for_provider_route(
         provider_name,
         route_name,
-        fallback_used=acquisition_fallback_used(
-            trace,
-            source_trail=source_trail,
-        ),
+        fallback_used=acquisition_fallback_used([*(trace), *(events)]),
     )
 
     if (
@@ -123,7 +116,7 @@ def _apply_article_acquisition(
 
 
 def _provider_fetch_result(
-    provider_client: FulltextProvider | RawFulltextProvider,
+    provider_client: FulltextProvider,
     *,
     doi: str,
     metadata: Mapping[str, Any],
@@ -131,17 +124,7 @@ def _provider_fetch_result(
     asset_profile: AssetProfile,
     context: RuntimeContext,
 ) -> ProviderFetchResult:
-    if isinstance(provider_client, FulltextProvider):
-        adapter = provider_client
-    elif isinstance(provider_client, RawFulltextProvider):
-        from ..providers.raw_adapter import RawProviderAdapter
-
-        adapter = RawProviderAdapter(provider_client)
-    else:
-        raise ProviderFailure(
-            NOT_SUPPORTED, "Provider does not implement raw full-text retrieval."
-        )
-    return adapter.fetch_result(
+    return provider_client.fetch_result(
         doi,
         metadata,
         artifact_store.asset_download_dir,
@@ -154,7 +137,7 @@ def _provider_fetch_result(
 @dataclass
 class _ProviderAttemptOutputs:
     warnings: list[str] = field(default_factory=list)
-    source_trail: list[str] = field(default_factory=list)
+    events: list[TraceEvent] = field(default_factory=list)
     trace: list[TraceEvent] = field(default_factory=list)
     failures: list[ProviderFailure] = field(default_factory=list)
 
@@ -171,22 +154,22 @@ def _try_official_provider(
     outputs: _ProviderAttemptOutputs,
 ) -> ArticleModel | None:
     warnings = outputs.warnings
-    source_trail = outputs.source_trail
+    events = outputs.events
     workflow_trace = outputs.trace
     if not doi or not provider_name or not is_official_provider(provider_name):
         return None
     if not provider_allowed(provider_name, strategy):
-        extend_unique(source_trail, [fulltext_marker(provider_name, "skipped")])
+        extend_trace(events, [fulltext_event(provider_name, "skipped")])
         return None
 
     provider_client = clients.get(provider_name)
-    if not isinstance(provider_client, (FulltextProvider, RawFulltextProvider)):
+    if not isinstance(provider_client, FulltextProvider):
         return None
     resolved_asset_profile = strategy.effective_asset_profile_for_provider(
         provider_name
     )
 
-    extend_unique(source_trail, [fulltext_marker(provider_name, "attempt")])
+    extend_trace(events, [fulltext_event(provider_name, "attempt")])
     attempt_started_at = time.monotonic()
     emit_structured_log(
         logger,
@@ -207,7 +190,9 @@ def _try_official_provider(
             asset_profile=resolved_asset_profile,
             context=context,
         )
-        if CONFIRMED_PAYWALL in provider_result.article.quality.source_trail:
+        if any(
+            event.code == CONFIRMED_PAYWALL for event in provider_result.article.trace
+        ):
             if not strategy.allow_metadata_only_fallback:
                 raise PaperFetchFailure(
                     NO_ACCESS,
@@ -249,7 +234,7 @@ def _try_official_provider(
             metadata=metadata,
         )
         extend_unique(warnings, download_warnings)
-        extend_unique(source_trail, download_trail)
+        extend_trace(events, download_trail)
         html_download_warnings, html_download_trail = (
             artifact_store.save_provider_html_payload(
                 provider_result.provider or provider_name,
@@ -259,13 +244,13 @@ def _try_official_provider(
             )
         )
         extend_unique(warnings, html_download_warnings)
-        extend_unique(source_trail, html_download_trail)
+        extend_trace(events, html_download_trail)
         artifact_store.apply_provider_artifacts(
             provider_name=provider_name,
             artifacts=provider_result.artifacts,
             asset_profile=resolved_asset_profile,
             warnings=warnings,
-            source_trail=source_trail,
+            events=events,
         )
         article = provider_result.article
         _apply_article_acquisition(
@@ -273,7 +258,7 @@ def _try_official_provider(
             provider_name=provider_result.provider or provider_name,
             content=provider_result.content,
             trace=workflow_trace,
-            source_trail=source_trail,
+            events=events,
         )
         artifact_store.audit_article_assets(
             article,
@@ -285,12 +270,12 @@ def _try_official_provider(
                 and not provider_result.artifacts.text_only
             ),
         )
-        extend_unique(source_trail, article.quality.source_trail)
-        if CONFIRMED_PAYWALL in article.quality.source_trail:
+        extend_trace(events, article.trace)
+        if any(event.code == CONFIRMED_PAYWALL for event in article.trace):
             return finalize_article(
                 article,
                 warnings=warnings,
-                source_trail=source_trail,
+                events=events,
                 trace=workflow_trace,
             )
         if article.quality.content_kind == FULLTEXT:
@@ -306,11 +291,11 @@ def _try_official_provider(
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
             )
-            extend_unique(source_trail, [fulltext_marker(provider_name, "article_ok")])
+            extend_trace(events, [fulltext_event(provider_name, "article_ok")])
             return finalize_article(
                 article,
                 warnings=warnings,
-                source_trail=source_trail,
+                events=events,
                 trace=workflow_trace,
             )
         if article.quality.content_kind == ABSTRACT_ONLY:
@@ -326,7 +311,7 @@ def _try_official_provider(
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
             )
-            extend_unique(source_trail, [fulltext_marker(provider_name, ABSTRACT_ONLY)])
+            extend_trace(events, [fulltext_event(provider_name, ABSTRACT_ONLY)])
             if provider_name in provider_managed_abstract_only_names():
                 warnings.append(
                     "Official full text only contained abstract-level content; returning abstract-only provider result."
@@ -334,7 +319,7 @@ def _try_official_provider(
                 return finalize_article(
                     article,
                     warnings=warnings,
-                    source_trail=source_trail,
+                    events=events,
                     trace=workflow_trace,
                 )
             warnings.append(
@@ -364,14 +349,14 @@ def _try_official_provider(
                     elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                     attempt=1,
                 )
-                extend_unique(
-                    source_trail,
-                    [fulltext_marker(provider_name, "ok", route=PDF_FALLBACK)],
+                extend_trace(
+                    events,
+                    [fulltext_event(provider_name, "ok", route=PDF_FALLBACK)],
                 )
                 return finalize_article(
                     article,
                     warnings=warnings,
-                    source_trail=source_trail,
+                    events=events,
                     trace=workflow_trace,
                 )
             emit_structured_log(
@@ -386,7 +371,7 @@ def _try_official_provider(
                 elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
                 attempt=1,
             )
-            extend_unique(source_trail, [fulltext_marker(provider_name, "not_usable")])
+            extend_trace(events, [fulltext_event(provider_name, "not_usable")])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
         if confirmed_paywall(exc):
@@ -401,13 +386,13 @@ def _try_official_provider(
             return finalize_article(
                 result.article,
                 warnings=[*warnings, *result.warnings],
-                source_trail=[*source_trail, *result.article.quality.source_trail],
+                events=[*events, *result.article.trace],
                 trace=[*workflow_trace, *result.trace],
             )
         outputs.failures.append(exc)
         workflow_trace[:] = merge_trace(workflow_trace, exc.trace)
         extend_unique(warnings, exc.warnings)
-        extend_unique(source_trail, exc.source_trail)
+        extend_trace(events, exc.trace)
         emit_structured_log(
             logger,
             logging.DEBUG,
@@ -419,9 +404,7 @@ def _try_official_provider(
             attempt=1,
         )
         warnings.append(exc.message)
-        extend_unique(
-            source_trail, [source_trail_for_failure("fulltext", provider_name, exc)]
-        )
+        extend_trace(events, [events_for_failure("fulltext", provider_name, exc)])
     return None
 
 
@@ -489,7 +472,7 @@ def _fallback_to_metadata_only(
     resolved,
     strategy: FetchStrategy,
     warnings: list[str],
-    source_trail: list[str],
+    events: list[TraceEvent],
     trace: list[TraceEvent] | None = None,
     provider_failure: ProviderFailure | None = None,
 ) -> ArticleModel:
@@ -506,12 +489,12 @@ def _fallback_to_metadata_only(
     warnings.append(
         "Full text was not available; returning metadata and abstract only."
     )
-    extend_unique(source_trail, [fallback_marker(METADATA_ONLY)])
+    extend_trace(events, [fallback_event(METADATA_ONLY)])
     return build_metadata_only_result(
         metadata,
         resolved=resolved,
         warnings=warnings,
-        source_trail=source_trail,
+        events=events,
         trace=trace,
     )
 
@@ -537,9 +520,9 @@ def fetch_article(
         resolver=resolver,
         context=runtime,
     )
-    source_trail: list[str] = [resolve_marker(resolved.query_kind)]
+    events: list[TraceEvent] = [resolve_event(resolved.query_kind)]
     if resolved.doi:
-        source_trail.append(resolve_marker("doi_selected"))
+        events.append(resolve_event("doi_selected"))
     if resolved.candidates and not resolved.doi:
         raise PaperFetchFailure(
             "ambiguous",
@@ -555,7 +538,7 @@ def fetch_article(
         strategy=strategy,
         context=runtime,
     )
-    extend_unique(source_trail, metadata_trail)
+    extend_trace(events, metadata_trail)
     from ..publisher_identity import normalize_doi
 
     doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
@@ -575,19 +558,17 @@ def fetch_article(
         start=1,
     ):
         provider_name = candidate_provider
-        source_trail.append(
-            route_marker(
-                f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}"
-            )
+        events.append(
+            route_event(f"provider_candidate_{candidate_provider}_{signal}_rank_{rank}")
         )
-        source_trail.append(
-            route_marker(
+        events.append(
+            route_event(
                 f"provider_candidate_{candidate_provider}_identity_{identity_strength}"
             )
         )
         attempt_outputs = _ProviderAttemptOutputs(
             warnings=warnings,
-            source_trail=source_trail,
+            events=events,
             trace=trace,
         )
         article = _try_official_provider(
@@ -602,32 +583,30 @@ def fetch_article(
         )
         provider_failures.extend(attempt_outputs.failures)
         if article is not None:
-            source_trail.append(
-                route_marker(f"provider_candidate_{candidate_provider}_accepted")
+            events.append(
+                route_event(f"provider_candidate_{candidate_provider}_accepted")
             )
             article = finalize_article(
                 article,
                 warnings=warnings,
-                source_trail=source_trail,
+                events=events,
                 trace=trace,
             )
-            runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
+            runtime.fetch_trace = merge_trace(events, trace)
             break
-        source_trail.append(
-            route_marker(f"provider_candidate_{candidate_provider}_rejected")
-        )
+        events.append(route_event(f"provider_candidate_{candidate_provider}_rejected"))
         if identity_strength == "strong" and any(
             failure.code == NO_ACCESS for failure in attempt_outputs.failures
         ):
-            source_trail.append(
-                route_marker(
+            events.append(
+                route_event(
                     f"provider_candidate_{candidate_provider}_access_boundary_stop"
                 )
             )
             break
         if any(failure.code == NO_ACCESS for failure in attempt_outputs.failures):
-            source_trail.append(
-                route_marker(
+            events.append(
+                route_event(
                     f"provider_candidate_{candidate_provider}_access_boundary_weak_continue"
                 )
             )
@@ -636,9 +615,9 @@ def fetch_article(
         return article
 
     if provider_emits_html_managed_marker(provider_name):
-        extend_unique(
-            source_trail,
-            [fallback_marker(f"{provider_name}_html_managed_by_provider")],
+        extend_trace(
+            events,
+            [fallback_event(f"{provider_name}_html_managed_by_provider")],
         )
 
     fallback_article = _fallback_to_metadata_only(
@@ -646,9 +625,9 @@ def fetch_article(
         resolved=resolved,
         strategy=strategy,
         warnings=warnings,
-        source_trail=source_trail,
+        events=events,
         trace=trace,
         provider_failure=_primary_provider_failure(provider_failures),
     )
-    runtime.fetch_trace = project_source_trail_trace(source_trail, trace)
+    runtime.fetch_trace = merge_trace(events, trace)
     return fallback_article

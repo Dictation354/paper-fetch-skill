@@ -559,7 +559,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
                 ),
                 asset_profile="body",
                 warnings=warnings,
-                source_trail=[],
+                events=[],
             )
 
         asset_warnings = [

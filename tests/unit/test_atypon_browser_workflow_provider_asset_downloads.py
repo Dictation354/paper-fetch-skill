@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from tests.support._atypon_browser_workflow_provider_support import *
 from paper_fetch.runtime import RuntimeContext
 # ruff: noqa: F403,F405
@@ -868,7 +869,15 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         fetcher.failure_for.return_value = {
             "reason": "wiley_supplement_download_timeout"
         }
-        refresh = mock.Mock()
+        refresh = mock.Mock(
+            return_value=BrowserWarmResult(
+                seed={},
+                changed=False,
+                accepted=False,
+                status=None,
+                reason="unavailable",
+            )
+        )
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", "10.1111/test")
             raw = _typed_raw_payload(

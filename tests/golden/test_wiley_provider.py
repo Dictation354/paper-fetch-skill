@@ -91,8 +91,6 @@ def test_wiley_confirmed_403_html_passes_markdown_and_availability(
         user_agent=None,
         profile_dir=None,
         user_data_dir=None,
-        storage_state_path=None,
-        persist_storage_state=False,
     )
     browser_html = browser_runtime.BrowserFetchedHtml(
         source_url=landing_url,
@@ -183,8 +181,6 @@ def test_wiley_confirmed_403_extraction_failure_continues_next_candidate(
         user_agent=None,
         profile_dir=None,
         user_data_dir=None,
-        storage_state_path=None,
-        persist_storage_state=False,
     )
     provisional_review = {
         "status": 403,

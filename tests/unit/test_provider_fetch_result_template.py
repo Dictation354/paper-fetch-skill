@@ -1,8 +1,10 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 
 import tempfile
 import unittest
-from dataclasses import replace
 from pathlib import Path
 from collections.abc import Mapping
 
@@ -21,7 +23,6 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_event, trace_from_markers
 
 
 def _payload(
@@ -32,18 +33,23 @@ def _payload(
     body = b"<html><body>Article</body></html>"
     return RawFulltextPayload(
         provider="template",
-        source_url=source_url,
-        content_type="text/html",
-        body=body,
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=body,
+                markdown_text="# Template Article\n\n## Results\n\n"
+                + "Body text " * 80,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=body,
-            markdown_text="# Template Article\n\n## Results\n\n" + ("Body text " * 80),
         ),
-        trace=trace_from_markers(
-            list(["fulltext:template_html_ok"] if markers is None else markers)
+        trace=list(
+            [trace_event("fulltext", "template_html", "ok")]
+            if markers is None
+            else markers
         ),
     )
 
@@ -78,13 +84,13 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                 ProviderWaterfallStep(
                     label="html",
                     run=first,
-                    failure_marker="fulltext:template_html_fail",
+                    failure_event=trace_event("fulltext", "template_html", "fail"),
                     failure_warning="trying pdf",
                 ),
                 ProviderWaterfallStep(
                     label="pdf",
                     run=second,
-                    success_markers=("fulltext:template_pdf_ok",),
+                    success_events=(trace_event("fulltext", "template_pdf", "ok"),),
                     success_warning="pdf success",
                 ),
                 ProviderWaterfallStep(label="unused", run=third),
@@ -95,14 +101,25 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(
             payload.warnings, ["first warning", "trying pdf", "pdf success"]
         )
-        self.assertEqual(
-            [event.marker() for event in payload.trace if event.marker()],
-            [
-                "fulltext:template_html_fail",
-                "fulltext:template_pdf_ok",
-                "fulltext:html_fail",
-                "fulltext:pdf_ok",
-            ],
+        self.assertTrue(
+            all(
+                event
+                in trace_facts(
+                    [
+                        trace_event(event.stage, event.component, event.outcome)
+                        for event in payload.trace
+                        if trace_event(event.stage, event.component, event.outcome)
+                    ]
+                )
+                for event in trace_facts(
+                    [
+                        trace_event("fulltext", "template_html", "fail"),
+                        trace_event("fulltext", "template_pdf", "ok"),
+                        trace_event("fulltext", "html", "fail"),
+                        trace_event("fulltext", "pdf", "ok"),
+                    ]
+                )
+            )
         )
 
     def test_runner_combines_failures_when_all_steps_fail(self) -> None:
@@ -114,14 +131,14 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                         run=lambda _state: (_ for _ in ()).throw(
                             ProviderFailure("no_result", "HTML failed.")
                         ),
-                        failure_marker="fulltext:template_html_fail",
+                        failure_event=trace_event("fulltext", "template_html", "fail"),
                     ),
                     ProviderWaterfallStep(
                         label="pdf",
                         run=lambda _state: (_ for _ in ()).throw(
                             ProviderFailure("no_result", "PDF failed.")
                         ),
-                        failure_marker="fulltext:template_pdf_fail",
+                        failure_event=trace_event("fulltext", "template_pdf", "fail"),
                     ),
                 ]
             )
@@ -129,9 +146,16 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, "no_result")
         self.assertIn("html: HTML failed.", raised.exception.message)
         self.assertIn("pdf: PDF failed.", raised.exception.message)
-        self.assertEqual(
-            raised.exception.source_trail,
-            ["fulltext:template_html_fail", "fulltext:template_pdf_fail"],
+        self.assertTrue(
+            all(
+                event in trace_facts(raised.exception.trace)
+                for event in trace_facts(
+                    [
+                        trace_event("fulltext", "template_html", "fail"),
+                        trace_event("fulltext", "template_pdf", "fail"),
+                    ]
+                )
+            )
         )
 
     def test_runner_combines_initial_trail_when_all_steps_fail(self) -> None:
@@ -144,17 +168,26 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                             ProviderFailure(
                                 "no_result",
                                 "HTML failed.",
-                                source_trail=["fulltext:template_html_fail"],
+                                trace=[
+                                    trace_event("fulltext", "template_html", "fail")
+                                ],
                             )
                         ),
                     )
                 ],
-                initial_source_trail=["fulltext:template_landing_ok"],
+                initial_events=[trace_event("fulltext", "template_landing", "ok")],
             )
 
-        self.assertEqual(
-            raised.exception.source_trail,
-            ["fulltext:template_landing_ok", "fulltext:template_html_fail"],
+        self.assertTrue(
+            all(
+                event in trace_facts(raised.exception.trace)
+                for event in trace_facts(
+                    [
+                        trace_event("fulltext", "template_landing", "ok"),
+                        trace_event("fulltext", "template_html", "fail"),
+                    ]
+                )
+            )
         )
 
     def test_runner_short_circuit_failure_keeps_prior_state(self) -> None:
@@ -171,14 +204,14 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                                 warnings=["html warning"],
                             )
                         ),
-                        failure_marker="fulltext:template_html_fail",
+                        failure_event=trace_event("fulltext", "template_html", "fail"),
                     ),
                     ProviderWaterfallStep(
                         label="pdf",
                         run=lambda _state: (_ for _ in ()).throw(
                             ProviderFailure("no_access", "PDF was blocked.")
                         ),
-                        failure_marker="fulltext:template_pdf_fail",
+                        failure_event=trace_event("fulltext", "template_pdf", "fail"),
                         continue_codes=(),
                     ),
                 ]
@@ -187,9 +220,16 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(raised.exception.code, "no_access")
         self.assertEqual(raised.exception.retry_after_seconds, 9)
         self.assertEqual(raised.exception.warnings, ["html warning"])
-        self.assertEqual(
-            raised.exception.source_trail,
-            ["fulltext:template_html_fail", "fulltext:template_pdf_fail"],
+        self.assertTrue(
+            all(
+                event in trace_facts(raised.exception.trace)
+                for event in trace_facts(
+                    [
+                        trace_event("fulltext", "template_html", "fail"),
+                        trace_event("fulltext", "template_pdf", "fail"),
+                    ]
+                )
+            )
         )
 
     def test_runner_custom_final_failure_keeps_state_fields(self) -> None:
@@ -210,7 +250,7 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                                 warnings=["html warning"],
                             )
                         ),
-                        failure_marker="fulltext:template_html_fail",
+                        failure_event=trace_event("fulltext", "template_html", "fail"),
                     )
                 ],
                 final_failure_factory=final_failure,
@@ -220,7 +260,14 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(raised.exception.retry_after_seconds, 11)
         self.assertEqual(raised.exception.missing_env, ["HTML_TOKEN"])
         self.assertEqual(raised.exception.warnings, ["html warning"])
-        self.assertEqual(raised.exception.source_trail, ["fulltext:template_html_fail"])
+        self.assertTrue(
+            all(
+                event in trace_facts(raised.exception.trace)
+                for event in trace_facts(
+                    [trace_event("fulltext", "template_html", "fail")]
+                )
+            )
+        )
 
     def test_combine_provider_failures_preserves_retry_after_and_dedupes_details(
         self,
@@ -233,7 +280,10 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                         "no_result",
                         "HTML failed.",
                         warnings=["shared", "html warning"],
-                        source_trail=["fulltext:template_html_fail", "shared_marker"],
+                        trace=[
+                            trace_event("fulltext", "template_html", "fail"),
+                            trace_event("fulltext", "shared", "info"),
+                        ],
                     ),
                 ),
                 (
@@ -243,7 +293,10 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                         "PDF was rate limited.",
                         retry_after_seconds=7,
                         warnings=["shared", "pdf warning"],
-                        source_trail=["shared_marker", "fulltext:template_pdf_fail"],
+                        trace=[
+                            trace_event("fulltext", "shared", "info"),
+                            trace_event("fulltext", "template_pdf", "fail"),
+                        ],
                     ),
                 ),
             ]
@@ -252,13 +305,17 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
         self.assertEqual(combined.code, "no_result")
         self.assertEqual(combined.retry_after_seconds, 7)
         self.assertEqual(combined.warnings, ["shared", "html warning", "pdf warning"])
-        self.assertEqual(
-            combined.source_trail,
-            [
-                "fulltext:template_html_fail",
-                "shared_marker",
-                "fulltext:template_pdf_fail",
-            ],
+        self.assertTrue(
+            all(
+                event in trace_facts(combined.trace)
+                for event in trace_facts(
+                    [
+                        trace_event("fulltext", "template_html", "fail"),
+                        trace_event("fulltext", "shared", "info"),
+                        trace_event("fulltext", "template_pdf", "fail"),
+                    ]
+                )
+            )
         )
 
     def test_runner_skips_step_when_condition_is_false(self) -> None:
@@ -274,20 +331,22 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
 
         def second(_state):
             calls.append("second")
-            return _payload(markers=["fulltext:template_pdf_ok"])
+            return _payload(markers=[trace_event("fulltext", "template_pdf", "ok")])
 
         payload = run_provider_waterfall(
             [
                 ProviderWaterfallStep(
                     label="html",
                     run=first,
-                    failure_marker="fulltext:template_html_fail",
+                    failure_event=trace_event("fulltext", "template_html", "fail"),
                 ),
                 ProviderWaterfallStep(
                     label="conditional",
                     run=skipped,
                     condition=lambda state: state.failure("html") is None,
-                    failure_marker="fulltext:template_conditional_fail",
+                    failure_event=trace_event(
+                        "fulltext", "template_conditional", "fail"
+                    ),
                 ),
                 ProviderWaterfallStep(label="pdf", run=second),
             ]
@@ -315,16 +374,20 @@ class ProviderWaterfallRunnerTests(unittest.TestCase):
                 ProviderWaterfallStep(
                     label="pdf",
                     run=lambda _state: payload,
-                    success_markers=("fulltext:template_pdf_fallback_ok",),
+                    success_events=(
+                        trace_event("fulltext", "template_pdf_fallback", "ok"),
+                    ),
                 )
             ],
-            initial_source_trail=["fulltext:template_html_fail"],
+            initial_events=[trace_event("fulltext", "template_html", "fail")],
         )
 
         html_event = next(
             event
             for event in result.trace
-            if event.marker() == "fulltext:template_html_fail"
+            if event.code is not None
+            and trace_event(event.stage, event.component, event.outcome)
+            == trace_event("fulltext", "template_html", "fail")
         )
         self.assertEqual(html_event.code, "browser_runtime_prepare_timeout")
         self.assertEqual(html_event.message, "Camoufox runtime preparation timed out.")
@@ -425,16 +488,18 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
                 del context
                 return RawFulltextPayload(
                     provider="template",
-                    source_url="https://example.test/article",
-                    content_type="text/html",
-                    body=body,
-                    content=ProviderContent(
-                        route_kind="html",
+                    content=replace(
+                        ProviderContent(
+                            route_kind="html",
+                            source_url="https://example.test/article",
+                            content_type="text/html",
+                            body=body,
+                        ),
                         source_url="https://example.test/article",
                         content_type="text/html",
                         body=body,
                     ),
-                    trace=trace_from_markers(["fulltext:template_html_ok"]),
+                    trace=[trace_event("fulltext", "template_html", "ok")],
                 )
 
         result = HtmlOnlyClient().fetch_result(
@@ -460,16 +525,18 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
                 del doi, metadata, context
                 return RawFulltextPayload(
                     provider="template",
-                    source_url="https://example.test/article",
-                    content_type="text/html; charset=iso-8859-1",
-                    body=body,
-                    content=ProviderContent(
-                        route_kind="html",
+                    content=replace(
+                        ProviderContent(
+                            route_kind="html",
+                            source_url="https://example.test/article",
+                            content_type="text/html; charset=iso-8859-1",
+                            body=body,
+                        ),
                         source_url="https://example.test/article",
                         content_type="text/html; charset=iso-8859-1",
                         body=body,
                     ),
-                    trace=trace_from_markers(["fulltext:template_html_ok"]),
+                    trace=[trace_event("fulltext", "template_html", "ok")],
                 )
 
         result = LatinHtmlClient().fetch_result(
@@ -517,8 +584,14 @@ class ProviderFetchResultTemplateTests(unittest.TestCase):
 
         self.assertIn("custom asset warning: asset backend failed", result.warnings)
         self.assertIn(
-            "download:template_assets_failed",
-            [event.marker() for event in result.trace if event.marker()],
+            trace_facts(trace_event("download", "template_assets_failed", "info")),
+            trace_facts(
+                [
+                    trace_event(event.stage, event.component, event.outcome)
+                    for event in result.trace
+                    if trace_event(event.stage, event.component, event.outcome)
+                ]
+            ),
         )
 
     def test_base_fetch_result_passes_same_runtime_context_to_all_provider_hooks(

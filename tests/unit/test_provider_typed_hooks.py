@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 
 from bs4 import BeautifulSoup
 import pytest
@@ -95,7 +96,6 @@ def test_provider_specific_hooks_have_neutral_defaults() -> None:
 def test_inline_and_table_hooks_run_at_existing_normalization_stages(
     monkeypatch,
 ) -> None:
-    from dataclasses import replace
     from paper_fetch.providers.atypon_browser_workflow import normalization
 
     profile = normalization._publisher_profile("pnas")
@@ -140,7 +140,6 @@ def test_inline_and_table_hooks_run_at_existing_normalization_stages(
 
 
 def test_table_hook_none_uses_shared_rendering(monkeypatch) -> None:
-    from dataclasses import replace
     from paper_fetch.providers.atypon_browser_workflow import normalization
 
     profile = normalization._publisher_profile("pnas")

@@ -1,6 +1,8 @@
 from __future__ import annotations
-from tests.support.markdown_presentation import visible_markdown
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from dataclasses import replace
+from tests.support.markdown_presentation import visible_markdown
 from pathlib import Path
 import re
 from paper_fetch.providers.plos import (
@@ -44,7 +46,9 @@ def test_plos_xml_route_replays_jats_fixture_as_fulltext() -> None:
     )
 
     assert article.source == "plos_xml"
-    assert "fulltext:plos_xml_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "plos_xml", "ok")) in trace_facts(
+        article.trace
+    )
     assert article.quality.content_kind == "fulltext"
     assert "## Abstract" in markdown
     assert "Download PDF" not in markdown
@@ -68,7 +72,9 @@ def test_plos_runtime_xml_route_fetches_and_converts_jats_fixture() -> None:
     assert raw_payload.content.route_kind == "xml"
     assert article.source == "plos_xml"
     assert article.quality.content_kind == "fulltext"
-    assert "fulltext:plos_xml_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "plos_xml", "ok")) in trace_facts(
+        article.trace
+    )
 
 
 def test_plos_runtime_xml_route_follows_relative_and_signed_redirects() -> None:
@@ -118,12 +124,16 @@ def test_plos_runtime_xml_route_follows_relative_and_signed_redirects() -> None:
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "xml"
     assert article.source == "plos_xml"
-    assert "fulltext:plos_xml_ok" in article.quality.source_trail
-    assert "fulltext:plos_xml_fail" not in article.quality.source_trail
-    assert "temporary-credential" not in raw_payload.source_url
-    assert "temporary-signature" not in raw_payload.source_url
-    assert "X-Goog-Credential=%2A%2A%2A" in raw_payload.source_url
-    assert "X-Goog-Signature=%2A%2A%2A" in raw_payload.source_url
+    assert trace_facts(trace_event("fulltext", "plos_xml", "ok")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(trace_event("fulltext", "plos_xml", "fail")) not in trace_facts(
+        article.trace
+    )
+    assert "temporary-credential" not in raw_payload.content.source_url
+    assert "temporary-signature" not in raw_payload.content.source_url
+    assert "X-Goog-Credential=%2A%2A%2A" in raw_payload.content.source_url
+    assert "X-Goog-Signature=%2A%2A%2A" in raw_payload.content.source_url
 
 
 def test_plos_xml_redirect_failure_continues_to_pdf_fallback() -> None:
@@ -149,8 +159,12 @@ def test_plos_xml_redirect_failure_continues_to_pdf_fallback() -> None:
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == PDF_FALLBACK
     assert article.source == "plos_pdf"
-    assert "fulltext:plos_xml_fail" in article.quality.source_trail
-    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "plos_xml", "fail")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "plos_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     assert any(
         "PLOS XML redirect chain was not usable" in warning
         for warning in article.quality.warnings
@@ -171,7 +185,9 @@ def test_plos_pdf_fallback_route_uses_pdf_magic_and_rejects_html_wrapper() -> No
     )
     assert fixture.content_type == "application/pdf"
     assert article.source == "plos_pdf"
-    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "plos_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     assert "Access Denied" not in markdown
     assert "<html" not in markdown.lower(), (
         "PLOS pdf_fallback must not capture an HTML wrapper"
@@ -202,8 +218,12 @@ def test_plos_runtime_pdf_fallback_rejects_html_xml_candidate() -> None:
     assert raw_payload.content.route_kind == PDF_FALLBACK
     assert article.source == "plos_pdf"
     assert article.quality.content_kind == "fulltext"
-    assert "fulltext:plos_xml_fail" in article.quality.source_trail
-    assert "fulltext:plos_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "plos_xml", "fail")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "plos_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
 
 
 def test_plos_markdown_review_loop_non_null_fixture_contracts() -> None:

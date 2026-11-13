@@ -551,7 +551,7 @@ def fetch_provider_supplementary(
                 except ProviderFailure as exc:
                     if (
                         exc.code not in {NO_RESULT, NO_ACCESS}
-                        and exc.error_category != "identity_unverified"
+                        and exc.diagnostics.error_category != "identity_unverified"
                     ):
                         raise
                     raw = None
@@ -566,7 +566,8 @@ def fetch_provider_supplementary(
             [
                 {
                     **asset,
-                    "source_page_url": asset.get("source_page_url") or raw.source_url,
+                    "source_page_url": asset.get("source_page_url")
+                    or raw.content.source_url,
                 }
                 for asset in raw.content.extracted_assets
             ]
@@ -580,7 +581,7 @@ def fetch_provider_supplementary(
             discovery_complete=not discovery_failures,
             identity_verified=True,
             source_urls=[
-                raw.source_url,
+                raw.content.source_url,
                 *raw.content.diagnostics.get("supplementary_index_urls", []),
             ],
         )

@@ -4,6 +4,10 @@ Only transport/browser setup and PDF failure are injected; no historical markdow
 or unrelated successful PDF supplies a recoverability claim.
 """
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+
+
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
 from unittest import mock
 import json
@@ -124,7 +128,15 @@ def test_original_rejection_page_obeys_fixed_stop_or_fallback_expectation(
             load_runtime_config=mock.Mock(return_value=runtime),
             ensure_runtime_ready=mock.Mock(),
             fetch_html_with_browser=mock.Mock(return_value=fetched),
-            warm_browser_context=mock.Mock(return_value={}),
+            warm_browser_context=mock.Mock(
+                return_value=browser_runtime.BrowserWarmResult(
+                    seed={},
+                    changed=False,
+                    accepted=False,
+                    status=None,
+                    reason="no_refresh",
+                )
+            ),
             fetch_pdf_with_browser=pdf,
         )
         envelope = _fetch_through_service(client, fixture, metadata)
@@ -161,15 +173,19 @@ def test_original_rejection_page_obeys_fixed_stop_or_fallback_expectation(
     )
     if expected_gate:
         pdf.assert_not_called()
-        assert f"trace:{CONFIRMED_PAYWALL}" in article.quality.source_trail
+        assert any(event.code == CONFIRMED_PAYWALL for event in article.trace)
         assert article.quality.content_kind in {"abstract_only", "metadata_only"}
         return
     assert pdf.called
     assert any(e.code == "pdf_download_failed" for e in envelope.trace), envelope.trace
     assert article.quality.content_kind in {"abstract_only", "metadata_only"}
-    trail = article.quality.source_trail
-    assert f"fulltext:{fixture.provider}_html_fail" in trail
-    assert f"fulltext:{fixture.provider}_pdf_fallback_ok" not in trail
+    trail = article.trace
+    assert trace_facts(
+        trace_event("fulltext", f"{fixture.provider}_html", "fail")
+    ) in trace_facts(trail)
+    assert trace_facts(
+        trace_event("fulltext", f"{fixture.provider}_pdf_fallback", "ok")
+    ) not in trace_facts(trail)
     assert any(
         "Injected same-article PDF transport failure." in w
         for w in article.quality.warnings
@@ -230,11 +246,12 @@ def test_oxford_original_browser_dom_rejects_then_tries_current_pdf_candidates()
     ]
     assert not envelope.article.quality.has_fulltext
     assert envelope.article.quality.content_kind == "metadata_only"
-    assert "fulltext:oxfordacademic_html_fail" in envelope.article.quality.source_trail
-    assert (
-        "fulltext:oxfordacademic_pdf_fallback_fail"
-        in envelope.article.quality.source_trail
-    )
+    assert trace_facts(
+        trace_event("fulltext", "oxfordacademic_html", "fail")
+    ) in trace_facts(envelope.article.trace)
+    assert trace_facts(
+        trace_event("fulltext", "oxfordacademic_pdf_fallback", "fail")
+    ) in trace_facts(envelope.article.trace)
     assert any(
         "Encountered a challenge or CAPTCHA page" in warning
         for warning in envelope.article.quality.warnings

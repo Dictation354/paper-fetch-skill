@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import json
 from dataclasses import asdict, dataclass
 from typing import Any
 from collections.abc import Mapping, Sequence
@@ -23,7 +22,11 @@ from ..reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
 from ..service import PaperFetchFailure
 from ..tracing import TraceEvent
 
-MCP_OUTPUT_SCHEMA_VERSION = 2
+MCP_OUTPUT_SCHEMA_VERSION = 3
+
+
+class ToolArgumentError(ValueError):
+    """Invalid execution options rejected before acquisition starts."""
 
 
 @dataclass(frozen=True)
@@ -39,13 +42,8 @@ class _ErrorPayloadContext:
     details: Mapping[str, Any] | None = None
     trace: Sequence[TraceEvent] | None = None
     warnings: Sequence[str] | None = None
-    source_trail: Sequence[str] | None = None
     candidates: Sequence[Mapping[str, Any]] | None = None
     missing_env: Sequence[str] | None = None
-
-
-def _dump_payload(payload: Mapping[str, Any]) -> str:
-    return json.dumps(dict(payload), ensure_ascii=False, indent=2)
 
 
 def with_schema_version(payload: Mapping[str, Any]) -> dict[str, Any]:
@@ -63,7 +61,7 @@ def _tool_result(
     versioned_payload = with_schema_version(payload)
     content: list[
         TextContent | ImageContent | AudioContent | ResourceLink | EmbeddedResource
-    ] = [TextContent(type="text", text=_dump_payload(versioned_payload))]
+    ] = []
     if extra_content:
         content.extend(extra_content)
     return CallToolResult(
@@ -103,7 +101,6 @@ def _error_payload(
             "details": dict(error.details or {}),
             "trace": [asdict(item) for item in (error.trace or [])],
             "warnings": [str(item) for item in (error.warnings or [])],
-            "source_trail": [str(item) for item in (error.source_trail or [])],
             "candidates": list(error.candidates) if error.candidates else None,
             "missing_env": list(error.missing_env) if error.missing_env else None,
         }
@@ -129,10 +126,12 @@ def is_rate_limited_payload(payload: Mapping[str, Any]) -> bool:
 
 
 def error_payload_from_exception(error: Exception) -> dict[str, Any]:
-    if isinstance(error, ValidationError):
+    if isinstance(error, (ValidationError, ToolArgumentError)):
         return _error_payload(
             status=ERROR,
-            reason=_validation_reason(error),
+            reason=_validation_reason(error)
+            if isinstance(error, ValidationError)
+            else str(error),
             context=_ErrorPayloadContext(
                 code="validation_error",
                 error_category="validation_error",
@@ -167,26 +166,30 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
             ),
         )
     if isinstance(error, PaperFetchFailure):
-        return _error_payload(
+        payload = _error_payload(
             status=error.status,
             reason=error.reason,
             context=_ErrorPayloadContext(
                 code=error.status,
                 error_category=error.status,
                 candidates=error.candidates,
-                http_status=error.http_status,
+                http_status=error.diagnostics.http_status,
                 retry_after_seconds=error.retry_after_seconds,
-                provider=error.provider,
-                route=error.route,
-                stage=error.stage,
-                retryable=error.retryable,
-                details=error.details,
+                provider=error.diagnostics.provider,
+                route=error.diagnostics.route,
+                stage=error.diagnostics.stage,
+                retryable=error.diagnostics.retryable,
+                details=error.diagnostics.details,
                 trace=error.trace,
                 warnings=error.warnings,
-                source_trail=error.source_trail,
                 missing_env=error.missing_env,
             ),
         )
+        if error.doi is not None:
+            payload["doi"] = error.doi
+        if error.diagnostics.stage == "supplementary":
+            payload["target"] = "supplementary"
+        return payload
     if isinstance(error, ProviderFailure):
         status = error.code if error.code in {NO_ACCESS, RATE_LIMITED} else ERROR
         if error.code == NOT_CONFIGURED and error.missing_env:
@@ -196,17 +199,16 @@ def error_payload_from_exception(error: Exception) -> dict[str, Any]:
             reason=error.message,
             context=_ErrorPayloadContext(
                 code=error.code,
-                error_category=error.error_category or error.code,
-                http_status=error.http_status,
+                error_category=error.diagnostics.error_category or error.code,
+                http_status=error.diagnostics.http_status,
                 retry_after_seconds=error.retry_after_seconds,
-                provider=error.provider,
-                route=error.route,
-                stage=error.stage,
-                retryable=error.retryable,
-                details=error.details,
+                provider=error.diagnostics.provider,
+                route=error.diagnostics.route,
+                stage=error.diagnostics.stage,
+                retryable=error.diagnostics.retryable,
+                details=error.diagnostics.details,
                 trace=error.trace,
                 warnings=error.warnings,
-                source_trail=error.source_trail,
                 missing_env=error.missing_env,
             ),
         )

@@ -1,10 +1,11 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from pathlib import Path
 import re
 from paper_fetch.providers import _iop_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
-from paper_fetch.tracing import trace_from_markers
 
 
 IOP_SAMPLE_DOI = "10.1088/1748-9326/ab7d02"
@@ -95,22 +96,29 @@ def test_iop_real_replay_covers_table_and_formula_purposes() -> None:
 
     raw_payload = RawFulltextPayload(
         provider="iop",
-        source_url=IOP_TABLE_FORMULA_LANDING,
-        content_type="text/html",
-        body=html.encode("utf-8"),
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=IOP_TABLE_FORMULA_LANDING,
+                content_type="text/html",
+                body=html.encode("utf-8"),
+                markdown_text=markdown,
+                diagnostics={
+                    "extraction": extraction,
+                    "availability_diagnostics": extraction.get(
+                        "availability_diagnostics"
+                    ),
+                },
+            ),
             source_url=IOP_TABLE_FORMULA_LANDING,
             content_type="text/html",
             body=html.encode("utf-8"),
-            markdown_text=markdown,
-            diagnostics={
-                "extraction": extraction,
-                "availability_diagnostics": extraction.get("availability_diagnostics"),
+            merged_metadata={
+                "doi": IOP_TABLE_FORMULA_DOI,
+                "title": IOP_TABLE_FORMULA_DOI,
             },
         ),
-        trace=trace_from_markers(["fulltext:iop_html_ok"]),
-        merged_metadata={"doi": IOP_TABLE_FORMULA_DOI, "title": IOP_TABLE_FORMULA_DOI},
+        trace=[trace_event("fulltext", "iop_html", "ok")],
     )
     article = client.to_article_model(
         {"doi": IOP_TABLE_FORMULA_DOI, "title": IOP_TABLE_FORMULA_DOI},

@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from tests.support.markdown_presentation import visible_markdown
 from tests.support._paper_fetch_support import (
     RecordingTransport,
@@ -22,7 +25,6 @@ import unittest
 import tempfile
 import tarfile
 import io
-from dataclasses import replace
 from datetime import datetime
 import json
 import re
@@ -277,9 +279,7 @@ def _html_404_then_pdf_transport(arxiv_id: str) -> RecordingTransport:
     return _html_then_pdf_transport(
         arxiv_id,
         html_response=ProviderFailure(
-            "no_result",
-            f"HTTP 404 for {html_url}",
-            source_trail=[],
+            "no_result", f"HTTP 404 for {html_url}", trace=[]
         ),
     )
 
@@ -415,7 +415,10 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(raw_payload.content.route_kind, "html")
         self.assertEqual(article.source, "arxiv_html")
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:arxiv_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_html", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertNotIn("source_url", raw_payload.content.merged_metadata)
         self.assertEqual(raw_payload.warnings, [])
         self.assertEqual(
@@ -440,9 +443,13 @@ class ArxivProviderTests(unittest.TestCase):
                 self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
                 self.assertEqual(article.source, "arxiv_pdf")
                 self.assertEqual(article.quality.content_kind, "fulltext")
-                self.assertIn("fulltext:arxiv_html_fail", article.quality.source_trail)
                 self.assertIn(
-                    "fulltext:arxiv_pdf_fallback_ok", article.quality.source_trail
+                    trace_facts(trace_event("fulltext", "arxiv_html", "fail")),
+                    trace_facts(article.trace),
+                )
+                self.assertIn(
+                    trace_facts(trace_event("fulltext", "arxiv_pdf_fallback", "ok")),
+                    trace_facts(article.trace),
                 )
                 self.assertFalse(
                     any("latex" in item.lower() for item in raw_payload.warnings)
@@ -463,8 +470,17 @@ class ArxivProviderTests(unittest.TestCase):
                 self.assertTrue(result.artifacts.text_only)
                 self.assertFalse(result.artifacts.allow_related_assets)
                 self.assertIn(
-                    "download:arxiv_assets_skipped_text_only",
-                    [event.marker() for event in result.artifacts.skip_trace],
+                    trace_facts(
+                        trace_event(
+                            "download", "arxiv_assets_skipped_text_only", "info"
+                        )
+                    ),
+                    trace_facts(
+                        [
+                            trace_event(event.stage, event.component, event.outcome)
+                            for event in result.artifacts.skip_trace
+                        ]
+                    ),
                 )
 
     def test_non_html_candidate_directly_requests_pdf_fallback(self) -> None:
@@ -482,8 +498,14 @@ class ArxivProviderTests(unittest.TestCase):
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "arxiv_pdf")
-        self.assertIn("fulltext:arxiv_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:arxiv_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertEqual(
             [call["url"] for call in transport.calls],
             [metadata["html_url"], metadata["pdf_url"], _arxiv_atom.ARXIV_API_URL],
@@ -510,8 +532,14 @@ class ArxivProviderTests(unittest.TestCase):
                 for item in raw_payload.warnings
             )
         )
-        self.assertIn("fulltext:arxiv_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:arxiv_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertEqual(
             [call["url"] for call in transport.calls],
             [metadata["html_url"], metadata["pdf_url"], _arxiv_atom.ARXIV_API_URL],
@@ -767,10 +795,15 @@ class ArxivProviderTests(unittest.TestCase):
         markdown = raw_payload.content.markdown_text
 
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.source_url, canonical_arxiv_html_url(arxiv_id))
+        self.assertEqual(
+            raw_payload.content.source_url, canonical_arxiv_html_url(arxiv_id)
+        )
         self.assertEqual(article.source, "arxiv_html")
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:arxiv_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv_html", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertIn("## Abstract", markdown)
         self.assertIn("## 1 Introduction", markdown)
         self.assertIn("## References", markdown)
@@ -1737,11 +1770,16 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(envelope.article.source, "arxiv_html")
         self.assertEqual(envelope.article.quality.content_kind, "fulltext")
         self.assertIn(
-            "route:provider_selected_arxiv", envelope.article.quality.source_trail
+            trace_facts(trace_event("route", "provider_selected_arxiv", "info")),
+            trace_facts(envelope.article.trace),
         )
-        self.assertIn("metadata:arxiv_ok", envelope.article.quality.source_trail)
         self.assertIn(
-            "fulltext:arxiv_article_ok", envelope.article.quality.source_trail
+            trace_facts(trace_event("metadata", "arxiv", "ok")),
+            trace_facts(envelope.article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "arxiv", "article_ok")),
+            trace_facts(envelope.article.trace),
         )
         self.assertTrue(envelope.markdown)
         self.assertEqual(api_client.queries, [[arxiv_id]])
@@ -1775,7 +1813,8 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(envelope.article.source, "crossref_meta")
         self.assertEqual(envelope.article.quality.content_kind, "abstract_only")
         self.assertNotIn(
-            "fulltext:arxiv_attempt", envelope.article.quality.source_trail
+            trace_facts(trace_event("fulltext", "arxiv", "attempt")),
+            trace_facts(envelope.article.trace),
         )
         self.assertEqual(arxiv_client.transport.calls, [])
 
@@ -2080,11 +2119,12 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                     len(result.artifacts.asset_failures), int("failure" in scenario)
                 )
                 self.assertIn(
-                    "fulltext:arxiv_html_fail", result.article.quality.source_trail
+                    trace_facts(trace_event("fulltext", "arxiv_html", "fail")),
+                    trace_facts(result.article.trace),
                 )
                 self.assertIn(
-                    "fulltext:arxiv_pdf_fallback_ok",
-                    result.article.quality.source_trail,
+                    trace_facts(trace_event("fulltext", "arxiv_pdf_fallback", "ok")),
+                    trace_facts(result.article.trace),
                 )
                 envelope = paper_fetch.build_fetch_envelope(
                     result.article,
@@ -2095,9 +2135,7 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                 )
                 acceptance = evaluate_fetch_acceptance(envelope, asset_profile="all")
                 self.assertEqual(acceptance.overall.value, "degraded")
-                self.assertIn(
-                    "fulltext:arxiv_html:fail", acceptance.provenance.fallback_codes
-                )
+                self.assertIn("no_result", acceptance.provenance.fallback_codes)
                 self.assertEqual(
                     envelope.markdown.count("## Supplementary Materials"),
                     int(bool(kinds)),
@@ -2177,7 +2215,7 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                         expected_doi=_doi(arxiv_id),
                         require_local_body_assets=True,
                     )
-                self.assertTrue(envelope.has_fulltext)
+                self.assertTrue(envelope.quality.has_fulltext)
                 self.assertTrue(envelope.markdown)
                 self.assertEqual(
                     sum(
@@ -2243,7 +2281,6 @@ class TestArxivAncillaryAssets(unittest.TestCase):
                     mock.patch.object(
                         streaming, "_perform_request", return_value=response
                     ),
-                    mock.patch.object(transport, "_streaming_ready", True, create=True),
                     mock.patch.object(
                         transport,
                         "stream_to_file",

@@ -317,7 +317,7 @@ def test_browser_uses_combined_runtime_preparation(setup, monkeypatch):
     prepare = Mock(side_effect=lambda setup, **kw: setup.report("Byparr", "ready"))
     monkeypatch.setattr(offline_browsers, "prepare", prepare)
     setup.browser(selected=True)
-    prepare.assert_called_once_with(setup, selection="all", interactive=True)
+    prepare.assert_called_once_with(setup, interactive=True)
     assert "Byparr: ready" in setup.summary()
 
 

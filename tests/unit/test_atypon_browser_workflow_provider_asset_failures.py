@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from paper_fetch.providers.browser_workflow import fetchers as browser_fetchers
 from tests.support._atypon_browser_workflow_provider_support import *
 # ruff: noqa: F403,F405
@@ -132,7 +133,15 @@ class AtyponBrowserWorkflowProviderAssetFailureTests(
                 + ("Body text " * 120),
                 browser_context_seed=seed,
             )
-            mocked_warm = mock.Mock(return_value=refreshed_seed)
+            mocked_warm = mock.Mock(
+                return_value=BrowserWarmResult(
+                    seed=refreshed_seed,
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
+            )
             mocked_builder = mock.Mock(side_effect=[first_fetcher, retry_fetcher])
             install_browser_workflow_deps(
                 client,

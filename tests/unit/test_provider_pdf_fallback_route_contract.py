@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 
 from types import SimpleNamespace
 from unittest import mock
@@ -39,15 +42,17 @@ def _pdf_payload(provider: str) -> RawFulltextPayload:
     body = b"%PDF-1.7\n"
     return RawFulltextPayload(
         provider=provider,
-        source_url="https://example.test/article.pdf",
-        content_type="application/pdf",
-        body=body,
-        content=ProviderContent(
-            route_kind=PDF_FALLBACK,
+        content=replace(
+            ProviderContent(
+                route_kind=PDF_FALLBACK,
+                source_url="https://example.test/article.pdf",
+                content_type="application/pdf",
+                body=body,
+                reason="Downloaded PDF fallback.",
+            ),
             source_url="https://example.test/article.pdf",
             content_type="application/pdf",
             body=body,
-            reason="Downloaded PDF fallback.",
         ),
     )
 
@@ -93,7 +98,9 @@ def test_springer_html_failure_codes_reach_pdf_fallback(code: str) -> None:
 @pytest.mark.parametrize("code", PDF_FAILURE_CODES)
 def test_copernicus_xml_failure_codes_reach_pdf_fallback(code: str) -> None:
     client = copernicus_provider.CopernicusClient(transport=mock.Mock(), env={})
-    landing_attempt = SimpleNamespace(source_trail=["fulltext:copernicus_landing_ok"])
+    landing_attempt = SimpleNamespace(
+        events=[trace_event("fulltext", "copernicus_landing", "ok")]
+    )
     with (
         mock.patch.object(
             client, "_prepare_landing_attempt", return_value=landing_attempt
@@ -133,9 +140,14 @@ def test_oxford_pdf_fallback_reports_text_only_artifact_marker() -> None:
 
     assert not artifacts.allow_related_assets
     assert artifacts.text_only
-    assert [event.marker() for event in artifacts.skip_trace] == [
-        "download:oxfordacademic_assets_skipped_text_only"
-    ]
+    assert trace_facts(
+        [
+            trace_event(event.stage, event.component, event.outcome)
+            for event in artifacts.skip_trace
+        ]
+    ) == trace_facts(
+        [trace_event("download", "oxfordacademic_assets_skipped_text_only", "info")]
+    )
 
 
 @pytest.mark.parametrize("code", PDF_FAILURE_CODES)

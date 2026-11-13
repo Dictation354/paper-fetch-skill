@@ -38,7 +38,6 @@ class PlaywrightBackend:
         *,
         provider: str,
         doi: str,
-        require_storage_state: bool = False,
     ) -> BrowserRuntimeConfig:
         binary_value = browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR)
         binary_path = binary_value or None
@@ -56,34 +55,12 @@ class PlaywrightBackend:
                 )
             binary_path = str(path)
 
-        profile_dir = runtime_paths.configured_profile_dir(
-            env, provider=provider, backend=self.name
-        )
-        user_data_dir = runtime_paths.configured_user_data_dir(env, backend=self.name)
+        profile_dir = runtime_paths.configured_profile_dir(env, provider=provider)
+        user_data_dir = runtime_paths.configured_user_data_dir(env)
         if profile_dir is None and user_data_dir is None:
             user_data_dir = runtime_paths.default_provider_user_data_dir(
-                env, provider=provider, backend=self.name
+                env, provider=provider
             )
-        storage_state_path = runtime_paths.configured_storage_state_path(
-            env, provider=provider
-        )
-        storage_state_env_var = runtime_paths.provider_storage_state_env_var(provider)
-        native_dir = profile_dir or user_data_dir
-        native_profile_present = native_dir is not None and any(
-            (native_dir / name).is_file()
-            for name in ("prefs.js", "cookies.sqlite", "compatibility.ini")
-        )
-        runtime_paths.validate_storage_state_path(
-            storage_state_path,
-            provider=provider,
-            require_storage_state=require_storage_state and not native_profile_present,
-            explicit_path=not native_profile_present
-            and bool(
-                (
-                    env.get(storage_state_env_var, "") if storage_state_env_var else ""
-                ).strip()
-            ),
-        )
         timeout_value = browser_env_value(env, BROWSER_TIMEOUT_MS_ENV_VAR)
         return BrowserRuntimeConfig(
             provider=provider,
@@ -106,7 +83,6 @@ class PlaywrightBackend:
             binary_path=binary_path,
             profile_dir=profile_dir,
             user_data_dir=user_data_dir,
-            storage_state_path=storage_state_path,
         )
 
     def fetch_html(
@@ -143,6 +119,3 @@ class PlaywrightBackend:
             runtime_context=runtime_context,
             lightweight=lightweight,
         )
-
-    def storage_state_path(self, config: BrowserRuntimeConfig) -> Path | None:
-        return runtime_paths.storage_state_path(config)

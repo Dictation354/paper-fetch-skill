@@ -1,5 +1,8 @@
 """P28–P30: image identity and local-asset acceptance boundary contracts."""
 
+from paper_fetch.models import Quality
+
+
 import pytest
 
 from paper_fetch.models import FetchEnvelope
@@ -98,9 +101,9 @@ def test_remote_body_reference_cannot_pass_strict_local_acceptance(discovered):
         FetchEnvelope(
             doi="10.48550/arxiv.1234.56789v1",
             source="arxiv_html",
-            has_fulltext=True,
             article=article,
             markdown=markdown,
+            quality=Quality(has_fulltext=True),
         ),
         asset_profile="body",
         require_local_body_assets=True,
@@ -170,7 +173,10 @@ def test_localization_keeps_occurrence_label_through_file_rendering(
     rendered = rewrite_markdown_asset_links(
         markdown,
         FetchEnvelope(
-            doi=None, source=article.source, article=article, has_fulltext=True
+            doi=None,
+            source=article.source,
+            article=article,
+            quality=Quality(has_fulltext=True),
         ),
         target_path=tmp_path / "article.md",
         render=RenderOptions(),

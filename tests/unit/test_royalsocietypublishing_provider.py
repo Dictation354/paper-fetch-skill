@@ -1,4 +1,7 @@
 from __future__ import annotations
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 import tempfile
 from pathlib import Path
 from unittest import mock
@@ -17,7 +20,6 @@ from paper_fetch.providers._royalsocietypublishing_html import (
 )
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingClient
-from paper_fetch.tracing import source_trail_from_trace
 from tests.support._atypon_browser_workflow_provider_support import (
     AssetTransport,
     _typed_raw_payload,
@@ -164,15 +166,17 @@ def test_article_html_route_uses_browser_doi_candidate_without_xml_route() -> No
             fetch_pdf_with_browser=mock.Mock(),
         )
         raw_payload = client.fetch_raw_fulltext(doi, {"doi": doi})
-    article = client.to_article_model(raw_payload.merged_metadata or {}, raw_payload)
+    article = client.to_article_model(
+        raw_payload.content.merged_metadata or {}, raw_payload
+    )
 
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "html"
-    assert raw_payload.source_url == article_url
+    assert raw_payload.content.source_url == article_url
     assert article.source == "royalsocietypublishing_html"
-    assert "fulltext:royalsocietypublishing_html_ok" in source_trail_from_trace(
-        raw_payload.trace
-    )
+    assert trace_facts(
+        trace_event("fulltext", "royalsocietypublishing_html", "ok")
+    ) in trace_facts(raw_payload.trace)
     assert "Royal Society Direct HTML Test" in article.to_ai_markdown(
         include_refs="all"
     )
@@ -245,7 +249,7 @@ def test_article_html_fetch_result_downloads_figure_assets_and_rewrites_inline_l
         body=html.encode("utf-8"),
         route="html",
         markdown_text=markdown_text,
-        source_trail=["fulltext:royalsocietypublishing_html_ok"],
+        events=[trace_event("fulltext", "royalsocietypublishing_html", "ok")],
         extraction=extraction,
         browser_context_seed={"browser_final_url": article_url},
     )
@@ -376,7 +380,7 @@ def test_royal_figure_asset_uses_viewer_only_when_direct_original_is_missing() -
         body=html.encode("utf-8"),
         route="html",
         markdown_text=markdown_text,
-        source_trail=["fulltext:royalsocietypublishing_html_ok"],
+        events=[trace_event("fulltext", "royalsocietypublishing_html", "ok")],
         extraction=extraction,
         browser_context_seed={"browser_final_url": article_url},
     )
@@ -550,11 +554,17 @@ def test_pdf_fallback_uses_citation_pdf_url_after_html_is_not_fulltext() -> None
         )
     )
     warm = mock.Mock(
-        return_value={
-            "browser_cookies": [{"name": "__cf_bm", "value": "seed"}],
-            "browser_user_agent": "Mozilla/5.0",
-            "browser_final_url": f"https://royalsocietypublishing.org/doi/{doi}",
-        }
+        return_value=BrowserWarmResult(
+            seed={
+                "browser_cookies": [{"name": "__cf_bm", "value": "seed"}],
+                "browser_user_agent": "Mozilla/5.0",
+                "browser_final_url": f"https://royalsocietypublishing.org/doi/{doi}",
+            },
+            changed=True,
+            accepted=True,
+            status=200,
+            reason="refreshed",
+        )
     )
     metadata = {
         "doi": doi,
@@ -572,18 +582,24 @@ def test_pdf_fallback_uses_citation_pdf_url_after_html_is_not_fulltext() -> None
             fetch_pdf_with_browser=fetch_pdf,
         )
         raw_payload = client.fetch_raw_fulltext(doi, metadata)
-    article = client.to_article_model(raw_payload.merged_metadata or {}, raw_payload)
+    article = client.to_article_model(
+        raw_payload.content.merged_metadata or {}, raw_payload
+    )
 
     assert raw_payload.content is not None
     assert raw_payload.content.route_kind == "pdf_fallback"
     assert raw_payload.content.content_type == "application/pdf"
-    assert raw_payload.body.startswith(
+    assert raw_payload.content.body.startswith(
         b"%PDF-"
     )  # pdf magic bytes route_contract coverage
     assert article.source == "royalsocietypublishing_pdf"
-    trail = source_trail_from_trace(raw_payload.trace)
-    assert "fulltext:royalsocietypublishing_html_fail" in trail
-    assert "fulltext:royalsocietypublishing_pdf_fallback_ok" in trail
+    trail = raw_payload.trace
+    assert trace_facts(
+        trace_event("fulltext", "royalsocietypublishing_html", "fail")
+    ) in trace_facts(trail)
+    assert trace_facts(
+        trace_event("fulltext", "royalsocietypublishing_pdf_fallback", "ok")
+    ) in trace_facts(trail)
     fetch_pdf.assert_called_once()
     assert list(fetch_pdf.call_args.args[0])[:2] == [
         pdf_url,
@@ -697,8 +713,12 @@ def test_metadata_only_route_contract_is_service_fallback_after_provider_failure
     assert article.source == "crossref_meta"
     assert article.quality.content_kind == "metadata_only"
     assert article.quality.has_fulltext is False
-    assert "fulltext:royalsocietypublishing_fail" in article.quality.source_trail
-    assert "fallback:metadata_only" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "royalsocietypublishing", "fail")
+    ) in trace_facts(article.trace)
+    assert trace_facts(trace_event("fallback", "metadata_only", "info")) in trace_facts(
+        article.trace
+    )
 
 
 def test_markdown_normalization_drops_inline_list_label_dash() -> None:

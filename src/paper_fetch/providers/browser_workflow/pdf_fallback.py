@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
+from ...tracing import TraceEvent
+
 from typing import Any
 from collections.abc import Mapping, Sequence
 
 from ...http import PDF_MIME_TYPE
 from ...runtime import RuntimeContext
-from ...tracing import trace_event, trace_from_markers
+from ...tracing import trace_event
 from ...reason_codes import PDF_FALLBACK
 from .._pdf_fallback import PdfRequestContext
 from ..base import ProviderContent, RawFulltextPayload
@@ -35,7 +37,7 @@ def fetch_seeded_browser_pdf_payload(
     expected_title: str | None = None,
     html_failure_diagnostics: Mapping[str, Any] | None = None,
     warnings: list[str] | None = None,
-    success_source_trail: list[str] | None = None,
+    success_events: list[TraceEvent] | None = None,
     success_warning: str = "Full text was extracted from PDF fallback after the HTML path was not usable.",
     artifact_subdir: str = PDF_FALLBACK,
     context: RuntimeContext | None = None,
@@ -64,7 +66,7 @@ def fetch_seeded_browser_pdf_payload(
             browser_context_seed=browser_context_seed,
             runtime_context=context,
             lightweight=True,
-        )
+        ).seed
     if context is not None:
         context.raise_if_cancelled()
     seed_url = _choose_browser_seed_url(
@@ -110,7 +112,7 @@ def fetch_seeded_browser_pdf_payload(
     if success_warning:
         payload_warnings.append(success_warning)
     failure_diagnostics = dict(html_failure_diagnostics or {})
-    payload_trace = trace_from_markers(list(success_source_trail or []))
+    payload_trace = list(success_events or [])
     if html_failure_reason:
         payload_trace.append(
             trace_event(

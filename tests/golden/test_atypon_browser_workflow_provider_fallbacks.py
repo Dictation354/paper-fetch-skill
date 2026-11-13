@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from tests.support._atypon_browser_workflow_provider_support import *
 # ruff: noqa: F403,F405
@@ -28,7 +30,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             markdown_text=_provisional_abstract_markdown(
                 PNAS_PAYWALL_SAMPLE_RAW, landing_url
             ),
-            source_trail=["fulltext:pnas_html_ok"],
+            events=[trace_event("fulltext", "pnas_html", "ok")],
             browser_context_seed={
                 "browser_cookies": [
                     {
@@ -49,10 +51,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             route="pdf_fallback",
             markdown_text=f"# {title}\n\n## Results\n\n"
             + ("Injected PNAS PDF mechanism text. " * 100),
-            source_trail=[
-                "fulltext:pnas_html_ok",
-                "fulltext:pnas_abstract_only",
-                "fulltext:pnas_pdf_fallback_ok",
+            events=[
+                trace_event("fulltext", "pnas_html", "ok"),
+                trace_event("fulltext", "pnas", "abstract_only"),
+                trace_event("fulltext", "pnas_pdf_fallback", "ok"),
             ],
             suggested_filename="archive.pdf",
         )
@@ -79,9 +81,15 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertFalse(result.article.quality.has_fulltext)
         self.assertEqual(result.article.quality.content_kind, "abstract_only")
         self.assertTrue(result.article.metadata.abstract)
-        self.assertIn("confirmed_article_paywall", result.article.quality.source_trail)
+        self.assertTrue(
+            any(
+                event.code == "confirmed_article_paywall"
+                for event in result.article.trace
+            )
+        )
         self.assertNotIn(
-            "fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail
+            trace_facts(trace_event("fulltext", "pnas_pdf_fallback", "ok")),
+            trace_facts(result.article.trace),
         )
 
     def test_science_provider_fetch_result_recovers_pdf_for_paywall_sample_markdown(
@@ -116,7 +124,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
             route="html",
             markdown_text=markdown_text,
-            source_trail=["fulltext:science_html_ok"],
+            events=[trace_event("fulltext", "science_html", "ok")],
             availability_diagnostics=diagnostics.to_dict(),
             browser_context_seed={
                 "browser_cookies": [
@@ -138,10 +146,10 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             route="pdf_fallback",
             markdown_text=f"# {title}\n\n## Results\n\n"
             + ("Injected Science PDF mechanism text. " * 100),
-            source_trail=[
-                "fulltext:science_html_ok",
-                "fulltext:science_abstract_only",
-                "fulltext:science_pdf_fallback_ok",
+            events=[
+                trace_event("fulltext", "science_html", "ok"),
+                trace_event("fulltext", "science", "abstract_only"),
+                trace_event("fulltext", "science_pdf_fallback", "ok"),
             ],
             suggested_filename="science-paywall.pdf",
         )
@@ -185,7 +193,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             markdown_text=_provisional_abstract_markdown(
                 PNAS_PAYWALL_SAMPLE_RAW, landing_url
             ),
-            source_trail=["fulltext:pnas_html_ok"],
+            events=[trace_event("fulltext", "pnas_html", "ok")],
             browser_context_seed={
                 "browser_cookies": [
                     {
@@ -225,9 +233,15 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertFalse(result.article.quality.has_fulltext)
         self.assertEqual(result.article.quality.content_kind, "abstract_only")
         self.assertTrue(result.article.metadata.abstract)
-        self.assertIn("confirmed_article_paywall", result.article.quality.source_trail)
+        self.assertTrue(
+            any(
+                event.code == "confirmed_article_paywall"
+                for event in result.article.trace
+            )
+        )
         self.assertNotIn(
-            "fulltext:pnas_pdf_fallback_ok", result.article.quality.source_trail
+            trace_facts(trace_event("fulltext", "pnas_pdf_fallback", "ok")),
+            trace_facts(result.article.trace),
         )
 
     def test_science_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(
@@ -262,7 +276,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
             body=SCIENCE_PAYWALL_SAMPLE_RAW.read_bytes(),
             route="html",
             markdown_text=markdown_text,
-            source_trail=["fulltext:science_html_ok"],
+            events=[trace_event("fulltext", "science_html", "ok")],
             availability_diagnostics=diagnostics.to_dict(),
             browser_context_seed={
                 "browser_cookies": [

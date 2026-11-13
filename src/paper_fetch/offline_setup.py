@@ -541,7 +541,7 @@ class Setup:
             return
         from .offline_browsers import prepare
 
-        prepare(self, selection="all", interactive=True)
+        prepare(self, interactive=True)
 
     def terminal(self) -> None:
         print(
@@ -587,41 +587,19 @@ def main(argv=None) -> int:
     parser.add_argument("--reuse-env-file", action="store_true")
     parser.add_argument("--non-interactive", action="store_true")
     parser.add_argument(
-        "--prepare-byparr",
-        action="store_true",
-        help="Prepare managed Byparr and Camoufox components",
-    )
-    parser.add_argument(
-        "--prepare-flaresolverr", action="store_true", help=argparse.SUPPRESS
-    )
-
-    def browser_selection(value):
-        if value == "flaresolverr":
-            raise argparse.ArgumentTypeError(
-                "FlareSolverr was removed; use --prepare-byparr or --prepare-browsers byparr. See docs/browser-backends.md#migration."
-            )
-        return value
-
-    parser.add_argument(
         "--prepare-browsers",
-        choices=("all", "camoufox", "byparr"),
-        type=browser_selection,
+        action="store_true",
+        help="Prepare the selected platform engine and Byparr",
     )
     parser.add_argument("--initialize-request", type=Path)
     parser.add_argument("--request", type=Path)
     parser.add_argument("--result", type=Path)
     parser.add_argument("--cleanup-tools", action="store_true")
     args = parser.parse_args(argv)
-    if args.prepare_flaresolverr:
-        parser.error(
-            "FlareSolverr was removed; use --prepare-byparr or --prepare-browsers byparr. See docs/browser-backends.md#migration."
-        )
     if args.initialize_request:
         args.initialize_request.mkdir(exist_ok=False)
         protect(args.initialize_request)
         return 0
-    if args.prepare_byparr:
-        args.prepare_browsers = "byparr"
     if not args.prepare_browsers and (
         args.non_interactive
         or (
@@ -648,7 +626,7 @@ def main(argv=None) -> int:
             message = (
                 "Browser preparation: not ready\n"
                 "Failed to read configuration; core installation is preserved.\n"
-                f"Retry: {browser_command(args.install_root.absolute(), args.env_file or args.install_root / 'offline.env', args.prepare_browsers)}\n"
+                f"Retry: {browser_command(args.install_root.absolute(), args.env_file or args.install_root / 'offline.env')}\n"
             )
         print(message)
         if args.result:
@@ -666,9 +644,7 @@ def main(argv=None) -> int:
             with tool_environment(setup.env):
                 setup.step(
                     "Browsers",
-                    lambda: prepare(
-                        setup, selection=args.prepare_browsers, interactive=interactive
-                    ),
+                    lambda: prepare(setup, interactive=interactive),
                 )
         elif args.cleanup_tools:
             from .offline_windows_tools import cleanup_tools
@@ -709,9 +685,7 @@ def main(argv=None) -> int:
         if args.request:
             args.request.unlink(missing_ok=True)
     if args.prepare_browsers:
-        from .offline_browsers import selected_backends
-
-        backends = selected_backends(args.prepare_browsers)
+        backends = ("Byparr",)
         if any(
             name in setup.results for name in ("Browsers", "Optional configuration")
         ):
@@ -733,7 +707,7 @@ def main(argv=None) -> int:
         if state == "not ready":
             summary += (
                 "Retry: "
-                + browser_command(setup.root, setup.env_file, args.prepare_browsers)
+                + browser_command(setup.root, setup.env_file)
                 + "\nRuntime on-demand repair remains enabled.\n"
             )
     else:
@@ -744,7 +718,7 @@ def main(argv=None) -> int:
     return 0
 
 
-def browser_command(root: Path, env_file: Path, selection: str) -> str:
+def browser_command(root: Path, env_file: Path) -> str:
     installed_python = root / (
         "runtime/python.exe" if os.name == "nt" else "runtime/paper-fetch-python"
     )
@@ -757,7 +731,6 @@ def browser_command(root: Path, env_file: Path, selection: str) -> str:
         "--env-file",
         str(env_file),
         "--prepare-browsers",
-        selection,
     ]
     return subprocess.list2cmdline(command) if os.name == "nt" else shlex.join(command)
 

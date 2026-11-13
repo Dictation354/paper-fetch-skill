@@ -5,6 +5,10 @@ transport failure below is injected. XML, landing and successful PDF bytes are
 the original canonical corpus files, and extraction/routing are current code.
 """
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+
+
 import hashlib
 import pytest
 from paper_fetch.http import RequestFailure
@@ -81,7 +85,9 @@ def test_original_empty_xml_current_provider_waterfall(fixture, pdf_succeeds):
     calls = [call["url"] for call in transport.calls]
     assert fixture.source_url in calls and pdf_url in calls
     assert calls.index(fixture.source_url) < calls.index(pdf_url)
-    assert "fulltext:copernicus_xml_fail" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "copernicus_xml", "fail")
+    ) in trace_facts(article.trace)
     assert any(
         fixture.expected_reason in warning for warning in article.quality.warnings
     )
@@ -92,7 +98,9 @@ def test_original_empty_xml_current_provider_waterfall(fixture, pdf_succeeds):
     if pdf_succeeds:
         assert article.source == "copernicus_pdf"
         assert article.quality.has_fulltext
-        assert "fulltext:copernicus_pdf_fallback_ok" in article.quality.source_trail
+        assert trace_facts(
+            trace_event("fulltext", "copernicus_pdf_fallback", "ok")
+        ) in trace_facts(article.trace)
         converted = article.sections[0].text
         assert converted in article.to_ai_markdown(
             include_refs="all", max_tokens="full_text"
@@ -102,7 +110,9 @@ def test_original_empty_xml_current_provider_waterfall(fixture, pdf_succeeds):
     else:
         assert not article.quality.has_fulltext
         assert article.quality.content_kind in {"abstract_only", "metadata_only"}
-        assert "fulltext:copernicus_pdf_fallback_ok" not in article.quality.source_trail
+        assert trace_facts(
+            trace_event("fulltext", "copernicus_pdf_fallback", "ok")
+        ) not in trace_facts(article.trace)
         assert any(
             "Injected same-article PDF transport failure." in warning
             for warning in article.quality.warnings

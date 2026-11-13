@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import unittest
 from paper_fetch import service as paper_fetch
 from paper_fetch.extraction.html.assets import extract_html_assets
@@ -21,7 +23,6 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
-from paper_fetch.tracing import trace_from_markers
 from tests.provider_benchmark_samples import (
     iter_provider_benchmark_samples,
     provider_benchmark_sample,
@@ -250,20 +251,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="wiley",
-            source_url=landing_url,
-            content_type="text/html",
-            body=html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=landing_url,
+                    content_type="text/html",
+                    body=html.encode("utf-8"),
+                    markdown_text=markdown,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": info},
+                ),
                 source_url=landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                markdown_text=markdown,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:wiley_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "wiley_html", "ok")],
         )
         return wiley_provider.WileyClient(HttpTransport(), {}).to_article_model(
             metadata, raw_payload
@@ -287,20 +290,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="tandf",
-            source_url=landing_url,
-            content_type="text/html",
-            body=html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=landing_url,
+                    content_type="text/html",
+                    body=html.encode("utf-8"),
+                    markdown_text=markdown,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": info},
+                ),
                 source_url=landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                markdown_text=markdown,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:tandf_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "tandf_html", "ok")],
         )
         return client.to_article_model(metadata, raw_payload)
 
@@ -328,11 +333,14 @@ class RegressionSampleTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url=landing_url,
-            content_type="application/xml",
-            body=read_fixture_bytes(fixture_name),
-            trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "elsevier_xml", "ok")],
+            content=ProviderContent(
+                route_kind="raw",
+                source_url=landing_url,
+                content_type="application/xml",
+                body=read_fixture_bytes(fixture_name),
+                merged_metadata=metadata,
+            ),
         )
         return elsevier_provider.ElsevierClient(HttpTransport(), {}).to_article_model(
             metadata, raw_payload

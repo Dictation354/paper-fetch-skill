@@ -354,7 +354,7 @@ class IeeeProviderAssetExtractionTests(unittest.TestCase):
             doi, {"doi": doi, "landing_page_url": landing_url}
         )
 
-        self.assertEqual(raw_payload.source_url, rest_url)
+        self.assertEqual(raw_payload.content.source_url, rest_url)
         self.assertEqual(raw_payload.content.source_url, rest_url)
         body_assets = [
             item

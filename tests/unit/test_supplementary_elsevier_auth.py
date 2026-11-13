@@ -34,10 +34,9 @@ def test_object_credentials_are_scoped_to_https_origin_and_path(url, authorized)
     assert headers["x-ELS-apikey"] == "virtual-key"
 
 
-@pytest.mark.parametrize("streaming", [False, True])
 @pytest.mark.parametrize("archive", [False, True])
 def test_supplementary_auth_downloads_redirects_and_partial_failure(
-    monkeypatch, tmp_path, streaming, archive
+    monkeypatch, tmp_path, archive
 ):
     doi = "10.1016/test.supplementary"
     official = "https://api.elsevier.com/content/object/"
@@ -72,7 +71,6 @@ def test_supplementary_auth_downloads_redirects_and_partial_failure(
     monkeypatch.setattr(SafeRemoteUrlPolicy, "validate", validate)
     calls = []
     with closing(HttpTransport(cache_ttl=0)) as transport:
-        transport._streaming_ready = streaming
         client = ElsevierClient(transport, {"ELSEVIER_API_KEY": "virtual-key"})
         index_url = client._official_article_url(doi)
 

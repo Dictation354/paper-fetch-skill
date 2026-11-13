@@ -252,7 +252,7 @@ def complete_reference_dois(client, doi, metadata, payload, context):
 
     context.raise_if_cancelled()
     root = elsevier_xml_root_from_payload(
-        payload.body, context=context, source_url=payload.source_url
+        payload.content.body, context=context, source_url=payload.content.source_url
     )
     if root is None:
         return payload

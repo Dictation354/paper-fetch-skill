@@ -24,9 +24,9 @@ CPython 3.11–3.14. The solver algorithm, selectors and cooldowns are unchanged
 
 Invisible owns one browser/context directly. Initial navigation pumps the same
 owner loop so request cancellation can close it without crossing threads. Native
-profiles retain their PublisherProfileManager lease and directories; filtered
-JSON state retains its existing provider/acceptance owner. No state migration is
-performed. Invisible's export-only cookie size/session fields are omitted on
+profiles retain their PublisherProfileManager lease and directories. Authentication,
+preflight and fetch share the native directory; credential scopes use its trusted
+summary. Invisible's export-only cookie size/session fields are omitted on
 cookie import. Its unsupported APIRequestContext is supplied by the existing
 host HTTP lane with synchronized cookies; challenged GET recovery still happens
 in the same browser context, with the same one-retry policy.

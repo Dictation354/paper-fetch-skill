@@ -5,6 +5,8 @@ IEEE pagination below is a constructed transport around real entries, not a
 capture of multiple publisher pages. Ancillary fixtures are original excerpts.
 """
 
+from tests.support.transport import RecordedStreamTransport
+
 from copy import deepcopy
 from tests.support.canonical_content import source_reference_text
 from types import SimpleNamespace
@@ -382,7 +384,7 @@ def test_ieee_original_short_api_response_keeps_every_entry_without_second_reque
 ):
     payload = golden_criteria_asset(IEEE, "references.json").read_bytes()
 
-    class Transport:
+    class Transport(RecordedStreamTransport):
         def __init__(self):
             self.urls = []
 
@@ -525,7 +527,7 @@ def test_ieee_constructed_overlapping_pages_of_real_entries_merge_at_boundary(li
     entries = original["references"]
     assert len(entries) == 51
 
-    class Transport:
+    class Transport(RecordedStreamTransport):
         def __init__(self):
             self.urls = []
 

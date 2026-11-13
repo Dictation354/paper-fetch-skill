@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 from tests.support.markdown_presentation import visible_markdown
 import re
 from pathlib import Path
@@ -64,17 +65,19 @@ def test_html_fixture_localizes_all_preview_images_without_duplicates(
     downloaded_assets = download_captured_images(FIGURE_DOI, figures, tmp_path)
     raw_payload = RawFulltextPayload(
         provider="oxfordacademic",
-        source_url=source_url,
-        content_type="text/html",
-        body=html_text.encode("utf-8"),
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=html_text.encode("utf-8"),
+                markdown_text=extraction.markdown_text,
+                merged_metadata=extraction.metadata,
+                extracted_assets=extraction.extracted_assets,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=html_text.encode("utf-8"),
-            markdown_text=extraction.markdown_text,
-            merged_metadata=extraction.metadata,
-            extracted_assets=extraction.extracted_assets,
         ),
     )
 

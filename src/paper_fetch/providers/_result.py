@@ -14,7 +14,7 @@ from ..http import RequestFailure
 from ..models import AssetProfile
 from ..quality.access_boundary import check_payload_paywall, confirmed_paywall
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, trace_from_markers
+from ..tracing import download_event
 from .base import (
     ProviderClient,
     ProviderFailure,
@@ -138,20 +138,12 @@ def assemble_provider_result(
                 if not policy.asset_errors_to_warnings:
                     raise
                 warnings.append(client.asset_download_failure_warning(exc))
-                trace.extend(
-                    trace_from_markers(
-                        [download_marker(f"{client.name}_assets_failed")]
-                    )
-                )
+                trace.extend([download_event(f"{client.name}_assets_failed")])
             except (RequestFailure, OSError) as exc:
                 if not policy.asset_errors_to_warnings:
                     raise
                 warnings.append(client.asset_download_failure_warning(exc))
-                trace.extend(
-                    trace_from_markers(
-                        [download_marker(f"{client.name}_assets_failed")]
-                    )
-                )
+                trace.extend([download_event(f"{client.name}_assets_failed")])
         if (
             prepared.provisional_article is not None
             and raw_payload.content is assembled_content
@@ -188,12 +180,7 @@ def assemble_provider_result(
             content=raw_payload.content,
             warnings=warnings,
             trace=list(
-                trace
-                or (
-                    trace_from_markers(article.quality.source_trail)
-                    if policy.derive_trace_from_article
-                    else []
-                )
+                trace or (article.trace if policy.derive_trace_from_article else [])
             ),
             artifacts=artifacts,
         )

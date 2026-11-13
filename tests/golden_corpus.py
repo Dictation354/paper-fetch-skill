@@ -1,6 +1,9 @@
 """Helpers for the offline golden fulltext corpus."""
 
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers import _springer_dom, _springer_markdown
+
 
 from dataclasses import asdict, dataclass
 import json
@@ -54,7 +57,6 @@ from paper_fetch.providers import (
     plos as plos_provider,
     royalsocietypublishing as royalsocietypublishing_provider,
     springer as springer_provider,
-    _springer_html as springer_html,
     wiley as wiley_provider,
 )
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
@@ -66,7 +68,6 @@ from paper_fetch.quality.html_availability import assess_html_fulltext_availabil
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
 from paper_fetch.utils import normalize_text
 from tests.golden_corpus_adapters import (
     GoldenCorpusAdapter,
@@ -264,12 +265,10 @@ def _build_pdf_article(fixture: GoldenCorpusFixture, client_type):
             merged_metadata=metadata,
             diagnostics={"pdf_fallback": converted.diagnostics},
         ),
-        trace=trace_from_markers(
-            [
-                f"fulltext:{fixture.provider}_html_fail",
-                f"fulltext:{fixture.provider}_pdf_fallback_ok",
-            ]
-        ),
+        trace=[
+            trace_event("fulltext", f"{fixture.provider}_html", "fail"),
+            trace_event("fulltext", f"{fixture.provider}_pdf_fallback", "ok"),
+        ],
         warnings=[
             f"Full text was extracted from {fixture.provider} PDF fallback after the HTML route was not usable."
         ],
@@ -293,7 +292,7 @@ def _build_elsevier_article(fixture: GoldenCorpusFixture):
             body=body,
             merged_metadata=metadata,
         ),
-        trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
+        trace=[trace_event("fulltext", "elsevier_xml", "ok")],
     )
     client = elsevier_provider.ElsevierClient(HttpTransport(), {})
     return client.to_article_model(metadata, raw_payload)
@@ -302,11 +301,11 @@ def _build_elsevier_article(fixture: GoldenCorpusFixture):
 def _build_springer_inline_article(fixture: GoldenCorpusFixture):
     metadata = _base_metadata(fixture)
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
-    html_metadata = springer_html.parse_html_metadata(html_text, fixture.source_url)
+    html_metadata = _springer_dom.parse_html_metadata(html_text, fixture.source_url)
     merged_metadata = _merge_replay_source_metadata(metadata, dict(html_metadata))
     if not merged_metadata.get("doi"):
         merged_metadata["doi"] = fixture.doi
-    extraction_payload = springer_html.extract_html_payload(
+    extraction_payload = _springer_markdown.extract_html_payload(
         html_text,
         title=str(merged_metadata.get("title") or fixture.title),
         source_url=fixture.source_url,
@@ -346,7 +345,7 @@ def _build_springer_inline_article(fixture: GoldenCorpusFixture):
                 },
             },
         ),
-        trace=trace_from_markers(["fulltext:springer_html_ok"]),
+        trace=[trace_event("fulltext", "springer_html", "ok")],
     )
     client = springer_provider.SpringerClient(HttpTransport(), {})
     return client.to_article_model(merged_metadata, raw_payload)
@@ -489,12 +488,10 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
                 },
                 reason=f"Loaded {fixture.provider} PDF fallback golden fixture.",
             ),
-            trace=trace_from_markers(
-                [
-                    f"fulltext:{fixture.provider}_html_fail",
-                    f"fulltext:{fixture.provider}_pdf_fallback_ok",
-                ]
-            ),
+            trace=[
+                trace_event("fulltext", f"{fixture.provider}_html", "fail"),
+                trace_event("fulltext", f"{fixture.provider}_pdf_fallback", "ok"),
+            ],
             warnings=[
                 f"Full text was extracted from {fixture.provider} PDF fallback after the HTML path was not usable.",
             ],
@@ -551,7 +548,7 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
             merged_metadata=metadata,
             extracted_assets=list(extraction.get("extracted_assets") or []),
         ),
-        trace=trace_from_markers([f"fulltext:{fixture.provider}_html_ok"]),
+        trace=[trace_event("fulltext", f"{fixture.provider}_html", "ok")],
     )
     return client.to_article_model(
         metadata, raw_payload, downloaded_assets=downloaded_assets
@@ -713,7 +710,7 @@ def _build_ieee_article(fixture: GoldenCorpusFixture):
             reason="Loaded IEEE real HTML fixture.",
             extracted_assets=extraction.extracted_assets,
         ),
-        trace=trace_from_markers(["fulltext:ieee_html_ok"]),
+        trace=[trace_event("fulltext", "ieee_html", "ok")],
     )
     client = IeeeClient(HttpTransport(), {})
     return client.to_article_model(
@@ -742,12 +739,10 @@ def _build_oxfordacademic_article(fixture: GoldenCorpusFixture):
             metadata=base_metadata,
             doi=fixture.doi,
             markdown_text=pdf_result.markdown_text,
-            trace=trace_from_markers(
-                [
-                    "fulltext:oxfordacademic_html_fail",
-                    "fulltext:oxfordacademic_pdf_fallback_ok",
-                ]
-            ),
+            trace=[
+                trace_event("fulltext", "oxfordacademic_html", "fail"),
+                trace_event("fulltext", "oxfordacademic_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from Oxford Academic PDF fallback after the HTML route was not usable.",
             ],
@@ -773,7 +768,7 @@ def _build_oxfordacademic_article(fixture: GoldenCorpusFixture):
         abstract_sections=[],
         section_hints=extraction.section_hints,
         assets=_captured_body_assets(fixture, extraction.extracted_assets),
-        trace=trace_from_markers(["fulltext:oxfordacademic_html_ok"]),
+        trace=[trace_event("fulltext", "oxfordacademic_html", "ok")],
         warnings=_oxfordacademic_html.source_mathml_warnings(
             extraction.source_mathml_error_count
         ),
@@ -818,9 +813,10 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
                 },
                 reason="Loaded Copernicus PDF fallback golden fixture.",
             ),
-            trace=trace_from_markers(
-                ["fulltext:copernicus_xml_fail", "fulltext:copernicus_pdf_fallback_ok"]
-            ),
+            trace=[
+                trace_event("fulltext", "copernicus_xml", "fail"),
+                trace_event("fulltext", "copernicus_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from Copernicus PDF fallback after the XML route was not usable.",
             ],
@@ -852,7 +848,7 @@ def _build_copernicus_article(fixture: GoldenCorpusFixture):
             },
             extracted_assets=extraction.assets,
         ),
-        trace=trace_from_markers(["fulltext:copernicus_xml_ok"]),
+        trace=[trace_event("fulltext", "copernicus_xml", "ok")],
     )
     client = copernicus_provider.CopernicusClient(HttpTransport(), {})
     return client.to_article_model(metadata, raw_payload)
@@ -890,12 +886,10 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
                 },
                 reason="Loaded Royal Society Publishing PDF fallback golden fixture.",
             ),
-            trace=trace_from_markers(
-                [
-                    "fulltext:royalsocietypublishing_html_fail",
-                    "fulltext:royalsocietypublishing_pdf_fallback_ok",
-                ]
-            ),
+            trace=[
+                trace_event("fulltext", "royalsocietypublishing_html", "fail"),
+                trace_event("fulltext", "royalsocietypublishing_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from Royal Society Publishing PDF fallback after the HTML route was not usable.",
             ],
@@ -931,7 +925,7 @@ def _build_royalsocietypublishing_article(fixture: GoldenCorpusFixture):
             reason="Loaded Royal Society Publishing real HTML fixture.",
             extracted_assets=extraction.extracted_assets,
         ),
-        trace=trace_from_markers(["fulltext:royalsocietypublishing_html_ok"]),
+        trace=[trace_event("fulltext", "royalsocietypublishing_html", "ok")],
     )
     return client.to_article_model(
         extraction.metadata,
@@ -955,9 +949,10 @@ def _build_plos_article(fixture: GoldenCorpusFixture):
             metadata=metadata,
             doi=fixture.doi,
             markdown_text=pdf_result.markdown_text,
-            trace=trace_from_markers(
-                ["fulltext:plos_xml_fail", "fulltext:plos_pdf_fallback_ok"]
-            ),
+            trace=[
+                trace_event("fulltext", "plos_xml", "fail"),
+                trace_event("fulltext", "plos_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from PLOS PDF fallback after the XML route was not used.",
             ],
@@ -986,7 +981,7 @@ def _build_plos_article(fixture: GoldenCorpusFixture):
         markdown_text=extraction.markdown_text,
         abstract_sections=extraction.abstract_sections,
         assets=assets,
-        trace=trace_from_markers(["fulltext:plos_xml_ok"]),
+        trace=[trace_event("fulltext", "plos_xml", "ok")],
         semantic_losses=extraction.semantic_losses,
     )
 
@@ -1006,12 +1001,10 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
             metadata=metadata,
             doi=fixture.doi,
             markdown_text=pdf_result.markdown_text,
-            trace=trace_from_markers(
-                [
-                    "fulltext:frontiers_xml_fail",
-                    "fulltext:frontiers_pdf_fallback_ok",
-                ]
-            ),
+            trace=[
+                trace_event("fulltext", "frontiers_xml", "fail"),
+                trace_event("fulltext", "frontiers_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from Frontiers PDF fallback after the XML route was not used.",
             ],
@@ -1081,7 +1074,7 @@ def _build_frontiers_article(fixture: GoldenCorpusFixture):
             },
             extracted_assets=normalized_assets,
         ),
-        trace=trace_from_markers(["fulltext:frontiers_xml_ok"]),
+        trace=[trace_event("fulltext", "frontiers_xml", "ok")],
     )
     return frontiers_provider.FrontiersClient(HttpTransport(), {}).to_article_model(
         article_metadata,
@@ -1175,12 +1168,10 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
                 },
                 reason="Loaded arXiv PDF fallback golden fixture.",
             ),
-            trace=trace_from_markers(
-                [
-                    "fulltext:arxiv_html_fail",
-                    "fulltext:arxiv_pdf_fallback_ok",
-                ]
-            ),
+            trace=[
+                trace_event("fulltext", "arxiv_html", "fail"),
+                trace_event("fulltext", "arxiv_pdf_fallback", "ok"),
+            ],
             warnings=[
                 "Full text was extracted from arXiv PDF fallback after the HTML route was not usable.",
             ],
@@ -1210,7 +1201,7 @@ def _build_arxiv_article(fixture: GoldenCorpusFixture):
             reason="Loaded arXiv official HTML golden fixture.",
             extracted_assets=extraction.extracted_assets,
         ),
-        trace=trace_from_markers(["fulltext:arxiv_html_ok"]),
+        trace=[trace_event("fulltext", "arxiv_html", "ok")],
         warnings=extraction.warnings,
     )
     return client.to_article_model(
@@ -1259,8 +1250,8 @@ def _lightweight_elsevier_summary(fixture: GoldenCorpusFixture) -> dict[str, Any
 
 def _lightweight_springer_summary(fixture: GoldenCorpusFixture) -> dict[str, Any]:
     html_text = fixture.raw_path.read_text(encoding="utf-8", errors="ignore")
-    metadata = springer_html.parse_html_metadata(html_text, fixture.source_url)
-    extraction_payload = springer_html.extract_html_payload(
+    metadata = _springer_dom.parse_html_metadata(html_text, fixture.source_url)
+    extraction_payload = _springer_markdown.extract_html_payload(
         html_text,
         fixture.source_url,
         title=str(metadata.get("title") or fixture.title),
@@ -1556,14 +1547,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="acs",
-                primary_marker="fulltext:acs_html_ok",
+                primary_marker=trace_event("fulltext", "acs_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="acs",
-                    primary_marker="fulltext:acs_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "acs_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1577,14 +1568,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="ams_html",
-                primary_marker="fulltext:ams_html_ok",
+                primary_marker=trace_event("fulltext", "ams_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="ams_pdf",
-                    primary_marker="fulltext:ams_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "ams_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1598,14 +1589,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="aip_html",
-                primary_marker="fulltext:aip_html_ok",
+                primary_marker=trace_event("fulltext", "aip_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="aip_pdf",
-                    primary_marker="fulltext:aip_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "aip_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1619,14 +1610,16 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="annualreviews_html",
-                primary_marker="fulltext:annualreviews_html_ok",
+                primary_marker=trace_event("fulltext", "annualreviews_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="annualreviews_pdf",
-                    primary_marker="fulltext:annualreviews_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "annualreviews_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )
@@ -1640,14 +1633,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="tandf_html",
-                primary_marker="fulltext:tandf_html_ok",
+                primary_marker=trace_event("fulltext", "tandf_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="tandf_pdf",
-                    primary_marker="fulltext:tandf_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "tandf_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1661,7 +1654,7 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="official",
                 content_prefix="text/xml",
                 source="elsevier_xml",
-                primary_marker="fulltext:elsevier_xml_ok",
+                primary_marker=trace_event("fulltext", "elsevier_xml", "ok"),
             ),
         )
     )
@@ -1674,14 +1667,16 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="springer_html",
-                primary_marker="fulltext:springer_html_ok",
+                primary_marker=trace_event("fulltext", "springer_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="springer_pdf",
-                    primary_marker="fulltext:springer_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "springer_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )
@@ -1695,7 +1690,7 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="science",
-                primary_marker="fulltext:science_html_ok",
+                primary_marker=trace_event("fulltext", "science_html", "ok"),
             ),
         )
     )
@@ -1708,7 +1703,7 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="wiley_browser",
-                primary_marker="fulltext:wiley_html_ok",
+                primary_marker=trace_event("fulltext", "wiley_html", "ok"),
             ),
         )
     )
@@ -1721,14 +1716,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="pnas",
-                primary_marker="fulltext:pnas_html_ok",
+                primary_marker=trace_event("fulltext", "pnas_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="pnas",
-                    primary_marker="fulltext:pnas_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "pnas_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1742,7 +1737,7 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="ieee_html",
-                primary_marker="fulltext:ieee_html_ok",
+                primary_marker=trace_event("fulltext", "ieee_html", "ok"),
             ),
         )
     )
@@ -1755,14 +1750,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="iop_html",
-                primary_marker="fulltext:iop_html_ok",
+                primary_marker=trace_event("fulltext", "iop_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="iop_pdf",
-                    primary_marker="fulltext:iop_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "iop_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1776,14 +1771,16 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="xml",
                 content_prefix="application/xml",
                 source="copernicus_xml",
-                primary_marker="fulltext:copernicus_xml_ok",
+                primary_marker=trace_event("fulltext", "copernicus_xml", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="copernicus_pdf",
-                    primary_marker="fulltext:copernicus_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "copernicus_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )
@@ -1797,14 +1794,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="mdpi_html",
-                primary_marker="fulltext:mdpi_html_ok",
+                primary_marker=trace_event("fulltext", "mdpi_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="mdpi_pdf",
-                    primary_marker="fulltext:mdpi_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "mdpi_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1818,14 +1815,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="arxiv_html",
-                primary_marker="fulltext:arxiv_html_ok",
+                primary_marker=trace_event("fulltext", "arxiv_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="arxiv_pdf",
-                    primary_marker="fulltext:arxiv_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "arxiv_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1839,14 +1836,18 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="royalsocietypublishing_html",
-                primary_marker="fulltext:royalsocietypublishing_html_ok",
+                primary_marker=trace_event(
+                    "fulltext", "royalsocietypublishing_html", "ok"
+                ),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="royalsocietypublishing_pdf",
-                    primary_marker="fulltext:royalsocietypublishing_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "royalsocietypublishing_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )
@@ -1860,14 +1861,16 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="html",
                 content_prefix="text/html",
                 source="oxfordacademic_html",
-                primary_marker="fulltext:oxfordacademic_html_ok",
+                primary_marker=trace_event("fulltext", "oxfordacademic_html", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="oxfordacademic_pdf",
-                    primary_marker="fulltext:oxfordacademic_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "oxfordacademic_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )
@@ -1881,14 +1884,14 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="xml",
                 content_prefix=("application/xml", "text/xml"),
                 source="plos_xml",
-                primary_marker="fulltext:plos_xml_ok",
+                primary_marker=trace_event("fulltext", "plos_xml", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="plos_pdf",
-                    primary_marker="fulltext:plos_pdf_fallback_ok",
+                    primary_marker=trace_event("fulltext", "plos_pdf_fallback", "ok"),
                 ),
             },
         )
@@ -1902,14 +1905,16 @@ def _register_golden_corpus_adapters() -> None:
                 route_kind="xml",
                 content_prefix=("application/xml", "text/xml"),
                 source="frontiers_xml",
-                primary_marker="fulltext:frontiers_xml_ok",
+                primary_marker=trace_event("fulltext", "frontiers_xml", "ok"),
             ),
             fallback_contracts={
                 "pdf_fallback": ProviderGoldenContract(
                     route_kind="pdf_fallback",
                     content_prefix="application/pdf",
                     source="frontiers_pdf",
-                    primary_marker="fulltext:frontiers_pdf_fallback_ok",
+                    primary_marker=trace_event(
+                        "fulltext", "frontiers_pdf_fallback", "ok"
+                    ),
                 ),
             },
         )

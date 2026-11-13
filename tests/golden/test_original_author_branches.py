@@ -1,5 +1,8 @@
 """Real author structures: natural fallback and coexisting sources stay distinct."""
 
+from paper_fetch.providers import _springer_authors
+
+
 import pytest
 from bs4 import BeautifulSoup
 
@@ -7,7 +10,6 @@ from paper_fetch.providers import (
     _arxiv_authors,
     _pnas_html,
     _science_html,
-    _springer_authors,
     _wiley_html,
 )
 from tests.golden_criteria import golden_criteria_asset

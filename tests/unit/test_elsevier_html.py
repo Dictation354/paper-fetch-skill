@@ -59,7 +59,7 @@ def test_backend_and_profile_are_isolated_from_pnas(monkeypatch, tmp_path):
     other = load_runtime_config(env, provider="pnas", doi="10.1073/test")
     actual = load_runtime_config(env, provider="elsevier", doi=DOI)
     assert actual.backend == "byparr"
-    assert actual.user_data_dir.name == "elsevier-byparr"
+    assert actual.user_data_dir.name == "elsevier"
     assert actual.user_data_dir != other.user_data_dir
 
 

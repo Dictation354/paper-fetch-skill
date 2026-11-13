@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import TraceEvent
+
 from ._definitions import PROVIDER_DEFINITIONS
 
 from ..quality.access_boundary import propagate_paywall
@@ -51,7 +53,7 @@ from ..provider_catalog import (
 )
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import (
     choose_public_landing_page_url,
     empty_asset_results,
@@ -120,7 +122,7 @@ class CopernicusLandingAttempt:
     xml_candidates: list[str]
     pdf_candidates: list[str]
     warnings: list[str] | None = None
-    source_trail: list[str] | None = None
+    events: list[TraceEvent] | None = None
 
 
 def _candidate_urls(doi: str, *, templates: tuple[str, ...]) -> list[str]:
@@ -306,9 +308,9 @@ class CopernicusClient(ProviderClient):
                 templates=provider_pdf_path_templates("copernicus"),
             ),
             warnings=[warning, *landing_failure.warnings],
-            source_trail=[
-                fulltext_marker(self.name, "fail", route="landing"),
-                *landing_failure.source_trail,
+            events=[
+                fulltext_event(self.name, "fail", route="landing"),
+                *landing_failure.trace,
             ],
         )
 
@@ -378,7 +380,7 @@ class CopernicusClient(ProviderClient):
             xml_candidates=xml_candidates,
             pdf_candidates=pdf_candidates,
             warnings=[],
-            source_trail=[],
+            events=[],
         )
 
     def _fetch_xml_response(self, url: str, *, referer: str) -> tuple[bytes, str, str]:
@@ -457,7 +459,7 @@ class CopernicusClient(ProviderClient):
                 NO_RESULT,
                 "Copernicus landing page did not expose an XML candidate.",
                 warnings=list(attempt.warnings or []),
-                source_trail=list(attempt.source_trail or []),
+                trace=list(attempt.events or []),
             )
         failures: list[tuple[str, ProviderFailure]] = []
         for candidate in attempt.xml_candidates:
@@ -519,9 +521,9 @@ class CopernicusClient(ProviderClient):
                 combined.code,
                 "Copernicus XML route was not usable. " + combined.message,
                 warnings=[*list(attempt.warnings or []), *combined.warnings],
-                source_trail=[
-                    *list(attempt.source_trail or []),
-                    *combined.source_trail,
+                trace=[
+                    *list(attempt.events or []),
+                    *combined.trace,
                 ],
             )
         raise ProviderFailure(NO_RESULT, "Copernicus XML route did not run.")
@@ -606,16 +608,16 @@ class CopernicusClient(ProviderClient):
 
         def run_xml(_state: ProviderWaterfallState) -> RawFulltextPayload:
             attempt = landing_attempt()
-            for marker in attempt.source_trail or []:
-                if marker not in _state.initial_source_trail:
-                    _state.initial_source_trail.append(marker)
+            for marker in attempt.events or []:
+                if marker not in _state.initial_events:
+                    _state.initial_events.append(marker)
             return self._fetch_xml_payload(attempt)
 
         def run_pdf(state: ProviderWaterfallState) -> RawFulltextPayload:
             attempt = landing_attempt()
-            for marker in attempt.source_trail or []:
-                if marker not in state.initial_source_trail:
-                    state.initial_source_trail.append(marker)
+            for marker in attempt.events or []:
+                if marker not in state.initial_events:
+                    state.initial_events.append(marker)
             xml_failure = state.failure("xml")
             xml_failure_message = (
                 xml_failure.message
@@ -635,8 +637,8 @@ class CopernicusClient(ProviderClient):
                     label="xml",
                     route_name="xml",
                     run=run_xml,
-                    failure_marker=fulltext_marker(self.name, "fail", route="xml"),
-                    success_markers=(fulltext_marker(self.name, "ok", route="xml"),),
+                    failure_event=fulltext_event(self.name, "fail", route="xml"),
+                    success_events=(fulltext_event(self.name, "ok", route="xml"),),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"Copernicus XML route was not usable ({failure.message}); attempting PDF fallback."
@@ -646,9 +648,9 @@ class CopernicusClient(ProviderClient):
                     label="pdf",
                     route_name="direct_pdf",
                     run=run_pdf,
-                    failure_marker=fulltext_marker(self.name, "fail", route="pdf"),
-                    success_markers=(
-                        fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+                    failure_event=fulltext_event(self.name, "fail", route="pdf"),
+                    success_events=(
+                        fulltext_event(self.name, "ok", route=PDF_FALLBACK),
                     ),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
@@ -703,13 +705,13 @@ class CopernicusClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_id = (
             normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
             or normalize_doi(doi)
             or normalize_text(str(metadata.get("title") or ""))
-            or raw_payload.source_url
+            or raw_payload.content.source_url
         )
         body_result = (
             download_assets(
@@ -778,7 +780,7 @@ class CopernicusClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_metadata = dict(
             merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -790,8 +792,7 @@ class CopernicusClient(ProviderClient):
             content.route_kind if content is not None else ""
         ).lower()
         trace = list(
-            raw_payload.trace
-            or trace_from_markers([fulltext_marker(self.name, "ok", route="xml")])
+            raw_payload.trace or [fulltext_event(self.name, "ok", route="xml")]
         )
         warnings = list(raw_payload.warnings)
         if asset_failures:
@@ -916,9 +917,7 @@ class CopernicusClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("copernicus_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("copernicus_assets_skipped_text_only")]
             if not pdf_assets
             else [],
         )

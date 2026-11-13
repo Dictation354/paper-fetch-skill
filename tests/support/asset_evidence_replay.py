@@ -1,6 +1,10 @@
 """Offline reassembly using the bounded 2026-09-18 official asset captures."""
 
-from dataclasses import asdict, replace
+from dataclasses import replace
+from paper_fetch.models import Quality
+
+
+from dataclasses import asdict
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.extraction.html.assets import merge_extracted_and_downloaded_assets
@@ -64,9 +68,9 @@ def finish_asset_replay(article, output_dir, *, discovered=None, downloaded=None
     envelope = FetchEnvelope(
         doi=article.doi,
         source=article.source,
-        has_fulltext=article.quality.has_fulltext,
         article=article,
         markdown=markdown,
+        quality=Quality(has_fulltext=article.quality.has_fulltext),
     )
     acceptance = evaluate_fetch_acceptance(
         envelope, asset_profile="body", require_local_body_assets=True

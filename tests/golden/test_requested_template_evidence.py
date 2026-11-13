@@ -1,5 +1,8 @@
 """Unmodified originals collected while reviewing removal of speculative routes."""
 
+from paper_fetch.providers import _springer_dom, _springer_markdown
+
+
 from urllib.parse import urlsplit
 from unittest import mock
 
@@ -7,7 +10,6 @@ import pytest
 from bs4 import BeautifulSoup
 from paper_fetch.extraction.image_payloads import image_dimensions_from_bytes
 
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingClient
@@ -93,9 +95,9 @@ def _springer_original(doi):
     record, body = _record(doi, SPRINGER_CAPTURE)
     assert record["status_code"] == 200
     html = body.decode()
-    metadata = springer_html.parse_html_metadata(html, record["requested_url"])
+    metadata = _springer_dom.parse_html_metadata(html, record["requested_url"])
     assert metadata["doi"] == doi
-    extraction = springer_html.extract_html_payload(
+    extraction = _springer_markdown.extract_html_payload(
         html, record["requested_url"], title=metadata["title"]
     )
     return record, html, metadata, extraction["markdown_text"]
@@ -226,7 +228,7 @@ def test_original_science_image_and_native_canvas_are_separate_evidence(
     assert canvas_record["requested_url"] == image_record["requested_url"]
     assert image_dimensions_from_bytes(original) == (4325, 2111)
     assert image_dimensions_from_bytes(canvas) == (4325, 2111)
-    metadata = springer_html.parse_html_metadata(
+    metadata = _springer_dom.parse_html_metadata(
         dom.decode(), dom_record["requested_url"]
     )
     assert metadata["doi"] == doi
@@ -286,7 +288,7 @@ def test_original_royal_missing_original_downloads_from_its_actual_viewer(tmp_pa
         FixtureHtmlTransport({candidate: _response(image_record, image)}),
         {},
     )
-    metadata = springer_html.parse_html_metadata(
+    metadata = _springer_dom.parse_html_metadata(
         original.decode(), article_record["requested_url"]
     )
     assert metadata["doi"] == doi

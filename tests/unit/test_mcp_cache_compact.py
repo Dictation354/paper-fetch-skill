@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.capability_scope import CapabilityScopeBuilder
 import json
 import socket
 from pathlib import Path
@@ -138,7 +139,7 @@ def test_get_cached_preferred_only_omits_nonpreferred_entry_arrays(
     "request_overrides",
     [
         {"modes": ["metadata"]},
-        {"strategy": {"asset_profile": "none"}},
+        {"strategy": {"asset_profile": "body"}},
         {"include_refs": "top10"},
         {"max_tokens": 512},
     ],
@@ -311,7 +312,7 @@ def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
 def test_get_cached_uses_runtime_credential_scope(tmp_path: Path) -> None:
     _prepared_cache(tmp_path)
     runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
-    credential_scope = fetch_cache.credential_scope_from_env(runtime_env)
+    credential_scope = CapabilityScopeBuilder(runtime_env).build()
     _rewrite_sidecar_credential_scope(tmp_path, credential_scope)
 
     payload = get_cached_payload(
@@ -331,7 +332,7 @@ def test_get_cached_credential_scope_fallback_is_one_way(tmp_path: Path) -> None
     _prepared_cache(public_cache)
     _prepared_cache(private_cache)
     runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
-    private_scope = fetch_cache.credential_scope_from_env(runtime_env)
+    private_scope = CapabilityScopeBuilder(runtime_env).build()
     _rewrite_sidecar_credential_scope(private_cache, private_scope)
 
     credentialed_reader = get_cached_payload(

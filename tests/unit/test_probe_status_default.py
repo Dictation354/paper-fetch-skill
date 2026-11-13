@@ -130,6 +130,7 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
         camoufox_backend,
         "_dependency_details",
         lambda: {
+            "runtime_valid": True,
             "probe": "unit_test",
             "packages": {"playwright": True, "camoufox": True},
             "package_ready": True,
@@ -157,6 +158,7 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
         camoufox_backend,
         "_dependency_details",
         lambda: {
+            "runtime_valid": True,
             "probe": "unit_test",
             "packages": {"playwright": True, "camoufox": True},
             "package_ready": True,

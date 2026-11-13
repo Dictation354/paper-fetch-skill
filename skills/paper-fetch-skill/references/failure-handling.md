@@ -2,6 +2,14 @@
 
 失败、限流、需解释的降级或准备重试时读本文件。结构化状态与退出码见[错误契约](tool-contract.md#error-contract)，需要用户决定的事项见[工作流](workflow.md#blocking-白名单)。
 
+## 正文句柄失效与宿主截断
+
+- 宿主截断只缩小同一句柄、同一 offset 的 max_chars，确认片段可消费后才按 next_offset 保存进度，不重新 fetch。
+- `content_handle_expired` 不自动重抓。先复用已有阅读内容或合格本地正文；仍缺正文时按原任务与当前 scope 使用合适的 fetch/缓存请求重新取得句柄。
+- `content_view_unavailable` 不表示获取失败；使用 content_ref 中已保留的表示。确需未请求的 article 时才重新请求该表示。
+- `content_range_out_of_bounds` 用保存的 next_offset 或 total_chars 修正范围，不重抓。
+- `content_store_capacity_exceeded` 只表示正文没有保留，原获取 acceptance 仍有效；按已请求的本地输出或现有可用正文完成任务，不能宣称仅凭验收摘要已读完。
+
 ## 分层与总尝试次数
 
 - 同一规范目标、同一意图最多 **初次尝试 + 2 次有意义重试**；消歧、修正参数或改变认证/runtime 状态后的调用也计入。
@@ -15,7 +23,7 @@
 
 ## 失败决策表
 
-优先读 status/code/error_category/http_status/retry_after_seconds，再用 reason/source_trail/warnings 补充；不以字符串分类覆盖已有结构化字段。以下均在达到 attempt 3、相同失败重复或没有可执行变化时停止。
+优先读 status/code/error_category/http_status/retry_after_seconds，再用 reason/trace/warnings 补充；不以字符串分类覆盖已有结构化字段。以下均在达到 attempt 3、相同失败重复或没有可执行变化时停止。
 
 | 类别 | 可重试的变化或处理 | 额外停止条件 |
 | --- | --- | --- |

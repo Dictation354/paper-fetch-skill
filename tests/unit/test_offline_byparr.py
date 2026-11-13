@@ -55,11 +55,11 @@ def test_failure_keeps_core_and_does_not_launch(setup, monkeypatch, failure):
 @pytest.mark.parametrize(
     "args", [["--prepare-flaresolverr"], ["--prepare-browsers", "flaresolverr"]]
 )
-def test_removed_options_report_migration(tmp_path, capsys, args):
+def test_removed_options_are_rejected(tmp_path, capsys, args):
     with pytest.raises(SystemExit) as error:
         wizard.main(["--install-root", str(tmp_path), *args])
     assert error.value.code == 2
-    assert "use --prepare-byparr" in capsys.readouterr().err
+    assert "unrecognized arguments" in capsys.readouterr().err
 
 
 def test_independent_mode_preserves_env_and_reports_retry(tmp_path, monkeypatch):
@@ -77,7 +77,7 @@ def test_independent_mode_preserves_env_and_reports_retry(tmp_path, monkeypatch)
                 str(tmp_path),
                 "--env-file",
                 str(env_file),
-                "--prepare-byparr",
+                "--prepare-browsers",
                 "--non-interactive",
                 "--result",
                 str(result),
@@ -85,7 +85,7 @@ def test_independent_mode_preserves_env_and_reports_retry(tmp_path, monkeypatch)
         )
         == 0
     )
-    assert "--prepare-browsers byparr" in result.read_text()
+    assert "--prepare-browsers" in result.read_text()
     assert "SECRET" not in result.read_text()
     assert "SECRET" in env_file.read_text()
 
@@ -117,7 +117,6 @@ def test_local_check_uses_temporary_state_and_always_closes(
     else:
         byparr.local_check(setup.env, Path("/source"))
     config = configs[0]
-    assert config.storage_state_path is None and not config.persist_storage_state
     assert config.timeout_ms == 120000 and not config.user_data_dir.exists()
     assert page.goto.call_args.args == ("about:blank",)
     assert 0 < page.wait_for_function.call_args.kwargs["timeout"] <= 120000
@@ -125,12 +124,11 @@ def test_local_check_uses_temporary_state_and_always_closes(
 
 
 @pytest.mark.parametrize("supported", [False, True])
-@pytest.mark.parametrize("selection", ["all", "camoufox", "byparr"])
 @pytest.mark.parametrize(
     "outcome", ["ready", "partial", "cancelled", "missing", "exception"]
 )
 def test_browser_overall_status_and_retry_follow_selected_backends(
-    tmp_path, monkeypatch, supported, selection, outcome
+    tmp_path, monkeypatch, supported, outcome
 ):
     from paper_fetch import offline_browsers
 
@@ -162,7 +160,6 @@ def test_browser_overall_status_and_retry_follow_selected_backends(
                 "--install-root",
                 str(tmp_path),
                 "--prepare-browsers",
-                selection,
                 "--non-interactive",
                 "--result",
                 str(result),
@@ -177,7 +174,7 @@ def test_browser_overall_status_and_retry_follow_selected_backends(
     assert "Core installation preserved" in summary
     assert "secret" not in summary
     if expected == "not ready":
-        assert f"--prepare-browsers {selection}" in summary
+        assert "--prepare-browsers" in summary
         assert str(tmp_path / "offline.env") in summary
 
 
@@ -201,7 +198,7 @@ def test_shared_preparation_rechecks_dependencies_without_second_install(
     )
     prepare = Mock(side_effect=lambda setup, **kw: setup.report("Byparr", "ready"))
     monkeypatch.setattr(byparr, "prepare", prepare)
-    offline_browsers.prepare(setup, selection="all", interactive=True)
+    offline_browsers.prepare(setup, interactive=True)
     assert len(installed) == 1
     assert prepare.call_args.kwargs == {
         "interactive": True,

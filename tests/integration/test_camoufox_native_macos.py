@@ -146,7 +146,6 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         user_data_dir=tmp_path / "camoufox-profile",
         headless=True,
         user_agent=None,
-        persist_storage_state=False,
         component_cache_dir=Path(os.environ["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]),
     )
     for attempt in range(2):

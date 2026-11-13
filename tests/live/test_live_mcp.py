@@ -214,9 +214,9 @@ class LiveMcpServerTests(unittest.IsolatedAsyncioTestCase):
         self.assertTrue(
             sample.accepts_live_result(
                 source=result.structured_content["source"],
-                source_trail=result.structured_content["source_trail"],
+                events=result.structured_content["events"],
             ),
-            result.structured_content["source_trail"],
+            result.structured_content["events"],
         )
         acceptance = result.structured_content["acceptance"]
         self.assertEqual(acceptance["fetch"], "ok")

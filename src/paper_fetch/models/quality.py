@@ -231,7 +231,7 @@ def _dedupe_strings(values: Sequence[str] | None) -> list[str]:
 
 
 def coerce_asset_provenance(value: Any) -> list[str]:
-    """Normalize additive asset provenance while accepting legacy payloads."""
+    """Normalize additive asset provenance."""
 
     if not isinstance(value, Sequence) or isinstance(value, (str, bytes, bytearray)):
         return []

@@ -195,7 +195,8 @@ def test_automatic_preparation_entrypoints_share_update_interval(
                 )
         else:
             result = browser_preflight.preflight_browser_provider(
-                "ieee", env=runtime_env, save_storage_state=False
+                "ieee",
+                env=runtime_env,
             )
             assert result.status == "runtime_error"
             assert "launch boundary reached" in result.message

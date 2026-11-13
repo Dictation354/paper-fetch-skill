@@ -57,28 +57,6 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
     name = PNAS_BROWSER_PROFILE.name
     profile = PNAS_BROWSER_PROFILE
 
-    def _browser_asset_file_fetcher(self, context, **request):
-        config = request.get("browser_config")
-        if config is None or config.state_mode != "json":
-            return super()._browser_asset_file_fetcher(context, **request)
-        if not request["attempt_supplementary_assets"]:
-            return None
-        from .browser_workflow.fetchers.context import BrowserDocumentFetcherOptions
-
-        # Keep discovered PNAS attachments in the same Byparr cookie context.
-        return self.deps._build_shared_browser_file_fetcher(
-            browser_context_seed_getter=request["browser_context_seed_getter"],
-            seed_urls_getter=request["seed_urls_getter"],
-            browser_user_agent=request["browser_user_agent"],
-            headless=request["headless"],
-            runtime_context=context,
-            use_runtime_shared_browser=True,
-            thread_local=True,
-            browser_options=BrowserDocumentFetcherOptions(
-                runtime_config=config, file_fetch_mode="context_request"
-            ),
-        )
-
     def html_candidates(self, doi: str, metadata) -> list[str]:
         del metadata
         normalized_doi = normalize_doi(doi)

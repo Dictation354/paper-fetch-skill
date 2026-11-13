@@ -1,4 +1,9 @@
 from __future__ import annotations
+from tests.support._paper_fetch_support import FixtureProvider
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from paper_fetch.providers import (
     springer as springer_provider,
     science as science_provider,
@@ -28,14 +33,13 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
-from paper_fetch.tracing import trace_from_markers
 from tests.provider_benchmark_samples import (
     provider_benchmark_sample,
 )
 from tests.paths import FIXTURE_DIR
 
 
-class FixtureTransport(HttpTransport):
+class FixtureTransport(RecordedStreamTransport, HttpTransport):
     def __init__(self, responses):
         self.responses = responses
 
@@ -63,48 +67,6 @@ class FixtureTransport(HttpTransport):
             "body": body,
             "url": response_url,
         }
-
-
-class ProviderStub:
-    def __init__(
-        self, metadata=None, raw_payload=None, raw_error=None, article_factory=None
-    ):
-        self._metadata = metadata
-        self._raw_payload = raw_payload
-        self._raw_error = raw_error
-        self._article_factory = article_factory
-
-    def fetch_metadata(self, query):
-        if isinstance(self._metadata, Exception):
-            raise self._metadata
-        return self._metadata
-
-    def fetch_raw_fulltext(self, doi, metadata, *, context=None):
-        del context
-        if self._raw_error:
-            raise self._raw_error
-        return self._raw_payload
-
-    def to_article_model(
-        self,
-        metadata,
-        raw_payload,
-        *,
-        downloaded_assets=None,
-        asset_failures=None,
-        context=None,
-    ):
-        del context
-        if self._article_factory is None:
-            raise AssertionError(
-                "article_factory must be provided for raw full-text tests."
-            )
-        return self._article_factory(
-            metadata,
-            raw_payload,
-            downloaded_assets=downloaded_assets,
-            asset_failures=asset_failures,
-        )
 
 
 def fetch_article(query: str, **kwargs):
@@ -306,20 +268,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="wiley",
-            source_url=landing_url,
-            content_type="text/html",
-            body=html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=landing_url,
+                    content_type="text/html",
+                    body=html.encode("utf-8"),
+                    markdown_text=markdown,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": info},
+                ),
                 source_url=landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                markdown_text=markdown,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:wiley_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "wiley_html", "ok")],
         )
         return wiley_provider.WileyClient(HttpTransport(), {}).to_article_model(
             metadata, raw_payload
@@ -343,20 +307,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="tandf",
-            source_url=landing_url,
-            content_type="text/html",
-            body=html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=landing_url,
+                    content_type="text/html",
+                    body=html.encode("utf-8"),
+                    markdown_text=markdown,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": info},
+                ),
                 source_url=landing_url,
                 content_type="text/html",
                 body=html.encode("utf-8"),
-                markdown_text=markdown,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:tandf_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "tandf_html", "ok")],
         )
         return client.to_article_model(metadata, raw_payload)
 
@@ -384,11 +350,14 @@ class RegressionSampleTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url=landing_url,
-            content_type="application/xml",
-            body=read_fixture_bytes(fixture_name),
-            trace=trace_from_markers(["fulltext:elsevier_xml_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "elsevier_xml", "ok")],
+            content=ProviderContent(
+                route_kind="raw",
+                source_url=landing_url,
+                content_type="application/xml",
+                body=read_fixture_bytes(fixture_name),
+                merged_metadata=metadata,
+            ),
         )
         return elsevier_provider.ElsevierClient(HttpTransport(), {}).to_article_model(
             metadata, raw_payload
@@ -403,7 +372,7 @@ class RegressionSampleTests(unittest.TestCase):
         raw_payload: RawFulltextPayload,
         provider_client,
     ):
-        replay_provider = ProviderStub(
+        replay_provider = FixtureProvider(
             metadata=metadata,
             raw_payload=raw_payload,
             article_factory=provider_client.to_article_model,
@@ -426,7 +395,7 @@ class RegressionSampleTests(unittest.TestCase):
                 context=paper_fetch.RuntimeContext(
                     clients={
                         provider_name: replay_provider,
-                        "crossref": ProviderStub(metadata=metadata),
+                        "crossref": FixtureProvider(metadata=metadata),
                     }
                 ),
             )
@@ -583,7 +552,7 @@ class RegressionSampleTests(unittest.TestCase):
                                 "springer": springer_provider.SpringerClient(
                                     transport, {}
                                 ),
-                                "crossref": ProviderStub(metadata=metadata),
+                                "crossref": FixtureProvider(metadata=metadata),
                             },
                             transport=transport,
                         ),
@@ -593,7 +562,8 @@ class RegressionSampleTests(unittest.TestCase):
                     self.assertEqual(article.metadata.title, sample["title"])
                     self.assertTrue(article.quality.has_fulltext)
                     self.assertIn(
-                        "fulltext:springer_html_ok", article.quality.source_trail
+                        trace_facts(trace_event("fulltext", "springer_html", "ok")),
+                        trace_facts(article.trace),
                     )
         finally:
             paper_fetch.resolve_paper = original_resolve
@@ -615,14 +585,17 @@ class RegressionSampleTests(unittest.TestCase):
         xml_body = read_fixture_bytes(sample.fixture_name)
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648?view=FULL",
-            content_type="text/xml",
-            body=xml_body,
+            content=ProviderContent(
+                route_kind="raw",
+                source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648?view=FULL",
+                content_type="text/xml",
+                body=xml_body,
+            ),
         )
         real_elsevier_client = elsevier_provider.ElsevierClient(
             FixtureTransport({}), {}
         )
-        replay_provider = ProviderStub(
+        replay_provider = FixtureProvider(
             metadata=metadata,
             raw_payload=raw_payload,
             article_factory=real_elsevier_client.to_article_model,
@@ -647,7 +620,7 @@ class RegressionSampleTests(unittest.TestCase):
                 context=paper_fetch.RuntimeContext(
                     clients={
                         "elsevier": replay_provider,
-                        "crossref": ProviderStub(metadata=metadata),
+                        "crossref": FixtureProvider(metadata=metadata),
                     }
                 ),
             )
@@ -697,17 +670,19 @@ class RegressionSampleTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="science",
-            source_url=SCIENCE_SAMPLE.landing_url,
-            content_type="text/html",
-            body=science_html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=SCIENCE_SAMPLE.landing_url,
+                    content_type="text/html",
+                    body=science_html.encode("utf-8"),
+                    markdown_text=markdown_text,
+                ),
                 source_url=SCIENCE_SAMPLE.landing_url,
                 content_type="text/html",
                 body=science_html.encode("utf-8"),
-                markdown_text=markdown_text,
             ),
-            trace=trace_from_markers(["fulltext:science_html_ok"]),
+            trace=[trace_event("fulltext", "science_html", "ok")],
         )
 
         article = self._fetch_replayed_provider_article(
@@ -721,12 +696,15 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(
             SCIENCE_SAMPLE.accepts_live_result(
                 source=article.source,
-                source_trail=article.quality.source_trail,
+                events=article.trace,
             )
         )
         self.assertEqual(article.metadata.title, SCIENCE_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "science_html", "ok")),
+            trace_facts(article.trace),
+        )
         markdown = article.to_ai_markdown(max_tokens=16000)
         self.assertIn("![Figure 1](", markdown)
         self.assertIn("**Figure 1.**", markdown)
@@ -755,20 +733,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="wiley",
-            source_url=WILEY_SAMPLE.landing_url,
-            content_type="text/html",
-            body=wiley_html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=WILEY_SAMPLE.landing_url,
+                    content_type="text/html",
+                    body=wiley_html.encode("utf-8"),
+                    markdown_text=markdown_text,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": extraction_info},
+                ),
                 source_url=WILEY_SAMPLE.landing_url,
                 content_type="text/html",
                 body=wiley_html.encode("utf-8"),
-                markdown_text=markdown_text,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": extraction_info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:wiley_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "wiley_html", "ok")],
         )
 
         article = self._fetch_replayed_provider_article(
@@ -782,13 +762,16 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(
             WILEY_SAMPLE.accepts_live_result(
                 source=article.source,
-                source_trail=article.quality.source_trail,
+                events=article.trace,
             )
         )
         self.assertEqual(article.metadata.title, WILEY_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
         self.assertTrue(article.metadata.abstract)
-        self.assertIn("fulltext:wiley_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_html", "ok")),
+            trace_facts(article.trace),
+        )
         markdown = article.to_ai_markdown(max_tokens=16000)
         self.assertIn("## Abstract", markdown)
         self.assertIn(
@@ -824,24 +807,24 @@ class RegressionSampleTests(unittest.TestCase):
         }
         raw_payload = RawFulltextPayload(
             provider="wiley",
-            source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
-            content_type="application/pdf",
-            body=b"%PDF-1.4\n",
-            content=ProviderContent(
-                route_kind="pdf_fallback",
+            content=replace(
+                ProviderContent(
+                    route_kind="pdf_fallback",
+                    source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
+                    content_type="application/pdf",
+                    body=b"%PDF-1.4\n",
+                    markdown_text=markdown_text,
+                ),
                 source_url=f"https://api.wiley.com/onlinelibrary/tdm/v1/articles/{WILEY_PDF_FALLBACK_SAMPLE.doi}",
                 content_type="application/pdf",
                 body=b"%PDF-1.4\n",
-                markdown_text=markdown_text,
+                needs_local_copy=True,
             ),
-            trace=trace_from_markers(
-                [
-                    "fulltext:wiley_html_fail",
-                    "fulltext:wiley_pdf_api_ok",
-                    "fulltext:wiley_pdf_fallback_ok",
-                ]
-            ),
-            needs_local_copy=True,
+            trace=[
+                trace_event("fulltext", "wiley_html", "fail"),
+                trace_event("fulltext", "wiley_pdf_api", "ok"),
+                trace_event("fulltext", "wiley_pdf_fallback", "ok"),
+            ],
         )
 
         article = self._fetch_replayed_provider_article(
@@ -855,13 +838,19 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(
             WILEY_PDF_FALLBACK_SAMPLE.accepts_live_result(
                 source=article.source,
-                source_trail=article.quality.source_trail,
+                events=article.trace,
             )
         )
         self.assertEqual(article.metadata.title, WILEY_PDF_FALLBACK_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:wiley_pdf_api_ok", article.quality.source_trail)
-        self.assertIn("fulltext:wiley_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_api", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "wiley_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_paper_fetch_uses_pnas_replay_fixture_for_positive_sample(self) -> None:
         pnas_html = read_fixture_text(PNAS_SAMPLE.fixture_name)
@@ -885,20 +874,22 @@ class RegressionSampleTests(unittest.TestCase):
         )
         raw_payload = RawFulltextPayload(
             provider="pnas",
-            source_url=PNAS_SAMPLE.landing_url,
-            content_type="text/html",
-            body=pnas_html.encode("utf-8"),
-            content=ProviderContent(
-                route_kind="html",
+            content=replace(
+                ProviderContent(
+                    route_kind="html",
+                    source_url=PNAS_SAMPLE.landing_url,
+                    content_type="text/html",
+                    body=pnas_html.encode("utf-8"),
+                    markdown_text=markdown_text,
+                    merged_metadata=dict(metadata),
+                    diagnostics={"extraction": extraction_info},
+                ),
                 source_url=PNAS_SAMPLE.landing_url,
                 content_type="text/html",
                 body=pnas_html.encode("utf-8"),
-                markdown_text=markdown_text,
-                merged_metadata=dict(metadata),
-                diagnostics={"extraction": extraction_info},
+                merged_metadata=metadata,
             ),
-            trace=trace_from_markers(["fulltext:pnas_html_ok"]),
-            merged_metadata=metadata,
+            trace=[trace_event("fulltext", "pnas_html", "ok")],
         )
 
         article = self._fetch_replayed_provider_article(
@@ -912,12 +903,15 @@ class RegressionSampleTests(unittest.TestCase):
         self.assertTrue(
             PNAS_SAMPLE.accepts_live_result(
                 source=article.source,
-                source_trail=article.quality.source_trail,
+                events=article.trace,
             )
         )
         self.assertEqual(article.metadata.title, PNAS_SAMPLE.title)
         self.assertTrue(article.quality.has_fulltext)
-        self.assertIn("fulltext:pnas_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "pnas_html", "ok")),
+            trace_facts(article.trace),
+        )
         markdown = article.to_ai_markdown(max_tokens=16000)
         self.assertTrue(article.metadata.abstract)
         self.assertIn("## Significance", markdown)
@@ -972,14 +966,14 @@ class RegressionSampleTests(unittest.TestCase):
                 strategy=paper_fetch.FetchStrategy(),
                 context=paper_fetch.RuntimeContext(
                     clients={
-                        "elsevier": ProviderStub(
+                        "elsevier": FixtureProvider(
                             metadata=ProviderFailure(
                                 "not_supported",
                                 "Regression fixture omits official metadata.",
                             ),
                             raw_error=not_found_error,
                         ),
-                        "crossref": ProviderStub(metadata=metadata),
+                        "crossref": FixtureProvider(metadata=metadata),
                     }
                 ),
             )

@@ -2,10 +2,11 @@
 
 from __future__ import annotations
 
+from ..tracing import TraceEvent
+
 from typing import Any
 from collections.abc import Mapping
 
-from ..tracing import trace_from_markers
 from .base import ProviderContent, ProviderFailure, RawFulltextPayload
 
 
@@ -15,8 +16,6 @@ def provider_failure_diagnostics(
     if failure is None:
         return None
     diagnostics: dict[str, Any] = {"code": failure.code, "message": failure.message}
-    if failure.source_trail:
-        diagnostics["source_trail"] = list(failure.source_trail)
     return diagnostics
 
 
@@ -39,7 +38,7 @@ def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
     html_failure_message: str | None = None,
     extracted_assets: list[dict[str, Any]] | None = None,
     warnings: list[str] | None = None,
-    trace_markers: list[str] | tuple[str, ...] | None = None,
+    trace_events: list[TraceEvent] | tuple[TraceEvent, ...] | None = None,
     needs_local_copy: bool = False,
 ) -> RawFulltextPayload:
     content = ProviderContent(
@@ -66,7 +65,7 @@ def build_provider_payload(  # noqa: PLR0913 - explicit typed payload boundary
         provider=provider,
         content=content,
         warnings=list(warnings or []),
-        trace=trace_from_markers(list(trace_markers or [])),
+        trace=list(trace_events or []),
     )
 
 

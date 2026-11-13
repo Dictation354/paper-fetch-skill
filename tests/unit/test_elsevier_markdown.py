@@ -1,5 +1,4 @@
 from __future__ import annotations
-from __future__ import annotations
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 from paper_fetch.models import article_from_structure
 from paper_fetch.providers import elsevier as elsevier_provider

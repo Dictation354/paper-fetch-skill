@@ -26,7 +26,6 @@ from .types import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     BrowserRuntimeSession,
-    BrowserStagedStorageState,
     BrowserWarmResult,
 )
 
@@ -39,7 +38,6 @@ _API_EXPORTS = {
     "load_runtime_config",
     "probe_runtime_status",
     "prepare_runtime",
-    "storage_state_path",
     "warm_browser_context",
 }
 
@@ -57,7 +55,6 @@ __all__ = [
     "BrowserRuntimeConfig",
     "BrowserRuntimeFailure",
     "BrowserRuntimeSession",
-    "BrowserStagedStorageState",
     "BrowserWarmResult",
     "browser_context",
     "browser_context_seed_from_mapping",
@@ -72,7 +69,6 @@ __all__ = [
     "parse_optional_int",
     "prepare_runtime",
     "probe_runtime_status",
-    "storage_state_path",
     "warm_browser_context",
 ]
 

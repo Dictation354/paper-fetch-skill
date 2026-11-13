@@ -20,6 +20,7 @@ from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_
 
 CAMOUFOX_ENV = {}
 CAMOUFOX_DEPENDENCIES_READY = {
+    "runtime_valid": True,
     "probe": "unit_test",
     "packages": {"playwright": True, "camoufox": True},
     "package_ready": True,
@@ -27,6 +28,7 @@ CAMOUFOX_DEPENDENCIES_READY = {
     "download_required": False,
 }
 CAMOUFOX_DEPENDENCIES_MISSING = {
+    "runtime_valid": False,
     "probe": "unit_test",
     "packages": {"playwright": False, "camoufox": False},
     "package_ready": False,

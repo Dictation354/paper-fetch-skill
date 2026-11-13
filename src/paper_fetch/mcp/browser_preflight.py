@@ -18,7 +18,6 @@ from ..browser_preflight import (
     BrowserPreflightRuntimeOptions,
     browser_preflight_next_action,
 )
-from ..utils import normalize_text
 from ._deps import MCPDeps, default_mcp_deps
 from .batch import report_progress, run_blocking_call
 from .log_bridge import PaperFetchLogBridge
@@ -26,32 +25,10 @@ from .results import _tool_result, error_payload_from_exception, with_schema_ver
 from .schemas import BrowserPreflightRequest
 
 
-def _storage_state_payload(
-    result: BrowserPreflightResult,
-    *,
-    save_requested: bool,
-) -> dict[str, object]:
-    diagnostics = result.diagnostics if isinstance(result.diagnostics, Mapping) else {}
-    trace = diagnostics.get("browser_runtime_trace")
-    trace_payload = trace if isinstance(trace, Mapping) else {}
-    save = trace_payload.get("storage_state_save")
-    save_payload = save if isinstance(save, Mapping) else {}
-    return {
-        "path": str(result.storage_state_path)
-        if result.storage_state_path is not None
-        else None,
-        "save_requested": save_requested,
-        "attempted": bool(save_payload.get("attempted")),
-        "saved": bool(save_payload.get("saved")),
-        "reason": normalize_text(str(save_payload.get("reason") or "")) or None,
-    }
-
-
 def _result_payload(
     result: BrowserPreflightResult,
     *,
     detail: str,
-    save_storage_state: bool,
 ) -> dict[str, Any]:
     compact = {
         "provider": result.provider,
@@ -73,10 +50,7 @@ def _result_payload(
         "target_url": result.target_url,
         "final_url": result.final_url,
         "title": result.title,
-        "storage_state": _storage_state_payload(
-            result,
-            save_requested=save_storage_state,
-        ),
+        "profile_dir": str(result.profile_dir) if result.profile_dir else None,
         "diagnostics": dict(result.diagnostics or {}),
     }
 
@@ -101,7 +75,6 @@ def _response_payload(
         _result_payload(
             result,
             detail=request.detail,
-            save_storage_state=request.save_storage_state,
         )
         for result in results
     ]
@@ -135,8 +108,6 @@ def _response_payload(
                 if any(item["status"] != "cancelled" for item in result_payloads)
                 else "not_started"
             ),
-            "storage_state_write_enabled": request.save_storage_state,
-            "json_export_enabled": request.save_storage_state,
             "native_profile_write_enabled": True,
             "pdf_fallback_attempted": False,
             "auth_attempted": False,
@@ -160,8 +131,7 @@ def browser_preflight_payload(
     test_url: str | None = None,
     timeout_ms: int | None = None,
     browser_user_agent: str | None = None,
-    storage_state_path: str | None = None,
-    save_storage_state: bool = True,
+    profile_dir: str | None = None,
     detail: str = "full",
     env: Mapping[str, str] | None = None,
     cancel_check: Callable[[], bool] | None = None,
@@ -176,8 +146,7 @@ def browser_preflight_payload(
             "test_url": test_url,
             "timeout_ms": timeout_ms,
             "browser_user_agent": browser_user_agent,
-            "storage_state_path": storage_state_path,
-            "save_storage_state": save_storage_state,
+            "profile_dir": profile_dir,
             "detail": detail,
         }
     )
@@ -188,12 +157,11 @@ def browser_preflight_payload(
         browser_user_agent=request.browser_user_agent,
         cancel_check=cancel_check,
         target_url=request.test_url,
-        storage_state_path=(
-            Path(request.storage_state_path).expanduser()
-            if request.storage_state_path is not None
+        profile_dir=(
+            Path(request.profile_dir).expanduser()
+            if request.profile_dir is not None
             else None
         ),
-        save_storage_state=request.save_storage_state,
         cancel_as_result=True,
         on_result=on_result,
         runtime_options=BrowserPreflightRuntimeOptions(env=runtime_env),
@@ -207,8 +175,7 @@ async def browser_preflight_tool_async(
     test_url: str | None = None,
     timeout_ms: int | None = None,
     browser_user_agent: str | None = None,
-    storage_state_path: str | None = None,
-    save_storage_state: bool = True,
+    profile_dir: str | None = None,
     detail: str = "full",
     env: Mapping[str, str] | None = None,
     ctx: Context | None = None,
@@ -221,8 +188,7 @@ async def browser_preflight_tool_async(
                 "test_url": test_url,
                 "timeout_ms": timeout_ms,
                 "browser_user_agent": browser_user_agent,
-                "storage_state_path": storage_state_path,
-                "save_storage_state": save_storage_state,
+                "profile_dir": profile_dir,
                 "detail": detail,
             }
         )
@@ -260,8 +226,7 @@ async def browser_preflight_tool_async(
                 test_url=request.test_url,
                 timeout_ms=request.timeout_ms,
                 browser_user_agent=request.browser_user_agent,
-                storage_state_path=request.storage_state_path,
-                save_storage_state=request.save_storage_state,
+                profile_dir=request.profile_dir,
                 detail=request.detail,
                 env=env,
                 cancel_check=cancelled.is_set,
@@ -277,8 +242,7 @@ async def browser_preflight_tool_async(
                     test_url=request.test_url,
                     timeout_ms=request.timeout_ms,
                     browser_user_agent=request.browser_user_agent,
-                    storage_state_path=request.storage_state_path,
-                    save_storage_state=request.save_storage_state,
+                    profile_dir=request.profile_dir,
                     detail=request.detail,
                     env=env,
                     cancel_check=cancelled.is_set,

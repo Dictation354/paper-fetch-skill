@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import *
 # ruff: noqa: F403,F405
 
@@ -46,7 +48,10 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
         mocked_pdf.assert_not_called()
         self.assertEqual(_payload_route(raw_payload), "html")
         self.assertEqual(article.source, "science")
-        self.assertIn("fulltext:science_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "science_html", "ok")),
+            trace_facts(article.trace),
+        )
 
     def test_science_provider_rewrites_inline_figure_links_to_downloaded_local_assets(
         self,
@@ -70,7 +75,7 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
                         "**Figure 1.** Caption body for the science figure.",
                     ]
                 ),
-                source_trail=["fulltext:science_html_ok"],
+                events=[trace_event("fulltext", "science_html", "ok")],
             )
 
             article = client.to_article_model(
@@ -117,7 +122,7 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
             body=str(scenario["body_html"]).encode("utf-8"),
             route="html",
             markdown_text=str(scenario["markdown_text"]),
-            source_trail=["fulltext:science_html_ok"],
+            events=[trace_event("fulltext", "science_html", "ok")],
             extraction=scenario["extraction"],
         )
 
@@ -189,7 +194,7 @@ class AtyponBrowserWorkflowProviderHtmlTests(AtyponBrowserWorkflowProviderTestCa
             body=html.encode("utf-8"),
             route="html",
             markdown_text=markdown_text,
-            source_trail=["fulltext:science_html_ok"],
+            events=[trace_event("fulltext", "science_html", "ok")],
             extraction=extraction,
         )
 

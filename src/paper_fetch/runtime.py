@@ -306,7 +306,7 @@ class RuntimeContext:
         *,
         provider: str,
         backend: str,
-        storage_state_path: Path | str,
+        profile_dir: Path | str,
         content_sha256: str | None = None,
     ) -> None:
         """Record the actual native profile and its current context summary."""
@@ -316,13 +316,13 @@ class RuntimeContext:
         use = BrowserStateCapabilityUse(
             provider=provider,
             backend=backend,
-            storage_state_path=str(Path(storage_state_path).expanduser().resolve()),
+            profile_dir=str(Path(profile_dir).expanduser().resolve()),
             content_sha256=content_sha256,
         )
         record = {
             "provider": use.provider,
             "backend": use.backend,
-            "storage_state_path": use.storage_state_path,
+            "profile_dir": use.profile_dir,
             "content_sha256": (str(content_sha256 or "").strip() or use.content_sha256),
             "used": True,
         }
@@ -330,8 +330,8 @@ class RuntimeContext:
             self.capability_uses[:] = [
                 item
                 for item in self.capability_uses
-                if (item.get("provider"), item.get("storage_state_path"))
-                != (record["provider"], record["storage_state_path"])
+                if (item.get("provider"), item.get("profile_dir"))
+                != (record["provider"], record["profile_dir"])
             ]
             self.capability_uses.append(record)
 
@@ -390,9 +390,6 @@ class RuntimeContext:
         return self._browser_sessions.new_browser_context_for_runtime_config(
             config, runtime_context=self, **context_kwargs
         )
-
-    def note_browser_json_export(self, path: Path) -> None:
-        self._browser_sessions.note_browser_json_export(path)
 
     def refresh_browser_profiles(self) -> None:
         self._browser_sessions.refresh_browser_profiles()

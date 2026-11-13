@@ -21,7 +21,6 @@ from ...base import (
     build_provider_status_check,
     provider_status_check_from_failure,
 )
-from .. import paths as runtime_paths
 from ..context import open_browser_context
 from ..preparation import probe_camoufox_managed_runtime
 from ..types import BrowserRuntimeConfig
@@ -45,6 +44,7 @@ def _dependency_details() -> dict[str, Any]:
         "package_ready": package_ready,
         "runtime_path": None,
         "runtime_installed": False,
+        "runtime_valid": False,
         "download_required": package_ready,
     }
     for package, available in packages.items():
@@ -83,13 +83,7 @@ def _package_ready(details: Mapping[str, Any]) -> bool:
 
 
 def _runtime_installed(details: Mapping[str, Any]) -> bool:
-    # The fallback keeps third-party/test probes that predate the richer status
-    # payload compatible. The production probe always supplies runtime_installed.
-    if "runtime_valid" in details:
-        return bool(details.get("runtime_valid"))
-    if "runtime_installed" not in details:
-        return _package_ready(details)
-    return bool(details.get("runtime_installed"))
+    return bool(details.get("runtime_valid"))
 
 
 class CamoufoxBackend(PlaywrightBackend):
@@ -148,8 +142,8 @@ class CamoufoxBackend(PlaywrightBackend):
                         "binary_path_configured": bool(config.binary_path),
                         "profile_dir_configured": bool(config.profile_dir),
                         "user_data_dir_configured": bool(config.user_data_dir),
-                        "storage_state_path": str(
-                            runtime_paths.storage_state_path(config) or ""
+                        "profile_dir": str(
+                            (config.profile_dir or config.user_data_dir) or ""
                         ),
                         "browser_user_agent_ignored": bool(
                             normalize_text(env.get(BROWSER_USER_AGENT_ENV_VAR))

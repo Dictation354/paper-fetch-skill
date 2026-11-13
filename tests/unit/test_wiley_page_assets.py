@@ -1,3 +1,5 @@
+from tests.support.transport import configure_stream_transport
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 import hashlib
 import json
 from pathlib import Path
@@ -189,6 +191,7 @@ def test_png_url_webp_response_keeps_bytes_and_mime_extension(tmp_path):
     fetcher._page.evaluate.return_value = True
     fetcher._page.goto.side_effect = lambda *a, **kw: capture(fetcher, url, WEBP_1X1)
     transport = Mock()
+    configure_stream_transport(transport)
     result = download_assets(
         FIGURE_KIND,
         transport,
@@ -217,6 +220,7 @@ def test_png_url_webp_response_keeps_bytes_and_mime_extension(tmp_path):
 def test_browser_only_failure_never_uses_http(tmp_path, fetcher):
     url = ROOT + "/math.png"
     transport = Mock()
+    configure_stream_transport(transport)
     result = download_assets(
         FIGURE_KIND,
         transport,
@@ -236,6 +240,7 @@ def test_browser_only_failure_never_uses_http(tmp_path, fetcher):
 
 def test_browser_only_propagates_cancellation(tmp_path):
     transport = Mock()
+    configure_stream_transport(transport)
     fetcher = Mock(side_effect=RequestCancelledError("cancelled"))
     with pytest.raises(RequestCancelledError):
         download_assets(
@@ -263,6 +268,7 @@ def test_wiley_default_policy_has_no_direct_probe_figure_page_or_refresh(
     from tests.support.wiley_page_assets import figure
 
     transport = Mock()
+    configure_stream_transport(transport)
     client = WileyClient(transport, {})
     runtime = SimpleNamespace(headless=True, user_agent="test")
     assets = [figure(ROOT, 1), formula(ROOT + "/math.png")]
@@ -287,7 +293,11 @@ def test_wiley_default_policy_has_no_direct_probe_figure_page_or_refresh(
     )
     factory = Mock(return_value=Mock(return_value=None))
     monkeypatch.setattr(client, "_browser_asset_image_fetcher", factory)
-    refresh = Mock()
+    refresh = Mock(
+        return_value=BrowserWarmResult(
+            seed={}, changed=False, accepted=False, status=None, reason="unavailable"
+        )
+    )
     figure_page = Mock()
     deps = install_browser_workflow_deps(
         client,
@@ -346,7 +356,12 @@ def test_wiley_preview_fallback_remains_degraded_even_for_large_preview(tmp_path
 
     fetcher = Mock(side_effect=response)
     transport = Mock()
-    refresh = Mock()
+    configure_stream_transport(transport)
+    refresh = Mock(
+        return_value=BrowserWarmResult(
+            seed={}, changed=False, accepted=False, status=None, reason="unavailable"
+        )
+    )
     result = download_browser_backed_related_assets(
         BrowserAssetDownloadPlan(
             article_id="10.1111/test",
@@ -386,6 +401,7 @@ def test_browser_only_never_invokes_figure_page_or_deferred_candidates(tmp_path)
     asset = figure(ROOT, 1)
     asset["figure_page_url"] = ROOT + "/doi/figure/10.1111/test"
     transport = Mock()
+    configure_stream_transport(transport)
     figure_page = Mock()
     fallback = Mock()
     result = download_assets(

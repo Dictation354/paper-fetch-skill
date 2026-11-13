@@ -18,8 +18,6 @@ from filelock import FileLock, Timeout as FileLockTimeout
 from .byparr_manager import ByparrManager
 from .paths import (
     _atomic_write_json,
-    _filtered_storage_state_mapping,
-    storage_state_path,
 )
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 
@@ -32,9 +30,7 @@ def profile_path(config: BrowserRuntimeConfig) -> Path:
     if path is None:
         from .paths import default_provider_user_data_dir
 
-        path = default_provider_user_data_dir(
-            os.environ, provider=config.provider, backend=config.backend
-        )
+        path = default_provider_user_data_dir(os.environ, provider=config.provider)
     return Path(path).expanduser().resolve()
 
 
@@ -107,7 +103,6 @@ def trusted_profile_digest(
     provider: str,
     *,
     locked: bool = False,
-    explicit_state_path: Path | None = None,
 ) -> str | None:
     """Read only an idle, unchanged profile summary, or our own locked profile."""
     path = path.expanduser().resolve()
@@ -122,14 +117,6 @@ def trusted_profile_digest(
         data = _metadata(path)
         if data.get("provider") != provider or not data.get("state_sha256"):
             return None
-        if explicit_state_path is not None:
-            explicit = explicit_state_path.expanduser().resolve()
-            imported = data.get("migrations", {}).get(str(explicit))
-            if (
-                explicit.is_file()
-                and hashlib.sha256(explicit.read_bytes()).hexdigest() != imported
-            ):
-                return None
         if not locked and data.get("native_stamp") != _native_stamp(path):
             return None
         return str(data["state_sha256"])
@@ -159,7 +146,6 @@ class PublisherProfileManager:
             "provider": config.provider,
             "native_profile_loaded": False,
             "context_reused": False,
-            "json_imported": False,
         }
 
     def _assert_owner(self) -> None:
@@ -193,11 +179,7 @@ class PublisherProfileManager:
     def new_context(self) -> Any:
         self._assert_owner()
         if self.context is not None:
-            self.diagnostics.update(
-                context_reused=True, native_profile_loaded=False, json_imported=False
-            )
-            self.diagnostics.pop("json_import_path", None)
-            self.diagnostics.pop("json_import_sha256", None)
+            self.diagnostics.update(context_reused=True, native_profile_loaded=False)
             self.refresh()
             return self.context
         self._acquire()
@@ -254,84 +236,12 @@ class PublisherProfileManager:
                     },
                 ) from exc
             self.diagnostics["native_profile_loaded"] = True
-            self._import_legacy(bool(native_exists))
             self.metadata["native_initialized"] = True
             self.refresh()
             return self.context
         except BaseException:
             self.close()
             raise
-
-    def _import_legacy(self, native_exists: bool) -> None:
-        path = storage_state_path(self.config)
-        if path is None or not path.is_file():
-            return
-        explicit = self.config.storage_state_path is not None
-        if native_exists and not explicit:
-            return
-        try:
-            payload_bytes = path.read_bytes()
-        except OSError as exc:
-            raise BrowserRuntimeFailure(
-                "browser_profile_json_import_failed",
-                f"Cannot read legacy JSON {path}: {exc}",
-                details={"stage": "json_import", "profile_dir": str(self.path)},
-            ) from exc
-        digest = hashlib.sha256(payload_bytes).hexdigest()
-        key = str(path.expanduser().resolve())
-        migrations = self.metadata.setdefault("migrations", {})
-        if migrations.get(key) == digest:
-            return
-        from ...provider_catalog import provider_domains
-
-        domains = provider_domains(self.config.provider)
-        try:
-            payload = _filtered_storage_state_mapping(
-                json.loads(payload_bytes),
-                url=f"https://{domains[0]}/" if domains else "",
-                provider=self.config.provider,
-            )
-        except (ValueError, TypeError, AttributeError) as exc:
-            raise BrowserRuntimeFailure(
-                "browser_profile_json_import_failed",
-                f"Cannot import legacy JSON {path}: {exc}",
-                details={"stage": "json_import", "profile_dir": str(self.path)},
-            ) from exc
-        if payload is None:
-            raise BrowserRuntimeFailure(
-                "browser_profile_json_import_failed",
-                f"Cannot import publisher JSON: {path}",
-            )
-        try:
-            cookies = payload.get("cookies") or []
-            if cookies:
-                self.context.add_cookies(cookies)
-            for origin in payload.get("origins") or []:
-                page = self.context.new_page()
-                try:
-                    from .navigation import navigate_page
-
-                    navigate_page(
-                        page,
-                        origin["origin"],
-                        wait_until="domcontentloaded",
-                        timeout_ms=self.config.timeout_ms,
-                    )
-                    page.evaluate(
-                        "items => { for (const item of items) localStorage.setItem(item.name, item.value); }",
-                        origin.get("localStorage") or [],
-                    )
-                finally:
-                    page.close()
-        except Exception as exc:
-            raise BrowserRuntimeFailure(
-                "browser_profile_json_import_failed",
-                f"Legacy JSON import failed for {self.path}: {exc}",
-            ) from exc
-        migrations[key] = digest
-        self.diagnostics.update(
-            json_imported=True, json_import_path=key, json_import_sha256=digest
-        )
 
     def refresh(self) -> str | None:
         self._assert_owner()
@@ -378,23 +288,10 @@ class PublisherProfileManager:
             self.runtime_context.record_browser_state_capability_use(
                 provider=self.config.provider,
                 backend="byparr",
-                storage_state_path=self.path,
+                profile_dir=self.path,
                 content_sha256=digest,
             )
         return digest
-
-    def note_json_export(self, path: Path) -> None:
-        """Our own explicit export must not be re-imported as an external change."""
-        self._assert_owner()
-        if self.config.storage_state_path is None:
-            return
-        canonical = path.expanduser().resolve()
-        if canonical != self.config.storage_state_path.expanduser().resolve():
-            return
-        self.metadata.setdefault("migrations", {})[str(canonical)] = hashlib.sha256(
-            canonical.read_bytes()
-        ).hexdigest()
-        _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
 
     def close(self) -> None:
         self._assert_owner()

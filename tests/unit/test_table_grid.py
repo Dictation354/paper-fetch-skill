@@ -12,7 +12,7 @@ from paper_fetch.extraction.table_grid import (
     TableRow,
     normalize_table,
 )
-from paper_fetch.extraction.xml_tables import parse_xml_table, parse_xml_table_groups
+from paper_fetch.extraction.xml_tables import parse_xml_table_groups
 from paper_fetch.utils import normalize_text
 
 
@@ -22,7 +22,7 @@ def _xml_cell_text(cell: ET.Element) -> str:
 
 def _normalized_xml_table(xml_text: str):
     root = ET.fromstring(xml_text)
-    parsed = parse_xml_table(root, render_cell_text=_xml_cell_text)
+    parsed = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)[0]
     return normalize_table(
         parsed.rows,
         declared_width=parsed.declared_width,
@@ -59,7 +59,7 @@ def test_xml_table_tag_matching_preserves_supported_name_forms() -> None:
         )
         entry.text = style
 
-        parsed = parse_xml_table(root, render_cell_text=_xml_cell_text)
+        parsed = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)[0]
 
         assert parsed.declared_width == 1
         assert parsed.rows == (
@@ -320,7 +320,7 @@ def test_table_without_tgroup_remains_one_compatible_group() -> None:
 """
     )
 
-    legacy = parse_xml_table(root, render_cell_text=_xml_cell_text)
+    legacy = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)[0]
     groups = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)
 
     assert groups == (legacy,)

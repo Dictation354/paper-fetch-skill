@@ -192,7 +192,7 @@ def validate_contract(
     for key, expected in {
         "user_directory": "~/.agents/skills/paper-fetch-skill",
         "project_directory": ".agents/skills/paper-fetch-skill",
-        "verify_before_legacy_cleanup": True,
+        "current_skill_path_only": True,
         "check_is_read_only": True,
     }.items():
         if codex.get(key) != expected:
@@ -229,7 +229,7 @@ def validate_contract(
         "publisher_native_persistent_profiles",
         "profile_exclusive_lock_owner_thread",
         "auth_native_profile_replay",
-        "json_export_optional",
+        "native_profile_only",
     ):
         if browser.get(key) is not True:
             errors.append(f"browser.{key} must be true")

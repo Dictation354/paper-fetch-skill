@@ -7,12 +7,9 @@ from pathlib import Path
 
 from .camoufox import CamoufoxBackend
 from . import camoufox
-from .. import paths
 from ..byparr_preparation import bundled_component_root, runtime_location, valid_cache
 from ...base import ProviderFailure
 from ....config import (
-    BROWSER_PROFILE_DIR_ENV_VAR,
-    BROWSER_USER_DATA_DIR_ENV_VAR,
     resolve_user_data_dir,
 )
 from ....reason_codes import NOT_CONFIGURED, OK, READY
@@ -89,52 +86,20 @@ class ByparrBackend(CamoufoxBackend):
 
     def create_manager(self, config, *, runtime_context=None):
         config = replace(config, backend=self.name)
-        if config.state_mode == "native":
-            from ..profile import PublisherProfileManager
+        from ..profile import PublisherProfileManager
 
-            return PublisherProfileManager(config, runtime_context=runtime_context)
-        from ..byparr_manager import ByparrManager
+        return PublisherProfileManager(config, runtime_context=runtime_context)
 
-        return ByparrManager(config, runtime_context=runtime_context)
-
-    def load_runtime_config(self, env, *, provider, doi, require_storage_state=False):
-        from ..selection import selected_state_mode
-
-        state_mode = selected_state_mode(env, provider=provider)
-        isolated = {
-            k: v
-            for k, v in env.items()
-            if state_mode == "native"
-            or k
-            not in {
-                BROWSER_PROFILE_DIR_ENV_VAR,
-                BROWSER_USER_DATA_DIR_ENV_VAR,
-            }
-        }
-        # The shared config loader still resolves the legacy native directory.
-        from .camoufox import DEFAULT_CAMOUFOX_BACKEND
-
-        config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
-            isolated,
-            provider=provider,
-            doi=doi,
-            require_storage_state=require_storage_state,
-        )
+    def load_runtime_config(self, env, *, provider, doi):
+        config = super().load_runtime_config(env, provider=provider, doi=doi)
         return replace(
             config,
             backend=self.name,
-            state_mode=state_mode,
             component_cache_dir=Path(
                 env["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]
             ).expanduser()
             if env.get("PAPER_FETCH_BROWSER_COMPONENT_CACHE")
             else None,
-            profile_dir=config.profile_dir if state_mode == "native" else None,
-            user_data_dir=config.user_data_dir
-            if state_mode == "native"
-            else paths.default_provider_user_data_dir(
-                env, provider=provider, backend=self.name
-            ),
         )
 
     def ensure_runtime_ready(self, config):
@@ -227,7 +192,6 @@ class ByparrBackend(CamoufoxBackend):
                 check.details.update(
                     backend=self.name,
                     engine=engine_name(),
-                    state_mode=config.state_mode,
                     component_installed=installed,
                     download_required=bool(check.details.get("download_required"))
                     or not installed,

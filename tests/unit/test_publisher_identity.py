@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 
 import unittest
 from unittest import mock
@@ -107,10 +108,12 @@ class PublisherIdentityTests(unittest.TestCase):
                 )
                 return RawFulltextPayload(
                     provider=self.name,
-                    source_url=content.source_url,
-                    content_type=content.content_type,
-                    body=content.body,
-                    content=content,
+                    content=replace(
+                        content,
+                        source_url=content.source_url,
+                        content_type=content.content_type,
+                        body=content.body,
+                    ),
                 )
 
             def download_related_assets(self, *args, **kwargs):

@@ -1,5 +1,8 @@
 """Offline arXiv graphic extraction/assembly from the seven captured articles."""
 
+from paper_fetch.models import Quality
+
+
 from pathlib import Path
 
 from paper_fetch.models import FetchEnvelope
@@ -105,9 +108,9 @@ def graphic_acceptance(article, markdown, *, require_local):
         FetchEnvelope(
             doi=article.doi,
             source=article.source,
-            has_fulltext=True,
             article=article,
             markdown=markdown,
+            quality=Quality(has_fulltext=True),
         ),
         asset_profile="body",
         require_local_body_assets=require_local,

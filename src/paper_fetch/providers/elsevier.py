@@ -41,7 +41,7 @@ from ..models import (
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, normalize_doi
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import (
     choose_public_landing_page_url,
     dedupe_authors,
@@ -159,7 +159,8 @@ def _raise_for_elsevier_api_entitlement(
             NO_ACCESS,
             "Elsevier API route is not entitled to this article's full text.",
             diagnostics=FailureDiagnostics(
-                http_status=status, details={"api_entitlement": dict(exc.details or {})}
+                http_status=status,
+                details={"api_entitlement": dict(exc.diagnostics.details or {})},
             ),
         ) from exc
 
@@ -918,7 +919,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
             body=body,
             diagnostics=extract_elsevier_xml_identity(body),
             reason=reason,
-            trace_markers=[fulltext_marker("elsevier", "ok", route=trace_route)],
+            trace_events=[fulltext_event("elsevier", "ok", route=trace_route)],
             needs_local_copy=False,
         )
 
@@ -1034,9 +1035,9 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),
             warnings=pdf_fetch_result_warnings(pdf_result),
-            trace_markers=[
-                fulltext_marker("elsevier", "ok", route="pdf_api"),
-                fulltext_marker("elsevier", "ok", route=PDF_FALLBACK),
+            trace_events=[
+                fulltext_event("elsevier", "ok", route="pdf_api"),
+                fulltext_event("elsevier", "ok", route=PDF_FALLBACK),
             ],
             needs_local_copy=True,
         )
@@ -1057,7 +1058,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 or ""
             )
         )
-        if is_xml_content_type(raw_payload.content_type):
+        if is_xml_content_type(raw_payload.content.content_type):
             diagnostics = assess_structured_article_fulltext_availability(
                 article, title=title or None
             )
@@ -1068,11 +1069,13 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     raw_payload.content, diagnostics=diagnostics_payload
                 )
             return diagnostics.accepted
-        if raw_payload.content_type.startswith("text/") and not is_xml_content_type(
-            raw_payload.content_type
-        ):
+        if raw_payload.content.content_type.startswith(
+            "text/"
+        ) and not is_xml_content_type(raw_payload.content.content_type):
             try:
-                markdown_text = raw_payload.body.decode("utf-8", errors="replace")
+                markdown_text = raw_payload.content.body.decode(
+                    "utf-8", errors="replace"
+                )
             except Exception:
                 return False
             diagnostics = assess_plain_text_fulltext_availability(
@@ -1209,7 +1212,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
         context: RuntimeContext | None = None,
     ) -> dict[str, list[dict[str, Any]]]:
         context = self._runtime_context(context, output_dir=output_dir)
-        if "html" in raw_payload.content_type.lower():
+        if "html" in raw_payload.content.content_type.lower():
             return self._download_browser_backed_related_assets(
                 doi,
                 metadata,
@@ -1219,23 +1222,25 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 context=context,
                 body_fetch_policy="browser_only",
                 assets=_elsevier_html.extract_assets(
-                    raw_payload.body.decode("utf-8", errors="replace"),
-                    raw_payload.source_url,
+                    raw_payload.content.body.decode("utf-8", errors="replace"),
+                    raw_payload.content.source_url,
                     asset_profile=asset_profile,
                 ),
             )
         normalized_doi = normalize_doi(doi)
-        if not normalized_doi or not is_xml_content_type(raw_payload.content_type):
+        if not normalized_doi or not is_xml_content_type(
+            raw_payload.content.content_type
+        ):
             return empty_asset_results()
         return download_elsevier_related_assets(
             self.transport,
             doi=normalized_doi,
-            xml_body=raw_payload.body,
+            xml_body=raw_payload.content.body,
             output_dir=output_dir,
             headers=self._base_headers("*/*"),
             asset_profile=asset_profile,
             context=context,
-            source_url=raw_payload.source_url,
+            source_url=raw_payload.content.source_url,
         )
 
     def fetch_raw_fulltext(
@@ -1372,7 +1377,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 condition=lambda _state: bool(self.api_key),
                 route_name="xml_api",
                 run=run_xml,
-                failure_marker=fulltext_marker("elsevier", "fail", route="xml"),
+                failure_event=fulltext_event("elsevier", "fail", route="xml"),
                 failure_warning=xml_failure_warning,
                 continue_codes=(
                     NO_RESULT,
@@ -1387,8 +1392,8 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 route_name="xml_api",
                 run=run_pii_xml,
                 condition=pii_xml_condition,
-                failure_marker=fulltext_marker("elsevier", "fail", route="xml_pii"),
-                success_markers=(fulltext_marker("elsevier", "ok", route="xml_pii"),),
+                failure_event=fulltext_event("elsevier", "fail", route="xml_pii"),
+                success_events=(fulltext_event("elsevier", "ok", route="xml_pii"),),
                 failure_warning=lambda failure, _state: (
                     f"Elsevier PII XML fallback was not usable ({failure.message}); attempting browser HTML fallback."
                 ),
@@ -1404,7 +1409,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 label="html",
                 route_name="browser_html",
                 run=run_html,
-                failure_marker=fulltext_marker("elsevier", "fail", route="html"),
+                failure_event=fulltext_event("elsevier", "fail", route="html"),
                 failure_warning=lambda failure, _state: (
                     f"Elsevier browser HTML was not usable ({failure.message}); attempting API PDF fallback."
                 ),
@@ -1418,10 +1423,10 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     asset_profile=pdf_asset_profile_from_context(context),
                     context=context,
                 ),
-                failure_marker=fulltext_marker("elsevier", "fail", route="pdf_api"),
-                success_markers=(
-                    fulltext_marker("elsevier", "ok", route="pdf_api"),
-                    fulltext_marker("elsevier", "ok", route=PDF_FALLBACK),
+                failure_event=fulltext_event("elsevier", "fail", route="pdf_api"),
+                success_events=(
+                    fulltext_event("elsevier", "ok", route="pdf_api"),
+                    fulltext_event("elsevier", "ok", route=PDF_FALLBACK),
                 ),
                 success_warning="Full text was extracted from the Elsevier API PDF fallback.",
                 failure_warning=lambda failure, _state: (
@@ -1437,10 +1442,8 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     and bootstrap.runtime_failure is None
                 ),
                 run=run_browser_pdf,
-                failure_marker=fulltext_marker("elsevier", "fail", route="browser_pdf"),
-                success_markers=(
-                    fulltext_marker("elsevier", "ok", route="browser_pdf"),
-                ),
+                failure_event=fulltext_event("elsevier", "fail", route="browser_pdf"),
+                success_events=(fulltext_event("elsevier", "ok", route="browser_pdf"),),
             ),
         ]
         payload = run_provider_waterfall(
@@ -1451,7 +1454,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
             client=self,
         )
         if is_xml_content_type(
-            payload.content_type
+            payload.content.content_type
         ) and payload.content.diagnostics.get("availability_diagnostics", {}).get(
             "accepted"
         ):
@@ -1472,10 +1475,12 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
         context: RuntimeContext | None = None,
     ):
         context = self._runtime_context(context)
-        if "html" in raw_payload.content_type.lower():
+        if "html" in raw_payload.content.content_type.lower():
             from ._elsevier_html import extract_title
 
-            title = extract_title(raw_payload.body.decode("utf-8", errors="replace"))
+            title = extract_title(
+                raw_payload.content.body.decode("utf-8", errors="replace")
+            )
             if title:
                 metadata = {**metadata, "title": title}
                 raw_payload = replace(
@@ -1502,7 +1507,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_metadata = (
             merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -1526,9 +1531,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     warnings=warnings,
                     trace=[
                         *trace,
-                        *trace_from_markers(
-                            [fulltext_marker("elsevier", "fail", route="parse")]
-                        ),
+                        *[fulltext_event("elsevier", "fail", route="parse")],
                     ],
                 )
             return article_from_markdown(
@@ -1541,19 +1544,19 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                 trace=trace,
             )
 
-        if is_xml_content_type(raw_payload.content_type):
+        if is_xml_content_type(raw_payload.content.content_type):
             xml_root = elsevier_xml_root_from_payload(
-                raw_payload.body,
+                raw_payload.content.body,
                 context=context,
-                source_url=raw_payload.source_url,
+                source_url=raw_payload.content.source_url,
             )
             pseudo_assets = (
                 downloaded_assets
                 if downloaded_assets
                 else extract_elsevier_asset_references(
-                    raw_payload.body,
+                    raw_payload.content.body,
                     context=context,
-                    source_url=raw_payload.source_url,
+                    source_url=raw_payload.content.source_url,
                     xml_root=xml_root,
                 )
             )
@@ -1563,7 +1566,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
             structure = build_article_structure(
                 provider="elsevier",
                 metadata=metadata,
-                xml_body=raw_payload.body,
+                xml_body=raw_payload.content.body,
                 xml_path=xml_path,
                 assets=[dict(item) for item in pseudo_assets],
                 xml_root=xml_root,
@@ -1623,9 +1626,9 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     inline_figure_keys=sorted(structure.used_figure_keys),
                     inline_table_keys=sorted(structure.used_table_keys),
                 )
-        if raw_payload.content_type.startswith("text/"):
+        if raw_payload.content.content_type.startswith("text/"):
             try:
-                text = raw_payload.body.decode("utf-8", errors="replace")
+                text = raw_payload.content.body.decode("utf-8", errors="replace")
             except Exception:
                 text = ""
             if text.strip():
@@ -1676,9 +1679,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("elsevier_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("elsevier_assets_skipped_text_only")]
             if not pdf_assets
             else [],
         )

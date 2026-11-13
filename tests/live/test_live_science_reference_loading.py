@@ -1,7 +1,11 @@
 """Live Science bibliography and local body image acceptance in both modes."""
 
-from functools import wraps
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from dataclasses import replace
+
+
+from functools import wraps
 import json
 import os
 import time
@@ -106,7 +110,7 @@ def test_science_complete_references_and_body_images(
                     "status": exc.status,
                     "reason": exc.reason,
                     "details": exc.details,
-                    "source_trail": exc.source_trail,
+                    "events": exc.trace,
                 },
             )
             raise
@@ -148,7 +152,9 @@ def test_science_complete_references_and_body_images(
             asset.path and Path(asset.path).stat().st_size > 0 for asset in images
         )
         assert "reference_targets_missing" not in article.quality.flags
-        assert "fulltext:science_html_ok" in article.quality.source_trail
+        assert trace_facts(
+            trace_event("fulltext", "science_html", "ok")
+        ) in trace_facts(article.trace)
         assert acceptance.overall == "complete", acceptance.to_json()
         assert browser_traces
         terminal = {"status": "complete", "reason_code": "accepted"}

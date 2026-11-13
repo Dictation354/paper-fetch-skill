@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from tests.support.ieee_provider_routes import (
     _FakeIeeeBrowserContext,
     _FakeIeeeBrowserPage,
@@ -42,7 +45,7 @@ def _browser_landing_attempt(
     )
 
 
-class _PagedReferenceTransport:
+class _PagedReferenceTransport(RecordedStreamTransport):
     def __init__(self, page_factory):
         self.page_factory = page_factory
         self.urls: list[str] = []
@@ -304,7 +307,8 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         article = client.to_article_model({"doi": doi}, raw_payload)
         self.assertNotIn(
-            "fulltext:ieee_browser_html_fail", article.quality.source_trail
+            trace_facts(trace_event("fulltext", "ieee_browser_html", "fail")),
+            trace_facts(article.trace),
         )
         self.assertIn(
             "browser recovery is not eligible", "\n".join(raw_payload.warnings)
@@ -680,7 +684,10 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertEqual(article.source, "ieee_html")
         self.assertEqual(article.metadata.authors, ["Alice Example", "Bob Example"])
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:ieee_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_html", "ok")),
+            trace_facts(article.trace),
+        )
         rest_call = transport.calls[1]
         self.assertEqual(rest_call["url"], rest_url)
         self.assertEqual(rest_call["timeout"], DEFAULT_FULLTEXT_TIMEOUT_SECONDS)
@@ -717,10 +724,10 @@ class IeeeProviderRouteTests(unittest.TestCase):
             article_number=article_number,
             html_text=_dynamic_html(article_number).decode("utf-8"),
             source_url=rest_url,
-            trace_markers=[
-                "fulltext:ieee_html_fail",
-                "fulltext:ieee_browser_html_ok",
-                "fulltext:ieee_html_ok",
+            trace_events=[
+                trace_event("fulltext", "ieee_html", "fail"),
+                trace_event("fulltext", "ieee_browser_html", "ok"),
+                trace_event("fulltext", "ieee_html", "ok"),
             ],
         )
 
@@ -739,8 +746,14 @@ class IeeeProviderRouteTests(unittest.TestCase):
         self.assertEqual(raw_payload.content.fetcher, "playwright_html")
         self.assertEqual(article.source, "ieee_html")
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:ieee_browser_html_ok", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_html_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_browser_html", "ok")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_html", "ok")),
+            trace_facts(article.trace),
+        )
         mocked_browser.assert_called_once()
         self.assertEqual(
             mocked_browser.call_args.kwargs["direct_html_failure"].code, "no_access"
@@ -1197,11 +1210,15 @@ class IeeeProviderRouteTests(unittest.TestCase):
                     )
 
                 failure = raised.exception
-                self.assertEqual(failure.error_category, "browser_rest_wait_timeout")
-                self.assertTrue(failure.retryable)
-                self.assertEqual(failure.stage, "rest_readiness")
-                self.assertEqual(failure.details["rest_response_count"], 1)
-                self.assertEqual(failure.details["invalid_rest_response_count"], 1)
+                self.assertEqual(
+                    failure.diagnostics.error_category, "browser_rest_wait_timeout"
+                )
+                self.assertTrue(failure.diagnostics.retryable)
+                self.assertEqual(failure.diagnostics.stage, "rest_readiness")
+                self.assertEqual(failure.diagnostics.details["rest_response_count"], 1)
+                self.assertEqual(
+                    failure.diagnostics.details["invalid_rest_response_count"], 1
+                )
                 self.assertEqual(len(runtime.diagnostic_artifacts), 4)
                 for artifact in runtime.diagnostic_artifacts:
                     self.assertTrue(Path(artifact["path"]).is_file())
@@ -1265,9 +1282,11 @@ class IeeeProviderRouteTests(unittest.TestCase):
                     )
 
                 failure = raised.exception
-                self.assertEqual(failure.error_category, "browser_rest_wait_timeout")
-                self.assertTrue(failure.retryable)
-                self.assertEqual(failure.stage, "rest_readiness")
+                self.assertEqual(
+                    failure.diagnostics.error_category, "browser_rest_wait_timeout"
+                )
+                self.assertTrue(failure.diagnostics.retryable)
+                self.assertEqual(failure.diagnostics.stage, "rest_readiness")
                 self.assertEqual(page.initial_responses[0].body_calls, 0)
             finally:
                 runtime.close()
@@ -1327,10 +1346,14 @@ class IeeeProviderRouteTests(unittest.TestCase):
                     )
 
                 failure = raised.exception
-                self.assertEqual(failure.error_category, "aws_waf_challenge")
-                self.assertFalse(failure.retryable)
-                self.assertEqual(failure.stage, "block_detection")
-                self.assertEqual(failure.details["challenge_provider"], "aws_waf")
+                self.assertEqual(
+                    failure.diagnostics.error_category, "aws_waf_challenge"
+                )
+                self.assertFalse(failure.diagnostics.retryable)
+                self.assertEqual(failure.diagnostics.stage, "block_detection")
+                self.assertEqual(
+                    failure.diagnostics.details["challenge_provider"], "aws_waf"
+                )
             finally:
                 runtime.close()
 
@@ -1394,9 +1417,18 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "ieee_pdf")
-        self.assertIn("fulltext:ieee_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_browser_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_browser_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
         self.assertEqual(
             raw_payload.content.extracted_assets[0]["url"], "body_assets/ieee-f1.png"
         )
@@ -1467,9 +1499,18 @@ class IeeeProviderRouteTests(unittest.TestCase):
 
         self.assertEqual(raw_payload.content.route_kind, "abstract_only")
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertIn("fulltext:ieee_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_browser_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_pdf_fail", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_browser_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_pdf", "fail")),
+            trace_facts(article.trace),
+        )
         warning_blob = "\n".join(raw_payload.warnings)
         self.assertIn("IEEE dynamic HTML route was not usable", warning_blob)
         self.assertIn("IEEE browser HTML fallback was not usable", warning_blob)

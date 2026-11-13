@@ -1,5 +1,8 @@
 """Minimal dimensions and source-error structure at the MathML boundary."""
 
+from dataclasses import replace
+
+
 import xml.etree.ElementTree as ET
 
 import pytest
@@ -146,18 +149,20 @@ def test_oup_source_error_diagnostic_reaches_article_warning():
     metadata = {"doi": "10.1093/bioinformatics/btaa153", "title": "Example"}
     payload = RawFulltextPayload(
         provider="oxfordacademic",
-        source_url=source_url,
-        content_type="text/html",
-        body=b"<article/>",
         warnings=["existing warning"],
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=b"<article/>",
+                markdown_text="# Example\n\nReadable formula content.",
+                merged_metadata=metadata,
+                diagnostics={"extraction": {"source_mathml_error_count": 1}},
+            ),
             source_url=source_url,
             content_type="text/html",
             body=b"<article/>",
-            markdown_text="# Example\n\nReadable formula content.",
-            merged_metadata=metadata,
-            diagnostics={"extraction": {"source_mathml_error_count": 1}},
         ),
     )
     article = OxfordAcademicClient(HttpTransport(), {}).to_article_model(

@@ -125,6 +125,8 @@ select = ["E4", "E7", "E9", "F", "TID251", "UP", "RUF022", "SIM105", "B"]
 ignore = ["B008"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]
+"paper_fetch.providers._springer_html".msg = "Removed compatibility module; import the canonical Springer DOM, markdown, or asset owner instead."
+"paper_fetch.quality.reason_codes".msg = "Removed compatibility module; import paper_fetch.reason_codes instead."
 "paper_fetch.providers._article_markdown".msg = "Removed compatibility module; import the canonical provider or extraction owner instead."
 "paper_fetch.providers._ams_html".msg = "Removed compatibility module; import the matching canonical AMS owner (_ams_dom, _ams_markdown, _ams_assets, _ams_authors, or _ams_references) instead."
 "paper_fetch.providers._html_access_signals".msg = "Removed compatibility module; import paper_fetch.extraction.html.signals or paper_fetch.quality owners instead."

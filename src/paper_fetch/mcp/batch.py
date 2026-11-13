@@ -153,7 +153,6 @@ def _batch_check_success_payload(
             "warnings": list(payload.get("warnings") or []),
             "source": None,
             "acquisition": None,
-            "source_trail": [],
             "trace": [],
             "token_estimate": None,
             "token_estimate_breakdown": None,

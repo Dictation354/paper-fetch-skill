@@ -4,7 +4,7 @@ from paper_fetch.providers._article_markdown_jats import (
     assess_jats_body_availability,
     parse_jats_xml,
 )
-from paper_fetch.quality.reason_codes import (
+from paper_fetch.reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 )

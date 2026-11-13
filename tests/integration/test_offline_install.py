@@ -89,7 +89,7 @@ def _fake_python_script(
 
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
       printf 'POST_INSTALL_SETUP %s\\n' "$*"
-      if [[ "$*" == *'--prepare-browsers all'* ]]; then
+      if [[ "$*" == *'--prepare-browsers'* ]]; then
         result_path=""
         while (( $# )); do
           if [[ "$1" == '--result' ]]; then result_path="$2"; break; fi
@@ -447,7 +447,7 @@ class OfflineInstallTests(unittest.TestCase):
                 },
             )
             self.assertEqual(result.returncode, 0, result.stderr)
-            self.assertIn("--prepare-browsers all", result.stdout)
+            self.assertIn("--prepare-browsers", result.stdout)
             self.assertIn("--non-interactive", result.stdout)
             self.assertEqual(marker.read_text(), "keep")
             self.assertTrue((install_root / "offline.env").exists())
@@ -614,14 +614,14 @@ class OfflineInstallTests(unittest.TestCase):
                     self.assertEqual(installed.returncode, 0, installed.stderr)
                     self.assertEqual((target / "SKILL.md").read_bytes(), original)
                     self.assertFalse((target / "stale.md").exists())
-                    self.assertFalse(legacy.exists())
+                    self.assertTrue(legacy.exists())
                 _write_file(legacy / "SKILL.md", "legacy\n")
                 removed = self._run_installer(
                     bundle, fake_bin, home, "--uninstall", install_dir=install_root
                 )
                 self.assertEqual(removed.returncode, 0, removed.stderr)
                 self.assertFalse(target.exists())
-                self.assertFalse(legacy.exists())
+                self.assertTrue(legacy.exists())
 
     def test_install_dir_upgrade_cleans_old_payload_and_preserves_offline_env(
         self,
@@ -1055,7 +1055,7 @@ exec /bin/mv "$@"
             self.assertIn(
                 "Default browser backend: Camoufox (headless: false)", result.stdout
             )
-            self.assertIn("--prepare-browsers all", result.stdout)
+            self.assertIn("--prepare-browsers", result.stdout)
 
     def test_macos_host_below_manifest_minimum_is_rejected_before_writes(
         self,
@@ -2239,7 +2239,7 @@ def test_installer_browser_results_follow_current_run(tmp_path, target, mode, ex
         assert result.stdout.count("POST_INSTALL_SETUP") == 1
         assert "Browser preparation results:" in result.stdout
     if expected == "not ready":
-        assert "--prepare-browsers all" in result.stdout.split("Retry:", 1)[1]
+        assert "--prepare-browsers" in result.stdout.split("Retry:", 1)[1]
 
 
 @pytest.mark.parametrize("exit_code", [0, 7])

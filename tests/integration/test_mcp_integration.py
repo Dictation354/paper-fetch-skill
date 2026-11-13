@@ -95,7 +95,7 @@ SERVER_SCRIPT = textwrap.dedent(
                 has_fulltext=True,
                 token_estimate=64,
                 warnings=[],
-                source_trail=["source:ok"],
+                events=["source:ok"],
                 token_estimate_breakdown=TokenEstimateBreakdown(abstract=16, body=48, refs=20),
             ),
             acquisition=AcquisitionProvenance(
@@ -113,7 +113,7 @@ SERVER_SCRIPT = textwrap.dedent(
             has_fulltext=True,
             acquisition=article.acquisition,
             warnings=[],
-            source_trail=["source:ok"],
+            events=["source:ok"],
             trace=[
                 trace_event("resolve", "doi_selected", "ok"),
                 trace_event(

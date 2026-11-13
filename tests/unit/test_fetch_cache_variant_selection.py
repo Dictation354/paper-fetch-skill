@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 import json
 from pathlib import Path
 from unittest import mock
@@ -214,8 +215,9 @@ def test_deleted_browser_state_cannot_read_state_backed_sidecar(tmp_path: Path) 
     use = BrowserStateCapabilityUse.from_path(
         provider="wiley",
         backend="camoufox",
-        storage_state_path=state,
+        profile_dir=state.parent,
     )
+    use = replace(use, content_sha256="1" * 64)
     private_scope = CapabilityScopeBuilder(env).add_browser_state_use(use).build()
     cache = FetchCache(tmp_path / "downloads", credential_scope=private_scope)
     request = FetchPaperRequest(

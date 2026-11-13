@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support._mcp_support import retained_view
+from paper_fetch.tracing import trace_event
+from paper_fetch.models import Quality
 import asyncio
 import logging
 import tempfile
@@ -82,14 +85,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
                 )
             )
 
+        self.assertEqual([content.type for content in fresh.content], ["text", "image"])
         self.assertEqual(
-            [content.type for content in fresh.content], ["text", "text", "image"]
+            [content.type for content in cached.content], ["text", "image"]
         )
-        self.assertEqual(
-            [content.type for content in cached.content], ["text", "text", "image"]
-        )
-        self.assertIsNone(fresh.structured_content["article"])
-        self.assertIsNone(cached.structured_content["article"])
+        self.assertNotIn("article", fresh.structured_content)
+        self.assertNotIn("article", cached.structured_content)
         self.assertEqual(fetch.call_count, 1)
 
     def test_inline_image_request_misses_old_sidecar_without_article(self) -> None:
@@ -430,9 +431,9 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             envelope = FetchEnvelope(
                 doi=article.doi,
                 source=article.source,
-                has_fulltext=True,
                 article=article,
                 markdown="# Example",
+                quality=Quality(has_fulltext=True),
             )
             request = FetchPaperRequest(
                 query="10.1000/example",
@@ -465,7 +466,10 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             payload = fetch_paper_payload(
                 query="10.1000/example",
                 modes=["markdown"],
-                strategy={"inline_image_budget": {"max_images": 1}},
+                strategy={
+                    "asset_profile": "none",
+                    "inline_image_budget": {"max_images": 1},
+                },
                 prefer_cache=True,
                 download_dir=download_dir,
                 deps=mcp_test_deps(
@@ -478,7 +482,9 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             )
 
         self.assertEqual(payload["doi"], "10.1000/example")
-        self.assertEqual(payload["markdown"], "# Example Article\n\nExample body.\n")
+        self.assertEqual(
+            retained_view(payload, "markdown"), "# Example Article\n\nExample body.\n"
+        )
         mocked_fetch.assert_not_called()
 
     def test_build_fetch_tool_result_keeps_article_hidden_while_attaching_budgeted_images(
@@ -510,14 +516,16 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             envelope = FetchEnvelope(
                 doi=article.doi,
                 source="elsevier_xml",
-                has_fulltext=True,
-                warnings=[],
-                source_trail=["source:ok"],
-                token_estimate=article.quality.token_estimate,
-                token_estimate_breakdown=article.quality.token_estimate_breakdown,
                 article=article,
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
+                quality=Quality(
+                    has_fulltext=True,
+                    warnings=[],
+                    token_estimate=article.quality.token_estimate,
+                    token_estimate_breakdown=article.quality.token_estimate_breakdown,
+                ),
+                trace=[trace_event("source", "ok", "info")],
             )
             request = FetchPaperRequest(
                 query="10.1000/example",
@@ -533,9 +541,9 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             )
 
         self.assertFalse(result.is_error)
-        self.assertEqual(result.structured_content["article"], None)
+        self.assertNotIn("article", result.structured_content)
         self.assertEqual(
-            [content.type for content in result.content], ["text", "text", "image"]
+            [content.type for content in result.content], ["text", "image"]
         )
 
     def test_build_fetch_tool_result_save_markdown_suppresses_inline_images(
@@ -558,14 +566,16 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             envelope = FetchEnvelope(
                 doi=article.doi,
                 source="elsevier_xml",
-                has_fulltext=True,
-                warnings=[],
-                source_trail=["source:ok"],
-                token_estimate=article.quality.token_estimate,
-                token_estimate_breakdown=article.quality.token_estimate_breakdown,
                 article=article,
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
+                quality=Quality(
+                    has_fulltext=True,
+                    warnings=[],
+                    token_estimate=article.quality.token_estimate,
+                    token_estimate_breakdown=article.quality.token_estimate_breakdown,
+                ),
+                trace=[trace_event("source", "ok", "info")],
             )
             request = FetchPaperRequest(
                 query="10.1000/example",
@@ -582,12 +592,12 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             )
 
         self.assertFalse(result.is_error)
-        self.assertIsNone(result.structured_content["markdown"])
-        self.assertIsNone(result.structured_content["article"])
+        self.assertNotIn("markdown", result.structured_content)
+        self.assertNotIn("article", result.structured_content)
         self.assertEqual(
             result.structured_content["metadata"]["title"], "Example Article"
         )
-        self.assertEqual([content.type for content in result.content], ["text"])
+        self.assertEqual([content.type for content in result.content], [])
 
     def test_build_fetch_tool_result_asset_profile_none_keeps_remote_markdown_without_inline_images(
         self,
@@ -609,14 +619,16 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             envelope = FetchEnvelope(
                 doi=article.doi,
                 source="elsevier_xml",
-                has_fulltext=True,
-                warnings=[],
-                source_trail=["source:ok"],
-                token_estimate=article.quality.token_estimate,
-                token_estimate_breakdown=article.quality.token_estimate_breakdown,
                 article=article,
                 markdown="# Example Article\n\n![Figure 1](https://example.test/figure-1.png)\n\nBody text.\n",
                 metadata=None,
+                quality=Quality(
+                    has_fulltext=True,
+                    warnings=[],
+                    token_estimate=article.quality.token_estimate,
+                    token_estimate_breakdown=article.quality.token_estimate_breakdown,
+                ),
+                trace=[trace_event("source", "ok", "info")],
             )
             request = FetchPaperRequest(
                 query="10.1000/example",
@@ -634,11 +646,11 @@ class McpLoggingInlineImageTests(unittest.TestCase):
         self.assertFalse(result.is_error)
         self.assertIn(
             "![Figure 1](https://example.test/figure-1.png)",
-            result.structured_content["markdown"],
+            retained_view(result.structured_content, "markdown"),
         )
-        self.assertEqual([content.type for content in result.content], ["text"])
+        self.assertEqual([content.type for content in result.content], [])
 
-    def test_build_fetch_tool_result_uses_provider_default_asset_profile_for_inline_images(
+    def test_build_fetch_tool_result_uses_explicit_body_asset_profile_for_inline_images(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -659,19 +671,24 @@ class McpLoggingInlineImageTests(unittest.TestCase):
             envelope = FetchEnvelope(
                 doi=article.doi,
                 source="science",
-                has_fulltext=True,
-                warnings=[],
-                source_trail=["source:ok"],
-                token_estimate=article.quality.token_estimate,
-                token_estimate_breakdown=article.quality.token_estimate_breakdown,
                 article=article,
                 markdown="# Example Article\n\nExample body.\n",
                 metadata=None,
+                quality=Quality(
+                    has_fulltext=True,
+                    warnings=[],
+                    token_estimate=article.quality.token_estimate,
+                    token_estimate_breakdown=article.quality.token_estimate_breakdown,
+                ),
+                trace=[trace_event("source", "ok", "info")],
             )
             request = FetchPaperRequest(
                 query="10.1000/example",
                 modes=["markdown"],
-                strategy={"inline_image_budget": {"max_images": 1}},
+                strategy={
+                    "asset_profile": "body",
+                    "inline_image_budget": {"max_images": 1},
+                },
             )
 
             result = build_fetch_tool_result(
@@ -680,7 +697,7 @@ class McpLoggingInlineImageTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         self.assertEqual(
-            [content.type for content in result.content], ["text", "text", "image"]
+            [content.type for content in result.content], ["text", "image"]
         )
 
     def test_resolve_paper_tool_serializes_resolved_query(self) -> None:

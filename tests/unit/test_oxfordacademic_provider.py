@@ -1,4 +1,5 @@
 from __future__ import annotations
+from dataclasses import replace
 import re
 from pathlib import Path
 import pytest
@@ -81,17 +82,19 @@ def test_html_asset_download_supports_none_body_and_all_profiles(
     ]
     raw_payload = RawFulltextPayload(
         provider="oxfordacademic",
-        source_url=source_url,
-        content_type="text/html",
-        body=b"<article>body</article>",
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=b"<article>body</article>",
+                markdown_text=f"# Example\n\n![Figure 1]({figure_url})",
+                merged_metadata={"doi": HTML_DOI, "title": "Example"},
+                extracted_assets=assets,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=b"<article>body</article>",
-            markdown_text=f"# Example\n\n![Figure 1]({figure_url})",
-            merged_metadata={"doi": HTML_DOI, "title": "Example"},
-            extracted_assets=assets,
         ),
     )
 
@@ -160,16 +163,18 @@ def test_html_preview_images_stay_inline_after_model_rendering(
     )
     raw_payload = RawFulltextPayload(
         provider="oxfordacademic",
-        source_url=source_url,
-        content_type="text/html",
-        body=b"<article>body</article>",
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=b"<article>body</article>",
+                markdown_text=markdown,
+                extracted_assets=assets,
+            ),
             source_url=source_url,
             content_type="text/html",
             body=b"<article>body</article>",
-            markdown_text=markdown,
-            extracted_assets=assets,
         ),
     )
     downloaded_assets = []

@@ -4,13 +4,15 @@ Historical article HTML keeps its unknown HTTP envelope. Newly captured satellit
 pages and images replay their actual response envelopes. No failure is injected.
 """
 
+from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
+
+
 import re
 from pathlib import Path
 
 from bs4 import BeautifulSoup
 
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers.springer import SpringerClient
 from tests.golden_criteria import golden_criteria_asset
 from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
@@ -30,16 +32,18 @@ def _assert_original_expandable_boxes(doi, headings, sentences, tmp_path):
     )
     assert len(boxes) == len(headings)
     assert [b.find("h3").get_text(" ", strip=True) for b in boxes] == headings
-    payload = springer_html.extract_html_payload(body.decode(), record["requested_url"])
+    payload = _springer_markdown.extract_html_payload(
+        body.decode(), record["requested_url"]
+    )
     markdown = payload["markdown_text"]
-    assets = springer_html.extract_html_assets(
+    assets = _springer_assets.extract_html_assets(
         body.decode(), record["requested_url"], asset_profile="body"
     )
     box_images = [a for a in assets if "Figa_HTML" in str(a.get("url", ""))]
     if not sentences:
         assert len(box_images) == 1
         assets = download_captured_images(doi, box_images, tmp_path)
-    metadata = springer_html.parse_html_metadata(body.decode(), record["requested_url"])
+    metadata = _springer_dom.parse_html_metadata(body.decode(), record["requested_url"])
     raw = RawFulltextPayload(
         provider="springer",
         content=ProviderContent(
@@ -49,7 +53,7 @@ def _assert_original_expandable_boxes(doi, headings, sentences, tmp_path):
             body=body,
             markdown_text=markdown,
             merged_metadata=metadata,
-            extracted_assets=springer_html.extract_html_assets(
+            extracted_assets=_springer_assets.extract_html_assets(
                 body.decode(), record["requested_url"], asset_profile="body"
             ),
             diagnostics={"extraction": payload},
@@ -105,7 +109,7 @@ def test_original_old_nature_table_pages_recover_all_four_real_images(tmp_path):
         assert len(image_body) > 40_000
         originals[image_record["requested_url"]] = image_body
     client = SpringerClient(FixtureHtmlTransport(responses), {})
-    metadata = springer_html.parse_html_metadata(body.decode(), url)
+    metadata = _springer_dom.parse_html_metadata(body.decode(), url)
     metadata.update(doi=doi, landing_page_url=url, fulltext_links=[])
     raw = client.fetch_raw_fulltext(doi, metadata)
     tables = [a for a in raw.content.extracted_assets if a["kind"] == "table"]
@@ -173,7 +177,7 @@ def test_original_science_pure_code_statement_survives_acknowledgments():
     html = body.decode()
     soup = BeautifulSoup(html, "lxml")
     assert (
-        springer_html.parse_html_metadata(html, record["requested_url"])["doi"] == doi
+        _springer_dom.parse_html_metadata(html, record["requested_url"])["doi"] == doi
     )
     statements = [
         p
@@ -188,7 +192,7 @@ def test_original_science_pure_code_statement_survives_acknowledgments():
         _words("R scripts that were used to process hydroclimate")
     )
     client = ScienceClient(FixtureHtmlTransport({}), {})
-    metadata = springer_html.parse_html_metadata(html, record["requested_url"])
+    metadata = _springer_dom.parse_html_metadata(html, record["requested_url"])
     markdown, extraction = client.extract_markdown(
         html, record["requested_url"], metadata=metadata
     )

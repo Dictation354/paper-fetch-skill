@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.transport import configure_stream_transport
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 import base64
 import pytest
 from pathlib import Path
@@ -73,6 +75,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
     def test_direct_then_browser_uses_direct_success_without_browser(self) -> None:
         url = "https://example.test/figure.png"
         transport = mock.Mock()
+        configure_stream_transport(transport)
         transport.request.return_value = {
             "status_code": 200,
             "headers": {"content-type": "image/png"},
@@ -109,6 +112,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             with self.subTest(provider=provider):
                 url = f"https://assets.example.test/{provider}-figure.png"
                 transport = mock.Mock()
+                configure_stream_transport(transport)
                 transport.request.return_value = {
                     "status_code": 200,
                     "headers": {"content-type": "image/png"},
@@ -162,6 +166,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         ):
             with self.subTest(direct_response=type(direct_response).__name__):
                 transport = mock.Mock()
+                configure_stream_transport(transport)
                 if isinstance(direct_response, Exception):
                     transport.request.side_effect = direct_response
                 else:
@@ -211,6 +216,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         blocked_host = "https://cdn.example.test"
         direct_host = "https://public.example.test"
         transport = mock.Mock()
+        configure_stream_transport(transport)
         direct_urls: list[str] = []
         direct_lock = threading.Lock()
 
@@ -320,6 +326,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             with self.subTest(status=status):
                 url = f"https://example.test/figure-{status}.png"
                 transport = mock.Mock()
+                configure_stream_transport(transport)
                 transport.request.side_effect = RequestFailure(
                     status,
                     f"HTTP {status}",
@@ -381,6 +388,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         full_url = "https://example.test/figure-large.png"
         preview_url = "https://example.test/figure-preview.png"
         transport = mock.Mock()
+        configure_stream_transport(transport)
 
         def direct_request(_method, url, **_kwargs):
             if url == full_url:
@@ -440,6 +448,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
     def test_direct_then_browser_uses_file_fetcher_for_supplementary(self) -> None:
         url = "https://example.test/supplement.mp4"
         transport = mock.Mock()
+        configure_stream_transport(transport)
         transport.request.side_effect = RequestFailure(
             403,
             "forbidden",
@@ -1403,7 +1412,13 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         }
 
         mocked_warm = mock.Mock(
-            return_value={"browser_final_url": "https://example.test/refreshed"}
+            return_value=BrowserWarmResult(
+                seed={"browser_final_url": "https://example.test/refreshed"},
+                changed=True,
+                accepted=True,
+                status=200,
+                reason="refreshed",
+            )
         )
         mocked_download_assets = mock.Mock(return_value=retry_body_result)
         deps = browser_workflow_deps(
@@ -1478,7 +1493,15 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             browser_cookies=[],
             active_seed_urls=["https://example.test/article"],
         )
-        mocked_warm = mock.Mock()
+        mocked_warm = mock.Mock(
+            return_value=BrowserWarmResult(
+                seed={},
+                changed=False,
+                accepted=False,
+                status=None,
+                reason="unavailable",
+            )
+        )
         mocked_download_assets = mock.Mock()
         deps = browser_workflow_deps(
             refresh_browser_context_seed=mocked_warm,
@@ -1520,6 +1543,7 @@ def test_wiley_split_preview_preserves_fidelity_and_full_failure(tmp_path):
     for status in (403, 404):
         for preview_ok in (True, False):
             transport = mock.Mock()
+            configure_stream_transport(transport)
             calls = []
 
             def request(
@@ -1623,6 +1647,7 @@ def test_asset_progress_counts_identity_once_across_candidates_and_resets_scope(
     bad = "https://example.test/preview.png"
     good = "https://example.test/full.png"
     transport = mock.Mock()
+    configure_stream_transport(transport)
     transport.request.side_effect = [
         {"status_code": 404, "headers": {}, "body": b"missing", "url": bad},
         {
@@ -1968,6 +1993,7 @@ def test_browser_supplement_failure_has_no_direct_fallback(provider, tmp_path):
 
     fetcher = ClickFailure()
     transport = mock.Mock()
+    configure_stream_transport(transport)
     plan = BrowserAssetDownloadPlan(
         article_id="10.5555/click",
         output_dir=tmp_path,

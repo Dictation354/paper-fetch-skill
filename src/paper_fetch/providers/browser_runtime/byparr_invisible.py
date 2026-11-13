@@ -121,9 +121,7 @@ def start(owner, binary, runtime):
     )
     original_state = owner.context.storage_state
 
-    def storage_state(*, path=None, **kwargs):
-        import json
-
+    def storage_state(**kwargs):
         state = original_state(**kwargs)
         origins = {}
         for page in owner.context.pages:
@@ -139,8 +137,6 @@ def start(owner, binary, runtime):
             except Exception:
                 continue
         state["origins"] = list(origins.values())
-        if path is not None:
-            Path(path).write_text(json.dumps(state))
         return state
 
     owner.context.storage_state = storage_state

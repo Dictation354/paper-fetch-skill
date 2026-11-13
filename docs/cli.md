@@ -59,7 +59,7 @@ paper-fetch fetch --target supplementary --query-file queries.txt --output-dir .
 
 材料范围沿用 provider 的明确补充区、Source Data、Extended Data 和多媒体定义，普通数据仓库链接不自动纳入。`--asset-profile` 的三个值不变，补充任务固定获取材料范围；`--include-refs`、`--max-tokens` 和正文资产要求仅用于 `paper`。
 
-主 JSON/Markdown 及另存 Markdown 索引使用 `<paper-stem>_supplementary`，附件沿用原资产目录规则。JSON 的 `target="supplementary"`、`has_fulltext=false`、`article=null`；`supplementary` 包含 `assets`、`asset_failures`、`discovery_complete`、`identity_verified` 和 `source_urls`。Markdown 只列材料名称、来源链接及已下载文件路径。`--artifact-mode none` 返回未归档清单，显式的主输出或索引保存仍遵循原 CLI 语义。
+主 JSON/Markdown 及另存 Markdown 索引使用 `<paper-stem>_supplementary`，附件沿用原资产目录规则。JSON 的 `target="supplementary"`、`quality.has_fulltext=false`、`article=null`；`supplementary` 包含 `assets`、`asset_failures`、`discovery_complete`、`identity_verified` 和 `source_urls`。Markdown 只列材料名称、来源链接及已下载文件路径。`--artifact-mode none` 返回未归档清单，显式的主输出或索引保存仍遵循原 CLI 语义。
 
 全部文件成功时 acceptance 为 `complete`，部分成功或仅发现未归档时为 `degraded`；全部下载失败保留具体原因。只有完整检查且没有材料时返回 `no_result` 和空清单，并使用非零退出码，批量 JSONL 的 acceptance 保留该结果。随正文下载补充材料继续用 `--target paper --asset-profile all`。
 
@@ -124,7 +124,7 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" \
 
 该文件包含一条与批量 JSONL 完全相同的 v2 record。主输出、额外 Markdown 和 manifest 都使用目标 path-scoped lock、唯一同目录 staging file、flush/fsync 与原子替换；取消 fence 与最终 replace 由同一临界区线性化。record 随后读取最终文件的 size、SHA256 和 mtime，因此 `output_artifacts` 不描述临时 `.part`。默认不覆盖时，相同字节视为幂等成功且不改写，不同字节明确冲突；显式 `--overwrite` 允许串行原子替换。manifest 路径不能与主输出或额外 Markdown 相同。单篇不能同时使用 `--query-file` 和 `--manifest`；批量结果使用 `--batch-results`。
 
-JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并增量输出 `acquisition.provider/route/representation/transport/fallback_used`。例如 Wiley TDM PDF 的 `source` 仍是 `wiley_browser`，精确路线另记为 `wiley/tdm_pdf/pdf/api`。若旧 Markdown 没有该块仍可读取，值视为 `null`；新抓取无法确认精确路线时也保持 `null`，对应 provenance 不会被判为 complete。
+JSON、manifest v2 与 Markdown YAML front matter 都保留原有 `source`，并增量输出 `acquisition.provider/route/representation/transport/fallback_used`。例如 Wiley TDM PDF 的 `source` 仍是 `wiley_browser`，精确路线另记为 `wiley/tdm_pdf/pdf/api`。当前结构要求保留该字段；抓取无法确认精确路线时值为 `null`，对应 provenance 不会被判为 complete。
 
 ## 静态诊断、真实预检与人工认证
 
@@ -149,7 +149,7 @@ HTTP 路线和静态诊断不触发准备。组件安装、渠道与失败重试
 
 浏览器 provider 共用受管 Byparr：Windows/Linux x64 使用 Invisible，macOS/ARM 使用
 Camoufox。core 安装需补充 `[browser]` 或 `[full]`；后端兼容值、binary、目录覆盖和
-原生/JSON 状态选择见 [browser-backends.md](browser-backends.md)。
+原生 profile 复用见 [browser-backends.md](browser-backends.md)。
 
 需要建立或更新合法登录、验证状态时运行：
 
@@ -176,16 +176,14 @@ paper-fetch browser-preflight --provider wiley --provider science --timeout-ms 1
 预检结果不会作为后续 fetch 的页面缓存或 route hint。
 
 MCP `browser_preflight` 使用同一核心，无参数时检查全部 browser provider；可指定
-`provider`、`test_url`、`timeout_ms`、`browser_user_agent`、`storage_state_path`、
-`save_storage_state` 和 `detail="full|compact"`。`test_url` / `storage_state_path` 要求
+`provider`、`test_url`、`timeout_ms`、`browser_user_agent`、`profile_dir` 和 `detail="full|compact"`。`test_url` / `profile_dir` 要求
 显式单 provider。compact 项仅保留
 `provider/status/reason_code/stage/message/next_action`。状态为
 `ready/challenge/auth_required/network_timeout/extraction_error/runtime_error/cancelled`；
 单项失败不抹掉已完成结果，取消保留已完成项并停止后续调度。
 
-预检会访问网络、准备组件并默认导出过滤后的 JSON；`save_storage_state=false` 只禁止
-JSON 导出，原生目录仍可更新。原生目录与 JSON 不自动迁移，已有目录的初始化、显式
-JSON 导入、目录排他锁和 auth 回放统一见[状态模式](browser-backends.md#状态模式)。
+预检会访问网络、准备组件，并复用与 auth、fetch 相同的原生 profile。默认目录为
+`publisher-browser-profiles/<provider>/`，也支持显式目录。目录排他锁与 auth 回放见[原生 profile](browser-backends.md)。
 保存状态只复用已有访问权限，站点 session 仍可能过期。支持的 Cloudflare interstitial
 由 Byparr 在当前 context 和预算内处理；需登录或人工验证时，结果提示显式运行 `auth`。
 

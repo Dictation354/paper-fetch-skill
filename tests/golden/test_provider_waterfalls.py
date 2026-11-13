@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 import urllib.parse
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import (
@@ -31,8 +34,12 @@ def _payload_availability_diagnostics(
     return dict(raw_payload.content.diagnostics.get("availability_diagnostics") or {})
 
 
-def _payload_source_trail(raw_payload: RawFulltextPayload) -> list[str]:
-    return [event.marker() for event in raw_payload.trace if event.marker()]
+def _payload_events(raw_payload: RawFulltextPayload) -> list[str]:
+    return [
+        trace_event(event.stage, event.component, event.outcome)
+        for event in raw_payload.trace
+        if trace_event(event.stage, event.component, event.outcome)
+    ]
 
 
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
@@ -64,15 +71,17 @@ class PublisherWaterfallTests(unittest.TestCase):
         xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
         official_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
+            content=replace(
+                ProviderContent(
+                    route_kind="official",
+                    source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
+                    content_type="text/xml",
+                    body=xml_body,
+                    reason="Downloaded full text from the official Elsevier API.",
+                ),
                 source_url="https://api.elsevier.com/content/article/doi/10.1016%2Fj.rse.2025.114648",
                 content_type="text/xml",
                 body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
             ),
         )
         client = elsevier_provider.ElsevierClient(
@@ -104,15 +113,17 @@ class PublisherWaterfallTests(unittest.TestCase):
         xml_body = (FIXTURE_DIR / ELSEVIER_SAMPLE.fixture_name).read_bytes()
         raw_payload = RawFulltextPayload(
             provider="elsevier",
-            source_url="https://api.elsevier.com/content/article/doi/example",
-            content_type="text/xml",
-            body=xml_body,
-            content=ProviderContent(
-                route_kind="official",
+            content=replace(
+                ProviderContent(
+                    route_kind="official",
+                    source_url="https://api.elsevier.com/content/article/doi/example",
+                    content_type="text/xml",
+                    body=xml_body,
+                    reason="Downloaded full text from the official Elsevier API.",
+                ),
                 source_url="https://api.elsevier.com/content/article/doi/example",
                 content_type="text/xml",
                 body=xml_body,
-                reason="Downloaded full text from the official Elsevier API.",
             ),
         )
         client = elsevier_provider.ElsevierClient(
@@ -169,13 +180,18 @@ class PublisherWaterfallTests(unittest.TestCase):
 
         mocked_pdf.assert_not_called()
         self.assertEqual(_payload_route(raw_payload), "official")
-        self.assertEqual(raw_payload.source_url, f"{pii_url}?view=FULL")
-        self.assertIn("fulltext:elsevier_xml_fail", _payload_source_trail(raw_payload))
+        self.assertEqual(raw_payload.content.source_url, f"{pii_url}?view=FULL")
         self.assertIn(
-            "fulltext:elsevier_xml_pii_ok", _payload_source_trail(raw_payload)
+            trace_facts(trace_event("fulltext", "elsevier_xml", "fail")),
+            trace_facts(_payload_events(raw_payload)),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "elsevier_xml_pii", "ok")),
+            trace_facts(_payload_events(raw_payload)),
         )
         self.assertNotIn(
-            "fulltext:elsevier_pdf_api_ok", _payload_source_trail(raw_payload)
+            trace_facts(trace_event("fulltext", "elsevier_pdf_api", "ok")),
+            trace_facts(_payload_events(raw_payload)),
         )
         self.assertEqual(
             [str(call["url"]) for call in transport.calls], [doi_url, pii_url]

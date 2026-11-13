@@ -1,5 +1,8 @@
 """Minimal contracts for the 2026-09-19 audit fixes; no full-paper inputs."""
 
+from paper_fetch.models import Quality
+
+
 from bs4 import BeautifulSoup
 
 from paper_fetch.models import article_from_markdown
@@ -199,7 +202,10 @@ def test_science_missing_reference_flag_reaches_acceptance():
     assert any("R55" in warning for warning in article.quality.warnings)
     acceptance = evaluate_fetch_acceptance(
         FetchEnvelope(
-            doi=doi, source=article.source, article=article, has_fulltext=True
+            doi=doi,
+            source=article.source,
+            article=article,
+            quality=Quality(has_fulltext=True),
         ),
         asset_profile="none",
     )

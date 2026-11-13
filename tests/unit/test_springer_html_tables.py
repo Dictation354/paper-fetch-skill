@@ -1,8 +1,9 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.providers import _springer_assets
 import tempfile
 import unittest
 from pathlib import Path
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
@@ -53,7 +54,7 @@ NATURE_HEADER_SVG_URL = (
 )
 
 
-class FakeTransport:
+class FakeTransport(RecordedStreamTransport):
     def __init__(self, responses: dict[str, dict[str, object] | Exception]) -> None:
         self.responses = responses
 
@@ -121,9 +122,6 @@ class SpringerHtmlTableTests(unittest.TestCase):
         client = springer_provider.SpringerClient(transport=transport, env={})
         raw_payload = springer_provider.RawFulltextPayload(
             provider="springer",
-            source_url=SPRINGER_NATURE_LANDING_URL,
-            content_type="text/html",
-            body=b"<html><body><article><p>Figure 1 summarizes the basin response.</p></article></body></html>",
             content=springer_provider.ProviderContent(
                 route_kind="html",
                 source_url=SPRINGER_NATURE_LANDING_URL,
@@ -183,18 +181,18 @@ class SpringerHtmlTableTests(unittest.TestCase):
     ) -> None:
         self.assertIn(
             "supplementary information",
-            springer_html.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
+            _springer_assets.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
         )
         self.assertIn(
             "extended data figures and tables",
-            springer_html.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
+            _springer_assets.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
         )
         self.assertNotIn(
-            "references", springer_html.SPRINGER_SUPPLEMENTARY_SECTION_TITLES
+            "references", _springer_assets.SPRINGER_SUPPLEMENTARY_SECTION_TITLES
         )
         self.assertNotIn(
             "acknowledgements",
-            springer_html.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
+            _springer_assets.SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
         )
 
     def _article_with_inline_table(
@@ -784,9 +782,6 @@ def test_nature_body_all_scope_downloads_and_missing_evidence(tmp_path):
                 FetchEnvelope(
                     doi=metadata["doi"],
                     source=article.source,
-                    has_fulltext=True,
-                    content_kind="fulltext",
-                    has_abstract=True,
                     article=article,
                     quality=article.quality,
                     trace=payload.trace,

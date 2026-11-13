@@ -17,7 +17,7 @@ from .types import (
 
 
 def _backend(name: str) -> BrowserBackend:
-    if name in {"byparr", "camoufox"}:
+    if name == "byparr":
         from .backends.byparr import DEFAULT_BYPARR_BACKEND
 
         return DEFAULT_BYPARR_BACKEND
@@ -40,13 +40,11 @@ def load_runtime_config(
     *,
     provider: str,
     doi: str,
-    require_storage_state: bool = False,
 ) -> BrowserRuntimeConfig:
     return _backend(selected_backend(env, provider=provider)).load_runtime_config(
         env,
         provider=provider,
         doi=doi,
-        require_storage_state=require_storage_state,
     )
 
 
@@ -111,7 +109,3 @@ def warm_browser_context(
         runtime_context=runtime_context,
         lightweight=lightweight,
     )
-
-
-def storage_state_path(config: BrowserRuntimeConfig):
-    return _backend(config.backend).storage_state_path(config)

@@ -1,6 +1,6 @@
 from __future__ import annotations
-from tests.support.asset_budget import _FakeStreamResponse
 from dataclasses import replace
+from tests.support.asset_budget import _FakeStreamResponse
 from io import BytesIO
 from pathlib import Path
 import gzip
@@ -1045,7 +1045,6 @@ _SMALL_PNG = (
 class _SessionReuseTransport:
     def __init__(self) -> None:
         self.cancelled = False
-        self._streaming_ready = True
         self.seed_urls: list[str] = []
 
     def request(self, method: str, url: str, **_kwargs: object) -> dict[str, object]:

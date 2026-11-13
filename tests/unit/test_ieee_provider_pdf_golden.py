@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from paper_fetch.providers import _ieee_metadata
 from tests.support._ieee_provider_support import *
 # ruff: noqa: F403,F405
@@ -142,14 +144,27 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
         self.assertTrue(raw_payload.content.needs_local_copy)
         self.assertEqual(article.source, "ieee_pdf")
         self.assertEqual(article.quality.content_kind, "fulltext")
-        self.assertIn("fulltext:ieee_html_fail", article.quality.source_trail)
-        self.assertIn("fulltext:ieee_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_html", "fail")),
+            trace_facts(article.trace),
+        )
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
         artifacts = client.describe_artifacts(raw_payload)
         self.assertFalse(artifacts.allow_related_assets)
         self.assertTrue(artifacts.text_only)
         self.assertIn(
-            "download:ieee_assets_skipped_text_only",
-            [event.marker() for event in artifacts.skip_trace],
+            trace_facts(
+                trace_event("download", "ieee_assets_skipped_text_only", "info")
+            ),
+            trace_facts(
+                [
+                    trace_event(event.stage, event.component, event.outcome)
+                    for event in artifacts.skip_trace
+                ]
+            ),
         )
         candidates = mocked_pdf.call_args.args[1]
         self.assertEqual(
@@ -257,7 +272,10 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
         self.assertEqual(article.source, "ieee_pdf")
-        self.assertIn("fulltext:ieee_pdf_fallback_ok", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_pdf_fallback", "ok")),
+            trace_facts(article.trace),
+        )
         diagnostics = raw_payload.content.diagnostics["pdf_fallback"]
         self.assertEqual(diagnostics["fetcher"], "camoufox_browser")
         self.assertEqual(diagnostics["browser_pdf_response"], "ieee_stamp_iframe")
@@ -270,7 +288,6 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
         envelope = FetchEnvelope(
             doi=doi,
             source=article.source,
-            has_fulltext=article.quality.has_fulltext,
             article=article,
             quality=article.quality,
             trace=raw_payload.trace,
@@ -364,7 +381,10 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
         self.assertEqual(raw_payload.content.route_kind, "abstract_only")
         self.assertEqual(article.source, "ieee_html")
         self.assertEqual(article.quality.content_kind, "abstract_only")
-        self.assertIn("fulltext:ieee_pdf_fail", article.quality.source_trail)
+        self.assertIn(
+            trace_facts(trace_event("fulltext", "ieee_pdf", "fail")),
+            trace_facts(article.trace),
+        )
         self.assertIn("Legacy IEEE abstract only.", article.metadata.abstract)
         diagnostics = raw_payload.content.diagnostics["pdf_fallback"]
         self.assertEqual(diagnostics["kind"], "publisher_access_challenge")

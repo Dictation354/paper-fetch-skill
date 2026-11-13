@@ -141,7 +141,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn('" -Action Install', script)
         self.assertIn("RestoreOfflineEnv;\n    RunPostInstallHelper;", script)
         self.assertIn("RunPostInstallHelper;\n    PrepareBrowsers;", script)
-        self.assertIn("--prepare-browsers all --non-interactive --result", script)
+        self.assertIn("--prepare-browsers --non-interactive --result", script)
         self.assertIn("browser-setup-results.txt", script)
         self.assertIn("Browser preparation: ready", script)
         self.assertIn("Browser preparation: not ready", script)

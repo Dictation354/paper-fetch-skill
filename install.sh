@@ -121,7 +121,7 @@ fi
 if [ "$INSTALL_HEAVY" = "1" ]; then
     if [ "$SKIP_BROWSER_PREPARE" = "0" ]; then
         log "Core installation complete; preparing supported browsers"
-        BROWSER_PREPARE_ARGS=(--install-root "$REPO_DIR" --prepare-browsers all)
+        BROWSER_PREPARE_ARGS=(--install-root "$REPO_DIR" --prepare-browsers)
         if [ -n "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}" ]; then
             BROWSER_PREPARE_ARGS+=(--env-file "${PAPER_FETCH_ENV_FILE:-$DEFAULT_ENV_FILE}")
         fi

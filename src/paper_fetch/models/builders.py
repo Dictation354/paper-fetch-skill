@@ -12,7 +12,7 @@ from ..markdown.citations import normalize_inline_citation_markdown
 from ..publisher_identity import normalize_doi
 from ..reason_codes import FULLTEXT
 from ..quality.access_boundary import confirmed_paywall, paywall_failure
-from ..tracing import TraceEvent, source_trail_from_trace, trace_from_markers
+from ..tracing import TraceEvent
 from ..utils import normalize_text, safe_text
 from .markdown import (
     NUMBERED_REFERENCE_PATTERN,
@@ -215,12 +215,12 @@ def metadata_only_article(
     metadata: Mapping[str, Any],
     doi: str | None = None,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     article_metadata = build_metadata(metadata)
     references = build_references(metadata.get("references"))
-    effective_trace = list(trace or trace_from_markers(source_trail))
+    effective_trace = [*(events or []), *(trace or [])]
     token_estimate_breakdown = build_token_estimate_breakdown(
         abstract_text=article_metadata.abstract,
         sections=[],
@@ -234,12 +234,12 @@ def metadata_only_article(
         sections=[],
         references=references,
         assets=[],
+        trace=effective_trace,
         quality=Quality(
             has_fulltext=False,
             token_estimate=token_estimate,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
@@ -332,7 +332,7 @@ def article_from_structure(
     conversion_notes: list[str],
     references: list[Reference] | None = None,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
     availability_diagnostics: Mapping[str, Any] | None = None,
     semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
@@ -345,7 +345,7 @@ def article_from_structure(
         metadata, availability_diagnostics, abstract_sections, abstract_lines
     )
     article_metadata = build_metadata(metadata)
-    effective_trace = list(trace or trace_from_markers(source_trail))
+    effective_trace = [*(events or []), *(trace or [])]
     explicit_abstract_sections = _abstract_sections_from_blocks(
         abstract_sections
     ) or _abstract_sections_from_lines(abstract_lines)
@@ -425,13 +425,13 @@ def article_from_structure(
         sections=sections,
         references=normalized_references,
         assets=assets,
+        trace=effective_trace,
         quality=Quality(
             has_fulltext=content_kind == FULLTEXT,
             token_estimate=token_estimate,
             content_kind=content_kind,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )
@@ -466,7 +466,7 @@ def article_from_markdown(
     section_hints: Sequence[SectionHint | Mapping[str, Any]] | None = None,
     assets: Sequence[Mapping[str, Any]] | None = None,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
     availability_diagnostics: Mapping[str, Any] | None = None,
     semantic_losses: SemanticLosses | Mapping[str, Any] | None = None,
@@ -477,7 +477,7 @@ def article_from_markdown(
     is_pdf = pdf_representation or source.endswith("_pdf")
     _check_access_diagnostics(metadata, availability_diagnostics, abstract_sections)
     article_metadata = build_metadata(metadata)
-    effective_trace = list(trace or trace_from_markers(source_trail))
+    effective_trace = [*(events or []), *(trace or [])]
     normalized_assets = [
         _asset_from_entry(
             item,
@@ -573,13 +573,13 @@ def article_from_markdown(
         sections=sections,
         references=references,
         assets=normalized_assets,
+        trace=effective_trace,
         quality=Quality(
             has_fulltext=content_kind == FULLTEXT,
             token_estimate=token_estimate,
             content_kind=content_kind,
             has_abstract=bool(article_metadata.abstract),
             warnings=list(warnings or []),
-            source_trail=list(source_trail or source_trail_from_trace(effective_trace)),
             token_estimate_breakdown=token_estimate_breakdown,
         ),
     )

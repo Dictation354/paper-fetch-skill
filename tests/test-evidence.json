@@ -4763,6 +4763,34 @@
         "scope": "真实线程下浏览器会话复用、出版社切换、child 隔离及取消后的关闭顺序；浏览器创建使用边界 mock。",
         "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
       }
+    },
+    "tests/unit/test_mcp_content_delivery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "MCP content snapshot pagination, lifecycle, alias sharing and presentation contracts",
+        "reason": "Synthetic text and mocked fetch boundaries isolate delivery from provider acquisition."
+      }
+    },
+    "tests/integration/test_mcp_content_delivery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real MCP stdio delivery, snapshot files and cache reuse",
+        "reason": "Synthetic provider data exercises actual process, pagination, persistence and saved-file contracts."
+      }
+    },
+    "tests/unit/test_native_models.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "provider payloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。",
+        "template_gap": "该模块手写片段／注入分支没有逐用例绑定真实出版社模板；真实覆盖仅由 content 登记承担，本轮不补采。",
+        "template_review": {
+          "status": "mechanism",
+          "scope": "typed content 字段投影、序列化、replace、trace 和 artifact store 约定；纯数据契约。",
+          "evidence_tests": [],
+          "remaining": []
+        }
+      }
     }
   }
 }

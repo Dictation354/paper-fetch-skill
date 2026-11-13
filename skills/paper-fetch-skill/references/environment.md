@@ -23,7 +23,7 @@
 
 ## Browser backend 与 storage-state
 
-全部 browser provider 使用锁定 Byparr 3.1.1；Windows/Linux x64 的底层引擎为 Invisible，其余平台保留 Camoufox。`PAPER_FETCH_<PROVIDER>_BROWSER_BACKEND=auto|camoufox|byparr` 都进入组合链路，旧 camoufox 值为兼容别名，仍影响既有状态模式绑定。
+所有 browser provider 固定使用 Byparr 和所选平台引擎，平台事实见 catalog；统一使用原生 profile。
 
 | 环境变量 | 作用 |
 | --- | --- |
@@ -31,13 +31,12 @@
 | PAPER_FETCH_BROWSER_BINARY_PATH | 当前平台引擎 executable 覆盖，须匹配 Invisible seal 或 Camoufox metadata。 |
 | PAPER_FETCH_BROWSER_PROFILE_DIR / PAPER_FETCH_BROWSER_USER_DATA_DIR | provider-scoped 原生状态目录覆盖。 |
 | PAPER_FETCH_BROWSER_USER_AGENT | publisher direct UA，独立于 API UA；Camoufox 忽略以保持指纹一致。 |
-| PAPER_FETCH_WILEY_STORAGE_STATE_JSON / PAPER_FETCH_WILEY_PROFILE_DIR | Wiley 状态/profile 覆盖。 |
 
-原 Camoufox 配置保留 `<provider>-camoufox/` 原生目录及显式覆盖；Windows/Linux x64 上 PNAS/Elsevier 原有 auto|byparr 保留 `<provider>-byparr/` 过滤后 JSON，新开放平台使用原生目录。不自动迁移或合并状态。旧 flaresolverr 值及 PAPER_FETCH_CHROME_BINARY_PATH 已移除，改用支持的后端值和 PAPER_FETCH_BROWSER_BINARY_PATH。
+默认目录为 `publisher-browser-profiles/<provider>/`；显式 profile / user data 目录覆盖默认目录。所有平台只使用原生 profile。
 
-同出版社一次抓取的各 browser 阶段复用 context，HTTP 仍可并行。原生目录是认证来源，JSON 是快照：默认 JSON 只初始化尚无原生状态的目录，显式 JSON 内容变化按摘要导入一次。`save_storage_state=false` 仅禁止 JSON 导出，不禁止原生目录更新。同目录进程间排队遵守取消和期限；归属冲突、外部占用和超时如实报告，不删除 Firefox 锁或静默回退临时会话。
+同出版社一次抓取的各 browser 阶段复用 context，HTTP 仍可并行。认证、预检和抓取共用原生 profile 目录；默认路径为 `publisher-browser-profiles/<provider>/`，可显式配置目录。凭证 scope 绑定实际使用目录及可信摘要。同目录进程间排队遵守取消和期限；归属冲突、外部占用和超时如实报告，不删除 Firefox 锁或静默回退临时会话。
 
-Byparr 自动处理支持的 Cloudflare interstitial。实际 fetch/preflight 仍返回 challenge/auth_required，或用户要求认证时，用 `paper-fetch auth <provider>` 进入用户交互验证。auth 后按正式抓取窗口配置重开同目录核验，JSON 导出失败单独报告；登录、付费和其他访问控制不因 runtime 准备而获得授权。预检参数见[工具契约](tool-contract.md#browser-preflight-contract)。
+Byparr 自动处理支持的 Cloudflare interstitial。实际 fetch/preflight 仍返回 challenge/auth_required，或用户要求认证时，用 `paper-fetch auth <provider>` 进入用户交互验证。auth 后按正式抓取窗口配置重开同目录核验；登录、付费和其他访问控制不因 runtime 准备而获得授权。预检参数见[工具契约](tool-contract.md#browser-preflight-contract)。
 
 ## 运行时准备与授权
 
@@ -48,7 +47,7 @@ MCP/CLI/library 进入所选 browser 时按需准备 runtime；纯 HTTP 和 cach
 - Camoufox 使用锁定 Python 包，默认 official/prerelease 选择当前平台最新兼容 browser；official/stable 仅正式版。显式渠道、版本 pin、SHA 和 executable 优先，不自动升级 Python 包。
 - 更新失败但本地仍有效时继续使用；无可用引擎则报告准备失败。进度和错误写 stderr，取消继续传播。读取 backend/code/stage/runtime_state/version/diagnostic_path 定位，不把组件故障报成 publisher 拒绝。
 
-离线环境重新准备命令：用安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers all`，也可选 camoufox 或 byparr；`--prepare-byparr` 等价于后者。缺系统依赖时按诊断指引处理，额外环境修改沿用任务已有授权。安装准备失败保留核心安装。
+离线环境重新准备命令：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers`，准备所选平台引擎及 Byparr。
 
 ## 图片与资产工具
 

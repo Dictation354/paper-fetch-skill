@@ -31,7 +31,6 @@ from ..browser_runtime import (
     BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
     BrowserRuntimeFailure,
-    BrowserWarmResult,
     merge_browser_context_seeds,
 )
 from .assets import (
@@ -179,10 +178,9 @@ def retry_failed_browser_assets(
         browser_context_seed=recovery.browser_context_seed,
         runtime_context=recovery.runtime_context,
     )
-    if isinstance(refreshed_seed, BrowserWarmResult):
-        if not refreshed_seed.accepted or not refreshed_seed.changed:
-            return previous
-        refreshed_seed = refreshed_seed.seed
+    if not refreshed_seed.accepted or not refreshed_seed.changed:
+        return previous
+    refreshed_seed = refreshed_seed.seed
     retry_result = _run_browser_asset_download_attempt(
         plan,
         recovery,

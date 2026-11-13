@@ -48,7 +48,7 @@ from ..provider_catalog import (
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
 from ._payloads import build_provider_payload
@@ -777,7 +777,7 @@ class FrontiersClient(ProviderClient):
             },
             reason="Downloaded full text from the Frontiers public JATS XML route.",
             extracted_assets=normalized_assets,
-            trace_markers=[fulltext_marker(self.name, "ok", route="xml")],
+            trace_events=[fulltext_event(self.name, "ok", route="xml")],
         )
 
     def _fetch_pdf_payload(
@@ -838,9 +838,9 @@ class FrontiersClient(ProviderClient):
                 *pdf_fetch_result_warnings(pdf_result),
                 f"Frontiers XML route was not usable ({xml_failure_message}); used PDF fallback.",
             ],
-            trace_markers=[
-                fulltext_marker(self.name, "fail", route="xml"),
-                fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+            trace_events=[
+                fulltext_event(self.name, "fail", route="xml"),
+                fulltext_event(self.name, "ok", route=PDF_FALLBACK),
             ],
             needs_local_copy=True,
         )
@@ -937,10 +937,10 @@ class FrontiersClient(ProviderClient):
             combined.code,
             "Frontiers full-text routes were not usable. " + combined.message,
             warnings=combined.warnings,
-            source_trail=[
-                fulltext_marker(self.name, "fail", route="xml"),
-                fulltext_marker(self.name, "fail", route="pdf"),
-                *combined.source_trail,
+            trace=[
+                fulltext_event(self.name, "fail", route="xml"),
+                fulltext_event(self.name, "fail", route="pdf"),
+                *combined.trace,
             ],
         )
 
@@ -1100,7 +1100,7 @@ class FrontiersClient(ProviderClient):
             normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
             or normalize_doi(doi)
             or normalize_text(str(metadata.get("title") or ""))
-            or raw_payload.source_url
+            or raw_payload.content.source_url
         )
         concurrency = resolve_asset_download_concurrency(context.env)
         results: list[Mapping[str, Any]] = []
@@ -1201,7 +1201,7 @@ class FrontiersClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_metadata = dict(
             merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -1213,8 +1213,7 @@ class FrontiersClient(ProviderClient):
             content.route_kind if content is not None else ""
         ).lower()
         trace = list(
-            raw_payload.trace
-            or trace_from_markers([fulltext_marker(self.name, "ok", route="xml")])
+            raw_payload.trace or [fulltext_event(self.name, "ok", route="xml")]
         )
         warnings = list(raw_payload.warnings)
         if asset_failures:
@@ -1310,9 +1309,7 @@ class FrontiersClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("frontiers_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("frontiers_assets_skipped_text_only")]
             if not pdf_assets
             else [],
         )

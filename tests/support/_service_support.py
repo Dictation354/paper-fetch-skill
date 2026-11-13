@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import TraceEvent
+from dataclasses import replace
 import logging
 import tempfile
 import unittest
@@ -17,7 +19,7 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.providers.wiley import WileyClient
-from paper_fetch.tracing import trace_from_markers
+from paper_fetch.tracing import merge_trace
 from paper_fetch.utils import choose_public_landing_page_url
 from paper_fetch.workflow.fulltext import _provider_fetch_result
 from tests.support._logging_support import RecordCaptureHandler
@@ -41,26 +43,28 @@ def _typed_payload(
     markdown_text: str | None = None,
     reason: str | None = None,
     warnings: list[str] | None = None,
-    source_trail: list[str] | None = None,
+    events: list[TraceEvent] | None = None,
     needs_local_copy: bool = False,
 ) -> RawFulltextPayload:
     return RawFulltextPayload(
         provider=provider,
-        source_url=source_url,
-        content_type=content_type,
-        body=body,
-        content=ProviderContent(
-            route_kind=route_kind,
+        content=replace(
+            ProviderContent(
+                route_kind=route_kind,
+                source_url=source_url,
+                content_type=content_type,
+                body=body,
+                markdown_text=markdown_text,
+                reason=reason,
+                needs_local_copy=needs_local_copy,
+            ),
             source_url=source_url,
             content_type=content_type,
             body=body,
-            markdown_text=markdown_text,
-            reason=reason,
             needs_local_copy=needs_local_copy,
         ),
         warnings=list(warnings or []),
-        trace=trace_from_markers(list(source_trail or [])),
-        needs_local_copy=needs_local_copy,
+        trace=list(events or []),
     )
 
 

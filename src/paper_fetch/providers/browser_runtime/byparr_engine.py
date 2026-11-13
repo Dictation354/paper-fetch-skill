@@ -3,19 +3,7 @@
 from __future__ import annotations
 
 import importlib
-import platform
-import sys
-
-
-def engine_name() -> str:
-    # Invisible's sealed release publishes these two native legs. Keep the
-    # established Camoufox runtime on macOS and ARM rather than removing support.
-    if sys.platform in {"linux", "win32"} and platform.machine().lower() in {
-        "amd64",
-        "x86_64",
-    }:
-        return "invisible"
-    return "camoufox"
+from paper_fetch.browser_runtime_policy import engine_name as engine_name
 
 
 def playwright_api(*, asynchronous: bool = False):

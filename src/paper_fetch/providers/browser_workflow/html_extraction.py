@@ -40,12 +40,11 @@ from ...page_diagnostics import (
     capture_page_diagnostic,
     is_empty_article_shell,
 )
-from ...tracing import fulltext_marker, trace_from_markers
+from ...tracing import fulltext_event
 from ...utils import normalize_text
 from ..browser_runtime import (
     BrowserFetchedHtml,
     BrowserHtmlFetchOptions,
-    BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     merge_browser_context_seeds,
 )
@@ -327,81 +326,6 @@ def _empty_shell_retry_decision(
     return decision
 
 
-def _commit_accepted_storage_state(
-    html_result: BrowserFetchedHtml,
-    runtime: BrowserRuntimeConfig,
-    *,
-    context: RuntimeContext | None = None,
-) -> tuple[BrowserFetchedHtml, list[str]]:
-    """Commit staged state only after provider HTML extraction succeeded."""
-
-    stage = html_result.staged_storage_state
-    diagnostics = dict(html_result.diagnostics or {})
-    runtime_trace = (
-        dict(diagnostics.get("browser_runtime_trace") or {})
-        if isinstance(diagnostics.get("browser_runtime_trace"), Mapping)
-        else {}
-    )
-    if stage is not None:
-        if not runtime.persist_storage_state:
-            runtime_trace["storage_state_save"] = {
-                "attempted": False,
-                "staged": False,
-                "saved": False,
-                "path": None,
-                "reason": "provider_runtime_fingerprint_boundary",
-            }
-            diagnostics["browser_runtime_trace"] = runtime_trace
-            return (
-                replace(
-                    html_result,
-                    diagnostics=diagnostics,
-                    staged_storage_state=None,
-                ),
-                [],
-            )
-        from ..browser_runtime.paths import commit_staged_storage_state
-
-        save_result = commit_staged_storage_state(
-            stage,
-            runtime,
-            runtime_context=context,
-        )
-        runtime_trace["storage_state_save"] = save_result
-        diagnostics["browser_runtime_trace"] = runtime_trace
-        warnings = (
-            []
-            if save_result.get("saved")
-            else [
-                "Provider HTML was accepted, but the staged browser storage state "
-                f"could not be saved ({save_result.get('reason') or 'save_failed'})."
-            ]
-        )
-        return (
-            replace(
-                html_result,
-                diagnostics=diagnostics,
-                staged_storage_state=None,
-            ),
-            warnings,
-        )
-
-    storage_result = runtime_trace.get("storage_state_save")
-    if (
-        runtime.persist_storage_state
-        and isinstance(storage_result, Mapping)
-        and not storage_result.get("saved")
-    ):
-        return (
-            replace(html_result, staged_storage_state=None),
-            [
-                "Provider HTML was accepted, but browser storage state was not "
-                f"staged ({storage_result.get('reason') or 'stage_failed'})."
-            ],
-        )
-    return replace(html_result, staged_storage_state=None), []
-
-
 __all__ = [
     "_FAST_BROWSER_HTML_RETRY_KINDS",
     "_FAST_BROWSER_HTML_TIMEOUT_MS",
@@ -519,7 +443,7 @@ def _browser_workflow_html_payload(
             browser_context_seed=dict(html_result.browser_context_seed or {}),
         ),
         warnings=list(warnings or []),
-        trace=trace_from_markers([fulltext_marker(client.name, "ok", route="html")]),
+        trace=[fulltext_event(client.name, "ok", route="html")],
     )
 
 
@@ -749,11 +673,7 @@ def _fetch_browser_html_payload(
     attempt_record["result"] = "success"
     result_diagnostics["html_attempts"] = [*attempt_history, attempt_record]
     html_result = replace(html_result, diagnostics=result_diagnostics)
-    html_result, storage_warnings = _commit_accepted_storage_state(
-        html_result,
-        runtime,
-        context=context,
-    )
+    storage_warnings: list[str] = []
     fetcher_attr = getattr(html_fetcher, "paper_fetch_html_fetcher_name", None)
     fetcher_name = runtime.backend
     if isinstance(fetcher_attr, str) and normalize_text(fetcher_attr).endswith("_fast"):

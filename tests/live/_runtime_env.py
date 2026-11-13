@@ -12,12 +12,10 @@ from paper_fetch.browser_preflight import (
     static_browser_capabilities,
 )
 from paper_fetch.config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
     build_runtime_env,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
@@ -60,9 +58,7 @@ def build_isolated_live_env(
     for name in (
         BROWSER_PROFILE_DIR_ENV_VAR,
         BROWSER_USER_DATA_DIR_ENV_VAR,
-        AMS_STORAGE_STATE_JSON_ENV_VAR,
         WILEY_PROFILE_DIR_ENV_VAR,
-        WILEY_STORAGE_STATE_JSON_ENV_VAR,
     ):
         env.pop(name, None)
     preserved_executable = os.environ.get(
@@ -116,16 +112,15 @@ def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:
         payload.get(key) == NO_ACCESS for key in ("status", "code", "error_category")
     ):
         return True
-    source_trail = payload.get("source_trail")
-    if not isinstance(source_trail, Sequence) or isinstance(
-        source_trail, (str, bytes, bytearray)
-    ):
+    events = payload.get("trace")
+    if not isinstance(events, Sequence) or isinstance(events, (str, bytes, bytearray)):
         return False
     return any(
-        isinstance(marker, str)
-        and marker.startswith("route:provider_candidate_")
-        and marker.endswith("_access_boundary_stop")
-        for marker in source_trail
+        isinstance(event, Mapping)
+        and event.get("stage") == "route"
+        and str(event.get("component", "")).startswith("provider_candidate_")
+        and str(event.get("component", "")).endswith("_access_boundary_stop")
+        for event in events
     )
 
 
@@ -182,11 +177,6 @@ def preflight_selected_browser_or_skip(
     if result is None:
         preflight_kwargs = {
             "env": env,
-            # AIP's anti-bot cookies are tied to Camoufox's per-process
-            # fingerprint. Persisting a successful probe into the acceptance
-            # profile can turn the immediately following fresh launch into an
-            # empty shell; its cold-start test covers the no-state path.
-            "save_storage_state": provider != "aip",
             "download_dir": (
                 artifact_root / f"{provider}-{backend}"
                 if artifact_root is not None

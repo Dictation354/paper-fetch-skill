@@ -1,4 +1,6 @@
 from __future__ import annotations
+from paper_fetch.tracing import trace_event
+from dataclasses import replace
 from tests.support.markdown_presentation import visible_markdown
 import pytest
 from tests.support.test_evidence import evidence_cache as cache
@@ -15,7 +17,6 @@ from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
 )
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.tandf import TandfClient
-from paper_fetch.tracing import trace_from_markers
 
 
 STRUCTURE_DOI = "10.1080/15481603.2026.2667034"
@@ -65,21 +66,23 @@ def _render_article_markdown(doi: str) -> str:
     )
     payload = RawFulltextPayload(
         provider="tandf",
-        source_url=source_url,
-        content_type="text/html",
-        body=html_text.encode("utf-8"),
-        content=ProviderContent(
-            route_kind="html",
+        content=replace(
+            ProviderContent(
+                route_kind="html",
+                source_url=source_url,
+                content_type="text/html",
+                body=html_text.encode("utf-8"),
+                markdown_text=markdown,
+                diagnostics={
+                    "extraction": extraction,
+                    "availability_diagnostics": extraction["availability_diagnostics"],
+                },
+            ),
             source_url=source_url,
             content_type="text/html",
             body=html_text.encode("utf-8"),
-            markdown_text=markdown,
-            diagnostics={
-                "extraction": extraction,
-                "availability_diagnostics": extraction["availability_diagnostics"],
-            },
         ),
-        trace=trace_from_markers(["fulltext:tandf_html_ok"]),
+        trace=[trace_event("fulltext", "tandf_html", "ok")],
     )
     article = TandfClient(None, {}).to_article_model(metadata, payload)
     return article.to_ai_markdown(include_refs="all", max_tokens="full_text")

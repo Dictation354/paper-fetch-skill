@@ -1,7 +1,11 @@
 """Replay the publisher HTML through provider, service, CLI and MCP outputs."""
 
 from __future__ import annotations
+from tests.support._mcp_support import retained_view
+from paper_fetch.tracing import trace_event
 from dataclasses import replace
+
+
 import hashlib
 import json
 from pathlib import Path
@@ -25,7 +29,6 @@ from paper_fetch.providers.browser_workflow.asset_download import (
 )
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import trace_from_markers
 from paper_fetch.workflow.types import FetchStrategy
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.acquired_publisher_inputs import _record, _response
@@ -101,7 +104,7 @@ def replay(monkeypatch):
                         ],
                     },
                 ),
-                trace=trace_from_markers(["fulltext:tandf_html_ok"]),
+                trace=[trace_event("fulltext", "tandf_html", "ok")],
             )
 
         def download_related_assets(
@@ -204,7 +207,7 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
         )
     assert envelope.article.quality.semantic_losses.formula_missing_count == 0
     wire = json.loads(envelope.to_json())
-    assert wire["article"]["quality"]["extraction_revision"] == EXTRACTION_REVISION
+    assert wire["quality"]["extraction_revision"] == EXTRACTION_REVISION
     out = tmp_path / "cli" / "paper.md"
     manifest = out.with_suffix(".json")
     assert (
@@ -283,11 +286,11 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
         ),
     )
     assert saved["acceptance"]["overall"] == "complete", saved["acceptance"]
-    assert saved["markdown"] is None  # Saved MCP replies intentionally omit body.
+    assert "markdown" not in saved  # Saved MCP replies intentionally omit body.
     texts = [
         envelope.markdown,
         out.read_text(),
-        payload["markdown"],
+        retained_view(payload, "markdown"),
         (mcpdir / "paper.md").read_text(),
     ]
     for text in texts:
@@ -330,9 +333,9 @@ def test_real_formula_loss_cannot_report_complete(replay, tmp_path, fallback):
         ),
     )
     assert payload["acceptance"]["overall"] == "degraded"
-    losses = payload["article"]["quality"]["semantic_losses"]
+    losses = retained_view(payload, "diagnostics")["quality"]["semantic_losses"]
     assert (
         losses["formula_fallback_count" if fallback else "formula_missing_count"] == 1
     )
     if not fallback:
-        assert payload["markdown"].count("[Formula unavailable]") == 1
+        assert retained_view(payload, "markdown").count("[Formula unavailable]") == 1

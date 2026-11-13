@@ -393,6 +393,7 @@ def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
         camoufox_backend,
         "_dependency_details",
         return_value={
+            "runtime_valid": True,
             "probe": "unit_test",
             "packages": {"playwright": True, "camoufox": True},
         },

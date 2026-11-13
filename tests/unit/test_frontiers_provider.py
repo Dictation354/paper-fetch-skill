@@ -1,6 +1,8 @@
 from __future__ import annotations
-from unittest import mock
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from dataclasses import replace
+from unittest import mock
 from pathlib import Path
 import re
 import json
@@ -279,7 +281,9 @@ def test_frontiers_xml_route_fetches_canonical_jats_and_rewrites_figure_url() ->
     assert "Article metrics" not in rendered_markdown
     assert "Google Scholar" not in rendered_markdown
     assert "fmars-10-1101972-g001.tif" not in markdown
-    assert "fulltext:frontiers_xml_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "frontiers_xml", "ok")) in trace_facts(
+        article.trace
+    )
     assert article.source == "frontiers_xml"
     assert article.quality.content_kind == "fulltext"
     assert article.quality.semantic_losses.table_layout_degraded_count == 0
@@ -755,8 +759,12 @@ def test_frontiers_pdf_fallback_rejects_html_xml_candidate() -> None:
     assert markdown == "Mock converter output. " * 120
     assert "Access Denied" not in markdown
     assert article.source == "frontiers_pdf"
-    assert "fulltext:frontiers_xml_fail" in article.quality.source_trail
-    assert "fulltext:frontiers_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "frontiers_xml", "fail")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "frontiers_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
 
 
 def test_frontiers_catalog_routes_domain_publisher_and_doi_signals() -> None:

@@ -45,9 +45,6 @@ def _fulltext_envelope(article: ArticleModel) -> FetchEnvelope:
     return FetchEnvelope(
         doi=article.doi,
         source=article.source,
-        has_fulltext=True,
-        content_kind="fulltext",
-        has_abstract=True,
         trace=[event],
         quality=article.quality,
         article=article,

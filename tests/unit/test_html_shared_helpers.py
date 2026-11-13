@@ -1,11 +1,12 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
+from paper_fetch.providers import _springer_assets
 import pytest
 from tests.golden_criteria import golden_criteria_asset
 from paper_fetch.providers.atypon_browser_workflow import (
     asset_scopes as atypon_browser_workflow_asset_scopes,
 )
 import paper_fetch.providers._wiley_html as wiley_html
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.http import HttpTransport
 from paper_fetch.extraction.html import assets as html_assets
 from bs4 import BeautifulSoup
@@ -55,7 +56,7 @@ from paper_fetch.extraction.markdown_render.figures import (
     is_html_figure_container,
 )
 from paper_fetch.extraction.html.tables import render_table_markdown
-from paper_fetch.image_tools import ImageConversionFailure, SourceImageConversion
+from paper_fetch.image_tools import ImageConversionFailure, SourceImagePathConversion
 from paper_fetch.providers._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
@@ -66,7 +67,7 @@ from paper_fetch.providers.atypon_browser_workflow import (
 )
 
 
-class _DelayedAssetTransport(HttpTransport):
+class _DelayedAssetTransport(RecordedStreamTransport, HttpTransport):
     def __init__(self, delays: dict[str, float]) -> None:
         self.delays = delays
         self.active = 0
@@ -91,7 +92,7 @@ class _DelayedAssetTransport(HttpTransport):
                 self.active -= 1
 
 
-class _StaticAssetTransport(HttpTransport):
+class _StaticAssetTransport(RecordedStreamTransport, HttpTransport):
     def __init__(self, responses: dict[tuple[str, str], dict[str, object]]) -> None:
         self.responses = responses
         self.calls: list[dict[str, object]] = []
@@ -1087,13 +1088,17 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with (
             tempfile.TemporaryDirectory() as tmpdir,
             mock.patch(
-                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
-                return_value=SourceImageConversion(
-                    body=converted_body,
-                    content_type="image/png",
-                    source_format="eps",
-                    tool="ghostscript",
-                ),
+                "paper_fetch.extraction.html.assets.download.convert_source_image_path_to_png",
+                side_effect=lambda source, destination, **kwargs: (
+                    destination.write_bytes(converted_body),
+                    SourceImagePathConversion(
+                        path=destination,
+                        content_type="image/png",
+                        source_format="eps",
+                        tool="ghostscript",
+                        output_bytes=len(converted_body),
+                    ),
+                )[1],
             ) as converter,
         ):
             result = html_assets.download_assets(
@@ -1167,7 +1172,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with (
             tempfile.TemporaryDirectory() as tmpdir,
             mock.patch(
-                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
+                "paper_fetch.extraction.html.assets.download.convert_source_image_path_to_png",
                 side_effect=ImageConversionFailure("missing ghostscript"),
             ) as converter,
         ):
@@ -1221,7 +1226,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         with (
             tempfile.TemporaryDirectory() as tmpdir,
             mock.patch(
-                "paper_fetch.extraction.html.assets.download.convert_source_image_response_to_png",
+                "paper_fetch.extraction.html.assets.download.convert_source_image_path_to_png",
                 side_effect=ImageConversionFailure(
                     "missing ghostscript",
                     reason_code="image_conversion_backend_missing",
@@ -2280,7 +2285,7 @@ Learn more
             "</div>"
         )
 
-        assets = springer_html.extract_scoped_html_assets(
+        assets = _springer_assets.extract_scoped_html_assets(
             html,
             "https://www.nature.com/articles/example",
             asset_profile="body",

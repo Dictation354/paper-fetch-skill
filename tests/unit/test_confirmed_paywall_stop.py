@@ -1,5 +1,8 @@
 """Article entitlement stops requests, with local degradation and evidence."""
 
+from dataclasses import replace
+
+
 from types import SimpleNamespace
 from unittest import mock
 import pytest
@@ -182,7 +185,7 @@ def test_result_stops_recovery_and_assets_and_keeps_received_metadata(
         "abstract_only" if has_abstract else "metadata_only"
     )
     assert not article.sections
-    assert CONFIRMED_PAYWALL in article.quality.source_trail
+    assert any(event.code == CONFIRMED_PAYWALL for event in article.trace)
     assert "access_gate_detected" in article.quality.flags
     if has_abstract:
         assert article.metadata.abstract == ABSTRACT
@@ -366,7 +369,7 @@ def test_weak_provider_candidate_stops_cross_provider_dispatch(allow_fallback):
             )
 
         if allow_fallback:
-            assert fetch().content_kind == "abstract_only"
+            assert fetch().quality.content_kind == "abstract_only"
         else:
             with pytest.raises(service.PaperFetchFailure) as exc:
                 fetch()
@@ -375,7 +378,6 @@ def test_weak_provider_candidate_stops_cross_provider_dispatch(allow_fallback):
 
 
 def test_browser_candidate_loop_closes_page_before_preparation_or_next_url(tmp_path):
-    from dataclasses import replace
     from paper_fetch.providers import _playwright_browser
     from tests.support.browser_preflight import _runtime_config
 
@@ -390,7 +392,6 @@ def test_browser_candidate_loop_closes_page_before_preparation_or_next_url(tmp_p
     context.cookies.return_value = []
     config = replace(
         _runtime_config(tmp_path, provider="wiley", doi=DOI),
-        persist_storage_state=False,
     )
     with (
         mock.patch.object(
@@ -438,7 +439,7 @@ def test_independent_asset_access_failure_keeps_readable_body(tmp_path):
     )
     client.download_related_assets.assert_called_once()
     assert result.article.quality.content_kind == "fulltext"
-    assert CONFIRMED_PAYWALL not in result.article.quality.source_trail
+    assert CONFIRMED_PAYWALL not in result.article.trace
     assert "Measured findings" in result.article.to_ai_markdown()
 
 
@@ -460,7 +461,7 @@ def test_assembly_boundary_keeps_abstract_from_extracted_blocks():
             conversion_notes=[],
             availability_diagnostics=diagnostics,
         )
-    assert exc.value.details["received_metadata"]["abstract"] == ABSTRACT
+    assert exc.value.diagnostics.details["received_metadata"]["abstract"] == ABSTRACT
 
 
 @pytest.mark.parametrize("css_class", ["hidden", "d-none", "is-hidden"])
@@ -646,7 +647,6 @@ def test_payload_html_cache_reuses_inputs_but_checks_new_diagnostics():
 def test_payload_html_cache_invalidates_each_detection_input(changed):
     from paper_fetch.quality import access_boundary
     from paper_fetch.runtime import RuntimeContext
-    from dataclasses import replace
 
     payload = RawFulltextPayload(
         provider="wiley",
@@ -701,7 +701,6 @@ def test_response_article_number_cannot_confirm_an_explicit_target_doi():
 
 
 def test_assembly_reuses_body_check_but_observes_mutated_body_and_diagnostics():
-    from dataclasses import replace
     from paper_fetch.quality import access_boundary
     from paper_fetch.runtime import RuntimeContext
 

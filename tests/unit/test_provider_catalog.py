@@ -432,7 +432,7 @@ class ProviderCatalogTests(unittest.TestCase):
         )
 
         warnings: list[str] = []
-        source_trail: list[str] = []
+        events: list[str] = []
 
         article = fulltext._try_official_provider(
             doi="10.5555/example",
@@ -444,14 +444,14 @@ class ProviderCatalogTests(unittest.TestCase):
             clients={"crossref": provider},
             outputs=fulltext._ProviderAttemptOutputs(
                 warnings=warnings,
-                source_trail=source_trail,
+                events=events,
             ),
         )
 
         self.assertIsNone(article)
         provider.fetch_result.assert_not_called()
         self.assertEqual(warnings, [])
-        self.assertEqual(source_trail, [])
+        self.assertEqual(events, [])
 
     def test_catalog_preserves_publisher_doi_domain_inference(self) -> None:
         self.assertEqual(

@@ -710,7 +710,7 @@ It does not redistribute the Camoufox browser binary for browser-backed provider
 After core smoke checks, browsers are prepared by default, including non-interactive installs.
 Use `--skip-browser-prepare` to skip preparation. System packages retain their existing permission rules.
 The optional wizard configures credentials and image tools. Failures preserve the core installation.
-Before moving fully offline, run `./runtime/paper-fetch-python -m paper_fetch.offline_setup --install-root . --prepare-browsers all`.
+Before moving fully offline, run `./runtime/paper-fetch-python -m paper_fetch.offline_setup --install-root . --prepare-browsers`.
 EOF
 
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"

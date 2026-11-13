@@ -38,18 +38,3 @@ class FailureDiagnostics:
         if "details" in updates:
             updates["details"] = dict(updates["details"] or {})
         return replace(self, **updates)
-
-    @classmethod
-    def from_failure(cls, failure: object) -> FailureDiagnostics:
-        existing = getattr(failure, "diagnostics", None)
-        if isinstance(existing, cls):
-            return existing
-        return cls(
-            provider=getattr(failure, "provider", None),
-            route=getattr(failure, "route", None),
-            stage=getattr(failure, "stage", None),
-            http_status=getattr(failure, "http_status", None),
-            error_category=getattr(failure, "error_category", None),
-            retryable=getattr(failure, "retryable", None),
-            details=getattr(failure, "details", None) or {},
-        )

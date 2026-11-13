@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..tracing import TraceEvent
+
 from ._definitions import PROVIDER_DEFINITIONS
 
 from ..quality.access_boundary import propagate_paywall
@@ -54,7 +56,7 @@ from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..tracing import download_marker, fulltext_marker, trace_from_markers
+from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from ..quality.html_availability import (
     HtmlQualityAssessor,
@@ -384,7 +386,7 @@ class OxfordAcademicClient(ProviderClient):
         source_url: str,
         html_text: str | None,
         html_failure_message: str,
-        html_trace_markers: Sequence[str],
+        html_trace_events: Sequence[TraceEvent],
         context: RuntimeContext | None = None,
     ) -> RawFulltextPayload:
         candidates = self.pdf_candidates(
@@ -457,9 +459,9 @@ class OxfordAcademicClient(ProviderClient):
                     *pdf_fetch_result_warnings(pdf_result),
                     "Full text was extracted from Oxford Academic PDF fallback after the HTML route was not usable.",
                 ],
-                trace_markers=[
-                    *list(html_trace_markers),
-                    fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+                trace_events=[
+                    *list(html_trace_events),
+                    fulltext_event(self.name, "ok", route=PDF_FALLBACK),
                 ],
             )
 
@@ -528,7 +530,7 @@ class OxfordAcademicClient(ProviderClient):
                 source_url=source_url,
                 html_text=html_text,
                 html_failure_message=html_failure_message,
-                html_trace_markers=state.source_trail,
+                html_trace_events=state.events,
                 context=runtime_context,
             )
 
@@ -552,7 +554,7 @@ class OxfordAcademicClient(ProviderClient):
                 combined.code,
                 "Oxford Academic full text could not be retrieved. " + combined.message,
                 warnings=state.warnings,
-                source_trail=state.source_trail,
+                trace=state.events,
             )
 
         return run_provider_waterfall(
@@ -561,8 +563,8 @@ class OxfordAcademicClient(ProviderClient):
                     label="article_html",
                     route_name="direct_html",
                     run=run_article_html,
-                    failure_marker=fulltext_marker(self.name, "fail", route="html"),
-                    success_markers=(fulltext_marker(self.name, "ok", route="html"),),
+                    failure_event=fulltext_event(self.name, "fail", route="html"),
+                    success_events=(fulltext_event(self.name, "ok", route="html"),),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     failure_warning=lambda failure, _state: (
                         f"Oxford Academic HTML route was not usable ({failure.message}); attempting PDF fallback."
@@ -572,11 +574,9 @@ class OxfordAcademicClient(ProviderClient):
                     label="pdf_fallback",
                     route_name="direct_pdf",
                     run=run_pdf_fallback,
-                    failure_marker=fulltext_marker(
-                        self.name, "fail", route=PDF_FALLBACK
-                    ),
-                    success_markers=(
-                        fulltext_marker(self.name, "ok", route=PDF_FALLBACK),
+                    failure_event=fulltext_event(self.name, "fail", route=PDF_FALLBACK),
+                    success_events=(
+                        fulltext_event(self.name, "ok", route=PDF_FALLBACK),
                     ),
                     continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                 ),
@@ -629,7 +629,7 @@ class OxfordAcademicClient(ProviderClient):
         )
         merged_metadata = dict(
             (content.merged_metadata if content is not None else None)
-            or raw_payload.merged_metadata
+            or raw_payload.content.merged_metadata
             or metadata
             or {}
         )
@@ -720,7 +720,7 @@ class OxfordAcademicClient(ProviderClient):
         article_id = (
             normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
             or normalize_text(str(metadata.get("title") or ""))
-            or raw_payload.source_url
+            or raw_payload.content.source_url
         )
         concurrency = resolve_asset_download_concurrency(context.env)
         body_result = (
@@ -811,9 +811,7 @@ class OxfordAcademicClient(ProviderClient):
             asset_failures=[dict(item) for item in (asset_failures or [])],
             allow_related_assets=not text_only,
             text_only=text_only and not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("oxfordacademic_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("oxfordacademic_assets_skipped_text_only")]
             if text_only and not pdf_assets
             else [],
         )

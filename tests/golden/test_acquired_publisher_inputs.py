@@ -1,8 +1,11 @@
 """Replay 2026-09-14 response bytes, preserving endpoint and evidence limits."""
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+
+
 from tests.support.acquired_publisher_inputs import _record, _response
 import json
-from unittest import mock
 import pymupdf
 import pytest
 from paper_fetch.extraction.html.assets import (
@@ -50,7 +53,9 @@ def test_elsevier_open_access_pdf_api_complete_response_and_article():
         payload,
     )
     assert article.quality.has_fulltext
-    assert "fulltext:elsevier_pdf_api_ok" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "elsevier_pdf_api", "ok")
+    ) in trace_facts(article.trace)
     envelope = build_fetch_envelope(
         article,
         modes={"article", "markdown"},
@@ -91,17 +96,14 @@ def test_acquired_same_paper_pdf_current_provider_and_acceptance(doi, provider, 
             {"url": record["requested_url"], "content_type": "application/pdf"}
         ],
     }
-    # HTML/XML transport failure and cookie seed setup are injected. The actual
-    # PDF request uses its captured HTTP envelope through the provider waterfall.
-    with mock.patch(
-        "paper_fetch.providers._pdf_fallback._build_cookie_seeded_opener",
-        return_value=None,
-    ):
-        envelope = _fetch_through_service(client, fixture, metadata)
+    # The shared streaming transport replays the captured PDF response.
+    envelope = _fetch_through_service(client, fixture, metadata)
     article = envelope.article
     assert article is not None and article.quality.has_fulltext
     assert article.source == f"{provider}_pdf"
-    assert f"fulltext:{provider}_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", f"{provider}_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     text = article.to_ai_markdown(include_refs="all", max_tokens="full_text")
     assert article.sections[0].text in text
     with pymupdf.open(stream=body, filetype="pdf") as document:
@@ -132,9 +134,9 @@ def test_elsevier_actual_first_page_entitlement_response_is_rejected(header_case
     with pytest.raises(ProviderFailure, match="API route is not entitled") as failure:
         client._fetch_official_pdf_payload(doi)
     assert failure.value.code == "no_access"
-    assert failure.value.details["api_entitlement"]["confirmed_article_paywall"][
-        "confirmed"
-    ]
+    assert failure.value.diagnostics.details["api_entitlement"][
+        "confirmed_article_paywall"
+    ]["confirmed"]
 
 
 @pytest.mark.parametrize(

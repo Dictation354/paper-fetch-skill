@@ -1,6 +1,8 @@
 """Captured object/Silverchair images through their provider-owned asset routes."""
 
 from dataclasses import replace
+
+
 from pathlib import Path
 from paper_fetch.providers import elsevier, oxfordacademic
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload

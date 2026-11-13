@@ -13,7 +13,7 @@ from ..quality.html_availability import (
     availability_failure_message,
 )
 from ..runtime import RuntimeContext
-from ..tracing import fulltext_marker
+from ..tracing import fulltext_event
 from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from ._payloads import (
@@ -116,9 +116,9 @@ def build_ieee_browser_payload(
         fetcher="camoufox_ieee_html",
         browser_context_seed=dict(source.browser_context_seed),
         extracted_assets=request.extraction_assets(extraction, landing_attempt),
-        trace_markers=[
-            fulltext_marker("ieee", "fail", route="html"),
-            fulltext_marker("ieee", "ok", route="browser_html"),
-            fulltext_marker("ieee", "ok", route="html"),
+        trace_events=[
+            fulltext_event("ieee", "fail", route="html"),
+            fulltext_event("ieee", "ok", route="browser_html"),
+            fulltext_event("ieee", "ok", route="html"),
         ],
     )

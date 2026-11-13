@@ -4,6 +4,10 @@ Only browser bootstrap failure and the offline token are injected; PDF bytes,
 transport envelope, parsing, route selection and article assembly are real.
 """
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+
+
 from unittest import mock
 import pymupdf
 from paper_fetch.providers.wiley import WileyClient
@@ -52,8 +56,12 @@ def test_captured_tdm_pdf_current_wiley_fallback_and_final_acceptance():
     assert len(transport.calls) == 1
     assert article.source == "wiley_browser"
     assert article.quality.has_fulltext
-    assert "fulltext:wiley_pdf_api_ok" in article.quality.source_trail
-    assert "fulltext:wiley_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "wiley_pdf_api", "ok")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "wiley_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     rendered = article.to_ai_markdown(include_refs="all", max_tokens="full_text")
     assert DOI in rendered
     assert payload.content.markdown_text in rendered

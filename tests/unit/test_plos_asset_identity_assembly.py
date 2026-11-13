@@ -1,5 +1,8 @@
 """Minimal PLOS query-identity, partial download and binary denominator contract."""
 
+from paper_fetch.models import Quality
+
+
 from pathlib import Path
 
 import pytest
@@ -79,7 +82,10 @@ def test_plos_same_endpoint_formulas_keep_exact_identity_with_partial_download(
         saved = rewrite_markdown_asset_links(
             markdown,
             FetchEnvelope(
-                doi=DOI, source=article.source, article=article, has_fulltext=True
+                doi=DOI,
+                source=article.source,
+                article=article,
+                quality=Quality(has_fulltext=True),
             ),
             target_path=tmp_path / "article.md",
             render=RenderOptions(asset_profile=profile),
@@ -105,7 +111,10 @@ def test_plos_same_endpoint_formulas_keep_exact_identity_with_partial_download(
         )
         acceptance = evaluate_fetch_acceptance(
             FetchEnvelope(
-                doi=DOI, source=article.source, article=article, has_fulltext=False
+                doi=DOI,
+                source=article.source,
+                article=article,
+                quality=Quality(has_fulltext=False),
             ),
             asset_profile="body",
             require_local_body_assets=True,

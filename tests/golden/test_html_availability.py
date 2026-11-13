@@ -1,11 +1,11 @@
 from __future__ import annotations
+from paper_fetch.providers import _springer_dom, _springer_markdown
 from paper_fetch.quality.html_availability import (
     assess_html_fulltext_availability,
 )
 import unittest
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers import _springer_html as springer_html
 from paper_fetch.providers import browser_workflow
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset
@@ -237,7 +237,7 @@ class HtmlAvailabilityTests(unittest.TestCase):
         self.assertTrue("acknowledgements" in nature_html_text)
         self.assertTrue("rights and permissions" in nature_html_text)
         self.assertTrue("open access" in nature_html_text)
-        nature_payload = springer_html.extract_html_payload(
+        nature_payload = _springer_markdown.extract_html_payload(
             nature_html,
             "https://www.nature.com/articles/nature13376",
         )
@@ -276,8 +276,8 @@ class HtmlAvailabilityTests(unittest.TestCase):
             with self.subTest(doi=doi):
                 html = block_asset(doi, "raw.html").read_text(encoding="utf-8")
                 source_url = f"https://link.springer.com/article/{doi}"
-                metadata = springer_html.parse_html_metadata(html, source_url)
-                extraction_payload = springer_html.extract_html_payload(
+                metadata = _springer_dom.parse_html_metadata(html, source_url)
+                extraction_payload = _springer_markdown.extract_html_payload(
                     html,
                     source_url,
                     title=str(metadata.get("title") or ""),

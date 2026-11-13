@@ -2,6 +2,10 @@
 
 from __future__ import annotations
 
+from ..tracing import extend_trace
+
+from ..tracing import TraceEvent
+
 from ._definitions import PROVIDER_DEFINITIONS
 
 from ..quality.access_boundary import propagate_paywall, raise_for_paywall
@@ -53,10 +57,9 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..tracing import (
     TraceContext,
-    download_marker,
-    fulltext_marker,
+    download_event,
+    fulltext_event,
     merge_trace,
-    trace_from_markers,
     trace_event,
 )
 from ..utils import (
@@ -384,7 +387,7 @@ def _cached_springer_scoped_assets(
 def _springer_html_payload_from_attempt(
     attempt: SpringerHtmlAttempt,
     *,
-    trace_markers: list[str],
+    trace_events: list[TraceEvent],
     reason: str,
     extracted_assets: list[dict[str, Any]] | None = None,
 ) -> RawFulltextPayload:
@@ -402,7 +405,7 @@ def _springer_html_payload_from_attempt(
         reason=reason,
         extracted_assets=extracted_assets,
         warnings=list(attempt.warnings),
-        trace_markers=trace_markers,
+        trace_events=trace_events,
         needs_local_copy=False,
     )
 
@@ -471,9 +474,9 @@ def _springer_fallback_attempt(
 def _finalize_springer_abstract_only_article(
     article, *, warnings: list[str] | None = None
 ):
-    extend_unique(
-        article.quality.source_trail,
-        [fulltext_marker("springer", ABSTRACT_ONLY)],
+    extend_trace(
+        article.trace,
+        [fulltext_event("springer", ABSTRACT_ONLY)],
     )
     extend_unique(article.quality.warnings, list(warnings or []))
     return article
@@ -1255,9 +1258,9 @@ class SpringerClient(ProviderClient):
                 *pdf_fetch_result_warnings(pdf_result),
                 "Full text was extracted from PDF fallback after the Springer HTML path was not usable.",
             ],
-            trace_markers=[
-                fulltext_marker("springer", "fail", route="html"),
-                fulltext_marker("springer", "ok", route=PDF_FALLBACK),
+            trace_events=[
+                fulltext_event("springer", "fail", route="html"),
+                fulltext_event("springer", "ok", route=PDF_FALLBACK),
             ],
         )
 
@@ -1286,8 +1289,8 @@ class SpringerClient(ProviderClient):
         )
         if not article_assets:
             html_text = _springer_dom.decode_html(
-                raw_payload.body,
-                content_type=raw_payload.content_type,
+                raw_payload.content.body,
+                content_type=raw_payload.content.content_type,
             )
             title = normalize_text(
                 str(
@@ -1299,20 +1302,20 @@ class SpringerClient(ProviderClient):
             asset_body_html, asset_supplementary_html = (
                 _springer_assets.extract_asset_html_scopes(
                     html_text,
-                    raw_payload.source_url,
+                    raw_payload.content.source_url,
                     title=title or None,
                 )
             )
             asset_source_data_html = _springer_assets.extract_source_data_html_scope(
                 html_text,
-                raw_payload.source_url,
+                raw_payload.content.source_url,
                 title=title or None,
             )
             article_assets = _filter_springer_assets_for_profile(
                 _cached_springer_scoped_assets(
                     context,
                     asset_body_html,
-                    raw_payload.source_url,
+                    raw_payload.content.source_url,
                     asset_profile="all",
                     supplementary_html_text=asset_supplementary_html,
                     source_data_html_text=asset_source_data_html,
@@ -1324,14 +1327,14 @@ class SpringerClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_id = (
             normalize_doi(str((merged_metadata or {}).get("doi") or doi or ""))
             or normalize_doi(doi)
             or normalize_doi(str(metadata.get("doi") or ""))
             or normalize_text(str(metadata.get("title") or ""))
-            or raw_payload.source_url
+            or raw_payload.content.source_url
         )
         return _springer_assets.download_assets_for_springer(
             self.transport,
@@ -1401,7 +1404,7 @@ class SpringerClient(ProviderClient):
                 )
                 return _springer_html_payload_from_attempt(
                     attempt,
-                    trace_markers=[fulltext_marker("springer", "ok", route="html")],
+                    trace_events=[fulltext_event("springer", "ok", route="html")],
                     reason="Downloaded full text from the Springer landing page HTML.",
                     extracted_assets=extracted_assets,
                 )
@@ -1457,7 +1460,7 @@ class SpringerClient(ProviderClient):
                     label="html",
                     route_name="direct_html",
                     run=run_html,
-                    failure_marker=fulltext_marker("springer", "fail", route="html"),
+                    failure_event=fulltext_event("springer", "fail", route="html"),
                     failure_warning=lambda failure, _state: (
                         _springer_html_unusable_warning(failure)
                     ),
@@ -1466,8 +1469,8 @@ class SpringerClient(ProviderClient):
                     label="pdf",
                     route_name="direct_pdf",
                     run=run_pdf,
-                    success_markers=(
-                        fulltext_marker("springer", "ok", route=PDF_FALLBACK),
+                    success_events=(
+                        fulltext_event("springer", "ok", route=PDF_FALLBACK),
                     ),
                 ),
             ],
@@ -1548,7 +1551,7 @@ class SpringerClient(ProviderClient):
                 )
                 html_payload = _springer_html_payload_from_attempt(
                     attempt,
-                    trace_markers=[fulltext_marker("springer", "ok", route="html")],
+                    trace_events=[fulltext_event("springer", "ok", route="html")],
                     reason="Downloaded full text from the Springer landing page HTML.",
                     extracted_assets=extracted_assets,
                 )
@@ -1561,7 +1564,7 @@ class SpringerClient(ProviderClient):
                     return html_payload
                 fallback_payload = _springer_html_payload_from_attempt(
                     attempt,
-                    trace_markers=[fulltext_marker("springer", "fail", route="html")],
+                    trace_events=[fulltext_event("springer", "fail", route="html")],
                     reason=_springer_accepted_html_not_fulltext_message(
                         provisional_article.quality.content_kind
                     ),
@@ -1591,7 +1594,7 @@ class SpringerClient(ProviderClient):
             if failure_code != NO_ACCESS:
                 provisional_payload = _springer_html_payload_from_attempt(
                     attempt,
-                    trace_markers=[fulltext_marker("springer", "fail", route="html")],
+                    trace_events=[fulltext_event("springer", "fail", route="html")],
                     reason="Springer HTML route only exposed abstract-level content after markdown extraction.",
                 )
                 attempt_context["provisional_payload"] = provisional_payload
@@ -1626,11 +1629,9 @@ class SpringerClient(ProviderClient):
                         label="html",
                         route_name="direct_html",
                         run=run_html,
-                        failure_marker=fulltext_marker(
-                            "springer", "fail", route="html"
-                        ),
-                        success_markers=(
-                            fulltext_marker("springer", "ok", route="html"),
+                        failure_event=fulltext_event("springer", "fail", route="html"),
+                        success_events=(
+                            fulltext_event("springer", "ok", route="html"),
                         ),
                         continue_codes=DEFAULT_WATERFALL_CONTINUE_CODES,
                     ),
@@ -1646,7 +1647,7 @@ class SpringerClient(ProviderClient):
             propagate_paywall(exc)
             html_failure = exc
 
-        details = html_failure.details
+        details = html_failure.diagnostics.details
         html_failure_event = trace_event(
             "fulltext",
             "springer_html",
@@ -1656,7 +1657,7 @@ class SpringerClient(ProviderClient):
             context=TraceContext(
                 provider="springer",
                 route="html",
-                http_status=html_failure.http_status,
+                http_status=html_failure.diagnostics.http_status,
                 target=details.get("diagnostic_path"),
             ),
         )
@@ -1668,12 +1669,22 @@ class SpringerClient(ProviderClient):
                 http_status=html_failure_event.http_status,
                 target=html_failure_event.target,
             )
-            if event.marker() == html_failure_event.marker()
+            if (event.stage, event.component, event.outcome)
+            == (
+                html_failure_event.stage,
+                html_failure_event.component,
+                html_failure_event.outcome,
+            )
             else event
             for event in html_failure.trace
         ]
         if not any(
-            event.marker() == html_failure_event.marker()
+            (event.stage, event.component, event.outcome)
+            == (
+                html_failure_event.stage,
+                html_failure_event.component,
+                html_failure_event.outcome,
+            )
             for event in html_failure.trace
         ):
             html_failure.trace.append(html_failure_event)
@@ -1778,12 +1789,10 @@ class SpringerClient(ProviderClient):
                 retry_after_seconds=failure.retry_after_seconds,
                 missing_env=failure.missing_env,
                 warnings=state.warnings,
-                source_trail=state.source_trail,
+                trace=state.events,
             )
 
-        html_source_trail = list(html_failure.source_trail)
-        if fulltext_marker("springer", "fail", route="html") not in html_source_trail:
-            html_source_trail.append(fulltext_marker("springer", "fail", route="html"))
+        html_events = list(html_failure.trace)
 
         try:
             recovered_payload = run_provider_waterfall(
@@ -1792,8 +1801,8 @@ class SpringerClient(ProviderClient):
                         label="pdf",
                         route_name="direct_pdf",
                         run=run_pdf,
-                        success_markers=(
-                            fulltext_marker("springer", "ok", route=PDF_FALLBACK),
+                        success_events=(
+                            fulltext_event("springer", "ok", route=PDF_FALLBACK),
                         ),
                     ),
                 ],
@@ -1802,7 +1811,7 @@ class SpringerClient(ProviderClient):
                 context=context,
                 client=self,
                 initial_warnings=warnings,
-                initial_source_trail=html_source_trail,
+                initial_events=html_events,
                 final_failure_factory=final_pdf_failure,
             )
         except ProviderFailure as exc:
@@ -1831,9 +1840,7 @@ class SpringerClient(ProviderClient):
                     result_trace=merge_trace(
                         prepared.raw_payload.trace,
                         exc.trace,
-                        trace_from_markers(
-                            [fulltext_marker("springer", ABSTRACT_ONLY)]
-                        ),
+                        [fulltext_event("springer", ABSTRACT_ONLY)],
                     ),
                 )
             raise combine_provider_failures(
@@ -1845,12 +1852,12 @@ class SpringerClient(ProviderClient):
             [
                 event
                 for event in recovered_payload.trace
-                if event.marker() not in {item.marker() for item in html_failure.trace}
+                if event not in html_failure.trace
             ],
         )
         if recovered_payload.content is not None:
             recovered_payload.content.diagnostics["html_failure"] = dict(
-                html_failure.details
+                html_failure.diagnostics.details
             )
         return PreparedFetchResultPayload(raw_payload=recovered_payload)
 
@@ -1885,7 +1892,7 @@ class SpringerClient(ProviderClient):
         merged_metadata = (
             content.merged_metadata
             if content is not None
-            else raw_payload.merged_metadata
+            else raw_payload.content.merged_metadata
         )
         article_metadata = (
             merged_metadata if isinstance(merged_metadata, Mapping) else metadata
@@ -1899,8 +1906,7 @@ class SpringerClient(ProviderClient):
         ).lower()
         warnings = list(raw_payload.warnings)
         trace = list(
-            raw_payload.trace
-            or trace_from_markers([fulltext_marker("springer", "ok", route="html")])
+            raw_payload.trace or [fulltext_event("springer", "ok", route="html")]
         )
         extracted_assets = list(content.extracted_assets if content is not None else [])
         assets = merge_asset_retry_results(
@@ -1913,13 +1919,15 @@ class SpringerClient(ProviderClient):
         )
         if (
             not isinstance(extraction_payload, Mapping)
-            and "html" in normalize_text(raw_payload.content_type).lower()
+            and "html" in normalize_text(raw_payload.content.content_type).lower()
         ):
-            html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace")
+            html_text = bytes(raw_payload.content.body or b"").decode(
+                "utf-8", errors="replace"
+            )
             extraction_payload = _cached_springer_html_payload(
                 context,
                 html_text,
-                raw_payload.source_url,
+                raw_payload.content.source_url,
                 title=str(article_metadata.get("title") or metadata.get("title") or "")
                 or None,
             )
@@ -1959,9 +1967,11 @@ class SpringerClient(ProviderClient):
         )
         if (
             not extracted_authors
-            and "html" in normalize_text(raw_payload.content_type).lower()
+            and "html" in normalize_text(raw_payload.content.content_type).lower()
         ):
-            html_text = bytes(raw_payload.body or b"").decode("utf-8", errors="replace")
+            html_text = bytes(raw_payload.content.body or b"").decode(
+                "utf-8", errors="replace"
+            )
             extracted_authors = _springer_authors.extract_authors(html_text)
         if extracted_authors:
             existing_authors = [
@@ -2049,9 +2059,7 @@ class SpringerClient(ProviderClient):
             asset_failures=list(artifacts.asset_failures),
             allow_related_assets=False,
             text_only=not pdf_assets,
-            skip_trace=trace_from_markers(
-                [download_marker("springer_assets_skipped_text_only")]
-            )
+            skip_trace=[download_event("springer_assets_skipped_text_only")]
             if not pdf_assets
             else [],
         )

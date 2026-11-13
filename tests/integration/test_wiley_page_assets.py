@@ -1,5 +1,7 @@
 """Real Camoufox contracts for Wiley's serial image navigation."""
 
+from tests.support.transport import configure_stream_transport
+
 import json
 import os
 from pathlib import Path
@@ -109,6 +111,7 @@ def setup_fetcher(browser, monkeypatch, assets, *, mode="success", runtime=None)
 
 def download(fetcher, assets, tmp_path):
     transport = Mock()
+    configure_stream_transport(transport)
     result = download_assets(
         FIGURE_KIND,
         transport,

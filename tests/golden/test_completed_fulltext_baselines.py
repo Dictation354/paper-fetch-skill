@@ -1,5 +1,11 @@
 """New full-paper baselines use original captures and complete persisted output."""
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers import _springer_dom
+from paper_fetch.models import Quality
+
+
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
@@ -60,7 +66,6 @@ def test_complete_persisted_markdown_matches_provider_replay(fixture, tmp_path):
 
 def test_nature_early_access_keeps_html_failure_pdf_identity_and_degraded_acceptance():
     from bs4 import BeautifulSoup
-    from paper_fetch.providers import _springer_dom
 
     fixture = golden_corpus_fixture_for_doi("10.1038/s41586-026-11124-z")
     html = golden_criteria_asset(fixture.doi, "landing.html").read_text()
@@ -78,10 +83,17 @@ def test_nature_early_access_keeps_html_failure_pdf_identity_and_degraded_accept
     assert calls and fixture.source_url in calls[0]
     assert payload.content.route_kind == "pdf_fallback"
     assert article.source == "springer_pdf"
-    assert "fulltext:springer_html_fail" in article.quality.source_trail
-    assert "fulltext:springer_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(trace_event("fulltext", "springer_html", "fail")) in trace_facts(
+        article.trace
+    )
+    assert trace_facts(
+        trace_event("fulltext", "springer_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     envelope = FetchEnvelope(
-        doi=fixture.doi, source=article.source, has_fulltext=True, article=article
+        doi=fixture.doi,
+        source=article.source,
+        article=article,
+        quality=Quality(has_fulltext=True),
     )
     acceptance = evaluate_fetch_acceptance(
         envelope, expected_doi=fixture.doi, asset_profile="none"

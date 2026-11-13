@@ -58,7 +58,12 @@ _HIDDEN = re.compile(r"(?:display\s*:\s*none|visibility\s*:\s*hidden)", re.I)
 
 def confirmed_paywall(value: Any) -> bool:
     if not isinstance(value, Mapping):
-        value = getattr(value, "details", None)
+        diagnostics = getattr(value, "diagnostics", None)
+        value = (
+            diagnostics.details
+            if diagnostics is not None
+            else getattr(value, "details", None)
+        )
     if not isinstance(value, Mapping):
         return False
     evidence = value.get(CONFIRMED_PAYWALL)

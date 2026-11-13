@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support.transport import RecordedStreamTransport
 
 import json
 
@@ -9,7 +10,7 @@ from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.reason_codes import IDENTITY_MISMATCH
 
 
-class _ResponseTransport:
+class _ResponseTransport(RecordedStreamTransport):
     def __init__(self, body: bytes) -> None:
         self.body = body
 
@@ -30,7 +31,7 @@ def test_crossref_invalid_json_preserves_stable_error_category() -> None:
     with pytest.raises(ProviderFailure) as raised:
         _lookup(b"<html>not JSON</html>").fetch_metadata({"doi": "10.1000/expected"})
 
-    assert raised.value.error_category == "invalid_json"
+    assert raised.value.diagnostics.error_category == "invalid_json"
     assert "<html>not JSON</html>" in raised.value.message
 
 
@@ -48,7 +49,7 @@ def test_crossref_schema_mismatch_is_not_reported_as_invalid_json(payload) -> No
             {"doi": "10.1000/expected"}
         )
 
-    assert raised.value.error_category == "response_schema_mismatch"
+    assert raised.value.diagnostics.error_category == "response_schema_mismatch"
 
 
 def test_crossref_endpoint_doi_mismatch_is_rejected() -> None:

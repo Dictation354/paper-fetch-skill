@@ -51,3 +51,24 @@ def restore_markdown_math(text: str, protected: dict[str, str]) -> str:
 def normalize_prose_preserving_math(text: str, normalize: Callable[[str], str]) -> str:
     prose, protected = protect_markdown_math(text)
     return restore_markdown_math(normalize(prose), protected)
+
+
+def markdown_math_spans(text: str):
+    """Yield code-point ranges and unfenced TeX for existing math scan rules."""
+    for match in _CODE_OR_MATH.finditer(text):
+        value = match.group("math")
+        if value is None:
+            continue
+        if value.startswith("$"):
+            fence = value[: len(value) - len(value.lstrip("$"))]
+            expression = value[len(fence) : -len(fence)]
+        else:
+            expression = value[2:-2]
+        yield match.start(), match.end(), expression
+
+
+def markdown_code_spans(text: str):
+    """Yield literal code ranges using the same code/math scanner."""
+    for match in _CODE_OR_MATH.finditer(text):
+        if match.group("math") is None:
+            yield match.start(), match.end()

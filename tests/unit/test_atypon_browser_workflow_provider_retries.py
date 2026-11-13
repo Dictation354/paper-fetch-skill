@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from tests.support._atypon_browser_workflow_provider_support import *
 # ruff: noqa: F403,F405
 
@@ -64,7 +65,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 + ("Body text " * 120),
                 browser_context_seed=initial_seed,
             )
-            mocked_warm = mock.Mock(return_value=refreshed_seed)
+            mocked_warm = mock.Mock(
+                return_value=BrowserWarmResult(
+                    seed=refreshed_seed,
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
+            )
             mocked_builder = mock.Mock(
                 side_effect=[failing_fetcher, successful_fetcher]
             )
@@ -154,7 +163,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", doi)
-            mocked_warm = mock.Mock(return_value={"browser_final_url": article_url})
+            mocked_warm = mock.Mock(
+                return_value=BrowserWarmResult(
+                    seed={"browser_final_url": article_url},
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
+            )
             supplementary_results = iter([supplementary_failure, supplementary_success])
             mocked_download_assets = mock.Mock(
                 side_effect=lambda kind, *_args, **_kwargs: (
@@ -302,7 +319,15 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
 
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "science", doi)
-            mocked_warm = mock.Mock(return_value={"browser_final_url": article_url})
+            mocked_warm = mock.Mock(
+                return_value=BrowserWarmResult(
+                    seed={"browser_final_url": article_url},
+                    changed=True,
+                    accepted=True,
+                    status=200,
+                    reason="refreshed",
+                )
+            )
             body_results = iter(
                 [probe_body_result, initial_body_result, retry_body_result]
             )

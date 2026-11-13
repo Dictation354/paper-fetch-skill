@@ -1,6 +1,9 @@
 """Offline acquisition replay; real source parsing and final model assembly."""
 
+from tests.support.transport import RecordedStreamTransport
 from dataclasses import replace
+
+
 import json
 from types import MethodType
 
@@ -18,7 +21,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow.session_cache import CROSSREF_METADATA_KEY
 
 
-class ReplayTransport:
+class ReplayTransport(RecordedStreamTransport):
     def __init__(self, xml_body):
         self.xml_body = xml_body
 

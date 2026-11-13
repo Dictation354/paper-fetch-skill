@@ -1,4 +1,6 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
 from dataclasses import dataclass
 import unittest
 from paper_fetch.runtime import RuntimeContext
@@ -23,8 +25,8 @@ class _BatchItem:
 
 
 class WorkflowRoutingTests(unittest.TestCase):
-    def test_route_signal_markers_preserve_signal_order_and_deduplicate(self) -> None:
-        markers = routing.route_signal_markers(
+    def test_route_signal_events_preserve_signal_order_and_deduplicate(self) -> None:
+        markers = routing.route_signal_events(
             landing_urls=[
                 "https://linkinghub.elsevier.com/retrieve/pii/S0021863496900852",
                 "https://www.sciencedirect.com/science/article/pii/S0021863496900852",
@@ -34,13 +36,15 @@ class WorkflowRoutingTests(unittest.TestCase):
         )
 
         self.assertEqual(
-            markers,
-            [
-                "route:signal_domain_elsevier",
-                "route:signal_publisher_elsevier",
-                "route:signal_publisher_springer",
-                "route:signal_doi_wiley",
-            ],
+            trace_facts(markers),
+            trace_facts(
+                [
+                    trace_event("route", "signal_domain_elsevier", "info"),
+                    trace_event("route", "signal_publisher_elsevier", "info"),
+                    trace_event("route", "signal_publisher_springer", "info"),
+                    trace_event("route", "signal_doi_wiley", "info"),
+                ]
+            ),
         )
 
     def test_batch_identity_resolution_deduplication_and_fanout_are_shared(

@@ -1,7 +1,6 @@
 from __future__ import annotations
-
-import json
 from dataclasses import replace
+
 
 import pytest
 
@@ -57,7 +56,7 @@ def test_every_browser_provider_opens_persistent_directory(
     with RuntimeContext(env={}) as runtime:
         manager, context = open_browser_context(config, runtime_context=runtime)
         assert manager is None
-        assert profile.profile_path(config).name == f"{provider}-camoufox"
+        assert profile.profile_path(config).name == provider
         assert profile.profile_path(config).is_dir()
         assert not context.closed
     assert context.closed
@@ -68,9 +67,7 @@ def test_borrowed_stages_and_export_disabled_keep_context_alive(config):
         with browser_context(config, runtime_context=runtime) as body:
             page = body.context.new_page()
             page.close()
-        with browser_context(
-            replace(config, persist_storage_state=False), runtime_context=runtime
-        ) as assets:
+        with browser_context(config, runtime_context=runtime) as assets:
             assert assets.context is body.context
             assert not assets.context.closed
         assert not body.context.closed
@@ -86,60 +83,6 @@ def test_directory_override_is_canonical_and_cannot_cross_publishers(config, tmp
     with pytest.raises(BrowserRuntimeFailure, match="belongs to pnas") as error:
         open_browser_context(replace(config, provider="aip"))
     assert error.value.kind == "browser_profile_provider_conflict"
-
-
-def test_default_json_only_migrates_into_uninitialized_profile(config):
-    path = profile.profile_path(config)
-    path.mkdir(parents=True)
-    snapshot = path / "storage-state.json"
-    payload = {
-        "cookies": [
-            {"name": "sid", "value": "old", "domain": ".pnas.org", "path": "/"}
-        ],
-        "origins": [
-            {
-                "origin": "https://www.pnas.org",
-                "localStorage": [{"name": "token", "value": "old"}],
-            }
-        ],
-    }
-    snapshot.write_text(json.dumps(payload))
-    manager, context = open_browser_context(config)
-    assert context.state == payload
-    assert manager.diagnostics["json_imported"]
-    manager.close()
-    snapshot.write_text(json.dumps({**payload, "origins": []}))
-    manager, context = open_browser_context(config)
-    assert context.state == {"cookies": [], "origins": []}
-    assert not manager.diagnostics["json_imported"]
-    manager.close()
-
-
-def test_explicit_json_digest_imports_each_change_once(config, tmp_path):
-    snapshot = tmp_path / "legacy.json"
-    snapshot.write_text('{"cookies": [], "origins": []}')
-    config = replace(config, storage_state_path=snapshot)
-    for expected in (True, False, True):
-        if expected and profile.profile_path(config).exists():
-            snapshot.write_text('{"cookies": [], "origins": []} ')
-        manager, _ = open_browser_context(config)
-        assert manager.diagnostics["json_imported"] is expected
-        manager.close()
-    metadata = json.loads(
-        (profile.profile_path(config) / profile.METADATA_FILENAME).read_text()
-    )
-    assert len(metadata["migrations"]) == 1
-    assert "cookies" not in metadata
-
-
-def test_existing_native_profile_never_imports_default_snapshot(config):
-    path = profile.profile_path(config)
-    path.mkdir(parents=True)
-    (path / "prefs.js").touch()
-    (path / "storage-state.json").write_text("not JSON")
-    manager, _ = open_browser_context(config)
-    assert not manager.diagnostics["json_imported"]
-    manager.close()
 
 
 def test_native_locks_are_preserved_and_reported(config, monkeypatch):
@@ -211,52 +154,6 @@ def test_same_runtime_rejects_other_publisher_on_identical_directory(config):
         assert not context.closed
 
 
-def test_explicit_json_change_disables_private_read_until_imported(config, tmp_path):
-    snapshot = tmp_path / "configured.json"
-    snapshot.write_text('{"cookies": [], "origins": []}')
-    config = replace(
-        config,
-        provider="wiley",
-        user_data_dir=profile.profile_path(config).parent / "wiley-camoufox",
-        storage_state_path=snapshot,
-    )
-    manager, _ = open_browser_context(config)
-    manager.close()
-    assert profile.trusted_profile_digest(
-        profile.profile_path(config), "wiley", explicit_state_path=snapshot
-    )
-    snapshot.write_text('{"cookies": [], "origins": []} ')
-    assert (
-        profile.trusted_profile_digest(
-            profile.profile_path(config), "wiley", explicit_state_path=snapshot
-        )
-        is None
-    )
-    manager, _ = open_browser_context(config)
-    assert manager.diagnostics["json_imported"]
-    manager.close()
-    assert profile.trusted_profile_digest(
-        profile.profile_path(config), "wiley", explicit_state_path=snapshot
-    )
-
-
-def test_failed_initial_migration_can_be_retried_without_overwriting_native_profile(
-    config,
-):
-    path = profile.profile_path(config)
-    path.mkdir(parents=True)
-    snapshot = path / "storage-state.json"
-    snapshot.write_text("invalid JSON")
-    with pytest.raises(BrowserRuntimeFailure) as error:
-        open_browser_context(config)
-    assert error.value.kind == "browser_profile_json_import_failed"
-    assert error.value.details["stage"] == "json_import"
-    snapshot.write_text('{"cookies": [], "origins": []}')
-    manager, _ = open_browser_context(config)
-    assert manager.diagnostics["json_imported"]
-    manager.close()
-
-
 def test_switching_publishers_discards_cached_pages_from_previous_context(config):
     from paper_fetch.providers.browser_workflow.fetchers.context import (
         _SharedBrowserPageSession,
@@ -280,20 +177,6 @@ def test_switching_publishers_discards_cached_pages_from_previous_context(config
         assert page.closed
         assert shared.context is None
         assert runtime.get_session_cache("old-figure-page") is None
-
-
-def test_reused_context_does_not_claim_a_second_json_import(config):
-    path = profile.profile_path(config)
-    path.mkdir(parents=True)
-    (path / "storage-state.json").write_text('{"cookies": [], "origins": []}')
-    with RuntimeContext(env={}) as runtime:
-        _, context = open_browser_context(config, runtime_context=runtime)
-        assert runtime.browser_profile_diagnostics(context)["json_imported"]
-        open_browser_context(config, runtime_context=runtime)
-        diagnostics = runtime.browser_profile_diagnostics(context)
-        assert diagnostics["context_reused"]
-        assert not diagnostics["native_profile_loaded"]
-        assert not diagnostics["json_imported"]
 
 
 def test_cancelled_after_acquiring_directory_never_launches_browser(
@@ -328,8 +211,19 @@ def test_native_profile_does_not_require_optional_json_snapshot_to_exist(
         },
         provider="wiley",
         doi="test",
-        require_storage_state=True,
     )
     manager, _ = open_browser_context(runtime_config)
     manager.close()
-    assert profile.trusted_profile_digest(path, "wiley", explicit_state_path=snapshot)
+    assert profile.trusted_profile_digest(path, "wiley")
+
+
+def test_native_profiles_ignore_old_json_files(config):
+    path = profile.profile_path(config)
+    path.mkdir(parents=True)
+    old = path / "storage-state.json"
+    old.write_text("invalid old state")
+    manager, context = open_browser_context(config)
+    assert context.state == {"cookies": [], "origins": []}
+    assert "json_imported" not in manager.diagnostics
+    manager.close()
+    assert old.read_text() == "invalid old state"

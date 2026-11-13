@@ -1,6 +1,5 @@
 from __future__ import annotations
-from __future__ import annotations
-from __future__ import annotations
+from paper_fetch.providers import _springer_markdown
 from paper_fetch.extraction.html.formula_rules import (
     looks_like_formula_image,
 )
@@ -11,7 +10,6 @@ from paper_fetch.extraction.html.formula_rules import (
     formula_image_url_from_node,
     is_display_formula_node,
 )
-from paper_fetch.providers import _springer_html as springer_html
 import paper_fetch.providers._wiley_html as wiley_html
 from paper_fetch.providers.atypon_browser_workflow import (
     asset_scopes as atypon_browser_workflow_asset_scopes,
@@ -124,7 +122,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         )
         self.assertTrue("source data fig." in source_data_html.casefold())
 
-        source_data_markdown = springer_html.extract_html_payload(
+        source_data_markdown = _springer_markdown.extract_html_payload(
             source_data_html,
             "https://www.nature.com/articles/s41561-022-00912-7",
         )["markdown_text"]
@@ -141,7 +139,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertTrue("rights and permissions" in chrome_html_text)
         self.assertTrue("open access" in chrome_html_text)
 
-        chrome_markdown = springer_html.extract_html_payload(
+        chrome_markdown = _springer_markdown.extract_html_payload(
             chrome_html,
             "https://www.nature.com/articles/nature13376",
         )["markdown_text"]

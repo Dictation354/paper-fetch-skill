@@ -24,7 +24,7 @@ from .byparr_preparation import (
     cache_lock,
     prepare_components,
 )
-from .paths import _filtered_storage_state_mapping, storage_state_path
+from .paths import _filtered_storage_state_mapping
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 from ...config import resolve_user_data_dir
 
@@ -58,7 +58,6 @@ class ByparrManager:
             "provider": config.provider,
             "backend": "byparr",
             "engine": "camoufox",
-            "state_mode": config.state_mode,
             "context_reused": False,
         }
         self.metadata: dict[str, Any] = {}
@@ -182,7 +181,6 @@ class ByparrManager:
             )
             self.context._paper_fetch_navigator = self
             if not self.local_check and self.native_profile is None:
-                self._restore_state()
                 self.refresh()
             return self.context
         except BaseException as exc:
@@ -203,31 +201,6 @@ class ByparrManager:
                     f"Publisher browser preparation failed: {exc}",
                 ) from exc
             raise
-
-    def _restore_state(self):
-        path = storage_state_path(self.config)
-        if path is None or not path.is_file():
-            return
-        with cache_lock(path.with_suffix(path.suffix + ".lock"), self.budget):
-            state = _filtered_storage_state_mapping(
-                json.loads(path.read_text()),
-                url=self.home_url,
-                provider=self.config.provider,
-            )
-        if not state:
-            return
-        if state.get("cookies"):
-            self.context.add_cookies(self._cookie_parameters(state["cookies"]))
-        origins = {
-            item["origin"]: item.get("localStorage", [])
-            for item in state.get("origins", [])
-        }
-        self.context.add_init_script(
-            "const origins = "
-            + json.dumps(origins)
-            + "; for (const item of origins[location.origin] || []) localStorage.setItem(item.name, item.value);"
-        )
-        self.diagnostics["state_restored"] = True
 
     @staticmethod
     def _cookie_parameters(cookies):
@@ -536,13 +509,10 @@ class ByparrManager:
             self.runtime_context.record_browser_state_capability_use(
                 provider=self.config.provider,
                 backend="byparr",
-                storage_state_path=storage_state_path(self.config),
+                profile_dir=self.native_profile,
                 content_sha256=digest,
             )
         return digest
-
-    def note_json_export(self, path):
-        self.refresh()
 
     def _save_service_evidence(self):
         store = getattr(self.runtime_context, "artifact_store", None)

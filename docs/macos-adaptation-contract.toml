@@ -46,7 +46,7 @@ validated_purge_paths = true
 [skills.codex]
 user_directory = "~/.agents/skills/paper-fetch-skill"
 project_directory = ".agents/skills/paper-fetch-skill"
-verify_before_legacy_cleanup = true
+current_skill_path_only = true
 check_is_read_only = true
 
 [browser]
@@ -83,7 +83,7 @@ supplementary_index_without_body = true
 publisher_native_persistent_profiles = true
 profile_exclusive_lock_owner_thread = true
 auth_native_profile_replay = true
-json_export_optional = true
+native_profile_only = true
 
 [release]
 installer_manifest = "installer/manifest.json"

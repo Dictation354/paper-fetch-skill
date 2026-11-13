@@ -1106,7 +1106,6 @@ remove_installed_skills() {
   antigravity_skill="$(antigravity_home)/skills/$SKILL_NAME"
 
   rm -rf "$codex_skill" "$claude_skill" "$antigravity_skill"
-  rm -rf "$HOME/.codex/skills/$SKILL_NAME"
   log "Removed Codex skill at $codex_skill"
   log "Removed Claude Code skill at $claude_skill"
   log "Removed Antigravity skill at $antigravity_skill"
@@ -1463,7 +1462,7 @@ run_smoke_checks() {
 prepare_browsers() {
   rm -f "$INSTALL_ROOT/browser-setup-results.txt"
   [ "$SKIP_BROWSER_PREPARE" = "0" ] || return 0
-  local args=(--install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
+  local args=(--install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
     --result "$INSTALL_ROOT/browser-setup-results.txt")
   if [ "$NON_INTERACTIVE" = "1" ]; then args+=(--non-interactive); fi
   if [ "$REUSE_ENV_FILE" = "1" ]; then args+=(--reuse-env-file); fi
@@ -1485,7 +1484,7 @@ prepare_browsers() {
         echo "Browser preparation: not ready"
         echo "Preparation did not complete; core installation is preserved."
         printf 'Retry: '
-        printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
+        printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
         printf '\n'
       } > "$INSTALL_ROOT/browser-setup-results.txt"
     fi
@@ -1502,7 +1501,7 @@ browser_preparation_summary() {
     "skipped") printf 'Prepare manually: ' ;;
     *) return 0 ;;
   esac
-  printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers all
+  printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
   printf '\n'
 }
 
@@ -1693,7 +1692,6 @@ main() {
     "$(antigravity_home)/skills/$SKILL_NAME" \
     "Antigravity post-install"
   # Remove the previous Codex discovery entry only after all new bundles verify.
-  rm -rf "$HOME/.codex/skills/$SKILL_NAME"
   write_shell_startup_file
   register_codex_mcp
   register_claude_mcp

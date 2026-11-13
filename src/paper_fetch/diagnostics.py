@@ -8,7 +8,6 @@ from collections.abc import Callable, Mapping
 
 from .browser_preflight import static_browser_capabilities
 from .config import (
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
@@ -19,7 +18,6 @@ from .config import (
     ENV_FILE_ENV_VAR,
     USER_AGENT_ENV_VAR,
     WILEY_PROFILE_DIR_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
     build_runtime_env,
     runtime_configuration_report,
@@ -64,7 +62,6 @@ PROVIDER_STATUS_GROUPS: tuple[ProviderStatusGroup, ...] = (
 _STATIC_SCOPE = "static_configuration_and_local_dependencies"
 _GLOBAL_CONFIGURATION_NAMES = {
     "CROSSREF_MAILTO",
-    AMS_STORAGE_STATE_JSON_ENV_VAR,
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
@@ -81,7 +78,6 @@ _GLOBAL_CONFIGURATION_NAMES = {
     "WILEY_TDM_CLIENT_TOKEN",
     "ELSEVIER_API_KEY",
     WILEY_PROFILE_DIR_ENV_VAR,
-    WILEY_STORAGE_STATE_JSON_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
 }
 _DEFAULT_CONFIGURATION_NAMES = {

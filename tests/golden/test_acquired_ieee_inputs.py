@@ -1,10 +1,13 @@
 """Camoufox-acquired IEEE PDF and unmodified, overlapping reference pages."""
 
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+
+
 import html
 import json
 from dataclasses import asdict
 from pathlib import Path
-from unittest import mock
 from urllib.parse import urljoin
 from bs4 import BeautifulSoup
 import pymupdf
@@ -169,10 +172,6 @@ def test_captured_stamp_pdf_current_provider_and_final_article():
     # HTML failure is injected; the PDF candidate is bound to the real stamp.
     with (
         RuntimeContext(env={}, transport=transport) as context,
-        mock.patch(
-            "paper_fetch.providers._pdf_fallback._build_cookie_seeded_opener",
-            return_value=None,
-        ),
     ):
         payload = client._fetch_pdf_payload(
             landing,
@@ -186,7 +185,9 @@ def test_captured_stamp_pdf_current_provider_and_final_article():
     rendered = article.to_ai_markdown(include_refs="all", max_tokens="full_text")
     assert "NDPmulator" in rendered
     assert payload.content.markdown_text in rendered
-    assert "fulltext:ieee_pdf_fallback_ok" in article.quality.source_trail
+    assert trace_facts(
+        trace_event("fulltext", "ieee_pdf_fallback", "ok")
+    ) in trace_facts(article.trace)
     acceptance = evaluate_fetch_acceptance(
         build_envelope(article), asset_profile="none", doi=DOI, expected_doi=DOI
     )

@@ -1,4 +1,5 @@
 from __future__ import annotations
+from tests.support._mcp_support import retained_view
 import pytest
 from paper_fetch.mcp.fetch_tool import build_fetch_tool_result
 from paper_fetch.mcp.schemas import FetchPaperRequest
@@ -12,7 +13,7 @@ from paper_fetch.models import (
     Section,
     SemanticLosses,
 )
-from paper_fetch.tracing import TraceContext, source_trail_from_trace, trace_event
+from paper_fetch.tracing import TraceContext, trace_event
 from tests.support._mcp_support import assert_mcp_tool_omits_output_schema
 
 
@@ -33,7 +34,6 @@ def _fulltext_envelope(
     losses: SemanticLosses | None = None,
 ) -> FetchEnvelope:
     events = _successful_trace()
-    source_trail = source_trail_from_trace(events)
     metadata = Metadata(
         title="Acceptance Article",
         abstract="Accepted abstract.",
@@ -43,7 +43,6 @@ def _fulltext_envelope(
         content_kind="fulltext",
         has_abstract=True,
         token_estimate=128,
-        source_trail=source_trail,
         confidence="high",
         semantic_losses=losses or SemanticLosses(),
     )
@@ -76,12 +75,7 @@ def _fulltext_envelope(
     return FetchEnvelope(
         doi=article.doi,
         source=article.source,
-        has_fulltext=True,
-        content_kind="fulltext",
-        has_abstract=True,
-        source_trail=source_trail,
         trace=events,
-        token_estimate=128,
         quality=quality,
         article=article,
         markdown="# Acceptance Article\n\nAccepted body text.\n",
@@ -90,7 +84,6 @@ def _fulltext_envelope(
 
 def _limited_envelope(content_kind: str) -> FetchEnvelope:
     events = _successful_trace()
-    source_trail = source_trail_from_trace(events)
     has_abstract = content_kind == "abstract_only"
     metadata = Metadata(
         title="Limited Article",
@@ -101,24 +94,18 @@ def _limited_envelope(content_kind: str) -> FetchEnvelope:
         content_kind=content_kind,
         has_abstract=has_abstract,
         token_estimate=32,
-        source_trail=source_trail,
         confidence="medium",
     )
     return FetchEnvelope(
         doi="10.1000/limited",
         source="crossref_meta",
-        has_fulltext=False,
         acquisition=AcquisitionProvenance(
             provider="crossref",
             route="metadata",
             representation="metadata",
             transport="api",
         ),
-        content_kind=content_kind,
-        has_abstract=has_abstract,
-        source_trail=source_trail,
         trace=events,
-        token_estimate=32,
         quality=quality,
         metadata=metadata,
     )
@@ -195,7 +182,12 @@ def test_fetch_acceptance_preserves_quality_degradation() -> None:
     assert payload["status"] == "ok"
     assert payload["acceptance"]["overall"] == "degraded"
     assert payload["acceptance"]["content"] == "fulltext"
-    assert payload["quality"]["semantic_losses"]["table_fallback_count"] == 1
+    assert (
+        retained_view(payload, "diagnostics")["quality"]["semantic_losses"][
+            "table_fallback_count"
+        ]
+        == 1
+    )
 
 
 def test_mcp_full_size_requirement_implies_local_and_reaches_acceptance() -> None:
@@ -251,7 +243,8 @@ def test_saved_markdown_compaction_keeps_pre_compaction_acceptance() -> None:
 
     payload = result.structured_content
     assert payload is not None
-    assert payload["article"] is None
-    assert payload["markdown"] is None
+    assert "article" not in payload
+    assert "markdown" not in payload
+    assert retained_view(payload, "markdown")
     assert payload["acceptance"]["overall"] == "complete"
     assert payload["acceptance"]["output"] == "complete"

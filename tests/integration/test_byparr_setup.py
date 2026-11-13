@@ -28,7 +28,7 @@ def test_invalid_explicit_camoufox_reports_not_ready_preserving_core(tmp_path):
             str(tmp_path),
             "--env-file",
             str(config),
-            "--prepare-byparr",
+            "--prepare-browsers",
             "--non-interactive",
             "--result",
             str(result_file),

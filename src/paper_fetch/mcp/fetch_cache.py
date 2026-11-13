@@ -14,7 +14,6 @@ from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..artifacts import ArtifactStore
 from ..capability_scope import (
-    CapabilityScopeBuilder,
     PUBLIC_CAPABILITY_SCOPE,
     UNCACHEABLE_CAPABILITY_SCOPE,
 )
@@ -56,11 +55,9 @@ from .cache_index import (
 )
 from ..models.codec import (
     metadata_from_payload as metadata_from_payload,
-    derived_breakdown as derived_breakdown,
     trace_from_payload as trace_from_payload,
     dedupe_quality_flags as dedupe_quality_flags,
     _coerce_cached_int as _coerce_cached_int,
-    _cached_preview_accepted as _cached_preview_accepted,
     quality_from_payload as quality_from_payload,
     article_from_payload as article_from_payload,
     envelope_from_payload as envelope_from_payload,
@@ -119,7 +116,7 @@ def _envelope_proven_artifact_paths(envelope: FetchEnvelope) -> tuple[str, ...]:
 class _CacheRequestSchema(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    target: Literal["paper", "supplementary"] = "paper"
+    target: Literal["paper", "supplementary"]
     modes: list[str]
     strategy: dict[str, Any]
     include_refs: str | None
@@ -138,26 +135,37 @@ class _CacheAcquisitionSchema(BaseModel):
     fallback_used: bool
 
 
-class _CacheEnvelopePayloadSchema(BaseModel):
+class _CacheQualitySchema(BaseModel):
     model_config = ConfigDict(extra="allow", strict=True)
 
-    doi: str
-    source: str = Field(min_length=1)
-    acquisition: _CacheAcquisitionSchema
     has_fulltext: bool
     content_kind: Literal["fulltext", "abstract_only", "metadata_only"]
     has_abstract: bool
-    article: dict[str, Any] | None
-    markdown: str | None
-    metadata: dict[str, Any] | None
 
     @model_validator(mode="after")
-    def validate_content_flags(self) -> _CacheEnvelopePayloadSchema:
+    def validate_content_flags(self) -> _CacheQualitySchema:
         if self.has_fulltext != (self.content_kind == "fulltext"):
             raise ValueError("has_fulltext must match content_kind")
         if self.content_kind == "abstract_only" and not self.has_abstract:
             raise ValueError("abstract_only cache payload must have an abstract")
         return self
+
+
+class _CacheEnvelopePayloadSchema(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    schema_version: Literal[3]
+    doi: str
+    source: str = Field(min_length=1)
+    target: Literal["paper", "supplementary"]
+    supplementary: dict[str, Any] | None
+    acquisition: _CacheAcquisitionSchema
+    quality: _CacheQualitySchema
+    trace: list[dict[str, Any]]
+    article: dict[str, Any] | None
+    markdown: str | None
+    metadata: dict[str, Any] | None
+    diagnostic_artifacts: list[dict[str, Any]]
 
 
 class _FetchEnvelopeSidecarSchema(BaseModel):
@@ -166,8 +174,8 @@ class _FetchEnvelopeSidecarSchema(BaseModel):
     version: int
     extraction_revision: int
     pdf_render_revision: int | None = None
-    request_fingerprint: str | None = Field(default=None, pattern=r"^[0-9a-f]{64}$")
-    credential_scope: str = PUBLIC_CREDENTIAL_SCOPE
+    request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
+    credential_scope: str
     request: _CacheRequestSchema
     payload: _CacheEnvelopePayloadSchema
 
@@ -223,15 +231,9 @@ def fetch_envelope_variant_path(
     )
 
 
-def credential_scope_from_env(env: Mapping[str, str] | None) -> str:
-    """Compatibility wrapper for callers that only have environment facts."""
-
-    return CapabilityScopeBuilder(env).build()
-
-
 def request_cache_payload(request: FetchPaperRequest) -> dict[str, Any]:
     return {
-        **({"target": request.target} if request.target != "paper" else {}),
+        "target": request.target,
         "modes": sorted(request.requested_modes()),
         "strategy": request.strategy.cache_request_payload(),
         "include_refs": request.include_refs,
@@ -288,7 +290,7 @@ def _warning_summary(
         }
     provenance = report.provenance
     return {
-        "messages": list(envelope.warnings if envelope is not None else ()),
+        "messages": list(envelope.quality.warnings if envelope is not None else ()),
         "fallback_codes": list(provenance.fallback_codes),
         "warning_codes": list(provenance.warning_codes),
         "failure_codes": list(provenance.failure_codes),
@@ -322,7 +324,7 @@ def payload_from_envelope(
     retain_article_for_inline_assets: bool = False,
 ) -> dict[str, Any]:
     payload = envelope.to_dict()
-    payload["schema_version"] = 2
+    payload["schema_version"] = 3
     if (
         "article" not in request.requested_modes()
         and not retain_article_for_inline_assets
@@ -352,7 +354,7 @@ def cached_request_matches(
     cached_request: Mapping[str, Any],
     request: FetchPaperRequest,
 ) -> bool:
-    if cached_request.get("target", "paper") != request.target:
+    if cached_request.get("target") != request.target:
         return False
     cached_modes = {str(item) for item in cached_request.get("modes") or []}
     if not request.requested_modes().issubset(cached_modes):
@@ -367,7 +369,7 @@ def cached_request_matches(
 def cached_payload_satisfies_request(
     payload: Mapping[str, Any], request: FetchPaperRequest
 ) -> bool:
-    if payload.get("target", "paper") != request.target:
+    if payload.get("target") != request.target:
         return False
     if request.target == "supplementary":
         materials = payload.get("supplementary")
@@ -443,7 +445,7 @@ def cached_envelope_satisfies_request(
         return False
     if envelope.acquisition is None:
         return False
-    if envelope.has_fulltext != (envelope.content_kind == "fulltext"):
+    if envelope.quality.has_fulltext != (envelope.quality.content_kind == "fulltext"):
         return False
 
     if request.target == "supplementary":
@@ -780,8 +782,8 @@ class FetchCache:
             path,
             source=str(envelope.source),
             acquisition=envelope.acquisition,
-            has_fulltext=envelope.has_fulltext,
-            content_kind=str(envelope.content_kind),
+            has_fulltext=envelope.quality.has_fulltext,
+            content_kind=str(envelope.quality.content_kind),
             credential_scope=self.credential_scope,
             commit_guard=commit_guard,
         )
@@ -1204,7 +1206,7 @@ class FetchCache:
         entry_summary = _entry_summary(entries)
         preferred_markdown = preferred.get("markdown")
         content_kind = (
-            str(envelope.content_kind)
+            str(envelope.quality.content_kind)
             if envelope is not None
             else (
                 str(preferred_markdown.get("content_kind"))
@@ -1214,7 +1216,7 @@ class FetchCache:
             )
         )
         has_fulltext = (
-            envelope.has_fulltext
+            envelope.quality.has_fulltext
             if envelope is not None
             else (
                 preferred_markdown.get("has_fulltext")

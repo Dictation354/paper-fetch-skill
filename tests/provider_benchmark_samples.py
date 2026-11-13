@@ -1,4 +1,5 @@
 from __future__ import annotations
+from paper_fetch.tracing import TraceEvent, trace_event
 
 from dataclasses import dataclass
 
@@ -15,7 +16,7 @@ class ProviderBenchmarkSample:
     title: str
     landing_url: str
     accepted_sources: tuple[str, ...]
-    accepted_live_source_trail_groups: tuple[tuple[str, ...], ...]
+    accepted_live_events_groups: tuple[tuple[TraceEvent, ...], ...]
     required_env: tuple[str, ...] = ()
     recommended_env: tuple[str, ...] = ()
     fallback_dois: tuple[str, ...] = ()
@@ -23,23 +24,21 @@ class ProviderBenchmarkSample:
     fixture_kind: str | None = None
     resolve_url: str | None = None
 
-    def accepted_live_outcomes(self) -> tuple[tuple[str, tuple[str, ...]], ...]:
+    def accepted_live_outcomes(self) -> tuple[tuple[str, tuple[TraceEvent, ...]], ...]:
         """Pair each accepted source with only its declared route trail(s)."""
 
         if len(self.accepted_sources) == 1:
             source = self.accepted_sources[0]
-            return tuple(
-                (source, group) for group in self.accepted_live_source_trail_groups
-            )
-        if len(self.accepted_sources) != len(self.accepted_live_source_trail_groups):
+            return tuple((source, group) for group in self.accepted_live_events_groups)
+        if len(self.accepted_sources) != len(self.accepted_live_events_groups):
             raise ValueError(
-                f"{self.provider}: accepted sources and source-trail groups "
+                f"{self.provider}: accepted sources and trace groups "
                 "must have equal lengths unless exactly one source is accepted"
             )
         return tuple(
             zip(
                 self.accepted_sources,
-                self.accepted_live_source_trail_groups,
+                self.accepted_live_events_groups,
                 strict=True,
             )
         )
@@ -48,11 +47,15 @@ class ProviderBenchmarkSample:
         self,
         *,
         source: str,
-        source_trail: list[str] | tuple[str, ...],
+        events: list[TraceEvent] | tuple[TraceEvent, ...],
     ) -> bool:
+        facts = {(event.stage, event.component, event.outcome) for event in events}
         return any(
             source == accepted_source
-            and all(marker in source_trail for marker in accepted_group)
+            and all(
+                (event.stage, event.component, event.outcome) in facts
+                for event in accepted_group
+            )
             for accepted_source, accepted_group in self.accepted_live_outcomes()
         )
 
@@ -69,7 +72,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
         landing_url="https://www.sciencedirect.com/science/article/pii/S0034425725000525",
         accepted_sources=("elsevier_xml",),
-        accepted_live_source_trail_groups=(("fulltext:elsevier_article_ok",),),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "elsevier", "article_ok"),),
+        ),
         required_env=("ELSEVIER_API_KEY",),
         recommended_env=("CROSSREF_MAILTO",),
         fallback_dois=("10.1016/j.rse.2026.115369",),
@@ -86,7 +91,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Hydrological drought forecasts using precipitation data depend on catchment properties and human activities",
         landing_url="https://www.nature.com/articles/s43247-024-01295-w",
         accepted_sources=("springer_html",),
-        accepted_live_source_trail_groups=(("fulltext:springer_html_ok",),),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "springer_html", "ok"),),
+        ),
         recommended_env=("CROSSREF_MAILTO",),
     ),
     "science": ProviderBenchmarkSample(
@@ -96,9 +103,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration",
         landing_url="https://www.science.org/doi/full/10.1126/science.ady3136",
         accepted_sources=("science",),
-        accepted_live_source_trail_groups=(
-            ("fulltext:science_html_ok",),
-            ("fulltext:science_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "science_html", "ok"),),
+            (trace_event("fulltext", "science_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -113,9 +120,12 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Contrasting temperature effects on the velocity of early- versus late-stage vegetation green-up in the Northern Hemisphere",
         landing_url="https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16414",
         accepted_sources=("wiley_browser",),
-        accepted_live_source_trail_groups=(
-            ("fulltext:wiley_html_ok",),
-            ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "wiley_html", "ok"),),
+            (
+                trace_event("fulltext", "wiley_pdf_browser", "ok"),
+                trace_event("fulltext", "wiley_pdf_fallback", "ok"),
+            ),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture("10.1111/gcb.16414", "original.html"),
@@ -128,9 +138,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="The kinetics of SARS-CoV-2 infection based on a human challenge study",
         landing_url="https://www.pnas.org/doi/full/10.1073/pnas.2406303121",
         accepted_sources=("pnas",),
-        accepted_live_source_trail_groups=(
-            ("fulltext:pnas_html_ok",),
-            ("fulltext:pnas_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "pnas_html", "ok"),),
+            (trace_event("fulltext", "pnas_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -145,7 +155,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions",
         landing_url="https://www.mdpi.com/2077-0375/15/3/93",
         accepted_sources=("mdpi_html",),
-        accepted_live_source_trail_groups=(("fulltext:mdpi_html_ok",),),
+        accepted_live_events_groups=((trace_event("fulltext", "mdpi_html", "ok"),),),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.3390/membranes15030093", "original.html"
@@ -159,7 +169,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Skeleton-Based Few-Shot Action Recognition via Fine-Grained Information Capture and Adaptive Metric Aggregation",
         landing_url="https://ieeexplore.ieee.org/document/10772041/",
         accepted_sources=("ieee_html",),
-        accepted_live_source_trail_groups=(("fulltext:ieee_html_ok",),),
+        accepted_live_events_groups=((trace_event("fulltext", "ieee_html", "ok"),),),
         fixture_name=golden_criteria_fixture(
             "10.1109/TIM.2024.3509573", "original.html"
         ),
@@ -172,7 +182,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="EMO: Pretraining Mixture of Experts for Emergent Modularity",
         landing_url="https://arxiv.org/abs/2605.06663v1",
         accepted_sources=("arxiv_html",),
-        accepted_live_source_trail_groups=(("fulltext:arxiv_html_ok",),),
+        accepted_live_events_groups=((trace_event("fulltext", "arxiv_html", "ok"),),),
         fixture_name=golden_criteria_fixture(
             "10.48550/arxiv.2605.06663v1", "original.html"
         ),
@@ -185,9 +195,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Human Influence Has Increased the Likelihood of Extreme Autumn Fire Weather in California",
         landing_url="https://journals.ametsoc.org/view/journals/clim/37/24/JCLI-D-23-0738.1.xml",
         accepted_sources=("ams_html", "ams_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:ams_html_ok",),
-            ("fulltext:ams_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "ams_html", "ok"),),
+            (trace_event("fulltext", "ams_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -202,7 +212,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Seasonal variations in photooxidant formation and light absorption in aqueous extracts of ambient particles",
         landing_url="https://acp.copernicus.org/articles/24/1/2024/",
         accepted_sources=("copernicus_xml",),
-        accepted_live_source_trail_groups=(("fulltext:copernicus_xml_ok",),),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "copernicus_xml", "ok"),),
+        ),
         fixture_name=golden_criteria_fixture("10.5194/acp-24-1-2024", "original.xml"),
         fixture_kind="xml",
     ),
@@ -213,8 +225,8 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Creation and application of virtual patient cohorts of heart models",
         landing_url="https://royalsocietypublishing.org/doi/10.1098/rsta.2019.0558",
         accepted_sources=("royalsocietypublishing_html",),
-        accepted_live_source_trail_groups=(
-            ("fulltext:royalsocietypublishing_html_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "royalsocietypublishing_html", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture("10.1098/rsta.2019.0558", "original.html"),
@@ -227,9 +239,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Stretchable Shape Sensing and Computation for General Shape-Changing Robots",
         landing_url="https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355",
         accepted_sources=("annualreviews_html", "annualreviews_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:annualreviews_html_ok",),
-            ("fulltext:annualreviews_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "annualreviews_html", "ok"),),
+            (trace_event("fulltext", "annualreviews_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -244,7 +256,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Unified methods for feature selection in large-scale genomic studies with censored survival outcomes",
         landing_url="https://academic.oup.com/bioinformatics/article/36/11/3409/5802463",
         accepted_sources=("oxfordacademic_html",),
-        accepted_live_source_trail_groups=(("fulltext:oxfordacademic_html_ok",),),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "oxfordacademic_html", "ok"),),
+        ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1093/bioinformatics/btaa161", "original.html"
@@ -258,7 +272,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Social media usage to share information in communication journals",
         landing_url="https://journals.plos.org/plosone/article?id=10.1371/journal.pone.0263725",
         accepted_sources=("plos_xml",),
-        accepted_live_source_trail_groups=(("fulltext:plos_xml_ok",),),
+        accepted_live_events_groups=((trace_event("fulltext", "plos_xml", "ok"),),),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
             "10.1371/journal.pone.0263725", "original.xml"
@@ -272,9 +286,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Ocean acidification and warming modify stimulatory benthos effects on coastal ecosystem functioning",
         landing_url="https://www.frontiersin.org/journals/marine-science/articles/10.3389/fmars.2023.1101972/full",
         accepted_sources=("frontiers_xml", "frontiers_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:frontiers_xml_ok",),
-            ("fulltext:frontiers_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "frontiers_xml", "ok"),),
+            (trace_event("fulltext", "frontiers_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_kind="xml",
@@ -286,7 +300,7 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Functionalized Metal-Free Carbon Nanosphere Catalyst for the Selective C-N Bond Formation under Open-Air Conditions",
         landing_url="https://pubs.acs.org/doi/10.1021/acsomega.4c03987",
         accepted_sources=("acs",),
-        accepted_live_source_trail_groups=(("fulltext:acs_html_ok",),),
+        accepted_live_events_groups=((trace_event("fulltext", "acs_html", "ok"),),),
         recommended_env=("CROSSREF_MAILTO",),
     ),
     "iop": ProviderBenchmarkSample(
@@ -296,9 +310,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Quantifying the role of internal variability in the temperature we expect to observe in the coming decades",
         landing_url="https://iopscience.iop.org/article/10.1088/1748-9326/ab7d02",
         accepted_sources=("iop_html", "iop_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:iop_html_ok",),
-            ("fulltext:iop_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "iop_html", "ok"),),
+            (trace_event("fulltext", "iop_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -314,9 +328,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="On-chip on-demand delivery of K+ for in vitro bioelectronics",
         landing_url="https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/On-chip-on-demand-delivery-of-K-for-in-vitro",
         accepted_sources=("aip_html", "aip_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:aip_html_ok",),
-            ("fulltext:aip_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "aip_html", "ok"),),
+            (trace_event("fulltext", "aip_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -332,9 +346,9 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         title="Quantifying cumulative heat effects on heat-related mortality using MODIS land surface temperature data",
         landing_url="https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034",
         accepted_sources=("tandf_html", "tandf_pdf"),
-        accepted_live_source_trail_groups=(
-            ("fulltext:tandf_html_ok",),
-            ("fulltext:tandf_pdf_fallback_ok",),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "tandf_html", "ok"),),
+            (trace_event("fulltext", "tandf_pdf_fallback", "ok"),),
         ),
         recommended_env=("CROSSREF_MAILTO",),
         fixture_name=golden_criteria_fixture(
@@ -352,7 +366,7 @@ SPRINGER_NEWS_ACCESS_GATE_SAMPLE = ProviderBenchmarkSample(
     title="How to make the workplace fairer for female researchers",
     landing_url="https://www.nature.com/articles/d41586-023-01829-w",
     accepted_sources=("crossref_meta",),
-    accepted_live_source_trail_groups=(("fallback:metadata_only",),),
+    accepted_live_events_groups=((trace_event("fallback", "metadata_only", "info"),),),
     recommended_env=("CROSSREF_MAILTO",),
     fixture_name=golden_criteria_fixture("10.1038/d41586-023-01829-w", "original.html"),
     fixture_kind="html",
@@ -366,9 +380,15 @@ WILEY_PDF_FALLBACK_SAMPLE = ProviderBenchmarkSample(
     title="Current status and future direction of cancer research using artificial intelligence for clinical application",
     landing_url="https://onlinelibrary.wiley.com/doi/full/10.1111/cas.16395",
     accepted_sources=("wiley_browser",),
-    accepted_live_source_trail_groups=(
-        ("fulltext:wiley_pdf_api_ok", "fulltext:wiley_pdf_fallback_ok"),
-        ("fulltext:wiley_pdf_browser_ok", "fulltext:wiley_pdf_fallback_ok"),
+    accepted_live_events_groups=(
+        (
+            trace_event("fulltext", "wiley_pdf_api", "ok"),
+            trace_event("fulltext", "wiley_pdf_fallback", "ok"),
+        ),
+        (
+            trace_event("fulltext", "wiley_pdf_browser", "ok"),
+            trace_event("fulltext", "wiley_pdf_fallback", "ok"),
+        ),
     ),
     required_env=("WILEY_TDM_CLIENT_TOKEN",),
     recommended_env=("CROSSREF_MAILTO",),

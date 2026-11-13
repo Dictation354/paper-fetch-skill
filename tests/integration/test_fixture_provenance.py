@@ -1,9 +1,9 @@
 from __future__ import annotations
+from dataclasses import replace
 
 import json
 import hashlib
 import unittest
-from dataclasses import replace
 from unittest import mock
 
 from jsonschema import Draft202012Validator

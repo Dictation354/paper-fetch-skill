@@ -79,8 +79,8 @@ with sync_playwright() as driver:
         "verify", "--manifest", (Join-Path $InstallRoot "offline-manifest.json"),
         "--skill-dir", $codexSkill
     )
-    if (Test-Path -LiteralPath (Join-Path $env:USERPROFILE ".codex/skills/paper-fetch-skill")) {
-        throw "Verified install left the legacy Codex skill discoverable."
+    if (-not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE ".codex/skills/paper-fetch-skill"))) {
+        throw "Verified install touched an unrelated skill path."
     }
 
     $versionOutput = (& $cli --version | Out-String).Trim()
@@ -280,6 +280,9 @@ try {
         (Get-Content -LiteralPath $userPayload -Raw).Trim() -ne "preserve") {
         throw "Overwrite upgrade did not preserve install-root user content."
     }
+    if (-not (Test-Path -LiteralPath $legacyCodexSkill)) {
+        throw "Silent uninstall touched an unrelated skill path."
+    }
     if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf) -or
         (Get-Content -LiteralPath $externalUserPayload -Raw).Trim() -ne "preserve") {
         throw "Overwrite upgrade did not preserve external user content."
@@ -322,13 +325,15 @@ try {
     Assert-ExactPreservedInstallTree -InstallRoot $installRoot
     foreach ($managedSkill in @(
         (Join-Path $fakeProfile ".agents/skills/paper-fetch-skill"),
-        $legacyCodexSkill,
         (Join-Path $fakeProfile ".claude/skills/paper-fetch-skill"),
         (Join-Path $fakeAntigravity "skills/paper-fetch-skill")
     )) {
         if (Test-Path -LiteralPath $managedSkill) {
             throw "Silent uninstall left managed skill content: $managedSkill"
         }
+    }
+    if (-not (Test-Path -LiteralPath $legacyCodexSkill)) {
+        throw "Silent uninstall touched an unrelated skill path."
     }
     if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf) -or
         (Get-Content -LiteralPath $externalUserPayload -Raw).Trim() -ne "preserve") {

@@ -5,6 +5,9 @@ Only unmodified canonical adapter builds opt in. Cache/retry/isolation tests use
 independent copy; the shared pickle is a trusted, session-local test artifact.
 """
 
+from paper_fetch.models import Quality
+
+
 from copy import deepcopy
 from functools import cache
 import hashlib
@@ -57,7 +60,10 @@ def persisted_fixture_markdown(fixture, article):
     return rewrite_markdown_asset_links(
         markdown,
         FetchEnvelope(
-            doi=fixture.doi, source=article.source, article=article, has_fulltext=True
+            doi=fixture.doi,
+            source=article.source,
+            article=article,
+            quality=Quality(has_fulltext=True),
         ),
         target_path=golden_criteria_asset(fixture.doi, "extracted.md"),
         render=RenderOptions(

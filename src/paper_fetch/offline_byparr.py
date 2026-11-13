@@ -30,8 +30,6 @@ def local_check(env, runtime: Path):
             config,
             timeout_ms=120000,
             user_data_dir=Path(directory),
-            storage_state_path=None,
-            persist_storage_state=False,
         )
         manager = ByparrManager(config, local_check=True)
         try:
@@ -55,20 +53,8 @@ def prepare(
         interactive,
         system_dependencies,
     )  # Libraries are handled by shared browser preparation.
-    if setup.env.get("PAPER_FETCH_CHROME_BINARY_PATH", "").strip() or any(
-        key.startswith("PAPER_FETCH_")
-        and key.endswith("_BROWSER_BACKEND")
-        and value.strip().lower() == "flaresolverr"
-        for key, value in setup.env.items()
-    ):
-        setup.report(
-            "Byparr",
-            "not ready",
-            "FlareSolverr configuration was removed; select auto/byparr, remove PAPER_FETCH_CHROME_BINARY_PATH and use PAPER_FETCH_BROWSER_BINARY_PATH for Camoufox. See docs/browser-backends.md#migration.",
-        )
-        return
     if not supported_platform():
-        setup.report("Byparr", "skipped", "Unsupported Camoufox/Byparr platform")
+        setup.report("Byparr", "skipped", "Unsupported platform engine/Byparr platform")
         return
     if platform.python_implementation() != "CPython" or not (3, 11) <= sys.version_info[
         :2
@@ -93,7 +79,7 @@ def prepare(
         setup.report(
             "Byparr local launch",
             "checking",
-            "Shared Camoufox/about:blank only; budget 2 minutes",
+            "Selected platform engine/about:blank only; budget 2 minutes",
         )
         local_check(setup.env, runtime)
         setup.report("Byparr", "ready", "Byparr 3.1.1; shared page verified")

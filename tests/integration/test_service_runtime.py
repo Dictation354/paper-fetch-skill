@@ -1,4 +1,7 @@
 from __future__ import annotations
+from tests.support.trace import trace_facts
+from paper_fetch.tracing import trace_event
+from paper_fetch.providers.base import ProviderContent
 from tests.support._service_support import *
 # ruff: noqa: F403,F405
 
@@ -35,7 +38,10 @@ class ServiceRuntimeTests(unittest.TestCase):
                 "Wiley official PDF/binary was not written to disk because artifact mode is none."
             ],
         )
-        self.assertEqual(skipped_trail, ["download:wiley_skipped"])
+        self.assertEqual(
+            trace_facts(skipped_trail),
+            trace_facts([trace_event("download", "wiley", "skipped")]),
+        )
         ieee_skipped_warnings, ieee_skipped_trail = ArtifactStore.from_download_dir(
             None
         ).save_provider_payload(
@@ -50,7 +56,10 @@ class ServiceRuntimeTests(unittest.TestCase):
                 "IEEE official PDF/binary was not written to disk because artifact mode is none."
             ],
         )
-        self.assertEqual(ieee_skipped_trail, ["download:ieee_skipped"])
+        self.assertEqual(
+            trace_facts(ieee_skipped_trail),
+            trace_facts([trace_event("download", "ieee", "skipped")]),
+        )
 
         with tempfile.TemporaryDirectory() as tmpdir:
             store = ArtifactStore.from_download_dir(Path(tmpdir))
@@ -75,7 +84,10 @@ class ServiceRuntimeTests(unittest.TestCase):
 
             saved_paths = list(Path(tmpdir).glob("*"))
 
-        self.assertEqual(saved_trail, ["download:wiley_saved"])
+        self.assertEqual(
+            trace_facts(saved_trail),
+            trace_facts([trace_event("download", "wiley", "saved")]),
+        )
         self.assertTrue(
             any(
                 "Wiley official full text was downloaded as PDF/binary to" in item
@@ -83,7 +95,10 @@ class ServiceRuntimeTests(unittest.TestCase):
             )
         )
         self.assertEqual(html_warnings, [])
-        self.assertEqual(html_trail, ["download:springer_html_saved"])
+        self.assertEqual(
+            trace_facts(html_trail),
+            trace_facts([trace_event("download", "springer_html", "saved")]),
+        )
         self.assertEqual(wiley_html_warnings, [])
         self.assertEqual(wiley_html_trail, [])
         self.assertTrue(any(path.name.endswith(".pdf") for path in saved_paths))
@@ -126,7 +141,10 @@ class ServiceRuntimeTests(unittest.TestCase):
             )
             saved_paths = list(Path(tmpdir).glob("*"))
 
-        self.assertEqual(saved_trail, ["download:wiley_saved"])
+        self.assertEqual(
+            trace_facts(saved_trail),
+            trace_facts([trace_event("download", "wiley", "saved")]),
+        )
         self.assertTrue(
             any(
                 "Wiley official full text was downloaded as PDF/binary to" in item

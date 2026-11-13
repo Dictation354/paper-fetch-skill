@@ -261,7 +261,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
         seed_urls = [
             url
             for url in (
-                raw_payload.source_url,
+                raw_payload.content.source_url,
                 normalize_text(
                     str(browser_context_seed.get("browser_final_url") or "")
                 ),
@@ -294,7 +294,7 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
                         {
                             "kind": "supplementary",
                             "section": "supplementary",
-                            "referer_url": raw_payload.source_url,
+                            "referer_url": raw_payload.content.source_url,
                         },
                     )
                 except BrowserRuntimeFailure as exc:
@@ -429,17 +429,17 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
         normalized_doi = normalize_doi(str(metadata.get("doi") or doi or ""))
         if not normalized_doi:
             return empty_asset_results()
-        html_text = raw_payload.body.decode("utf-8", errors="replace")
+        html_text = raw_payload.content.body.decode("utf-8", errors="replace")
         assets = _iop_html.extract_scoped_html_assets(
             html_text,
-            raw_payload.source_url,
+            raw_payload.content.source_url,
             asset_profile=asset_profile,
         )
         index_failures: list[dict[str, Any]] = []
         if asset_profile == "all":
             index_urls = _iop_html.extract_supplementary_index_urls(
                 html_text,
-                raw_payload.source_url,
+                raw_payload.content.source_url,
                 doi=normalized_doi,
             )
             supplementary_assets, index_failures = (

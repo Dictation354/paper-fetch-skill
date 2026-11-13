@@ -251,16 +251,3 @@ def parse_xml_table_groups(
         _parse_xml_table_root(tgroup, render_cell_text=render_cell_text)
         for tgroup in tgroups
     )
-
-
-def parse_xml_table(
-    table_root: ET.Element,
-    *,
-    render_cell_text: RenderXmlCellText,
-) -> ParsedXmlTable:
-    """Parse XML rows using the legacy single-table compatibility contract."""
-
-    return _parse_xml_table_root(
-        table_root,
-        render_cell_text=render_cell_text,
-    )
