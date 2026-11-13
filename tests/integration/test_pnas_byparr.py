@@ -318,7 +318,7 @@ def test_api_ok_does_not_accept_verification_page(
         assert not (tmp_path / "pnas-byparr/storage-state.json").exists()
 
 
-def test_accepted_json_state_restores_in_fresh_owned_camoufox(
+def test_native_profile_restores_persistent_credentials_in_fresh_owned_camoufox(
     prepared, site, monkeypatch, tmp_path
 ):
     base, _, _ = site
@@ -351,6 +351,7 @@ def test_accepted_json_state_restores_in_fresh_owned_camoufox(
                     "domain": "www.pnas.org",
                     "path": "/",
                     "secure": True,
+                    "expires": time.time() + 3600,
                 }
             ]
         )
@@ -606,7 +607,7 @@ def test_elsevier_pdf_route_downloads_in_owned_context_without_http_lane(
                 default_browser_workflow_deps(), warm_browser_context=unnecessary_warm
             ),
         )
-        assert result.body == original
+        assert result.content.body == original
         assert runtime.new_browser_context_for_runtime_config(config) is context
         assert context._paper_fetch_navigator.home_url == home
 
@@ -686,7 +687,7 @@ def test_challenged_get_recovers_once_in_same_context(prepared, site, tmp_path):
         )  # original GET, page GET, automatic redirect, one retry GET
         events = [
             event
-            for item in owner.diagnostics["byparr_navigations"]
+            for item in context._paper_fetch_navigator.diagnostics["byparr_navigations"]
             for event in item["events"]
         ]
         assert any(event["kind"] == "challenge_detected" for event in events)
@@ -721,7 +722,7 @@ def test_invisible_delayed_challenge_calls_upstream_and_receives_article(
         assert b"Scientific results demonstrate" in response.body()
         assert "Scientific results demonstrate" in page.content()
         assert calls.count("/delayed-challenge") == calls.count("/article") == 1
-        operation = owner.diagnostics["byparr_navigations"][-1]
+        operation = context._paper_fetch_navigator.diagnostics["byparr_navigations"][-1]
         assert [doc["status"] for doc in operation["documents"]] == [403, 200]
         events = operation["events"]
         assert sum(event["kind"] == "solver_called" for event in events) == 1
@@ -797,7 +798,7 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
         settle_page_navigation(page, timeout_ms=10000)
         events = [
             event
-            for item in owner.diagnostics["byparr_navigations"]
+            for item in context._paper_fetch_navigator.diagnostics["byparr_navigations"]
             for event in item["events"]
         ]
         assert sum(event["kind"] == "navigation_managed" for event in events) >= 3
