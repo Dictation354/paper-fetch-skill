@@ -694,7 +694,7 @@ def test_challenged_get_recovers_once_in_same_context(prepared, site, tmp_path):
         assert not any(
             event["kind"] in {"solver_called", "solver_click"} for event in events
         )
-        assert len(owner.browser.contexts) == 1
+        assert context._paper_fetch_navigator.browser.contexts == [context]
     finally:
         owner.close()
 
