@@ -6,6 +6,25 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.0 - 2026-11-13
+
+### Native fetch presets and paged MCP content
+
+- Add shared `temporary_read` (default), `cacheable_read` and `archive` presets to single-paper and batch fetching. Presets expand before explicit options, including nested strategy settings and `false` values. Default to complete text, all references and metadata fallback, without body assets; explicit body/all assets enable downloads unless overridden. Archive supplementary attachments with a material index.
+- Deliver fetched text through `content_ref` and `read_content`, including after saving Markdown. Support Unicode pagination, reusable batch-alias handles, idle expiry and bounded storage. Return `preset`, `effective_options` and verified file snapshots; require an explicit or configured cache/output scope. Business payloads use only `structuredContent`, with requested images returned as separate media.
+- Remove `content_delivery` and inline fetched-body responses, plus batch-fetch `detail`, `content_max_chars` and snippet statistics. Batch JSONL remains an explicit `batch_results` option.
+
+### Canonical models and interface changes
+
+- Keep quality, acquisition and structured trace once in a full fetch envelope; its article contains content fields, while standalone articles retain their complete quality and provenance. Access envelope quality through `quality`; remove `source_trail`, marker conversions, old payload projections, raw-only provider adapters and non-streaming transport compatibility.
+- Advance MCP output to v3, fetch-envelope sidecars to v6 and cache indexes to v3. Reject old cache versions without migrating or deleting them; preserve acceptance/manifest v2 and historical acquisition evidence. Remove obsolete compatibility imports, constructors and wrappers. PDF converter output remains unchanged.
+
+### Native browser profiles and installation
+
+- Fix provider browser backends to Byparr, using the selected platform engine. Authentication, preflight and fetching share native profiles under `publisher-browser-profiles/<provider>/`, with explicit directory overrides and credential scopes bound to the actual profile and trusted digest.
+- Remove JSON browser-state modes, import/export settings and backend-selection aliases. Use the boolean `--prepare-browsers` entrypoint for the platform engine and Byparr. Installers and uninstallers manage current skill paths only; update the Skill, tool contracts, deployment guidance and macOS adaptation gates.
+- Correct the Windows upgrade gate for the pinned 7.4.2 uninstaller's ownership of legacy skill paths; verify current-path ownership on fresh installation, same-version upgrade and uninstall.
+
 ## 7.5.1 - 2026-11-12
 
 ### Provider runtime and asset downloads

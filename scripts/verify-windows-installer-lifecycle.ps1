@@ -35,7 +35,7 @@ function Invoke-NativeChecked {
 }
 
 function Invoke-InstalledSmoke {
-    param([string]$InstallRoot)
+    param([string]$InstallRoot, [bool]$CheckUnrelatedSkill = $true)
 
     $cli = Join-Path $InstallRoot "bin/paper-fetch.cmd"
     $runtime = Join-Path $InstallRoot "runtime/python.exe"
@@ -79,7 +79,7 @@ with sync_playwright() as driver:
         "verify", "--manifest", (Join-Path $InstallRoot "offline-manifest.json"),
         "--skill-dir", $codexSkill
     )
-    if (-not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE ".codex/skills/paper-fetch-skill"))) {
+    if ($CheckUnrelatedSkill -and -not (Test-Path -LiteralPath (Join-Path $env:USERPROFILE ".codex/skills/paper-fetch-skill"))) {
         throw "Verified install touched an unrelated skill path."
     }
 
@@ -272,7 +272,9 @@ try {
     Set-Content -LiteralPath (Join-Path $fakeProfile ".agents/skills/paper-fetch-skill/stale.md") -Value "stale"
     Write-Host "==> Upgrade to final cp314 EXE and verify retained user and host integration state"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
-    Invoke-InstalledSmoke -InstallRoot $installRoot
+    # The pinned 7.4.2 uninstaller owns and removes its legacy skill path.
+    # Current-only ownership is checked on fresh install and cp314 overwrite.
+    Invoke-InstalledSmoke -InstallRoot $installRoot -CheckUnrelatedSkill (-not [bool]$PreviousSetupPath)
     if (-not (Select-String -LiteralPath $offlineEnv -SimpleMatch "USER_LIFECYCLE_SENTINEL" -Quiet)) {
         throw "Overwrite upgrade did not preserve offline.env user content."
     }
@@ -280,8 +282,8 @@ try {
         (Get-Content -LiteralPath $userPayload -Raw).Trim() -ne "preserve") {
         throw "Overwrite upgrade did not preserve install-root user content."
     }
-    if (-not (Test-Path -LiteralPath $legacyCodexSkill)) {
-        throw "Silent uninstall touched an unrelated skill path."
+    if (-not $PreviousSetupPath -and -not (Test-Path -LiteralPath $legacyCodexSkill)) {
+        throw "Overwrite upgrade touched an unrelated skill path."
     }
     if (-not (Test-Path -LiteralPath $externalUserPayload -PathType Leaf) -or
         (Get-Content -LiteralPath $externalUserPayload -Raw).Trim() -ne "preserve") {
@@ -297,6 +299,8 @@ try {
     }
 
     Write-Host "==> In-place overwrite upgrade of cp314 installation"
+    New-Item -ItemType Directory -Force -Path $legacyCodexSkill | Out-Null
+    Set-Content -LiteralPath (Join-Path $legacyCodexSkill "SKILL.md") -Value "legacy coexistence"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
     Invoke-InstalledSmoke -InstallRoot $installRoot
 

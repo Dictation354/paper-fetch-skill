@@ -6,6 +6,25 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.0 - 2026-11-13
+
+### 原生抓取预设与 MCP 分页正文
+
+- 单篇与批量抓取共用 `temporary_read`（默认）、`cacheable_read`、`archive` 预设；先展开预设，再合并显式参数，保留嵌套 strategy 和 `false` 覆盖。默认获取完整正文、全部参考文献并允许 metadata fallback，不请求正文资产；显式请求 body/all 资产时补齐下载参数，仍以显式覆盖为准。独立补充材料归档默认下载附件并保存材料索引。
+- 抓取正文统一通过 `content_ref`、`read_content` 消费，保存 Markdown 后仍可分页读取；支持 Unicode 分页、批量别名句柄复用、闲置失效及容量限制。返回 `preset`、`effective_options` 和实际文件快照，缓存／输出 scope 必须来自请求路径或显式配置。业务载荷仅放在 `structuredContent`，显式请求的图片保留为独立媒体。
+- 删除 `content_delivery` 和正文 inline 响应，移除批量抓取的 `detail`、`content_max_chars` 及片段统计；批量 JSONL 仍仅由显式 `batch_results` 启用。
+
+### 统一模型与接口变更
+
+- 完整 fetch envelope 仅保留一份 quality、acquisition 和结构化 trace，内嵌 article 只保存内容字段；独立 article 保留完整质量与来源信息。通过 `quality` 访问 envelope 质量，删除 `source_trail`、marker 转换、旧载荷投影、raw-only provider 适配及非 streaming transport 兼容分支。
+- MCP 输出升级为 v3、fetch-envelope sidecar 为 v6、cache index 为 v3；旧版本缓存明确拒绝，不迁移或删除。acceptance／manifest 保持 v2，历史采集证据保留原字节；移除过时的兼容导入、构造器和包装入口，PDF 转换器输出保持不变。
+
+### 原生浏览器 profile 与安装
+
+- Provider 浏览器后端固定为 Byparr，继续按平台选择引擎；认证、预检和抓取共用 `publisher-browser-profiles/<provider>/` 原生目录，支持显式目录覆盖，凭证 scope 绑定实际使用的 profile 与可信摘要。
+- 删除 JSON 浏览器状态模式、导入／导出设置及后端选择兼容别名；统一使用布尔开关 `--prepare-browsers` 准备所选平台引擎及 Byparr。安装和卸载只处理当前 skill 路径，同步技能、工具契约、部署说明及 macOS 适配门禁。
+- 修正 Windows 升级门禁对固定 7.4.2 卸载器旧路径所有权的断言；在全新安装、同版覆盖升级和卸载中验证当前版本仅管理现行路径。
+
 ## 7.5.1 - 2026-11-12
 
 ### Provider 运行时与资产下载
