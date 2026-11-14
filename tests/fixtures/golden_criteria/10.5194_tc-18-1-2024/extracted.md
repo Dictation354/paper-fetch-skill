@@ -3,7 +3,7 @@ title: "Assessment of rock glaciers and their water storage in Guokalariju, Tibe
 authors: "Mengzhen Li, Yanmin Yang, Zhaoyu Peng, Gengnian Liu"
 journal: "The Cryosphere"
 doi: "10.5194/tc-18-1-2024"
-published: "2 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-2", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

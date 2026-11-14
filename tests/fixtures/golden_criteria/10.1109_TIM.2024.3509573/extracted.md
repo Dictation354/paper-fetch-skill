@@ -3,7 +3,7 @@ title: "Skeleton-Based Few-Shot Action Recognition via Fine-Grained Information 
 authors: "Jingyun Tian, Jinjing Gu, Yuanyuan Pu, Zhengpeng Zhao"
 journal: "IEEE Transactions on Instrumentation and Measurement"
 doi: "10.1109/tim.2024.3509573"
-published: "2025"
+publication_dates: [{"kind": "unspecified", "value": "2025", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2025", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

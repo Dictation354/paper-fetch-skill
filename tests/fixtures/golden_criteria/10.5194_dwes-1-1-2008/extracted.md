@@ -3,7 +3,7 @@ title: "Correlations between total cell concentration, total adenosine tri-phosp
 authors: "Siebel, E., Wang, Y., Egli, T., Hammes, F."
 journal: "Drinking Water Engineering and Science"
 doi: "10.5194/dwes-1-1-2008"
-published: "2008/06/02"
+publication_dates: [{"kind": "unspecified", "value": "2008/06/02", "source": "citation_publication_date"}, {"kind": "online", "value": "2008/06/02", "source": "citation_online_date"}]
 source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"

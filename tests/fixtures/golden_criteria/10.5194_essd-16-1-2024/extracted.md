@@ -3,7 +3,7 @@ title: "A merged continental planetary boundary layer height dataset based on hi
 authors: "Jianping Guo, Jian Zhang, Jia Shao, Tianmeng Chen, Kaixu Bai, Yuping Sun, Ning Li, Jingyan Wu, Rui Li, Jian Li, Qiyun Guo, Jason B. Cohen, Panmao Zhai, Xiaofeng Xu, Fei Hu"
 journal: "Earth System Science Data"
 doi: "10.5194/essd-16-1-2024"
-published: "4 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-4", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

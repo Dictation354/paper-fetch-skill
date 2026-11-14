@@ -3,7 +3,7 @@ title: "From Baby Universes to Narain Moduli: Topological Boundary Averaging in 
 authors: "Xingyang Yu"
 journal: "arXiv"
 doi: "10.48550/arxiv.2605.06653v1"
-published: "2026-05-07"
+publication_dates: [{"kind": "unspecified", "value": "2026-05-07", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

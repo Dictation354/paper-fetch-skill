@@ -3,7 +3,7 @@ title: "Software for Computing and Annotating Genomic Ranges"
 authors: "Michael Lawrence, Wolfgang Huber, Hervé Pagès, Patrick Aboyoun, Marc Carlson, Robert Gentleman, Martin T. Morgan, Vincent J. Carey"
 journal: "PLoS Computational Biology"
 doi: "10.1371/journal.pcbi.1003118"
-published: "8 2013"
+publication_dates: [{"kind": "collection", "value": "2013-8", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2013-8-8", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

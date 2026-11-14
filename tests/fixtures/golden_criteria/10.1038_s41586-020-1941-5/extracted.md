@@ -3,7 +3,7 @@ title: "Forest age and water yield"
 authors: "Adriaan J. Teuling, Anne J. Hoek van Dijke"
 journal: "Nature"
 doi: "10.1038/s41586-020-1941-5"
-published: "2020/02"
+publication_dates: [{"kind": "unspecified", "value": "2020/02", "source": "citation_publication_date"}, {"kind": "online", "value": "2020/02/12", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2020-02-12", "source": "dc.date"}, {"kind": "unspecified", "value": "2020-02-12", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

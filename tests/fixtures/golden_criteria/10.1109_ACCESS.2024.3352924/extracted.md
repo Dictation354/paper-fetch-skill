@@ -3,7 +3,7 @@ title: "NDPmulator: Enabling Full-System Simulation for Near-Data Accelerators F
 authors: "João Vieira, Nuno Roma, Gabriel Falcao, Pedro Tomás"
 journal: "IEEE Access"
 doi: "10.1109/access.2024.3352924"
-published: "2024"
+publication_dates: [{"kind": "unspecified", "value": "2024", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2024", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Encoded and non-genetic protein variants expand human functional proteom
 authors: "Vyacheslav Tretyachenko, Tehila Leiman, David Morgenstern, Yishai Levin, Omer Asraf, Orna Dahan, Dvir Dahary, Yitzhak Pilpel"
 journal: "Nature"
 doi: "10.1038/s41586-026-11124-z"
-published: "2026/09/14"
+publication_dates: [{"kind": "online", "value": "2026/09/14", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-09-14", "source": "dc.date"}, {"kind": "unspecified", "value": "2026-09-14", "source": "prism.publicationdate"}]
 source: "springer_pdf"
 has_fulltext: true
 content_kind: "fulltext"

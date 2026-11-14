@@ -3,7 +3,7 @@ title: "On the use of routine airborne observations for evaluation and monitorin
 authors: "Timothy J. Wagner, Thomas August, Tim Hultberg, Ralph A. Petersen"
 journal: "Atmospheric Measurement Techniques"
 doi: "10.5194/amt-17-1-2024"
-published: "3 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-3", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Northern Hemisphere drought risk in a warming climate"
 authors: "Daniel F. Balting, Amir AghaKouchak, Gerrit Lohmann, Monica Ionita"
 journal: "npj Climate and Atmospheric Science"
 doi: "10.1038/s41612-021-00218-2"
-published: "2021/12/02"
+publication_dates: [{"kind": "online", "value": "2021/12/02", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2021-12-02", "source": "dc.date"}, {"kind": "unspecified", "value": "2021-12-02", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

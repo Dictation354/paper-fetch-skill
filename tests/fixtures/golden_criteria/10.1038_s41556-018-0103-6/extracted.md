@@ -2,7 +2,7 @@
 title: "Methodical about Methods"
 journal: "Nature Cell Biology"
 doi: "10.1038/s41556-018-0103-6"
-published: "2018/05"
+publication_dates: [{"kind": "unspecified", "value": "2018/05", "source": "citation_publication_date"}, {"kind": "online", "value": "2018/04/25", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2018-04-25", "source": "dc.date"}, {"kind": "unspecified", "value": "2018-04-25", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

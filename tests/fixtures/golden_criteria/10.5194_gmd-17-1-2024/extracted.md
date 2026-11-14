@@ -3,7 +3,7 @@ title: "Scenario setup and forcing data for impact model evaluation and impact a
 authors: "Katja Frieler, Jan Volkholz, Stefan Lange, Jacob Schewe, Matthias Mengel, María del Rocío Rivas López, Christian Otto, Christopher P. O. Reyer, Dirk Nikolaus Karger, Johanna T. Malle, Simon Treu, Christoph Menz, Julia L. Blanchard, Cheryl S. Harrison, Colleen M. Petrik, Tyler D. Eddy, Kelly Ortega-Cisneros, Camilla Novaglio, Yannick Rousseau, Reg A. Watson, Charles Stock, Xiao Liu, Ryan Heneghan, Derek Tittensor, Olivier Maury, Matthias Büchner, Thomas Vogt, Tingting Wang, Fubao Sun, Inga J. Sauer, Johannes Koch, Inne Vanderkelen, Jonas Jägermeyr, Christoph Müller, Sam Rabin, Jochen Klar, Iliusi D. Vega del Valle, Gitta Lasslop, Sarah Chadburn, Eleanor Burke, Angela Gallego-Sala, Noah Smith, Jinfeng Chang, Stijn Hantson, Chantelle Burton, Anne Gädeke, Fang Li, Simon N. Gosling, Hannes Müller Schmied, Fred Hattermann, Jida Wang, Fangfang Yao, Thomas Hickler, Rafael Marcé, Don Pierson, Wim Thiery, Daniel Mercado-Bettín, Robert Ladwig, Ana Isabel Ayala-Zamora, Matthew Forrest, Michel Bechtold"
 journal: "Geoscientific Model Development"
 doi: "10.5194/gmd-17-1-2024"
-published: "4 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-4", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

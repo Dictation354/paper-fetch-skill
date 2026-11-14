@@ -3,7 +3,7 @@ title: "Nonlinear Traits of Leakage Current and Dynamic Actions of Surface Disch
 authors: "Yong Liu, Chao Li, Fanghui Yin, B. X. Du, Masoud Farzaneh"
 journal: "IEEE Transactions on Dielectrics and Electrical Insulation"
 doi: "10.1109/tdei.2024.3373549"
-published: "June 2024"
+publication_dates: [{"kind": "unspecified", "value": "June 2024", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2024", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

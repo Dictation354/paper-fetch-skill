@@ -3,7 +3,7 @@ title: "Soil priming effects and involved microbial community along salt gradien
 authors: "Haoli Zhang, Doudou Chang, Zhifeng Zhu, Chunmei Meng, Kaiyong Wang"
 journal: "Biogeosciences"
 doi: "10.5194/bg-21-1-2024"
-published: "2 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-2", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

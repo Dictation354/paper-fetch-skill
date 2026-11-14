@@ -3,7 +3,7 @@ title: "UniPool: A Globally Shared Expert Pool for Mixture-of-Experts"
 authors: "Minbin Huang, Han Shi, Chuanyang Zheng, Yimeng Wu, Guoxuan Chen, Xingtong Yu, Yichun Yin, Hong Cheng"
 journal: "arXiv"
 doi: "10.48550/arxiv.2605.06665v1"
-published: "2026-05-07"
+publication_dates: [{"kind": "unspecified", "value": "2026-05-07", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

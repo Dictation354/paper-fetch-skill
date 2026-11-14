@@ -3,7 +3,7 @@ title: "The protective value of the size and movement components of deimatic beh
 authors: "Hämäläinen, Liisa, Marsland, Connor M, White, Thomas E, Rowland, Hannah M, Umbers, Kate D L"
 journal: "Behavioral Ecology"
 doi: "10.1093/beheco/arag047"
-published: "2026/05/15"
+publication_dates: [{"kind": "unspecified", "value": "2026/05/15", "source": "citation_publication_date"}]
 source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"

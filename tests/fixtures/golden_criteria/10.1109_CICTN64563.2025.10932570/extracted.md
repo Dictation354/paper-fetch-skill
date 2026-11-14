@@ -3,7 +3,7 @@ title: "Deep Learning Based Model to Recommend Safe Route Navigation System"
 authors: "Sourav Garg, Aashu Mittal, V Sathiyasuntharam"
 journal: "2025 2nd International Conference on Computational Intelligence, Communication Technology and Networking (CICTN)"
 doi: "10.1109/cictn64563.2025.10932570"
-published: "06 February 2025"
+publication_dates: [{"kind": "unspecified", "value": "06 February 2025", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2025", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

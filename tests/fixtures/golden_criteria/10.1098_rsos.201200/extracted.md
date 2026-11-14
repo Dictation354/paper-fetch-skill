@@ -3,7 +3,7 @@ title: "Adaptation of the carbamoyl-phosphate synthetase enzyme in an extremophi
 authors: "White, Lewis J., Sutton, Gemma, Shechonge, Asilatu, Day, Julia J., Dasmahapatra, Kanchon K., Pownall, Mary E."
 journal: "Royal Society Open Science"
 doi: "10.1098/rsos.201200"
-published: "2020/10/01"
+publication_dates: [{"kind": "unspecified", "value": "2020/10/01", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

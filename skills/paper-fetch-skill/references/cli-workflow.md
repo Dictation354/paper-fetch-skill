@@ -29,12 +29,17 @@ paper-fetch fetch --preset archive --query-file ./queries.txt \
 
 ```python
 import json
+
 for line in progress_lines:
     event = json.loads(line)
     if event.get("paper_fetch_progress") and event.get("type") == "terminal":
         record = event["record"]
-        print(record["index"], record["acceptance"]["overall"],
-              record["acceptance"]["content"]["status"], record["output_artifacts"])
+        print(
+            record["index"],
+            record["acceptance"]["overall"],
+            record["acceptance"]["content"]["status"],
+            record["output_artifacts"],
+        )
 ```
 
 `record_status` 表示该输入的终态；内容完成结论读取 acceptance，并按 [`acceptance.md`](acceptance.md) 读取 `output_artifacts` 的实际路径及工具验收结论。每个输入都应有 terminal record，包括失败、限流、取消和未调度项。`--batch-results` 不提供恢复或 journal 语义；目标已存在且内容不同则保持拒绝，只有用户明确允许替换时才加 `--overwrite`。

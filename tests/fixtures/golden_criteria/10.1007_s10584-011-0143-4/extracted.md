@@ -3,7 +3,7 @@ title: "Hydrological response to climate change in a glacierized catchment in th
 authors: "Walter W. Immerzeel, L. P. H. van Beek, M. Konz, A. B. Shrestha, M. F. P. Bierkens"
 journal: "Climatic Change"
 doi: "10.1007/s10584-011-0143-4"
-published: "2012/02"
+publication_dates: [{"kind": "unspecified", "value": "2012/02", "source": "citation_publication_date"}, {"kind": "online", "value": "2011/07/12", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2011-07-12", "source": "dc.date"}, {"kind": "unspecified", "value": "2011-07-12", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

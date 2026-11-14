@@ -3,7 +3,7 @@ title: "A Generalized Simplest Equation Method and Its Application to the Boussi
 authors: "Bilige Sudao, Xiaomin Wang"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0126635"
-published: "2015"
+publication_dates: [{"kind": "collection", "value": "2015", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2015-5-14", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "JPOD240098_proof.pdf"
 authors: "Hui Sun, Qingxuan Yang, Jianing Li, Wei Zhao, Jiwei Tian"
 journal: "Journal of Physical Oceanography"
 doi: "10.1175/jpo-d-24-0098.1"
-published: "2025/06/11"
+publication_dates: [{"kind": "unspecified", "value": "2025/06/11", "source": "citation_publication_date"}]
 source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Creation and application of virtual patient cohorts of heart models"
 authors: "Niederer, S. A., Aboelkassem, Y., Cantwell, C. D., Corrado, C., Coveney, S., Cherry, E. M., Delhaas, T., Fenton, F. H., Panfilov, A. V., Pathmanathan, P., Plank, G., Riabiz, M., Roney, C. H., dos Santos, R. W., Wang, L."
 journal: "Philosophical Transactions of the Royal Society A: Mathematical, Physical and Engineering Sciences"
 doi: "10.1098/rsta.2019.0558"
-published: "2020/06/12"
+publication_dates: [{"kind": "unspecified", "value": "2020/06/12", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

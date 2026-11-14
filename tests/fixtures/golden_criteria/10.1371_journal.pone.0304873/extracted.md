@@ -3,7 +3,7 @@ title: "Efficient implementation of the linear layer of block ciphers with large
 authors: "Tran Thi Luong, Nguyen Van Long, Bay Vo"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0304873"
-published: "21 6 2024"
+publication_dates: [{"kind": "online", "value": "2024-6-21", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2024", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

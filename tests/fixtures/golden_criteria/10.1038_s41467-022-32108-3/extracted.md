@@ -3,7 +3,7 @@ title: "Thermal adaptation best explains Bergmann’s and Allen’s Rules across
 authors: "Alexandra McQueen, Marcel Klaassen, Glenn J. Tattersall, Robyn Atkinson, Roz Jessop, Chris J. Hassell, Maureen Christie, Matthew R. E. Symonds"
 journal: "Nature Communications"
 doi: "10.1038/s41467-022-32108-3"
-published: "2022/08/11"
+publication_dates: [{"kind": "online", "value": "2022/08/11", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2022-08-11", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-08-11", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

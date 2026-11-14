@@ -3,7 +3,7 @@ title: "Global ecological predictors of the soil priming effect"
 authors: "Felipe Bastida, Carlos García, Noah Fierer, David J. Eldridge, Matthew A. Bowker, Sebastián Abades, Fernando D. Alfaro, Asmeret Asefaw Berhe, Nick A. Cutler, Antonio Gallardo, Laura García-Velázquez, Stephen C. Hart, Patrick E. Hayes, Teresa Hernández, Zeng-Yei Hseu, Nico Jehmlich, Martin Kirchmair, Hans Lambers, Sigrid Neuhauser, Víctor M. Peña-Ramírez, Cecilia A. Pérez, Sasha C. Reed, Fernanda Santos, Christina Siebe, Benjamin W. Sullivan, Pankaj Trivedi, Alfonso Vera, Mark A. Williams, José Luis Moreno, Manuel Delgado-Baquerizo"
 journal: "Nature Communications"
 doi: "10.1038/s41467-019-11472-7"
-published: "2019/08/02"
+publication_dates: [{"kind": "online", "value": "2019/08/02", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2019-08-02", "source": "dc.date"}, {"kind": "unspecified", "value": "2019-08-02", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

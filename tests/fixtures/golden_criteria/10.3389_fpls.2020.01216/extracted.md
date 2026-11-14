@@ -3,7 +3,7 @@ title: "Concurrent Increases in Leaf Temperature With Light Accelerate Photosynt
 authors: "Hui-Xing Kang, Xin-Guang Zhu, Wataru Yamori, Yan-Hong Tang"
 journal: "Frontiers in Plant Science"
 doi: "10.3389/fpls.2020.01216"
-published: "07 08 2020"
+publication_dates: [{"kind": "online", "value": "2020-08-07", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2020", "source": "jats:pub-date:collection"}]
 source: "frontiers_xml"
 has_fulltext: true
 content_kind: "fulltext"

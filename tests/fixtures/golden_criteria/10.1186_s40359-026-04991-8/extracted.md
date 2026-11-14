@@ -3,7 +3,7 @@ title: "Phubbing in pregnancy as a predictor of postpartum depressive symptoms: 
 authors: "Sobol, Małgorzata, Mancinelli, Elisa, Schiavo, Alessandra, Cellini, Nicola, Mioni, Giovanna, Błachnio, Agata, Salcuni, Silvia"
 journal: "BMC Psychology"
 doi: "10.1186/s40359-026-04991-8"
-published: "2026/07/07"
+publication_dates: [{"kind": "online", "value": "2026/07/07", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-07-07", "source": "dc.date"}, {"kind": "unspecified", "value": "2026-07-07", "source": "prism.publicationdate"}]
 source: "springer_pdf"
 has_fulltext: true
 content_kind: "fulltext"

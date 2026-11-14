@@ -3,7 +3,7 @@ title: "Springtime arctic ozone depletion forces northern hemisphere climate ano
 authors: "Marina Friedel, Gabriel Chiodo, Andrea Stenke, Daniela I. V. Domeisen, Stephan Fueglistaler, Julien G. Anet, Thomas Peter"
 journal: "Nature Geoscience"
 doi: "10.1038/s41561-022-00974-7"
-published: "2022/07"
+publication_dates: [{"kind": "unspecified", "value": "2022/07", "source": "citation_publication_date"}, {"kind": "online", "value": "2022/07/07", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2022-07-07", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-07-07", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

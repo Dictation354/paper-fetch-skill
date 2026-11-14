@@ -3,7 +3,7 @@ title: "Contribution of semi-arid ecosystems to interannual variability of the g
 authors: "Benjamin Poulter, David Frank, Philippe Ciais, Ranga B. Myneni, Niels Andela, Jian Bi, Gregoire Broquet, Josep G. Canadell, Frederic Chevallier, Yi Y. Liu, Steven W. Running, Stephen Sitch, Guido R. van der Werf"
 journal: "Nature"
 doi: "10.1038/nature13376"
-published: "2014/05"
+publication_dates: [{"kind": "unspecified", "value": "2014/05", "source": "citation_publication_date"}, {"kind": "online", "value": "2014/05/21", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2014-05-21", "source": "dc.date"}, {"kind": "unspecified", "value": "2014-05-21", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

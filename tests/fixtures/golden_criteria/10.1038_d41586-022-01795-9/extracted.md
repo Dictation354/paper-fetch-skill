@@ -3,7 +3,7 @@ title: "After COVID, African countries vow to take the fight to malaria"
 authors: "T. V. Padma"
 journal: "Nature"
 doi: "10.1038/d41586-022-01795-9"
-published: "2022-07-01"
+publication_dates: [{"kind": "unspecified", "value": "2022-07-01", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-07-01", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

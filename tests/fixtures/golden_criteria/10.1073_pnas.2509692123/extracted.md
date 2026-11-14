@@ -3,7 +3,7 @@ title: "A discrete serotonergic circuit involved in the generation of tinnitus b
 authors: "Yu, Meng-Ting, Dai, Zhen-Yu, Wang, Si-Xin, Wang, Ke-Jian, Qin, Chun-Hui, Zhou, Yi-Mei, Guo, Xiao-Tao, Pan, Chun-Chen, Sun, Jia-Qiang, Sun, Jing-Wu, Chen, Wei-Heng, Jin, Yan, Wu, Qin-Wei, Trussell, Laurence O., Tang, Zheng-Quan"
 journal: "Proceedings of the National Academy of Sciences"
 doi: "10.1073/pnas.2509692123"
-published: "2026/04/28"
+publication_dates: [{"kind": "unspecified", "value": "2026/04/28", "source": "citation_publication_date"}, {"kind": "online", "value": "2026/04/20", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-4-20", "source": "dc.date"}]
 source: "pnas"
 acquisition:
   provider: "pnas"

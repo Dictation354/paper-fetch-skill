@@ -38,6 +38,7 @@ from .schema import (
     MaxTokensMode as MaxTokensMode,
     Metadata as Metadata,
     OutputMode as OutputMode,
+    PublicationDate as PublicationDate,
     Quality as Quality,
     QualityConfidence as QualityConfidence,
     Reference as Reference,

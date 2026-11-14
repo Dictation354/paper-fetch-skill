@@ -3,7 +3,7 @@ title: "Social media usage to share information in communication journals: An an
 authors: "Yasemin Özkent"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0263725"
-published: "9 2 2022"
+publication_dates: [{"kind": "online", "value": "2022-2-9", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2022", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

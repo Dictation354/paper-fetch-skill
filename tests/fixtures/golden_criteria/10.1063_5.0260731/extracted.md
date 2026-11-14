@@ -3,7 +3,7 @@ title: "A basis-free phase space electronic Hamiltonian that recovers beyond Bor
 authors: "Tao, Zhen, Qiu, Tian, Bian, Xuezhi, Duston, Titouan, Bradbury, Nadine, Subotnik, Joseph E."
 journal: "The Journal of Chemical Physics"
 doi: "10.1063/5.0260731"
-published: "2025/04/14"
+publication_dates: [{"kind": "unspecified", "value": "2025/04/14", "source": "citation_publication_date"}]
 source: "aip_pdf"
 has_fulltext: true
 content_kind: "fulltext"

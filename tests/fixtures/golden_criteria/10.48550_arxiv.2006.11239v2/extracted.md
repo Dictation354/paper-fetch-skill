@@ -3,7 +3,7 @@ title: "Denoising Diffusion Probabilistic Models"
 authors: "Jonathan Ho, Ajay Jain, Pieter Abbeel"
 journal: "arXiv"
 doi: "10.48550/arxiv.2006.11239v2"
-published: "2020-12-16"
+publication_dates: [{"kind": "unspecified", "value": "2020-12-16", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

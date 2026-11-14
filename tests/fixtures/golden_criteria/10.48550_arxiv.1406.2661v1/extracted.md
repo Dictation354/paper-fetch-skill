@@ -3,7 +3,6 @@ title: "Generative Adversarial Networks"
 authors: "Ian J. Goodfellow, Jean Pouget-Abadie, Mehdi Mirza, Bing Xu, David Warde-Farley, Sherjil Ozair, Aaron Courville, Yoshua Bengio"
 journal: "arXiv"
 doi: "10.48550/arxiv.1406.2661v1"
-published: "2014-06-10"
 source: "arxiv_pdf"
 has_fulltext: true
 content_kind: "fulltext"

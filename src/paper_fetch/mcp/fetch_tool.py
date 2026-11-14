@@ -761,7 +761,7 @@ def _fetch_error_payload(
     payload.update(target=target, query=query)
     acceptance = evaluate_fetch_acceptance(
         None,
-        target=target,
+        target="supplementary" if target == "supplementary" else "paper",
         asset_profile="all" if target == "supplementary" else "none",
         failure_code=payload.get("code", "error"),
         expected_doi=expected_doi_from_query(query),

@@ -3,7 +3,7 @@ title: "Drought self-propagation in drylands due to land-atmosphere feedbacks"
 authors: "Dominik L. Schumacher, Jessica Keune, Paul Dirmeyer, Diego G. Miralles"
 journal: "Nature Geoscience"
 doi: "10.1038/s41561-022-00912-7"
-published: "2022/04"
+publication_dates: [{"kind": "unspecified", "value": "2022/04", "source": "citation_publication_date"}, {"kind": "online", "value": "2022/03/17", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2022-03-17", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-03-17", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

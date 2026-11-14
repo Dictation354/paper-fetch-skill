@@ -3,7 +3,7 @@ title: "How to make the workplace fairer for female researchers"
 authors: "Katharine Sanderson"
 journal: "Nature"
 doi: "10.1038/d41586-023-01829-w"
-published: "2023-06-02"
+publication_dates: [{"kind": "unspecified", "value": "2023-06-02", "source": "dc.date"}, {"kind": "unspecified", "value": "2023-06-02", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Effects of chronic particulate matter exposure on endometriosis-associat
 authors: "Jung, Gee Soo, Lee, Jae Hoon, Lee, Min Jung, Lee, Inha, Park, Hyemin, Kim, Nara, Kim, Ji-Ye, Im, Wooseok, Cho, SiHyun, Choi, Young Sik"
 journal: "Molecular Human Reproduction"
 doi: "10.1093/molehr/gaaf013"
-published: "2025/04/03"
+publication_dates: [{"kind": "unspecified", "value": "2025/04/03", "source": "citation_publication_date"}]
 source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"

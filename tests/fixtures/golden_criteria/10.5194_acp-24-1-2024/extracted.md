@@ -3,7 +3,7 @@ title: "Seasonal variations in photooxidant formation and light absorption in aq
 authors: "Lan Ma, Reed Worland, Laura Heinlein, Chrystal Guzman, Wenqing Jiang, Christopher Niedek, Keith J. Bein, Qi Zhang, Cort Anastasio"
 journal: "Atmospheric Chemistry and Physics"
 doi: "10.5194/acp-24-1-2024"
-published: "2 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-2", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Paediatric Prosthetic Knee Design: The Technical Requirements of a Swing
 authors: "Caitlin E. Edgar, Richard K. Jones, Anthony M. J. Bull"
 journal: "IEEE Transactions on Biomedical Engineering"
 doi: "10.1109/tbme.2024.3434477"
-published: "December 2024"
+publication_dates: [{"kind": "unspecified", "value": "December 2024", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2024", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

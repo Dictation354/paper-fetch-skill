@@ -2,7 +2,7 @@
 title: "Ozone depletion over the Arctic affects spring climate in the Northern Hemisphere"
 journal: "Nature Geoscience"
 doi: "10.1038/s41561-022-00983-6"
-published: "2022/07"
+publication_dates: [{"kind": "unspecified", "value": "2022/07", "source": "citation_publication_date"}, {"kind": "online", "value": "2022/07/07", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2022-07-07", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-07-07", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

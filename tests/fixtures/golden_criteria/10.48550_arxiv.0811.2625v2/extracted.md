@@ -3,7 +3,7 @@ title: "Maximizing the number of $q$-colorings"
 authors: "Po-Shen Loh, Oleg Pikhurko, Benny Sudakov"
 journal: "arXiv"
 doi: "10.48550/arxiv.0811.2625v2"
-published: "2008-11-19"
+publication_dates: [{"kind": "unspecified", "value": "2008-11-19", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

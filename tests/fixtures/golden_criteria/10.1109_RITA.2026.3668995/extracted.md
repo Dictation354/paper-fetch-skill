@@ -3,7 +3,7 @@ title: "Computational Thinking in Rural Education: Evidence of Gains in Problem-
 authors: "Elkin Martínez-Caro, Miguel Garcés-Prettel"
 journal: "IEEE Revista Iberoamericana de Tecnologias del Aprendizaje"
 doi: "10.1109/rita.2026.3668995"
-published: "2026"
+publication_dates: [{"kind": "unspecified", "value": "2026", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2026", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

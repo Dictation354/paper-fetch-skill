@@ -3,7 +3,7 @@ title: "Figure Text Extraction in Biomedical Literature"
 authors: "Daehyun Kim, Hong Yu"
 journal: "PLoS ONE"
 doi: "10.1371/journal.pone.0015338"
-published: "2011"
+publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-1-13", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

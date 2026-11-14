@@ -3,7 +3,7 @@ title: "Embedding machine-learnt sub-grid variability improves climate model pre
 authors: "Daniel Giles, James Briant, Cyril J. Morcrette, Serge Guillas"
 journal: "Communications Earth & Environment"
 doi: "10.1038/s43247-024-01885-8"
-published: "2024/11/18"
+publication_dates: [{"kind": "online", "value": "2024/11/18", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2024-11-18", "source": "dc.date"}, {"kind": "unspecified", "value": "2024-11-18", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

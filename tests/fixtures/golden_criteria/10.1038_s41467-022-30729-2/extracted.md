@@ -3,7 +3,7 @@ title: "The timing of unprecedented hydrological drought under climate change"
 authors: "Yusuke Satoh, Kei Yoshimura, Yadu Pokhrel, Hyungjun Kim, Hideo Shiogama, Tokuta Yokohata, Naota Hanasaki, Yoshihide Wada, Peter Burek, Edward Byers, Hannes Müller Schmied, Dieter Gerten, Sebastian Ostberg, Simon Newland Gosling, Julien Eric Stanslas Boulange, Taikan Oki"
 journal: "Nature Communications"
 doi: "10.1038/s41467-022-30729-2"
-published: "2022/06/28"
+publication_dates: [{"kind": "online", "value": "2022/06/28", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2022-06-28", "source": "dc.date"}, {"kind": "unspecified", "value": "2022-06-28", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

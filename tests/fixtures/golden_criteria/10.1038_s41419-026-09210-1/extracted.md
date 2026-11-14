@@ -3,7 +3,7 @@ title: "SpringerNature_CellDeathDis_9210_AIP 1..27"
 authors: "Liu, Rui, Huang, Yazhu, Fang, Zhihong, Zhang, Xingding, Wang, Yafei, Li, Zongwei, Liu, Huan"
 journal: "Cell Death & Disease"
 doi: "10.1038/s41419-026-09210-1"
-published: "2026/09/07"
+publication_dates: [{"kind": "online", "value": "2026/09/07", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-09-07", "source": "dc.date"}, {"kind": "unspecified", "value": "2026-09-07", "source": "prism.publicationdate"}]
 source: "springer_pdf"
 has_fulltext: true
 content_kind: "fulltext"

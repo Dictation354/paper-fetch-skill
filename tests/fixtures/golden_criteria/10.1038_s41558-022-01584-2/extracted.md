@@ -3,7 +3,7 @@ title: "Widespread spring phenology effects on drought recovery of Northern Hemi
 authors: "Yang Li, Wen Zhang, Christopher R. Schwalm, Pierre Gentine, William K. Smith, Philippe Ciais, John S. Kimball, Antonio Gazol, Steven A. Kannenberg, Anping Chen, Shilong Piao, Hongyan Liu, Deliang Chen, Xiuchen Wu"
 journal: "Nature Climate Change"
 doi: "10.1038/s41558-022-01584-2"
-published: "2023/02"
+publication_dates: [{"kind": "unspecified", "value": "2023/02", "source": "citation_publication_date"}, {"kind": "online", "value": "2023/01/19", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2023-01-19", "source": "dc.date"}, {"kind": "unspecified", "value": "2023-01-19", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Solvent control of orbital mixing and electronic coupling in ligand-brid
 authors: "Hupp, Joseph T."
 journal: "Journal of the American Chemical Society"
 doi: "10.1021/ja00160a040"
-published: "1990/02/01"
+publication_dates: [{"kind": "unspecified", "value": "1990/02/01", "source": "citation_publication_date"}]
 source: "acs"
 acquisition:
   provider: "acs"

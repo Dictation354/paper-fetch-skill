@@ -3,7 +3,7 @@ title: "Emo: Pretraining Mixture of Experts for Emergent Modularity"
 authors: "Ryan Wang, Akshita Bhagia, Sewon Min"
 journal: "arXiv"
 doi: "10.48550/arxiv.2605.06663v1"
-published: "2026-05-07"
+publication_dates: [{"kind": "unspecified", "value": "2026-05-07", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

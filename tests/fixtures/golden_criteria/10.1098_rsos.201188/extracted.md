@@ -3,7 +3,7 @@ title: "Learning agents in Black–Scholes financial markets"
 authors: "Vaidya, Tushar, Murguia, Carlos, Piliouras, Georgios"
 journal: "Royal Society Open Science"
 doi: "10.1098/rsos.201188"
-published: "2020/10/01"
+publication_dates: [{"kind": "unspecified", "value": "2020/10/01", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

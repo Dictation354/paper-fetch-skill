@@ -11,11 +11,14 @@ DOCX 没有宿主 reader 时可用标准库读取段落和表格中的文本：
 ```python
 from zipfile import ZipFile
 from xml.etree import ElementTree as ET
+
 with ZipFile(path) as document:
     root = ET.fromstring(document.read("word/document.xml"))
 ns = {"w": "http://schemas.openxmlformats.org/wordprocessingml/2006/main"}
-paragraphs = ["".join(t.text or "" for t in p.findall(".//w:t", ns))
-              for p in root.findall(".//w:p", ns)]
+paragraphs = [
+    "".join(t.text or "" for t in p.findall(".//w:t", ns))
+    for p in root.findall(".//w:p", ns)
+]
 print("\n".join(paragraphs))
 ```
 

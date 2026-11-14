@@ -3,7 +3,7 @@ title: "ActCam: Zero-Shot Joint Camera and 3D Motion Control for Video Generatio
 authors: "Omar El Khalifi, Thomas Rossi, Oscar Fossey, Thibault Fouque, Ulysse Mizrahi, Philip Torr, Ivan Laptev, Fabio Pizzati, Baptiste Bellot-Gurlet"
 journal: "arXiv"
 doi: "10.48550/arxiv.2605.06667v1"
-published: "2026-05-07"
+publication_dates: [{"kind": "unspecified", "value": "2026-05-07", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

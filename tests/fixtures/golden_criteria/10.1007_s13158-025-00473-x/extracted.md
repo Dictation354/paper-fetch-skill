@@ -3,7 +3,7 @@ title: "Stagnated Development of Home Language Vocabulary in Japanese–Chinese 
 authors: "Hsin I. Lin, Mikimasa Omori"
 journal: "International Journal of Early Childhood"
 doi: "10.1007/s13158-025-00473-x"
-published: "2026/04"
+publication_dates: [{"kind": "unspecified", "value": "2026/04", "source": "citation_publication_date"}, {"kind": "online", "value": "2026/01/19", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-01-19", "source": "dc.date"}, {"kind": "unspecified", "value": "2026-01-19", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

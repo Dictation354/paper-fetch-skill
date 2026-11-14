@@ -3,7 +3,7 @@ title: "Fitness benefits of male dominance behaviours depend on the degree of in
 authors: "Piza-Roca, Carmen, Schoeman, David, Frere, Celine"
 journal: "Proceedings of the Royal Society B: Biological Sciences"
 doi: "10.1098/rspb.2020.0097"
-published: "2020/05/01"
+publication_dates: [{"kind": "unspecified", "value": "2020/05/01", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

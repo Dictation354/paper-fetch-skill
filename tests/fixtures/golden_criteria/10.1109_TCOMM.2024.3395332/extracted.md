@@ -3,7 +3,7 @@ title: "An Optimal Two-Step Decoding for PSK-Modulated Noisy Index Coding"
 authors: "Navya Saxena, Anjana A. Mahesh, B. Sundar Rajan"
 journal: "IEEE Transactions on Communications"
 doi: "10.1109/tcomm.2024.3395332"
-published: "October 2024"
+publication_dates: [{"kind": "unspecified", "value": "October 2024", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2024", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

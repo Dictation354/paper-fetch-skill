@@ -3,7 +3,7 @@ title: "Variation in Effects of Non-Hodgkin Lymphoma Risk Factors According to t
 authors: "Sophia S. Wang, Yani Lu, Nathaniel Rothman, Amr M. Abdou, James R. Cerhan, Anneclaire De Roos, Scott Davis, Richard K. Severson, Wendy Cozen, Stephen J. Chanock, Leslie Bernstein, Lindsay M. Morton, Patricia Hartge"
 journal: "PLoS ONE"
 doi: "10.1371/journal.pone.0026949"
-published: "2011"
+publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-11-9", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

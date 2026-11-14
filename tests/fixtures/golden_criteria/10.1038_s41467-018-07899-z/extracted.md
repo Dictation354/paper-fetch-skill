@@ -3,7 +3,7 @@ title: "A quasi-integral controller for adaptation of genetic modules to variabl
 authors: "Hsin-Ho Huang, Yili Qian, Domitilla Del Vecchio"
 journal: "Nature Communications"
 doi: "10.1038/s41467-018-07899-z"
-published: "2018/12/21"
+publication_dates: [{"kind": "online", "value": "2018/12/21", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2018-12-21", "source": "dc.date"}, {"kind": "unspecified", "value": "2018-12-21", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

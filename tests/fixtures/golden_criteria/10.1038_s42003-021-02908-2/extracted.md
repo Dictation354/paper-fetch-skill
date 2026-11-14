@@ -3,7 +3,7 @@ title: "Intracellular thermometry uncovers spontaneous thermogenesis and associa
 authors: "Kohki Okabe, Seiichi Uchiyama"
 journal: "Communications Biology"
 doi: "10.1038/s42003-021-02908-2"
-published: "2021/12/09"
+publication_dates: [{"kind": "online", "value": "2021/12/09", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2021-12-09", "source": "dc.date"}, {"kind": "unspecified", "value": "2021-12-09", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "How Australia's Millennium drought induced hydrological shifts"
 authors: "Yanhua Chen"
 journal: "Nature Water"
 doi: "10.1038/s44221-022-00024-x"
-published: "2023/01"
+publication_dates: [{"kind": "unspecified", "value": "2023/01", "source": "citation_publication_date"}, {"kind": "online", "value": "2023/01/19", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2023-01-19", "source": "dc.date"}, {"kind": "unspecified", "value": "2023-01-19", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

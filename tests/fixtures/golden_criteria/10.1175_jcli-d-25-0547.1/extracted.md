@@ -3,7 +3,7 @@ title: "Corrigendum"
 authors: "Kristian Strommen, Simon L. L. Michel, Hannah M. Christensen"
 journal: "Journal of Climate"
 doi: "10.1175/jcli-d-25-0547.1"
-published: "2026/04/24"
+publication_dates: [{"kind": "unspecified", "value": "2026/04/24", "source": "citation_publication_date"}]
 source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"

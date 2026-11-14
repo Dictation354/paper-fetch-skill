@@ -3,7 +3,7 @@ title: "Relationship between loss of desiccation tolerance and programmed cell d
 authors: "Xiangrong Tian, Sidi Li, Qing Zeng, Wei Huang, Xuanming Liu, Songquan Song"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0218513"
-published: "2 7 2019"
+publication_dates: [{"kind": "online", "value": "2019-7-2", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2019", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"

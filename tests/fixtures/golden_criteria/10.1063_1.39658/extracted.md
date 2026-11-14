@@ -3,7 +3,7 @@ title: "High throughput x-ray astronomy"
 authors: "Gorenstein, Paul"
 journal: "AIP Conference Proceedings"
 doi: "10.1063/1.39658"
-published: "1990/08/10"
+publication_dates: [{"kind": "unspecified", "value": "1990/08/10", "source": "citation_publication_date"}]
 source: "aip_pdf"
 has_fulltext: true
 content_kind: "fulltext"

@@ -6,6 +6,27 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.2 - 2026-11-14
+
+### MCP 内容交付与正文导航
+
+- MCP 输出升级至 v4，fetch-envelope sidecar 升至 v7。acquisition 仅在结果顶层出现一次，单篇／批量从统一 acceptance 派生 fallback、warning、failure 三组原因码。manifest／完整 acceptance 保持 v2、cache index 保持 v3；旧 sidecar 按版本不匹配处理，不迁移。
+- 精简补充材料和失败首包，将完整清单、来源 URL、逐项失败、acceptance 及 provider 原始诊断保留在可分页 diagnostics 快照；失败抓取同样提供诊断句柄，批量别名共享快照。公共参数校验统一返回结构化 `validation_error`，继续严格拒绝非法枚举、未知字段及越界值。
+- 新增只读 `navigate_content`，提供保留 Markdown 的标题目录、章节范围和不区分大小写的字面搜索；返回原文 Unicode 码点偏移供 `read_content` 使用，不改写正文或重新获取。
+
+### CLI、安装与诊断
+
+- CLI 新增 `temporary_read`、`archive` 预设，仅补全未显式指定的选项，保留输出、资产和渲染参数覆盖。文本终态显示执行状态、acceptance、全文／摘要／元数据范围和实际路径；JSONL terminal 协议保持不变。
+- MCP resource 与 `doctor --catalog [--json]` 共用运行时 catalog，直接表达补充材料 target、运行版本、解释器和安装来源；只有 catalog 可唯一对应时才提示规范 provider ID。
+- PDF 转换器的导入和调用改为当前解释器启动的独立子进程，附带输出进入日志，Markdown 经独立结果通道原样传递，保留父进程转换缓存。diagnostics 记录实际 PDF 字节 transport 与最终 URL。
+- Unix／Windows 直接注册和卸载 Codex MCP 时统一优先使用非空 `CODEX_HOME`，否则沿用宿主默认目录；认证错误保留 provider、人工检查／profile 重开阶段、实际窗口模式和原始 challenge reason。
+
+### 元数据、身份与阅读说明
+
+- 公开 `published` 字段直接替换为 `publication_dates=[{kind,value,source}]`，贯通全部 provider、合并、编解码、候选、渲染和文件命名。保留上游实际日期类型及多个日期，发表年份匹配排除 `created`，不保留旧字段兼容别名。
+- 作者按完整姓名、首字母和仅姓氏证据一对一匹配，明确姓名冲突为零，保留现有置信度及分差阈值；贯通上游文献类型、relation、update-to 和关联 DOI，不自动替换身份或追加关联论文获取。
+- skill 入口直接提供 fetch、分页和必要验收示例，补齐受管 CLI wrapper 发现及批量归档命令；移除固定重复 hash 和旧 bounded 字段检查，增加附件／DOCX 与指定图件交给宿主 reader 的短路径。
+
 ## 7.6.1 - 2026-11-14
 
 - 为 Oxford Academic 接入独立 `target=supplementary`，覆盖 Python、CLI 及 MCP 单篇／批量入口；复用现有附件发现、签名链接去重和下载逻辑，不要求正文可读，保留论文身份校验与逐项失败报告。

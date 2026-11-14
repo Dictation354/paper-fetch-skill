@@ -3,7 +3,7 @@ title: "The structure of micelles and microemulsions"
 authors: "Y Chevalier, T Zemb"
 journal: "Reports on Progress in Physics"
 doi: "10.1088/0034-4885/53/3/002"
-published: "1990/03/01"
+publication_dates: [{"kind": "online", "value": "1990/03/01", "source": "citation_online_date"}, {"kind": "unspecified", "value": "1990-03-01", "source": "dc.date"}]
 source: "iop_pdf"
 has_fulltext: true
 content_kind: "fulltext"

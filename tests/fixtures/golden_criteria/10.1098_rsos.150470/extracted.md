@@ -3,7 +3,7 @@ title: "First report of Plesiochelys etalloni and Tropidemys langii from the Lat
 authors: "Anquetin, Jérémy, Chapman, Sandra D."
 journal: "Royal Society Open Science"
 doi: "10.1098/rsos.150470"
-published: "2016/01/01"
+publication_dates: [{"kind": "unspecified", "value": "2016/01/01", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

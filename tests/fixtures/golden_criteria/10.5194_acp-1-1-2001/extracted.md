@@ -3,7 +3,7 @@ title: "298 K rate coefficients for the reaction of OH with i-C3H7I, n-C3H7I and
 authors: "Carl, S. A., Crowley, J. N."
 journal: "Atmospheric Chemistry and Physics"
 doi: "10.5194/acp-1-1-2001"
-published: "2001/11/22"
+publication_dates: [{"kind": "unspecified", "value": "2001/11/22", "source": "citation_publication_date"}, {"kind": "online", "value": "2001/11/22", "source": "citation_online_date"}]
 source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"

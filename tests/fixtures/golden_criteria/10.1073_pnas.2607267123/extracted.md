@@ -3,7 +3,7 @@ title: "Reconfigurable hydrogel interfaces for soft brain electrodes"
 authors: "Liu, Zhichang, Wang, Sihong"
 journal: "Proceedings of the National Academy of Sciences"
 doi: "10.1073/pnas.2607267123"
-published: "2026/04/28"
+publication_dates: [{"kind": "unspecified", "value": "2026/04/28", "source": "citation_publication_date"}, {"kind": "online", "value": "2026/04/20", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-4-20", "source": "dc.date"}]
 source: "pnas"
 acquisition:
   provider: "pnas"

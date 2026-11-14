@@ -3,7 +3,7 @@ title: "Unified methods for feature selection in large-scale genomic studies wit
 authors: "Spirko-Burns, Lauren, Devarajan, Karthik"
 journal: "Bioinformatics"
 doi: "10.1093/bioinformatics/btaa161"
-published: "2020/06/11"
+publication_dates: [{"kind": "unspecified", "value": "2020/06/11", "source": "citation_publication_date"}]
 source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"

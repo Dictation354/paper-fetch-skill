@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from ..publication_dates import publication_date, citation_date
+from ..publication_dates import PublicationDate, publication_date, citation_date
 
 from dataclasses import dataclass, field
 from pathlib import Path
@@ -200,7 +200,7 @@ def _article_id(article_meta: ET.Element | None, pub_id_type: str) -> str:
     return ""
 
 
-def _publication_dates(article_meta: ET.Element | None) -> list[dict[str, str]]:
+def _publication_dates(article_meta: ET.Element | None) -> list[PublicationDate]:
     dates = []
     for node in iter_children(article_meta, "pub-date"):
         raw_kind = str(

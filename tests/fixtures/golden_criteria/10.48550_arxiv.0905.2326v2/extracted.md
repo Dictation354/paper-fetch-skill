@@ -3,7 +3,7 @@ title: "The Ultraviolet Behavior of ${{\\cal N}=8}$ Supergravity at Four Loops"
 authors: "Z. Bern, J. J. Carrasco, L. J. Dixon, H. Johansson, R. Roiban"
 journal: "arXiv"
 doi: "10.48550/arxiv.0905.2326v2"
-published: "2012-01-08"
+publication_dates: [{"kind": "unspecified", "value": "2012-01-08", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

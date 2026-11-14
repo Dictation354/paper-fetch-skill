@@ -3,7 +3,7 @@ title: "Text mining for modeling of protein complexes enhanced by machine learni
 authors: "Badal, Varsha D, Kundrotas, Petras J, Vakser, Ilya A"
 journal: "Bioinformatics"
 doi: "10.1093/bioinformatics/btaa823"
-published: "2021/05/01"
+publication_dates: [{"kind": "unspecified", "value": "2021/05/01", "source": "citation_publication_date"}]
 source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"

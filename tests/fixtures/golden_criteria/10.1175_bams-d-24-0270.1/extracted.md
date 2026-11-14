@@ -3,7 +3,7 @@ title: "Integrating High-Resolution Modeling with Diverse Field Campaign Observa
 authors: "Maxwell A. Grover, Scott Collis, Daniel Feldman, Ann Fridlind, Ya-Chien Feng, Michael Giansiracusa, Sujata Goswami, William I. Gustafson, Thijs Heus, Robert C. Jackson, Timothy W. Juliano, Lishan Li, Joseph R. O’Brien, Damao Zhang"
 journal: "Bulletin of the American Meteorological Society"
 doi: "10.1175/bams-d-24-0270.1"
-published: "2024/12/04"
+publication_dates: [{"kind": "unspecified", "value": "2024/12/04", "source": "citation_publication_date"}]
 source: "ams_pdf"
 has_fulltext: true
 content_kind: "fulltext"

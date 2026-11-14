@@ -3,7 +3,7 @@ title: "Hashprice moderates the electricity demand response of Bitcoin miners"
 authors: "Subir Majumder"
 journal: "arXiv"
 doi: "10.48550/arxiv.2606.00587v2"
-published: "2026-06-03"
+publication_dates: [{"kind": "unspecified", "value": "2026-06-03", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

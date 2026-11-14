@@ -3,7 +3,7 @@ title: "Water cycle changes in Czechia: a multi-source water budget perspective"
 authors: "Mijael Rodrigo Vargas Godoy, Yannis Markonis, Oldrich Rakovec, Michal Jenicek, Riya Dutta, Rajani Kumar Pradhan, Zuzana Bešťáková, Jan Kyselý, Roman Juras, Simon Michael Papalexiou, Martin Hanel"
 journal: "Hydrology and Earth System Sciences"
 doi: "10.5194/hess-28-1-2024"
-published: "2 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-2", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

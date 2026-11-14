@@ -3,7 +3,7 @@ title: "A two-fold increase of carbon cycle sensitivity to tropical temperature 
 authors: "Xuhui Wang, Shilong Piao, Philippe Ciais, Pierre Friedlingstein, Ranga B. Myneni, Peter Cox, Martin Heimann, John Miller, Shushi Peng, Tao Wang, Hui Yang, Anping Chen"
 journal: "Nature"
 doi: "10.1038/nature12915"
-published: "2014/02"
+publication_dates: [{"kind": "unspecified", "value": "2014/02", "source": "citation_publication_date"}, {"kind": "online", "value": "2014/01/26", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2014-01-26", "source": "dc.date"}, {"kind": "unspecified", "value": "2014-01-26", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

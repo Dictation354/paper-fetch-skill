@@ -3,7 +3,7 @@ title: "Hepatitis C virus modelled as an indirectly transmitted infection highli
 authors: "Miller-Dickson, Miles D., Meszaros, Victor A., Almagro-Moreno, Salvador, Brandon Ogbunugafor, C."
 journal: "Journal of The Royal Society Interface"
 doi: "10.1098/rsif.2019.0334"
-published: "2019/09/01"
+publication_dates: [{"kind": "unspecified", "value": "2019/09/01", "source": "citation_publication_date"}]
 source: "royalsocietypublishing_html"
 has_fulltext: true
 content_kind: "fulltext"

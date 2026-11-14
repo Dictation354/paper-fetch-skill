@@ -3,7 +3,7 @@ title: "Quantifying the effect of vegetation dynamics on the climate of the Last
 authors: "Jahn, A., Claussen, M., Ganopolski, A., Brovkin, V."
 journal: "Climate of the Past"
 doi: "10.5194/cp-1-1-2005"
-published: "2005/10/04"
+publication_dates: [{"kind": "unspecified", "value": "2005/10/04", "source": "citation_publication_date"}, {"kind": "online", "value": "2005/10/04", "source": "citation_online_date"}]
 source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"

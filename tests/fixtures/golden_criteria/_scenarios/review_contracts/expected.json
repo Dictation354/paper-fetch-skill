@@ -3964,7 +3964,7 @@
         "inline": 164,
         "display": 0,
         "container_sha256": "9c50914ee3c9fbd913bf2e6bd429a14feef3946eaa8d082b245114ef40de9a44",
-        "baseline_sha256": "77b91fafe8fd09ae955a5386f30f5be0c0113e4b62a02927957f2952a3334441"
+        "baseline_sha256": "d13736661310968aff12fa8fe0459f9a990df707299ca099c68e2a169c05ca77"
       }
     },
     "10.48550_arxiv.0811.2625v2": {
@@ -5635,7 +5635,7 @@
         "inline": 3122,
         "display": 37,
         "container_sha256": "5c52b48ed205908093a32bbbe789910ddd57e219800d02b45cfa1a49834fc4b7",
-        "baseline_sha256": "9e0fa96c7ce87bbcb183b6a1775c8ebe737ef1b331d54fb6ead52afca347c8f3"
+        "baseline_sha256": "9f5291054124c7b3d1dae1ba0f1c933056905c086aa3cf5903f4ff9cb7b71de7"
       }
     },
     "10.48550_arxiv.2605.06556v1": {
@@ -5754,7 +5754,7 @@
         "inline": 1123,
         "display": 129,
         "container_sha256": "27379a33e8585b7958e5ea0c3f77d27379bc4984fe1b81bb8311350f7fcb6c31",
-        "baseline_sha256": "ecade21fb94bcb465f98fe8ba4f40c686c9b2c47a6457c3f13c3c0bb59d1dbef"
+        "baseline_sha256": "b6e15019782700bf7711fadf89d8c329a3e376dfe06330642f1e54d3abf51cf0"
       }
     },
     "10.48550_arxiv.2605.06598v1": {
@@ -5838,7 +5838,7 @@
         "inline": 327,
         "display": 20,
         "container_sha256": "a8772b49fcc2607c3d1e408846c2763e1966186fd7806938cd001da0e022b504",
-        "baseline_sha256": "26f3c39ba8a35361426140ae6752dcb8afd9a298ddc505860e290cc73126f728"
+        "baseline_sha256": "5743b9a57c6d08bbaeb442c04fa355caa37139dd07a3cf531a0e25bb83ccda68"
       }
     },
     "10.48550_arxiv.2605.06659v1": {
@@ -5973,7 +5973,7 @@
         "inline": 43,
         "display": 4,
         "container_sha256": "8c5f39656a7db34b69634077a0aab66af980d8b926cf252c1a12523618ab4720",
-        "baseline_sha256": "ad63b3683b14f8f9694d8fd642b69eedab876bf147bc4946ee46a6a533b623f2"
+        "baseline_sha256": "e964533c9701ad1c86ad52b71a569a29d22f509bf34c23dfa9267ae3d70179c1"
       }
     },
     "10.48550_arxiv.2605.06667v1": {
@@ -6003,7 +6003,7 @@
         "inline": 117,
         "display": 6,
         "container_sha256": "463c0d1d1e2f22e4b8dd4320f9501777c45b42d2ddb364bb4f512d91b1b97dc1",
-        "baseline_sha256": "18939d030397877ed36c58ed3fe818c529f40317694903aa3eaf733ab018a509"
+        "baseline_sha256": "8d046906c7ad0ac267c028066497dc3a9924e09cf276cc116523cd3d687c4e78"
       }
     },
     "10.48550_arxiv.2606.00587v2": {
@@ -6071,7 +6071,7 @@
         "inline": 105,
         "display": 10,
         "container_sha256": "6a0495ce110aee2c66d0d9f31df264ce884ee8b59941dc9c3dee52752befada0",
-        "baseline_sha256": "31ab794d83e20f515c9c9718273985d5c30ee3cc64cf6058ce74ccd808c1b3ed"
+        "baseline_sha256": "e74b13df610d3a24ef2d9d716a97da884f3c38870b09e1fb2eef0d829c28ce6a"
       }
     }
   },

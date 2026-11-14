@@ -3,7 +3,7 @@ title: "A field-based method for simultaneous measurements of the d18O and d13C 
 authors: "Mortazavi, B., Prater, J. L., Chanton, J. P."
 journal: "Biogeosciences"
 doi: "10.5194/bg-1-1-2004"
-published: "2004/08/13"
+publication_dates: [{"kind": "unspecified", "value": "2004/08/13", "source": "citation_publication_date"}, {"kind": "online", "value": "2004/08/13", "source": "citation_online_date"}]
 source: "copernicus_pdf"
 has_fulltext: true
 content_kind: "fulltext"

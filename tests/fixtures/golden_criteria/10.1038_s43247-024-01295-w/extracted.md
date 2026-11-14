@@ -3,7 +3,7 @@ title: "Hydrological drought forecasts using precipitation data depend on catchm
 authors: "Samuel Jonson Sutanto, Wahdan Achmad Syaehuddin, Inge de Graaf"
 journal: "Communications Earth & Environment"
 doi: "10.1038/s43247-024-01295-w"
-published: "2024/03/07"
+publication_dates: [{"kind": "online", "value": "2024/03/07", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2024-03-07", "source": "dc.date"}, {"kind": "unspecified", "value": "2024-03-07", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

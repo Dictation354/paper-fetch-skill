@@ -3,7 +3,7 @@ title: "Conceptualizing the Sample Mean: Insights for Computer Engineering Stude
 authors: "Fulya Kula, Nelly Litvak, Tracy S. Craig"
 journal: "IEEE Transactions on Education"
 doi: "10.1109/te.2024.3376795"
-published: "August 2024"
+publication_dates: [{"kind": "unspecified", "value": "August 2024", "source": "ieee:publicationDate"}, {"kind": "unspecified", "value": "2024", "source": "ieee:publicationYear"}]
 source: "ieee_html"
 has_fulltext: true
 content_kind: "fulltext"

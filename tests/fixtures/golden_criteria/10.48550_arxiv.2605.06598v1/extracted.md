@@ -3,7 +3,7 @@ title: "Mathematical Modeling of Early Embryonic Cell Cycles of *Drosophila mela
 authors: "Meskerem Abebaw Mebratie, Benedikt Drebes, Katja Kapp, Arno Müller, Werner M. Seiler"
 journal: "arXiv"
 doi: "10.48550/arxiv.2605.06598v1"
-published: "2026-05-07"
+publication_dates: [{"kind": "unspecified", "value": "2026-05-07", "source": "arxiv:watermark"}]
 source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"

@@ -3,7 +3,7 @@ title: "Choline counteracts pregnancy undernutrition-associated colitis in sheep
 authors: "Weibin Wu, Peng Jiao, Yamei Gu, Huizhen Lu, Caiyun Fan, Zheng Sun, Lizhuang Hao, Shengyong Mao, Jianbo Cheng, Yanfeng Xue"
 journal: "npj Biofilms and Microbiomes"
 doi: "10.1038/s41522-026-01027-2"
-published: "2026/05/30"
+publication_dates: [{"kind": "online", "value": "2026/05/30", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2026-05-30", "source": "dc.date"}, {"kind": "unspecified", "value": "2026-05-30", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

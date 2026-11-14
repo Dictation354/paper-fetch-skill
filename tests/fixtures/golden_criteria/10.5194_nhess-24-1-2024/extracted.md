@@ -3,7 +3,7 @@ title: "Slope Unit Maker (SUMak): an efficient and parameter-free algorithm for 
 authors: "Jacob B. Woodard, Benjamin B. Mirus, Nathan J. Wood, Kate E. Allstadt, Benjamin A. Leshchinsky, Matthew M. Crawford"
 journal: "Natural Hazards and Earth System Sciences"
 doi: "10.5194/nhess-24-1-2024"
-published: "3 January 2024"
+publication_dates: [{"kind": "unspecified", "value": "2024-January-3", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"

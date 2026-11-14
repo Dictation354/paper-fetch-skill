@@ -6,6 +6,27 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.2 - 2026-11-14
+
+### MCP delivery and content navigation
+
+- Advance MCP output to v4 and fetch-envelope sidecars to v7. Keep acquisition once at the result level and derive single/batch fallback, warning and failure codes from unified acceptance. Preserve manifest/acceptance v2 and cache-index v3; reject older sidecars without migration.
+- Return compact supplementary and failure summaries with complete materials, source URLs, per-file failures, acceptance and provider diagnostics retained in paged diagnostics snapshots. Failed fetches receive diagnostics handles, and batch aliases share snapshots. Return public argument-validation failures as structured `validation_error` results while retaining strict input schemas.
+- Add read-only `navigate_content` for heading/section ranges and case-insensitive literal search in retained Markdown. Return original Unicode code-point offsets for `read_content` without refetching or rewriting text.
+
+### CLI, installation and diagnostics
+
+- Add CLI `temporary_read` and `archive` presets that fill omitted options while preserving explicit output, asset and rendering choices. Show execution state, acceptance, content scope and output paths in text terminal events; retain the existing JSONL protocol.
+- Share the runtime provider catalog between MCP and `doctor --catalog [--json]`, including supplementary target capabilities, running version, interpreter and installation source. Suggest canonical provider IDs only when catalog evidence is unique.
+- Isolate PDF converter imports and calls in subprocesses using the current interpreter, keeping converter logs out of business stdout and passing Markdown unchanged through a separate result channel. Retain the parent conversion cache and record actual PDF byte transport and final URL in diagnostics.
+- Use nonempty `CODEX_HOME` consistently for direct Codex registration and removal on Unix/Windows, retaining host defaults otherwise. Preserve authentication provider, manual/profile-reopen stage, actual window mode and raw challenge reason.
+
+### Metadata, identity and reading guidance
+
+- Replace the public `published` field with `publication_dates=[{kind,value,source}]` throughout providers, merging, codecs, candidates, rendering and file naming. Preserve actual upstream date types and multiple values; exclude `created` from publication-year matching. This replaces the old field without a compatibility alias.
+- Match requested authors one-to-one using full-name, initial and surname evidence, reject explicit name conflicts, and retain existing confidence/margin thresholds. Preserve upstream article types, relationships and update-to DOIs without replacing identities or fetching related papers automatically.
+- Streamline the Skill's fetch/pagination/acceptance entrypoint, CLI wrapper discovery and batch-archive examples. Remove fixed repeated hash checks and obsolete bounded-response requirements; add attachment/DOCX and selected-figure handoff to host readers.
+
 ## 7.6.1 - 2026-11-14
 
 - Add independent Oxford Academic supplementary retrieval through `target=supplementary` in Python, CLI and single/batch MCP entrypoints. Reuse Oxford attachment discovery, signed-link deduplication and downloads without requiring readable body content; retain identity checks and per-file failure reporting.

@@ -3,7 +3,7 @@ title: "Earlier spring greening in Northern Hemisphere terrestrial biomes enhanc
 authors: "Yijia Ren, Jianxiu Qiu, Zhenzhong Zeng, Xiaoping Liu, Stephen Sitch, Kim Pilegaard, Tianyao Yang, Sheng Wang, Wenping Yuan, Atul K. Jain"
 journal: "Communications Earth & Environment"
 doi: "10.1038/s43247-024-01270-5"
-published: "2024/03/11"
+publication_dates: [{"kind": "online", "value": "2024/03/11", "source": "citation_online_date"}, {"kind": "unspecified", "value": "2024-03-11", "source": "dc.date"}, {"kind": "unspecified", "value": "2024-03-11", "source": "prism.publicationdate"}]
 source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"

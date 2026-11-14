@@ -3,7 +3,7 @@ title: "Ocean acidification and warming modify stimulatory benthos effects on se
 authors: "Ellen Vlaminck, Tom Moens, Ulrike Braeckman, Carl Van Colen"
 journal: "Frontiers in Marine Science"
 doi: "10.3389/fmars.2023.1101972"
-published: "20 02 2023"
+publication_dates: [{"kind": "online", "value": "2023-02-20", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2023", "source": "jats:pub-date:collection"}]
 source: "frontiers_xml"
 has_fulltext: true
 content_kind: "fulltext"

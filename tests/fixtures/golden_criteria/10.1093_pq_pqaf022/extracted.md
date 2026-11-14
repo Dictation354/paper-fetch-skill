@@ -3,7 +3,7 @@ title: "Embodied Idealism: Merleau-Ponty's Transcendental Philosophy"
 authors: "Li, Yuhui"
 journal: "The Philosophical Quarterly"
 doi: "10.1093/pq/pqaf022"
-published: "2025/12/03"
+publication_dates: [{"kind": "unspecified", "value": "2025/12/03", "source": "citation_publication_date"}]
 source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"
