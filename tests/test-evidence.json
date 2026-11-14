@@ -4569,6 +4569,13 @@
         "reason": "真实浏览器验证最小分页/懒加载与缺失报告契约，不声明线上可用性。"
       }
     },
+    "tests/unit/test_oxford_supplementary.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Oxford independent supplementary index, signed attachment discovery, identity, archival and partial failure contracts.",
+        "reason": "Minimal HTML snippets and provider boundary mocks; no live publisher availability claim."
+      }
+    },
     "tests/unit/test_supplementary.py": {
       "default": {
         "kind": "mechanism",

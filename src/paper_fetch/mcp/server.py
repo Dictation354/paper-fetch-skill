@@ -248,7 +248,11 @@ def build_server() -> PaperFetchMCPServer:
 
     @server.tool(
         name="read_content",
-        description="Read a retained markdown, article JSON, or diagnostics JSON snapshot without network or file writes. Offsets use Unicode code points; continue with next_offset. eof completes this representation, not necessarily an untruncated original rendering.",
+        description=(
+            "Read retained Markdown/article/diagnostics locally without writes; expired handles "
+            "never refetch. Offsets are Unicode code points; continue with next_offset. "
+            "eof ends this view, not necessarily the untruncated original."
+        ),
         annotations=_read_only_annotations(open_world=False),
         structured_output=False,
     )
@@ -269,8 +273,7 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="list_cached",
         description=(
-            "List DOI-proven cached downloads from the current cache index without "
-            "touching the network or scanning loose files."
+            "List DOI-proven downloads in the selected cache index; no network or loose-file scan."
         ),
         annotations=_read_only_annotations(open_world=False),
         structured_output=False,
@@ -288,9 +291,9 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="get_cached",
         description=(
-            "Look up DOI-proven cached files within one download_dir without touching "
-            "the network. detail=compact returns preferred entries plus request-sensitive "
-            "acceptance/asset summaries; preferred_only omits non-preferred entry arrays."
+            "Read DOI-proven cache entries in one download_dir without network/writes. "
+            "compact gives preferred entries and request-sensitive acceptance/assets; "
+            "preferred_only omits other entry arrays."
         ),
         annotations=_read_only_annotations(open_world=False),
         structured_output=False,
@@ -324,7 +327,7 @@ def build_server() -> PaperFetchMCPServer:
 
     @server.tool(
         name="batch_resolve",
-        description="Resolve multiple DOI, URL, or title queries with shared transport reuse and optional cross-host concurrency.",
+        description="Resolve multiple DOI, URL or title queries with optional concurrency.",
         annotations=_read_only_annotations(open_world=True),
         structured_output=False,
     )
@@ -340,11 +343,10 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="batch_fetch",
         description=(
-            "Fetch up to 50 known papers with the same presets and explicit overrides as fetch_paper. "
-            "Return input-ordered metadata, acceptance, content_ref handles and output_artifacts. "
-            "Canonical aliases share one acquisition and content handle. "
-            "batch_results explicitly opts into an atomic input-ordered JSONL manifest. "
-            "Use read_content for body content."
+            "Batch fetch papers or supplementary materials using fetch_paper presets and "
+            "cache/file options. Returns input-ordered metadata, acceptance and content_ref "
+            "for read_content; aliases share acquisition/handles. batch_results opts into "
+            "an atomic JSONL manifest."
         ),
         annotations=_fetch_annotations(),
         structured_output=False,
@@ -406,12 +408,9 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="batch_check",
         description=(
-            "Probe one or more papers using cheap metadata and landing-page signals, "
-            "with optional cross-host concurrency. mode defaults to metadata and accepts "
-            "only metadata; article mode and the standalone has_fulltext tool are removed. "
-            "Read probe_state, evidence, and errors from input-ordered results (results[0] "
-            "for one query). Never fetches full bodies or writes downloads. Use batch_fetch "
-            "for real fetching and judge results by acceptance."
+            "Probe availability from metadata/landing signals; no full-body fetching or "
+            "download writes. Input-ordered results contain probe_state, evidence and errors. "
+            "Use batch_fetch for acquisition."
         ),
         annotations=_read_only_annotations(open_world=True),
         structured_output=False,
@@ -433,11 +432,9 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="browser_preflight",
         description=(
-            "Live-check the shared browser HTML path for one provider or all browser "
-            "providers. This prepares managed Camoufox before launch, opens publisher "
-            "pages, and updates native publisher profiles. "
-            "JSON snapshot export; it never runs PDF fallback "
-            "or automatic authentication."
+            "Live-check provider HTML with the managed browser runtime; opens publisher pages "
+            "and updates profiles shared with auth/fetch. Exports JSON diagnostics; "
+            "no PDF fallback or automatic authentication."
         ),
         annotations=_browser_preflight_annotations(),
         structured_output=False,
@@ -465,8 +462,8 @@ def build_server() -> PaperFetchMCPServer:
     @server.tool(
         name="provider_status",
         description=(
-            "Inspect filtered static provider configuration and local dependency readiness. "
-            "This never opens Camoufox or publisher pages; use browser_preflight for live health."
+            "Inspect static provider configuration and local dependencies without network/browser "
+            "access. Use browser_preflight for live checks."
         ),
         annotations=_read_only_annotations(open_world=False),
         structured_output=False,

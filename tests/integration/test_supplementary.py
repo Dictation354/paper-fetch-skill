@@ -12,6 +12,7 @@ from paper_fetch import cli, service
 from paper_fetch.mcp.fetch_tool import fetch_paper_payload
 from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
 from paper_fetch.providers.springer import SpringerClient
+from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow import supplementary
@@ -19,8 +20,18 @@ from tests.support.supplementary import DOI, html_page
 
 
 @pytest.fixture
-def supplementary_server(monkeypatch):
+def supplementary_server(monkeypatch, request):
     calls = []
+    provider = getattr(request, "param", "springer")
+    client_class = (
+        OxfordAcademicClient if provider == "oxfordacademic" else SpringerClient
+    )
+    doi = "10.1093/bioinformatics/btaa161" if provider == "oxfordacademic" else DOI
+    links = (
+        '<div class="dataSuppLink"><a href="/support.csv">Supplementary data</a></div>'
+        if provider == "oxfordacademic"
+        else '<section id="supplementary"><a href="/support.csv">Supplementary data</a></section>'
+    )
 
     class Handler(BaseHTTPRequestHandler):
         def do_GET(self):
@@ -28,9 +39,9 @@ def supplementary_server(monkeypatch):
             if self.path == "/support.csv":
                 body, content_type = b"a,b\n1,2\n", "text/csv"
             elif self.path == "/empty":
-                body, content_type = html_page(links="").encode(), "text/html"
+                body, content_type = html_page(doi, links="").encode(), "text/html"
             else:
-                body, content_type = html_page().encode(), "text/html"
+                body, content_type = html_page(doi, links=links).encode(), "text/html"
             self.send_response(200)
             self.send_header("Content-Type", content_type)
             self.send_header("Content-Length", str(len(body)))
@@ -61,7 +72,7 @@ def supplementary_server(monkeypatch):
 
     monkeypatch.setattr(SafeRemoteUrlPolicy, "validate", validate_local)
     metadata = {
-        "doi": DOI,
+        "doi": doi,
         "title": "Attachment contract",
         "landing_page_url": base + "/article",
     }
@@ -69,26 +80,26 @@ def supplementary_server(monkeypatch):
         service,
         "resolve_paper",
         lambda query, **kwargs: ResolvedQuery(
-            query=query, query_kind="doi", doi=DOI, provider_hint="springer"
+            query=query, query_kind="doi", doi=doi, provider_hint=provider
         ),
     )
     monkeypatch.setattr(
         supplementary,
         "fetch_metadata_for_resolved_query",
-        lambda *a, **k: (dict(metadata), "springer", []),
+        lambda *a, **k: (dict(metadata), provider, []),
     )
     monkeypatch.setattr(
         supplementary,
         "_ranked_fulltext_provider_candidates",
-        lambda **kwargs: [("springer", "doi", "strong")],
+        lambda **kwargs: [(provider, "doi", "strong")],
     )
     monkeypatch.setattr(
         RuntimeContext,
         "get_clients",
-        lambda self: {"springer": SpringerClient(self.transport, self.env)},
+        lambda self: {provider: client_class(self.transport, self.env)},
     )
     monkeypatch.setattr(
-        SpringerClient,
+        client_class,
         "fetch_raw_fulltext",
         lambda *a, **k: pytest.fail("body request"),
     )
@@ -100,16 +111,19 @@ def supplementary_server(monkeypatch):
         thread.join()
 
 
+@pytest.mark.parametrize(
+    "supplementary_server", ["springer", "oxfordacademic"], indirect=True
+)
 def test_cli_single_downloads_only_material_and_writes_index(
     supplementary_server, tmp_path, capsys
 ):
-    _, calls = supplementary_server
+    metadata, calls = supplementary_server
     assert (
         cli.main(
             [
                 "fetch",
                 "--query",
-                DOI,
+                metadata["doi"],
                 "--target",
                 "supplementary",
                 "--output-dir",
@@ -124,6 +138,9 @@ def test_cli_single_downloads_only_material_and_writes_index(
     assert len(outputs) == 1
     payload = json.loads(outputs[0].read_text())
     assert payload["target"] == "supplementary"
+    assert payload["source"] == payload["acquisition"]["provider"]
+    assert payload["acquisition"]["route"] == "supplementary"
+    assert payload["acquisition"]["transport"] == "http"
     assert payload["article"] is None and not payload["quality"]["has_fulltext"]
     materials = payload["supplementary"]["assets"]
     assert len(materials) == 1
@@ -183,10 +200,13 @@ def test_cli_empty_single_and_batch_return_nonzero_with_empty_lists(
     assert record["acceptance"]["fetch"]["code"] == "no_result"
 
 
+@pytest.mark.parametrize(
+    "supplementary_server", ["springer", "oxfordacademic"], indirect=True
+)
 def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tmp_path):
-    _, calls = supplementary_server
+    metadata, calls = supplementary_server
     payload = fetch_paper_payload(
-        query=DOI,
+        query=metadata["doi"],
         target="supplementary",
         preset="archive",
         download_dir=tmp_path / "single",
@@ -200,7 +220,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
     assert len(list((tmp_path / "single").glob("*_supplementary.md"))) == 1
     result = asyncio.run(
         batch_fetch_tool_async(
-            queries=[DOI],
+            queries=[metadata["doi"]],
             target="supplementary",
             preset="archive",
             download_dir=tmp_path / "batch",
@@ -212,6 +232,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
     assert payload["results"][0]["target"] == "supplementary"
     assert payload["results"][0]["acceptance"]["overall"] == "complete"
     assert len(payload["results"][0]["supplementary"]["assets"]) == 1
+    assert sorted(calls) == ["/article", "/article", "/support.csv", "/support.csv"]
 
 
 @pytest.mark.parametrize("options", [{"no_download": True}, {"artifact_mode": "none"}])

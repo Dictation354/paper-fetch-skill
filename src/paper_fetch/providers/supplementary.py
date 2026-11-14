@@ -109,6 +109,13 @@ def _html_assets(client, html_text, source_url, context):
                 )
                 if not _springer_asset_is_peer_review(asset.get("heading", ""))
             ]
+    elif client.name == "oxfordacademic":
+        from ._oxfordacademic_html import _supplementary_assets
+        from ..extraction.html.parsing import choose_parser
+
+        assets = _supplementary_assets(
+            BeautifulSoup(html_text, choose_parser()), source_url
+        )
     elif isinstance(client, BrowserWorkflowClient) and client.name != "elsevier":
         from .browser_workflow.assets import _cached_browser_workflow_assets
         from ..extraction.html.signals import HtmlExtractionFailure
@@ -501,6 +508,7 @@ def fetch_provider_supplementary(
         "frontiers",
         "copernicus",
         "elsevier",
+        "oxfordacademic",
     }
     if not browser_index_client and client.name not in supported:
         raise ProviderFailure(
@@ -629,7 +637,7 @@ def fetch_provider_supplementary(
             user_agent=client.user_agent,
             runtime_context=context,
         )
-    elif client.name in {"plos", "frontiers", "ieee"}:
+    elif client.name in {"plos", "frontiers", "ieee", "oxfordacademic"}:
         assert raw is not None
         raw.content = replace(raw.content, extracted_assets=assets)
         downloaded = client.download_related_assets(

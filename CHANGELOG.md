@@ -6,6 +6,11 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.1 - 2026-11-14
+
+- Add independent Oxford Academic supplementary retrieval through `target=supplementary` in Python, CLI and single/batch MCP entrypoints. Reuse Oxford attachment discovery, signed-link deduplication and downloads without requiring readable body content; retain identity checks and per-file failure reporting.
+- Shorten shared MCP instructions and tool descriptions by 42%, retaining essential tool guidance, side effects and content-reading rules without changing parameters, schemas or results.
+
 ## 7.6.0 - 2026-11-13
 
 ### Native fetch presets and paged MCP content
