@@ -12,6 +12,9 @@ import functools
 import os
 import re
 import subprocess
+import sys
+import json
+import logging
 import tempfile
 import threading
 import contextlib
@@ -443,7 +446,7 @@ def _call_pdf_renderer_with_tessdata_retry(
         return renderer(*args, **kwargs)
 
 
-def _render_default_pdf_markdown(
+def _render_default_pdf_markdown_in_process(
     pdf_path: Path, *, image_dir: Path | None = None
 ) -> str:
     try:
@@ -474,7 +477,7 @@ def _render_default_pdf_markdown(
     )
 
 
-def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
+def _render_transparent_pdf_markdown_in_process(pdf_path: Path) -> str:
     try:
         from pymupdf4llm.helpers import pymupdf_rag
     except (
@@ -824,6 +827,7 @@ def pdf_fetch_result_from_response(
         source_url=source_url,
         final_url=resolved_final_url,
         pdf_bytes=pdf_bytes,
+        bytes_transport="http",
         suggested_filename=filename_from_headers(response_headers),
         allow_pdf_only=allow_pdf_only,
         expected_identity=expected_identity,
@@ -867,6 +871,8 @@ def pdf_fetch_result_from_bytes(
     source_url: str,
     final_url: str,
     pdf_bytes: bytes,
+    bytes_transport: Literal["http", "browser_response", "browser_download"]
+    | None = None,
     suggested_filename: str | None = None,
     expected_identity: Mapping[str, Any] | None = None,
 ) -> PdfFetchResult:
@@ -882,6 +888,7 @@ def pdf_fetch_result_from_bytes(
             details={
                 "source_url": source_url,
                 "final_url": final_url,
+                "bytes_transport": bytes_transport,
                 "pdf_sha256": pdf_sha256,
             },
         )
@@ -1075,6 +1082,8 @@ def pdf_fetch_result_from_bytes(
             assets=[dict(item) for item in render_result.assets],
             warnings=warnings,
             diagnostics={
+                "bytes_transport": bytes_transport,
+                "final_url": final_url,
                 "pdf_sha256": pdf_sha256,
                 "pdf_bytes": pdf_size,
                 "pdf_pages": page_count,
@@ -1094,3 +1103,47 @@ def pdf_fetch_result_from_bytes(
                 },
             },
         )
+
+
+def _render_pdf_in_subprocess(
+    pdf_path: Path, *, image_dir: Path | None = None, mode: str = "default"
+) -> str:
+    with tempfile.TemporaryDirectory(prefix="paper-fetch-converter-") as directory:
+        result_path = Path(directory) / "result.json"
+        process = subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "paper_fetch.providers._pdf_worker",
+                mode,
+                str(pdf_path.resolve()),
+                str(image_dir.resolve()) if image_dir is not None else "",
+                str(result_path),
+            ],
+            capture_output=True,
+        )
+        logger = logging.getLogger(__name__)
+        for stream in (process.stdout, process.stderr):
+            if stream:
+                logger.debug(
+                    "PDF converter: %s", stream.decode("utf-8", errors="replace")
+                )
+        if not result_path.is_file():
+            raise PdfFetchFailure(
+                "pdf_conversion_failed",
+                f"PDF converter exited with status {process.returncode}.",
+            )
+        result = json.loads(result_path.read_text(encoding="utf-8"))
+        if "error" in result:
+            raise PdfFetchFailure(result["kind"], result["error"])
+        return result["markdown"]
+
+
+def _render_default_pdf_markdown(
+    pdf_path: Path, *, image_dir: Path | None = None
+) -> str:
+    return _render_pdf_in_subprocess(pdf_path, image_dir=image_dir)
+
+
+def _render_transparent_pdf_markdown(pdf_path: Path) -> str:
+    return _render_pdf_in_subprocess(pdf_path, mode="transparent")

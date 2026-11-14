@@ -129,6 +129,14 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         for key in contract["skills"]["codex"]:
             self.assertIn(f"skills.codex.{key} must be", diagnostics)
 
+    def test_active_codex_configuration_contract_is_required(self) -> None:
+        contract = validator.load_contract()
+        contract["host_config"]["codex"]["home_override"] = "HOME"
+        self.assertIn(
+            "host_config.codex.home_override must be 'CODEX_HOME'",
+            validator.validate_contract(contract),
+        )
+
     def test_release_policy_keeps_build_evidence_private(self) -> None:
         contract = validator.load_contract()
         contract["release"]["build_evidence_is_not_public"] = False

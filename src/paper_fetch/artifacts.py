@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .publication_dates import citation_date
+
 from .tracing import extend_trace
 
 from .tracing import TraceEvent
@@ -365,7 +367,7 @@ class ArtifactStore:
             content.content_type,
             content.source_url,
             authors=naming_metadata.get("authors") or None,
-            year=_extract_year(safe_text(naming_metadata.get("published")) or None),
+            year=_extract_year(citation_date(naming_metadata.get("publication_dates"))),
         )
         if output_path is not None:
             saved_path = self.write_bytes_file(output_path, content.body)
@@ -405,7 +407,7 @@ class ArtifactStore:
 
         article_slug = format_paper_stem(
             metadata.get("authors") or None,
-            _extract_year(safe_text(metadata.get("published")) or None),
+            _extract_year(citation_date(metadata.get("publication_dates"))),
             safe_text(metadata.get("title")) or None,
             doi=doi,
         )

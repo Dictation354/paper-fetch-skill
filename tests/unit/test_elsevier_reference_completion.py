@@ -78,7 +78,9 @@ def search_record(**changes):
         "doi": REF_DOI,
         "title": TITLE,
         "authors": ["A. Writer"],
-        "published": "2024-02-01",
+        "publication_dates": [
+            {"kind": "unspecified", "value": "2024-02-01", "source": "test"}
+        ],
         "_bibliography": {
             "first_author": "Writer",
             "volume": "12",
@@ -181,7 +183,13 @@ def test_search_checks_candidates_instead_of_accepting_first_result_and_caches()
     "records",
     [
         [search_record(), search_record(doi="10.1000/second")],
-        [search_record(published="2023")],
+        [
+            search_record(
+                publication_dates=[
+                    {"kind": "unspecified", "value": "2023", "source": "test"}
+                ]
+            )
+        ],
         [search_record(title="Measured vegetation")],
     ],
 )

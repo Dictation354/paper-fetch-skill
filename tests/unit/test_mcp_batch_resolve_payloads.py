@@ -1,4 +1,5 @@
 from __future__ import annotations
+import json
 from tests.support._mcp_support import retained_view
 from tests.support.trace import trace_facts
 from paper_fetch.tracing import trace_event
@@ -164,7 +165,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         payload = result.structured_content
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(payload["source"], "elsevier_xml")
         self.assertTrue(payload["acceptance"]["has_fulltext"])
         self.assertEqual(payload["warnings"], ["example warning"])
@@ -222,7 +223,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "ambiguous")
-        self.assertEqual(result.structured_content["schema_version"], 3)
+        self.assertEqual(result.structured_content["schema_version"], 4)
         self.assertEqual(result.structured_content["code"], "ambiguous")
         self.assertEqual(
             result.structured_content["candidates"][0]["doi"], "10.1000/example"
@@ -245,16 +246,28 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
 
         self.assertTrue(result.is_error)
-        self.assertEqual(result.structured_content["schema_version"], 3)
+        self.assertEqual(result.structured_content["schema_version"], 4)
         self.assertEqual(result.structured_content["status"], "no_access")
         self.assertEqual(result.structured_content["code"], "no_access")
         self.assertEqual(result.structured_content["error_category"], "no_access")
         self.assertEqual(
             result.structured_content["reason"], "Provider request failed."
         )
-        self.assertEqual(result.structured_content["warnings"], ["provider warning"])
+        from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
+        from paper_fetch.mcp.schemas import ReadContentRequest
+
+        diagnostic = json.loads(
+            DEFAULT_CONTENT_STORE.read(
+                ReadContentRequest(
+                    content_id=result.structured_content["content_ref"]["content_id"],
+                    view="diagnostics",
+                    max_chars=20000,
+                )
+            )["text"]
+        )
+        self.assertEqual(diagnostic["warnings"], ["provider warning"])
         self.assertEqual(
-            trace_facts(result.structured_content["trace"]),
+            trace_facts(diagnostic["trace"]),
             trace_facts([trace_event("fulltext", "provider_failed", "info")]),
         )
         self.assertIsNone(result.structured_content["missing_env"])
@@ -272,7 +285,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             )
         )
 
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(payload["status"], "error")
         self.assertEqual(payload["code"], "no_result")
         self.assertEqual(payload["error_category"], "no_result")
@@ -304,7 +317,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
             RequestFailure(429, "HTTP 429 for provider", retry_after_seconds=4)
         )
 
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(payload["status"], "rate_limited")
         self.assertEqual(payload["code"], "http_429")
         self.assertEqual(payload["http_status"], 429)
@@ -330,7 +343,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "no_access")
-        self.assertNotIn("acceptance", result.structured_content)
+        self.assertIn("acceptance", result.structured_content)
         self.assertEqual(result.structured_content["missing_env"], ["ELSEVIER_API_KEY"])
         assert_mcp_tool_omits_output_schema(
             server, "fetch_paper", result.structured_content
@@ -416,7 +429,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         )
 
         self.assertTrue(payload["aborted"])
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(payload["abort_reason"]["status"], "rate_limited")
         self.assertEqual(payload["abort_reason"]["code"], "rate_limited")
         self.assertEqual(payload["abort_reason"]["retry_after_seconds"], 3)
@@ -528,7 +541,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
         self.assertEqual(payload["mode"], "metadata")
         self.assertFalse(payload["aborted"])
         self.assertEqual(len(payload["results"]), 2)
-        self.assertEqual(payload["results"][0]["schema_version"], 3)
+        self.assertEqual(payload["results"][0]["schema_version"], 4)
         self.assertEqual(payload["results"][0]["query"], "10.1000/one")
         self.assertEqual(payload["results"][0]["doi"], "10.1000/one")
         self.assertEqual(payload["results"][0]["title"], "Title for 10.1000/one")
@@ -795,7 +808,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertFalse(result.is_error)
         payload = result.structured_content
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(payload["mode"], "metadata")
         self.assertEqual(
             payload["progress"],
@@ -880,7 +893,7 @@ class McpBatchResolvePayloadTests(unittest.TestCase):
 
         self.assertTrue(result.is_error)
         self.assertEqual(result.structured_content["status"], "error")
-        self.assertNotIn("acceptance", result.structured_content)
+        self.assertIn("acceptance", result.structured_content)
         assert_mcp_tool_omits_output_schema(
             server, "fetch_paper", result.structured_content
         )

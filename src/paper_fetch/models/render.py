@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+import json
+
 import math
 import re
 from collections.abc import Sequence
@@ -158,13 +160,17 @@ def _build_article_header_block(article: ArticleModel) -> RenderedBlock:
         ),
         ("journal", article.metadata.journal),
         ("doi", article.doi),
-        ("published", article.metadata.published),
     )
     for key, value in front_matter_fields:
         normalized_value = normalize_inline_html_text(value)
         if normalized_value:
             normalized_value = normalized_value.replace("\\", "\\\\")
             lines.append(f'{key}: "{normalized_value.replace(chr(34), chr(39))}"')
+    if article.metadata.publication_dates:
+        lines.append(
+            "publication_dates: "
+            + json.dumps(article.metadata.publication_dates, ensure_ascii=False)
+        )
     display_title = (
         normalize_inline_html_text(article.metadata.title) or "Untitled Article"
     )

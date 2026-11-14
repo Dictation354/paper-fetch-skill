@@ -392,6 +392,8 @@ def provider_status_payload(
 def doctor_payload(**kwargs: Any) -> dict[str, Any]:
     """Wrap static runtime and provider diagnostics for the CLI."""
 
+    from .catalog_payload import runtime_identity
+
     provider_report = provider_status_payload(**kwargs)
     statuses = {
         normalize_text(str(item.get("status") or ERROR)).lower()
@@ -410,6 +412,7 @@ def doctor_payload(**kwargs: Any) -> dict[str, Any]:
         "diagnostic_scope": _STATIC_SCOPE,
         "live_network_checked": False,
         "provider_status": provider_report,
+        "runtime": runtime_identity(),
     }
 
 

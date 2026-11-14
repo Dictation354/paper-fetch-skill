@@ -4798,6 +4798,13 @@
           "remaining": []
         }
       }
+    },
+    "tests/unit/test_publication_metadata.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Typed date/relationship codecs and weighted one-to-one identity matching on minimal upstream records.",
+        "reason": "只验证最小元数据片段和评分契约，不宣称整篇内容覆盖。"
+      }
     }
   }
 }

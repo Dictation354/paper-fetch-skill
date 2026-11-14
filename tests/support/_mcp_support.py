@@ -61,7 +61,9 @@ def sample_article() -> ArticleModel:
             authors=["Alice Example"],
             abstract="Example abstract",
             journal="Example Journal",
-            published="2026-01-01",
+            publication_dates=[
+                {"kind": "unspecified", "value": "2026-01-01", "source": "test"}
+            ],
         ),
         sections=[
             Section(heading="Introduction", level=2, kind="body", text="Example body.")
@@ -218,7 +220,7 @@ def create_cached_fetch_envelope(
         "max_tokens": "full_text",
     }
     payload = sample_envelope(modes=set(request["modes"]), doi=doi).to_dict()
-    payload["schema_version"] = 3
+    payload["schema_version"] = 4
     path = fetch_envelope_cache_path(download_dir, doi)
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(

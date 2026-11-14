@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from ..reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
-from .provider_catalog import PROVIDER_CATALOG_RESOURCE_URI
+from ..catalog_payload import PROVIDER_CATALOG_RESOURCE_URI
 
 DEFAULT_FETCH_VALUES: tuple[tuple[str, str], ...] = (
     ("target", '"paper"'),
@@ -87,9 +87,9 @@ def server_instructions() -> str:
         "false values, override presets. Defaults: full_text, all references, metadata fallback, "
         "no body assets. body/all assets enable downloads and artifact_mode=markdown-assets "
         "unless explicitly overridden; they may add bounded ImageContent. Runtime preparation "
-        "is independent of paper writes and on demand. Business payloads: schema_version=3 "
+        "is independent of paper writes and on demand. Business payloads: schema_version=4 "
         "only in structuredContent; request article explicitly. Saved files appear in output_artifacts; "
-        "body content stays in content_ref/read_content. Judge acquisition by acceptance, text by "
+        "body content stays in content_ref/read_content; navigate_content locates headings/literal matches. Judge acquisition by acceptance, text by "
         "pagination/truncation, reading completion by consumed portions. Provider/platform facts: "
         f"{PROVIDER_CATALOG_RESOURCE_URI}. Respect access controls and manual-auth boundaries."
     )

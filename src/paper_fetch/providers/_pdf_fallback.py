@@ -648,8 +648,10 @@ def _response_to_pdf_result(
             asset_profile=asset_profile,
             asset_output_dir=asset_output_dir,
             source_url=source_url,
-            final_url=final_url,
+            final_url=normalize_text(str(getattr(response, "url", "") or ""))
+            or final_url,
             pdf_bytes=response_body,
+            bytes_transport="browser_response",
             suggested_filename=filename_from_headers(response_headers),
             allow_pdf_only=allow_pdf_only,
             expected_identity=request.expected_identity,
@@ -712,6 +714,10 @@ def _refetch_pdf_with_browser_request(
         response = context_get(
             page.context, normalized_final_url, timeout=timeout_ms, page=page
         )
+        normalized_final_url = (
+            normalize_text(str(getattr(response, "url", "") or ""))
+            or normalized_final_url
+        )
         headers = {
             str(key).lower(): str(value)
             for key, value in (response.headers or {}).items()
@@ -763,6 +769,7 @@ def _refetch_pdf_with_browser_request(
         source_url=source_url,
         final_url=normalized_final_url,
         pdf_bytes=body,
+        bytes_transport="browser_response",
         suggested_filename=filename_from_headers(headers),
         allow_pdf_only=allow_pdf_only,
         expected_identity=request.expected_identity,
@@ -804,8 +811,10 @@ def _download_to_pdf_result(
             asset_profile=asset_profile,
             asset_output_dir=asset_output_dir,
             source_url=source_url,
-            final_url=final_url,
+            final_url=normalize_text(str(getattr(download, "url", "") or ""))
+            or final_url,
             pdf_bytes=download_path.read_bytes(),
+            bytes_transport="browser_download",
             suggested_filename=getattr(download, "suggested_filename", None),
             allow_pdf_only=allow_pdf_only,
             expected_identity=expected_identity,
@@ -1507,6 +1516,7 @@ def fetch_pdf_over_http(
                 source_url=url,
                 final_url=final_url,
                 pdf_bytes=bytes(pdf_bytes),
+                bytes_transport="http",
                 suggested_filename=filename_from_headers(response_headers),
                 allow_pdf_only=allow_pdf_only,
                 expected_identity=request.expected_identity,

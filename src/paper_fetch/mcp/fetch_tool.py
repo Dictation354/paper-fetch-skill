@@ -33,12 +33,13 @@ from ..workflow.rendering import save_markdown_to_disk
 from ..workflow.types import effective_asset_profile
 from ..workflow.acceptance import evaluate_fetch_acceptance
 from .acceptance_payloads import (
+    acceptance_reason_codes,
     compact_acceptance_payload,
     expected_doi_from_query,
 )
 from .batch import report_progress, run_blocking_call
 from .content_store import DEFAULT_CONTENT_STORE, ContentStore
-from .content_delivery import handle_payload
+from .content_delivery import handle_payload, error_handle_payload
 from .output_artifacts import fetch_output_artifacts
 from .cache_payloads import _MCP_DEFAULT_DOWNLOAD_DIR, _resolve_download_dir
 from .cache_index import read_scoped_file
@@ -430,6 +431,7 @@ def _response_payload_from_envelope(
         else "ok"
     )
     payload["acceptance"] = compact_acceptance_payload(acceptance)
+    payload.update(acceptance_reason_codes(acceptance))
     payload["output_artifacts"] = fetch_output_artifacts(
         saved_path, envelope.diagnostic_artifacts
     )
@@ -749,24 +751,29 @@ def provider_status_tool(
 
 
 def _fetch_error_payload(
-    error: Exception, *, target: str, query: str
+    error: Exception,
+    *,
+    target: str,
+    query: str,
+    content_store: ContentStore | None = DEFAULT_CONTENT_STORE,
 ) -> dict[str, Any]:
     payload = error_payload_from_exception(error)
-    if target == "supplementary":
-        payload["target"] = target
-        payload["acceptance"] = compact_acceptance_payload(
-            evaluate_fetch_acceptance(
-                None,
-                target="supplementary",
-                asset_profile="all",
-                failure_code=payload.get("status", "error"),
-                expected_doi=expected_doi_from_query(query),
-                doi=payload.get("doi"),
-                source=payload.get("provider"),
-                candidate_count=len(payload.get("candidates") or []),
-            )
-        )
-    return payload
+    payload.update(target=target, query=query)
+    acceptance = evaluate_fetch_acceptance(
+        None,
+        target=target,
+        asset_profile="all" if target == "supplementary" else "none",
+        failure_code=payload.get("code", "error"),
+        expected_doi=expected_doi_from_query(query),
+        doi=payload.get("doi"),
+        source=payload.get("provider"),
+        candidate_count=len(payload.get("candidates") or []),
+    )
+    payload["acceptance"] = acceptance.model_dump(mode="json")
+    result = error_handle_payload(payload, content_store)
+    result["acceptance"] = compact_acceptance_payload(acceptance)
+    result.update(acceptance_reason_codes(acceptance))
+    return result
 
 
 async def fetch_paper_tool_async(
@@ -814,7 +821,10 @@ async def fetch_paper_tool_async(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed"
         )
         return _tool_result(
-            _fetch_error_payload(error, target=target, query=query), is_error=True
+            _fetch_error_payload(
+                error, target=target, query=query, content_store=content_store
+            ),
+            is_error=True,
         )
 
     await report_progress(ctx, 1, _FETCH_PROGRESS_TOTAL, "Fetching paper content")
@@ -898,7 +908,10 @@ async def fetch_paper_tool_async(
             ctx, _FETCH_PROGRESS_TOTAL, _FETCH_PROGRESS_TOTAL, "fetch_paper failed"
         )
         return _tool_result(
-            _fetch_error_payload(error, target=target, query=query), is_error=True
+            _fetch_error_payload(
+                error, target=target, query=query, content_store=content_store
+            ),
+            is_error=True,
         )
     finally:
         if runtime_context is not None:

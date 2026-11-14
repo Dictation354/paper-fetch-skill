@@ -31,10 +31,10 @@ def test_catalog_and_public_names_do_not_load_execution_dependencies():
                     raise AssertionError("Unexpected implementation import: " + name)
         sys.meta_path.insert(0, BlockExecution())
         from paper_fetch.provider_catalog import provider_names, SOURCE_PROVIDER_MAP, PROVIDER_CATALOG
-        from paper_fetch.mcp.provider_catalog import provider_catalog_resource_payload
+        from paper_fetch.catalog_payload import provider_catalog_payload
         assert set(provider_names()) == set(PROVIDER_DEFINITIONS)
         assert SOURCE_PROVIDER_MAP and PROVIDER_CATALOG
-        assert provider_catalog_resource_payload()["providers"]
+        assert provider_catalog_payload()["providers"]
         assert set(paper_fetch.__all__).issubset(dir(paper_fetch))
     """)
 

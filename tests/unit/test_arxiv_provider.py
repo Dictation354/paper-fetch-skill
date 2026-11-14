@@ -125,7 +125,7 @@ class ArxivProviderTests(unittest.TestCase):
         self.assertEqual(metadata["title"], "Internal Atom Title")
         self.assertEqual(metadata["authors"], ["First Author", "Second Author"])
         self.assertEqual(metadata["abstract"], "Atom abstract with line breaks.")
-        self.assertEqual(metadata["published"], "2026-05-11")
+        self.assertEqual(metadata["publication_dates"][0]["value"], "2026-05-11")
         self.assertEqual(metadata["updated"], "2026-05-12")
         self.assertEqual(metadata["primary_category"], "cs.CL")
         self.assertEqual(metadata["categories"], ["cs.CL", "cs.AI"])

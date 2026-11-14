@@ -33,6 +33,7 @@ from .providers.browser_runtime.paths import (
 )
 from .providers.browser_runtime.profile import PublisherProfileManager, profile_path
 from .providers.base import ProviderFailure
+from .failure import FailureDiagnostics
 from .reason_codes import (
     AUTH_FINAL_URL_INVALID,
     AUTH_REPLAY_FAILED,
@@ -274,6 +275,11 @@ def _require_accepted_auth_page(
                 f"{provider_label} authentication is still blocked "
                 f"({detected.reason}): {detected.message}"
             ),
+            diagnostics=FailureDiagnostics(
+                provider=provider,
+                http_status=status,
+                details={"challenge_reason": detected.reason},
+            ),
         )
     if not title and not normalize_text(html):
         raise ProviderFailure(
@@ -365,12 +371,30 @@ def authenticate_provider_profile(
             provider_label=provider_label,
             fallback_url=active_url,
         )
-    except ProviderFailure:
+    except ProviderFailure as error:
+        error.diagnostics = error.diagnostics.with_updates(
+            provider=provider_key,
+            stage="auth_manual_check",
+            details={
+                **error.diagnostics.details,
+                "headless": runtime.headless,
+                "window_mode": "headless" if runtime.headless else "headed",
+            },
+        )
         raise
     except Exception as exc:
         message = normalize_text(str(exc)) or exc.__class__.__name__
         raise ProviderFailure(
-            ERROR, f"{provider_label} authentication failed: {message}"
+            ERROR,
+            f"{provider_label} authentication failed: {message}",
+            diagnostics=FailureDiagnostics(
+                provider=provider_key,
+                stage="auth_manual_check",
+                details={
+                    "headless": runtime.headless,
+                    "window_mode": "headless" if runtime.headless else "headed",
+                },
+            ),
         ) from exc
     finally:
         for value in (page, manager):
@@ -409,11 +433,29 @@ def authenticate_provider_profile(
             "headless": fetch_headless,
             "state_sha256": digest,
         }
-    except ProviderFailure:
+    except ProviderFailure as error:
+        error.diagnostics = error.diagnostics.with_updates(
+            provider=provider_key,
+            stage="auth_profile_reopen",
+            details={
+                **error.diagnostics.details,
+                "headless": replay_runtime.headless,
+                "window_mode": "headless" if replay_runtime.headless else "headed",
+            },
+        )
         raise
     except Exception as exc:
         raise ProviderFailure(
-            AUTH_REPLAY_FAILED, f"{provider_label} native profile replay failed: {exc}"
+            AUTH_REPLAY_FAILED,
+            f"{provider_label} native profile replay failed: {exc}",
+            diagnostics=FailureDiagnostics(
+                provider=provider_key,
+                stage="auth_profile_reopen",
+                details={
+                    "headless": replay_runtime.headless,
+                    "window_mode": "headless" if replay_runtime.headless else "headed",
+                },
+            ),
         ) from exc
     finally:
         if page is not None:

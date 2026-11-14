@@ -208,7 +208,8 @@ class CliTests(unittest.TestCase):
             ),
             ("doctor",): (
                 "usage: paper-fetch doctor",
-                "--provider {crossref,elsevier",
+                "--provider PROVIDER",
+                "--catalog",
                 "--group {all,official,browser,direct,metadata}",
                 "--detail {full,compact}",
                 "without network access",
@@ -2545,7 +2546,9 @@ class CliTests(unittest.TestCase):
                 "in diurnal temperature variations"
             ),
             authors=["Annu Panwar", "Maik Renner", "Axel Kleidon"],
-            published="20 October 2020",
+            publication_dates=[
+                {"kind": "unspecified", "value": "20 October 2020", "source": "test"}
+            ],
         )
 
         self.assertEqual(
@@ -2555,7 +2558,9 @@ class CliTests(unittest.TestCase):
             "Panwar_et_al_2020_Imprints_of_evaporative_conditions_and_vegetation_"
             "type_in_diurnal_temperature_variations.md",
         )
-        self.assertEqual(article.metadata.published, "20 October 2020")
+        self.assertEqual(
+            article.metadata.publication_dates[0]["value"], "20 October 2020"
+        )
 
     def test_formatted_output_filename_prefers_fallback_query_doi(self) -> None:
         envelope = build_envelope(
@@ -2912,3 +2917,114 @@ class CliTests(unittest.TestCase):
                 self.assertIn("failure", payload["reason"])
         finally:
             paper_fetch_cli.fetch_paper = original_fetch
+
+
+def test_cli_read_and_archive_presets_preserve_explicit_output_and_asset_options(
+    monkeypatch, tmp_path, capsys
+):
+    seen = []
+
+    def fetch(*args, **kwargs):
+        seen.append(kwargs)
+        return build_envelope(sample_article())
+
+    monkeypatch.setattr(paper_fetch_cli, "fetch_paper", fetch)
+    root = tmp_path / "reading"
+    assert (
+        paper_fetch_cli.main(
+            [
+                "fetch",
+                "--preset",
+                "temporary_read",
+                "--query",
+                "10.1016/test",
+                "--output-dir",
+                str(root),
+                "--output",
+                "-",
+                "--progress",
+                "text",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr()
+    assert "# Example Article" in output.out
+    assert "acceptance=degraded scope=fulltext" in output.err
+    assert not list(root.rglob("*.md"))
+    assert seen[-1]["render"].include_refs == "all"
+    assert seen[-1]["strategy"].asset_profile == "none"
+    archive = tmp_path / "archive"
+    assert (
+        paper_fetch_cli.main(
+            [
+                "fetch",
+                "--preset",
+                "archive",
+                "--query",
+                "10.1016/test",
+                "--output-dir",
+                str(archive),
+                "--progress",
+                "text",
+            ]
+        )
+        == 0
+    )
+    output = capsys.readouterr()
+    paths = list(archive.glob("*.md"))
+    assert len(paths) == 1 and str(paths[0]) in output.err and output.out == ""
+    explicit = tmp_path / "chosen.json"
+    assert (
+        paper_fetch_cli.main(
+            [
+                "fetch",
+                "--preset=archive",
+                "--query",
+                "10.1016/test",
+                "--output-dir",
+                str(archive),
+                "--format=json",
+                "--output",
+                str(explicit),
+                "--asset-profile=body",
+                "--include-refs=none",
+                "--max-tokens=100",
+                "--overwrite",
+            ]
+        )
+        == 0
+    )
+    assert json.loads(explicit.read_text())["doi"] == "10.1016/test"
+    assert seen[-1]["strategy"].asset_profile == "body"
+    assert seen[-1]["render"].include_refs == "none"
+    assert seen[-1]["render"].max_tokens == 100
+
+
+def test_cli_material_archive_and_explicit_overrides():
+    parser = paper_fetch_cli.build_parser()
+    for flags, expected in [
+        ([], ("all", "markdown-assets")),
+        (["--artifact-mode=none"], ("all", "none")),
+        (["--asset-profile=none"], ("none", "markdown-assets")),
+    ]:
+        raw = [
+            "fetch",
+            "--preset=archive",
+            "--query=x",
+            "--target=supplementary",
+            *flags,
+        ]
+        args = parser.parse_args(raw)
+        paper_fetch_cli._apply_cli_preset(args, raw)
+        assert (args.asset_profile, args.artifact_mode) == expected
+
+
+def test_doctor_catalog_is_shared_and_suggests_only_unique_provider_ids(capsys):
+    from paper_fetch.catalog_payload import provider_catalog_payload
+
+    assert paper_fetch_cli.main(["doctor", "--catalog", "--json"]) == 0
+    assert json.loads(capsys.readouterr().out) == provider_catalog_payload()
+    with unittest.TestCase().assertRaises(SystemExit):
+        paper_fetch_cli.main(["doctor", "--provider", "nature"])
+    assert "springer" in capsys.readouterr().err

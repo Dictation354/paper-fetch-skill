@@ -576,7 +576,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": sample.doi,
             "title": sample.title,
             "journal_title": "Remote Sensing of Environment",
-            "published": "2025-01-01",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2025-01-01", "source": "test"}
+            ],
             "landing_page_url": sample.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -662,7 +664,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": SCIENCE_SAMPLE.doi,
             "title": SCIENCE_SAMPLE.title,
             "journal_title": "Science",
-            "published": "2026-01-01",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2026-01-01", "source": "test"}
+            ],
             "landing_page_url": SCIENCE_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -719,7 +723,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": WILEY_SAMPLE.doi,
             "title": WILEY_SAMPLE.title,
             "journal_title": "Global Change Biology",
-            "published": "2022-12-01",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2022-12-01", "source": "test"}
+            ],
             "landing_page_url": WILEY_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -799,7 +805,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": WILEY_PDF_FALLBACK_SAMPLE.doi,
             "title": WILEY_PDF_FALLBACK_SAMPLE.title,
             "journal_title": "Cancer Science",
-            "published": "2024-01-01",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2024-01-01", "source": "test"}
+            ],
             "landing_page_url": WILEY_PDF_FALLBACK_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -860,7 +868,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": PNAS_SAMPLE.doi,
             "title": PNAS_SAMPLE.title,
             "journal_title": "Proceedings of the National Academy of Sciences",
-            "published": "2024-11-12",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2024-11-12", "source": "test"}
+            ],
             "landing_page_url": PNAS_SAMPLE.landing_url,
             "authors": [],
             "fulltext_links": [],
@@ -936,7 +946,9 @@ class RegressionSampleTests(unittest.TestCase):
             "doi": doi,
             "title": "Regression fixture for unavailable Elsevier full text",
             "journal_title": "Solar Energy",
-            "published": "2024-01-01",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2024-01-01", "source": "test"}
+            ],
             "landing_page_url": landing_url,
             "authors": [],
             "abstract": "Metadata-only fallback for a DOI whose official Elsevier full text returned 404.",

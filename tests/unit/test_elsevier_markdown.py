@@ -28,7 +28,9 @@ def build_elsevier_markdown(
         "doi": "10.1016/test",
         "title": "Elsevier Markdown Example",
         "journal_title": "Example Journal",
-        "published": "2026-01-01",
+        "publication_dates": [
+            {"kind": "unspecified", "value": "2026-01-01", "source": "test"}
+        ],
         "landing_page_url": "https://example.test/article",
         "abstract": "",
     }

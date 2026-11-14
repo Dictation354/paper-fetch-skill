@@ -34,19 +34,13 @@ Windows 下载校验后打开图形安装向导，以 `/DIR` 预选当前安装�
 ## 基本用法
 
 ```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421" \
-  --format markdown \
-  --output - \
-  --output-dir ./.paper-fetch-tmp \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
+paper-fetch fetch --preset temporary_read --query "10.1186/1471-2105-11-421" \
+  --output-dir ./.paper-fetch-tmp --output - --progress jsonl
 ```
 
 `--query` 可以是 DOI、论文 landing URL 或标题查询。CLI 优先尝试全文，全文不可用时可返回摘要或 metadata-only。URL/DOI 路由规则与 provider 特例见 [provider 指南](providers.md#抓取瀑布与回退语义)。官方 PDF 已下载但无法转换为 Markdown 时，会保留可落盘的 PDF artifact 并报告 PDF-only 状态。
 
-上面的命令是临时阅读：正文写 stdout，不归档论文文件。CLI 仍会准备显式的 `./.paper-fetch-tmp` 工作目录，MCP 临时阅读预设可关闭论文产物与 fetch cache 写入，浏览器运行时仍可能写入状态。CLI 没有 cache-only / `prefer_cache` 预设，也没有与 `batch_check(mode="metadata")` 等价的低成本批量 probe。
+上面的命令是临时阅读：正文写 stdout，不归档论文文件。CLI 仍会准备显式的 `./.paper-fetch-tmp` 工作目录，MCP 临时阅读预设可关闭论文产物与 fetch cache 写入，浏览器运行时仍可能写入状态。CLI 没有 cache-only / `prefer_cache` 选项，也没有与 `batch_check(mode="metadata")` 等价的低成本批量 probe。
 
 ## 独立补充材料任务
 
@@ -65,17 +59,13 @@ paper-fetch fetch --target supplementary --query-file queries.txt --output-dir .
 
 ## 任务预设
 
-文本归档默认不下载图片，并使用 `--output` 或 `--output-dir` 作为主 Markdown：
+CLI 提供 `--preset temporary_read|archive`，只补全未显式指定的选项。两者默认完整 Markdown、全部引用、无正文资产及 `artifact-mode=none`。temporary_read 默认 stdout，不保留论文产物；archive 默认在输出目录写主文本。显式 format、output、output-dir、资产、引用和 token 参数优先。指定资产范围会补全未指定的 artifact-mode 为 markdown-assets；独立 supplementary archive 默认下载附件并保存索引。CLI 始终准备工作目录，浏览器准备独立于论文产物。query-file 仍逐篇输出，manifest/progress 按任务选择。
 
 ```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421" \
-  --format markdown \
-  --output ./papers/example.md \
-  --output-dir ./papers \
-  --artifact-mode none \
-  --asset-profile none \
-  --include-refs all \
-  --max-tokens full_text
+paper-fetch fetch --preset archive --query "10.1186/1471-2105-11-421" --output-dir ./papers
+paper-fetch fetch --preset archive --query-file ./queries.txt \
+  --output-dir ./papers --batch-concurrency 4 \
+  --batch-results ./papers/batch-results.jsonl --progress jsonl
 ```
 
 用户明确要求正文图时改用 `--artifact-mode markdown-assets --asset-profile body`；明确要求补充材料时改用 `--artifact-mode markdown-assets --asset-profile all`。`--artifact-mode all` 是原始 provider 载荷和调试 sidecar 的保留策略，不是补充材料开关。HTTP transport 只使用进程内存缓存，不保留磁盘 HTTP cache。
@@ -84,7 +74,7 @@ CLI 适合单篇或批量本地归档；需要 MCP 宿主内 progress/cancel、�
 
 ## 实时进度与机器取消
 
-单篇和批量都支持 `--progress auto|text|jsonl|none`。默认 `auto` 仅在 stderr 连接终端时显示文本；`text` 强制显示，`none` 关闭。正文或 JSON 的 stdout 语义不变。文本按输入序号报告阶段及资产计数，高频资产刷新间隔至少 200ms，阶段和终态立即显示。
+单篇和批量都支持 `--progress auto|text|jsonl|none`。默认 `auto` 仅在 stderr 连接终端时显示文本；`text` 强制显示，`none` 关闭。正文或 JSON 的 stdout 语义不变。文本按输入序号报告阶段及资产计数，高频资产刷新间隔至少 200ms，阶段和终态立即显示。文本终态同时给出 record_status、acceptance、fulltext/abstract_only/metadata_only 内容范围及实际产物路径。机器调用直接消费 JSONL terminal.record，无需再展开整份 manifest。
 
 `--progress jsonl` 在 stderr 逐行、即时输出协议 1 事件。只识别 `paper_fetch_progress: true` 的行，其他行是普通诊断。每个事件都有 `protocol_version: 1`、本次启动的 `run_id`、原始输入 `index` 和 `type`：
 
@@ -493,3 +483,11 @@ CLI 会在开始抓取前创建最终输出目录，包括显式 `--output-dir` 
 | `2` | 查询歧义或 argparse 参数错误 |
 | `3` | 无访问权限 |
 | `4` | 被限速 |
+
+## 运行接口与 catalog
+
+`paper-fetch doctor --catalog [--json]` 和 MCP provider-catalog resource 使用同一载荷 owner，包含支持的 target、规范 provider ID、运行版本、解释器、模块与受管安装来源；不联网或准备浏览器。非法 provider 仅在 catalog 可唯一对应时提示规范 ID。优先从 PATH、已有注册或受管 wrapper 找到当前入口，再尝试已知可导入包的解释器。已安装版本、MCP 是否注册、进程启动成功和宿主工具目录刷新是不同事实。
+
+PDF 转换器的导入和调用在当前解释器启动的子进程中执行。附带 stdout/stderr 进入日志，Markdown 经独立结果文件原样返回；不污染 CLI stdout 或 JSONL。父进程保留转换缓存。
+
+公开元数据用 `publication_dates=[{kind,value,source}]` 表达上游提供的日期；article_type、relations、update_to 保留实际文献关系。文件命名和内部引用日期按 print、online、issued、unspecified、created 优先，年份匹配排除 created。

@@ -198,6 +198,16 @@ def validate_contract(
         if codex.get(key) != expected:
             errors.append(f"skills.codex.{key} must be {expected!r}")
 
+    codex_config = contract.get("host_config", {}).get("codex", {})
+    for key, expected in {
+        "home_override": "CODEX_HOME",
+        "default_directory": "~/.codex",
+        "register_unregister_same_path": True,
+        "print_destination": True,
+    }.items():
+        if codex_config.get(key) != expected:
+            errors.append(f"host_config.codex.{key} must be {expected!r}")
+
     browser = contract.get("browser", {})
     for key in (
         "system_chrome_required",

@@ -1,6 +1,6 @@
 # 任务预设与落盘矩阵
 
-先按 workflow 完成身份解析。五种任务使用三个原生 fetch 预设及 batch_check；显式参数覆盖预设，包括嵌套 strategy 与 false。
+明确目标直接 fetch，歧义时再查看候选。五种任务使用三个原生 fetch 预设及 batch_check；显式参数覆盖预设，包括嵌套 strategy 与 false。
 
 ## 共同规则
 
@@ -42,12 +42,12 @@ cacheable_read 需要 download_dir 或配置的 scope。archive 需要输出路�
 {"query":"10.1186/1471-2105-11-421","preset":"archive","markdown_output_dir":"./papers","markdown_filename":"example.md"}
 ```
 
-按 output_artifacts 的实际绝对路径、size、SHA-256 和 verification_status 检查文件。正文仍可由句柄读取。
+按 output_artifacts 的实际绝对路径和 verification_status 消费保存结果；仅异常或用户要求时重算 hash。正文仍可由句柄读取。
 
 CLI 文本归档：
 
 ```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421" --format markdown --output ./papers/example.md --output-dir ./papers --artifact-mode none --asset-profile none --include-refs all --max-tokens full_text
+paper-fetch fetch --preset archive --query "10.1186/1471-2105-11-421" --output ./papers/example.md --output-dir ./papers --progress jsonl
 ```
 
 ### 4. 批量可读性分诊
@@ -64,11 +64,19 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421" --format markdown --output 
 {"queries":["10.1000/first","10.1000/second"],"preset":"archive","concurrency":4,"markdown_output_dir":"./papers","batch_results":"./papers/batch-results.jsonl"}
 ```
 
+CLI 批量归档：
+
+```bash
+paper-fetch fetch --preset archive --query-file ./queries.txt \
+  --output-dir ./papers --batch-concurrency 4 \
+  --batch-results ./papers/batch-results.jsonl --progress jsonl
+```
+
 单篇和批量使用同一展开逻辑及正文句柄。别名共享获取及句柄，保留每条原始输入的 index。JSONL 按输入顺序原子写入，不提供恢复语义。
 
 ## CLI 输出/落盘矩阵
 
-CLI 主输出由 --output/--output-dir 决定，--save-markdown 是额外副本。CLI 始终准备工作目录；--artifact-mode none 禁止 provider 产物，--asset-profile none 禁止正文资产。
+CLI 主输出由 --output/--output-dir 决定，--save-markdown 是额外副本。CLI `--preset temporary_read|archive` 仅补全未指定选项，默认完整 Markdown、全部引用、无正文资产。temporary_read 默认 stdout、artifact-mode none；archive 默认在输出目录写主文本，独立材料 archive 默认下载附件并保存索引。显式 output/output-dir/format/asset 选项优先，query-file 仍逐篇输出；manifest/progress 按任务选择。CLI 始终准备工作目录；--artifact-mode none 禁止 provider 产物，--asset-profile none 禁止正文资产。
 
 ## MCP 输出/落盘矩阵
 

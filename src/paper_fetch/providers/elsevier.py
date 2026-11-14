@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import publication_date
+
 from ._definitions import PROVIDER_DEFINITIONS
 
 from ..quality.access_boundary import propagate_paywall
@@ -1185,8 +1187,12 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     .get("abstracts"),
                 )
             ),
-            "published": first_non_empty(
-                core.get("prism:coverDate"), core.get("prism:coverDisplayDate")
+            "publication_dates": publication_date(
+                "unspecified",
+                first_non_empty(
+                    core.get("prism:coverDate"), core.get("prism:coverDisplayDate")
+                ),
+                "elsevier:prism:coverDate",
             ),
             "landing_page_url": choose_public_landing_page_url(
                 core.get("link"), core.get("prism:url")

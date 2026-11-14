@@ -297,3 +297,38 @@ def test_auth_replays_same_native_profile_without_json(provider, monkeypatch, tm
     )
     assert all(manager.closed for manager in managers.instances)
     assert not (result.profile_dir / "storage-state.json").exists()
+
+
+@pytest.mark.parametrize(
+    "blocked_attempt,stage,headless",
+    [(1, "auth_manual_check", False), (2, "auth_profile_reopen", True)],
+)
+def test_auth_failures_preserve_raw_challenge_and_actual_window_mode(
+    monkeypatch, tmp_path, blocked_attempt, stage, headless
+):
+    from types import SimpleNamespace
+
+    _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    attempts = []
+
+    def detect(*args):
+        attempts.append(args)
+        return (
+            SimpleNamespace(reason="cloudflare_challenge", message="Challenge page")
+            if len(attempts) == blocked_attempt
+            else None
+        )
+
+    monkeypatch.setattr(auth, "detect_html_block", detect)
+    with pytest.raises(ProviderFailure) as caught:
+        auth.authenticate_provider_profile(
+            provider="wiley", confirm=lambda prompt: None
+        )
+    failure = caught.value
+    assert failure.code == "auth_final_url_invalid"
+    assert failure.diagnostics.provider == "wiley"
+    assert failure.diagnostics.stage == stage
+    assert failure.diagnostics.http_status is None
+    assert failure.diagnostics.details["headless"] is headless
+    assert failure.diagnostics.details["challenge_reason"] == "cloudflare_challenge"

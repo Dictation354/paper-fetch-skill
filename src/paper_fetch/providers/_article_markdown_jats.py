@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import publication_date, citation_date
+
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
@@ -198,24 +200,24 @@ def _article_id(article_meta: ET.Element | None, pub_id_type: str) -> str:
     return ""
 
 
-def _publication_date(article_meta: ET.Element | None) -> str:
-    pub_dates = iter_children(article_meta, "pub-date")
-    if not pub_dates:
-        return ""
-    preferred = pub_dates[0]
-    for candidate in pub_dates:
-        pub_type = normalize_text(
-            str(candidate.get("pub-type") or candidate.get("date-type") or "")
-        ).lower()
-        if pub_type in {"epub", "ppub", "collection"}:
-            preferred = candidate
-            break
-    parts = [
-        normalize_text(child_text(preferred, "day")),
-        normalize_text(child_text(preferred, "month")),
-        normalize_text(child_text(preferred, "year")),
-    ]
-    return normalize_text(" ".join(part for part in parts if part))
+def _publication_dates(article_meta: ET.Element | None) -> list[dict[str, str]]:
+    dates = []
+    for node in iter_children(article_meta, "pub-date"):
+        raw_kind = str(
+            node.get("pub-type")
+            or node.get("date-type")
+            or node.get("publication-format")
+            or "unspecified"
+        )
+        kind = {"epub": "online", "ppub": "print", "electronic": "online"}.get(
+            raw_kind, raw_kind
+        )
+        parts = [
+            normalize_text(child_text(node, key)) for key in ("year", "month", "day")
+        ]
+        value = "-".join(part for part in parts if part)
+        dates.extend(publication_date(kind, value, "jats:pub-date:" + raw_kind))
+    return dates
 
 
 def _license_urls(article_meta: ET.Element | None) -> list[str]:
@@ -255,9 +257,22 @@ def extract_jats_metadata(
             "journal_title": journal_title
             or normalize_text(str(base.get("journal_title") or ""))
             or None,
-            "published": _publication_date(article_meta)
-            or normalize_text(str(base.get("published") or ""))
-            or None,
+            "publication_dates": [
+                *_publication_dates(article_meta),
+                *(base.get("publication_dates") or []),
+            ],
+            "relations": [
+                *(base.get("relations") or []),
+                *[
+                    {
+                        "kind": node.get("related-article-type") or "unspecified",
+                        "doi": _href(node),
+                        "source": "jats:related-article",
+                    }
+                    for node in iter_descendants(article_meta, "related-article")
+                    if node.get("ext-link-type") == "doi" and _href(node)
+                ],
+            ],
             "authors": extract_jats_authors(root) or list(base.get("authors") or []),
             "abstract": abstract_text
             or normalize_text(str(base.get("abstract") or ""))
@@ -863,7 +878,7 @@ def build_jats_markdown_document(
     )
     if journal:
         lines.append(f"- Journal: {journal}")
-    published = normalize_text(str(extraction.metadata.get("published") or ""))
+    published = citation_date(extraction.metadata.get("publication_dates"))
     if published:
         lines.append(f"- Published: {published}")
     if xml_path is not None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import PublicationDate
+
 import json
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -103,7 +105,9 @@ class Metadata:
     abstract: str | None = None
     journal: str | None = None
     article_type: str | None = None
-    published: str | None = None
+    publication_dates: list[PublicationDate] = field(default_factory=list)
+    relations: list[dict[str, Any]] = field(default_factory=list)
+    update_to: list[dict[str, Any]] = field(default_factory=list)
     keywords: list[str] = field(default_factory=list)
     license_urls: list[str] = field(default_factory=list)
     landing_page_url: str | None = None
@@ -425,6 +429,7 @@ class FetchEnvelope:
     metadata: Metadata | None = None
     diagnostic_artifacts: list[dict[str, Any]] = field(default_factory=list)
     acquisition: AcquisitionProvenance | None = None
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from .codec import model_to_payload
@@ -447,6 +452,9 @@ class FetchEnvelope:
                     "FetchEnvelope and ArticleModel acquisition provenance must match."
                 )
             self.article.trace = self.trace
+            if not self.diagnostics:
+                self.diagnostics = dict(self.article.diagnostics)
+            self.article.diagnostics = self.diagnostics
 
 
 @dataclass(kw_only=True)
@@ -462,6 +470,7 @@ class ArticleModel:
     )
     trace: list[TraceEvent] = field(default_factory=list)
     acquisition: AcquisitionProvenance | None = None
+    diagnostics: dict[str, Any] = field(default_factory=dict)
 
     def to_dict(self) -> dict[str, Any]:
         from .codec import model_to_payload
@@ -638,6 +647,7 @@ __all__ = [
     "MaxTokensMode",
     "Metadata",
     "OutputMode",
+    "PublicationDate",
     "Quality",
     "QualityConfidence",
     "Reference",

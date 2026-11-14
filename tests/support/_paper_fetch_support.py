@@ -357,7 +357,9 @@ def sample_article(doi: str = "10.1016/test") -> paper_fetch.ArticleModel:
             authors=["Alice Example", "Bob Example"],
             abstract="Example abstract",
             journal="Example Journal",
-            published="2026-01-01",
+            publication_dates=[
+                {"kind": "unspecified", "value": "2026-01-01", "source": "test"}
+            ],
         ),
         sections=[
             Section(

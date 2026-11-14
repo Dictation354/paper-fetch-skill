@@ -301,7 +301,7 @@ resolve
 ### 2. metadata 与路由
 
 - 系统会先尽可能拿到 Crossref metadata。
-- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 1 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔一秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、published、categories、arXiv DOI、abs URL 和 PDF URL。
+- `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 1 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔一秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、publication_dates、categories、arXiv DOI、abs URL 和 PDF URL。
 - `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `probe_has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
 - 最终会合并 primary / secondary metadata，统一生成正文抓取需要的元数据。
 
@@ -407,7 +407,7 @@ resolve
   - 固定顺序是 `arXiv ID 解析 -> arXiv official HTML -> direct HTTP PDF fallback -> metadata-only`。
   - resolve 支持 `https://arxiv.org/abs/{id}`、`/html/{id}`、`/pdf/{id}`、`arXiv:{id}`、裸 `{id}` / `{id}vN`，以及 `10.48550/arXiv.{id}`。
   - DOI、URL、裸 ID 或已有 metadata 中能可靠推导 arXiv ID 时，会先构造最小 metadata：`doi`、`arxiv_id`、`landing_page_url`、`html_url`、`pdf_url`、`provider=arxiv`，随后执行 HTML -> PDF waterfall（`all` 且允许资产落盘时先核对摘要页并发现附件）；主链结束后默认通过内部 Atom API client 补充 metadata，使用 10 秒单次 I/O 超时、一次请求尝试和 1 秒节流，关闭该调用的瞬时错误与限流重试；普通失败只记录 warning/diagnostic，保留已得到的全文。独立 metadata 查询使用 60 秒及原重试策略。
-  - official HTML front matter 会补齐 `title`、`authors`、`abstract`、`published`、`primary_category`、canonical DOI、HTML/PDF URL；普通字段合并优先级是 arXiv API metadata > HTML front matter > derived arXiv URLs；作者保留完整有序列表：API 列表更长时使用 API，否则优先 HTML，不拼接不同姓名写法；显式或本次固定的 `vN` 标识和对应 URL 不被 enrichment 改为最新版，因此 API 不可用时也不应出现 `Untitled Article` 或 authorless arXiv fulltext。
+  - official HTML front matter 会补齐 `title`、`authors`、`abstract`、`publication_dates`、`primary_category`、canonical DOI、HTML/PDF URL；普通字段合并优先级是 arXiv API metadata > HTML front matter > derived arXiv URLs；作者保留完整有序列表：API 列表更长时使用 API，否则优先 HTML，不拼接不同姓名写法；显式或本次固定的 `vN` 标识和对应 URL 不被 enrichment 改为最新版，因此 API 不可用时也不应出现 `Untitled Article` 或 authorless arXiv fulltext。
   - official HTML 是主路径，直接请求 `https://arxiv.org/html/{id}`，抽取 Markdown、官方 bibliography references 和正文 figure 资产候选；可匹配到下载 URL 的正文 figure 会在原 caption 附近先以内联图片 Markdown 表达，下载后改写为 `body_assets/...` 本地链接；如果 official HTML 只有 `ltx_missing_image` 这类缺失图片占位符，会读取 `https://arxiv.org/e-print/{id}` source 包，按 LaTeX figure 顺序 / caption 匹配恢复图片或将 source PDF 图渲染为 PNG，再插回对应 figure caption 前；HTML 正文不足、非 HTML、不可访问或质量门控失败时直接继续 PDF fallback。
   - official HTML 渲染前会做 arXiv/LaTeXML 专用语义块预处理：`figure.ltx_table` 和裸 `table.ltx_tabular` 复用共享 HTML table renderer 输出 Markdown 表格或 key-value 行，单个全宽 `colspan` 标题行会提升为表格前普通文本，`ltx_listing` / algorithm block 输出标题与保留数学的逐行内容，并用 placeholder 保持原文位置；无法插回的位置会追加到文末并记录 warning。
   - official HTML 的 section kind 由清洗后的 `article.ltx_document` DOM 结构 hint 驱动：`References` / `Bibliography` 与 Data / Code Availability 继续按共享语义分类，其它由正文渲染链路输出的 article 标题默认作为正文；页面外部 metrics / citation chrome 不进入 arXiv HTML 解析范围。
@@ -1029,3 +1029,5 @@ notes、配置来源与本地能力。
 - `science` / `pnas` / `ams` / `mdpi` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `tandf`
   - 这些 provider 以 `capabilities.browser_available=true`（由 provider routes 派生） 为准，统一检查 selected backend 的 `runtime_env`、Playwright 与对应 Python 包。
   - 本地 runtime 未就绪时，HTML 主路径、图片资产恢复和 seeded-browser PDF/ePDF fallback 会表现为 `not_configured` 或 `error`；远端 access gate、paywall 或 challenge 仍由实际抓取路线判定，不属于 `provider_status()` 的本地探测范围。
+
+PDF 成功取得字节时 diagnostics 记录 bytes_transport=http|browser_response|browser_download 和实际 final_url，未知为空。它表达实际字节来源；route 和 acquisition.transport 继续表达 catalog 路线。原始 provider diagnostics 贯通 envelope/cache 并由 MCP diagnostics 视图按需交付。

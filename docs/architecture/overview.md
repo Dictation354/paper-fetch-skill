@@ -30,8 +30,8 @@
 
 - MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，只保留静态 provider catalog resource。
 - payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
-- 所有 MCP tool JSON payload 顶层都带 `schema_version=3`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider`、`warnings`、顶层唯一完整 `trace` 供 host 做机器判断。完整 envelope 仅保存一份 quality、acquisition、trace，article 部分仅保存内容字段。
-- 工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=3` 的 payload；该版本化 payload 契约不等同于 MCP output schema。
+- 所有 MCP tool JSON payload 顶层都带 `schema_version=4`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider` 及路由、阶段、HTTP/重试语义供 host 判断；完整 warnings/trace/details 保留在 diagnostics 句柄。完整 envelope 仅保存一份 quality、acquisition、trace、diagnostics，article 部分仅保存内容字段。
+- 工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=4` 的 payload；该版本化 payload 契约不等同于 MCP output schema。
 - `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
 - `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
 - async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
@@ -213,7 +213,7 @@ provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 
 - `ArtifactStore` / `DownloadPolicy` 管理 provider payload、Markdown、资产、诊断和 cache JSON。所有 writer 使用目标 path lock、同目录唯一 staging、flush/fsync 与原子 replace；取消 fence 与最终 replace 在同一临界区线性化。`overwrite=false` 时相同字节幂等，不同字节冲突；显式 overwrite 允许原子替换。
 - `artifact_mode=all` 下失败页面保留隐私清洗后的 HTML 与诊断 JSON，manifest 对其记录 size/hash；不自动保存原始失败 HTML 或截图。逐资产 timing 属于资产结果，请求墙钟由调用方观察。
 
-`FetchCache` 拥有 MCP fetch-envelope sidecar 的匹配和写入，`models.codec` 负责结构编码/解码并保持 wire shape；两者均不修复 PDF。当前 sidecar version 为 6，cache index version 为 3，要求完整 acquisition。旧 sidecar 以 `version_mismatch` 失效并重新抓取，既有 Markdown 不删除。cache index 只信任显式注册且仍通过 DOI/hash/scope 校验的条目，不扫描文件名推断身份，也不自动迁移或修复。
+`FetchCache` 拥有 MCP fetch-envelope sidecar 的匹配和写入，`models.codec` 负责结构编码/解码并保持 wire shape；两者均不修复 PDF。当前 sidecar version 为 7，cache index version 为 3，要求完整 acquisition。旧 sidecar 以 `version_mismatch` 失效并重新抓取，既有 Markdown 不删除。cache index 只信任显式注册且仍通过 DOI/hash/scope 校验的条目，不扫描文件名推断身份，也不自动迁移或修复。
 
 `CapabilityScopeBuilder` 统一构造 credential scope。browser state 只在成功注入 context 后记录实际 use，绑定 provider、backend、canonical 路径及最终内容摘要；空配置不制造 private scope，状态后续消失也不降为 public。loader、inspector 和 compact projection 只查当前请求的精确 variant，再单向回退 canonical/public；public 与不同 private scope 不能横向读取。`get_cached(detail="compact")` 通过 `cached_request_matches()` 判断请求兼容，质量摘要复用统一 acceptance。
 
@@ -252,7 +252,7 @@ service facade
 
 ### 1. resolve
 
-`resolve_paper()` 把 DOI / URL / 标题输入标准化成 `ResolvedQuery`，产出 `query_kind`、`doi`、`landing_url`、`provider_hint`、`candidates`、`title`。MCP structured `title` / `authors` / `year` 以结构化 request 进入 resolver：Crossref bibliographic search 只使用 title，authors 用 canonical author key 做独立相似度，year 从候选 `published` 字段提取后参与加权消歧。DOI cleanup 保留宽松输入清理后用 `idutils` 校验/规范化；标题候选用 token Jaccard + `rapidfuzz.fuzz.ratio` 评分，confidence threshold 和 ambiguity margin 控制。候选不够确定时保留 `candidates`，由上层返回 `ambiguous`，不猜测性继续抓取。
+`resolve_paper()` 把 DOI / URL / 标题输入标准化成 `ResolvedQuery`，产出 `query_kind`、`doi`、`landing_url`、`provider_hint`、`candidates`、`title`。MCP structured `title` / `authors` / `year` 以结构化 request 进入 resolver：Crossref bibliographic search 只使用 title，authors 局部按完整姓名/首字母/仅姓氏给出 1.0/0.8/0.5 证据并一对一匹配，明确姓名冲突为零，公共去重 key 不变；year 消费候选 publication_dates 中明确发表年份并排除 created 后参与加权消歧。DOI cleanup 保留宽松输入清理后用 `idutils` 校验/规范化；标题候选用 token Jaccard + `rapidfuzz.fuzz.ratio` 评分，confidence threshold 和 ambiguity margin 控制。候选不够确定时保留 `candidates`，由上层返回 `ambiguous`，不猜测性继续抓取。
 
 ### 2. routing signal
 
@@ -311,7 +311,7 @@ metadata fallback 的 `quality.has_fulltext=false`，结构化 trace 包含
 
 固定返回形状的公开抓取结果。始终承载 doi、source、acquisition、quality、trace。按 modes 决定 article、markdown、metadata；完整 envelope 只序列化一份 quality、acquisition 和 trace，article 仅保存内容字段。独立 ArticleModel 仍包含自身完整质量与来源。无法从 provider 原点确认 acquisition 时保持 null，不做启发式补全。
 
-MCP tool 与 sidecar 业务 payload 使用 `schema_version=3` 的 JSON-safe 形状；sidecar wrapper 版本与匹配规则见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。reader 仅接受新结构，旧 sidecar/index 返回版本不匹配，不迁移或删除。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
+MCP tool 与 sidecar 业务 payload 使用 `schema_version=4` 的 JSON-safe 形状；sidecar wrapper 版本与匹配规则见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。reader 仅接受新结构，旧 sidecar/index 返回版本不匹配，不迁移或删除。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 
 ### `ArticleModel`
 
@@ -356,3 +356,7 @@ CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provide
 - [`../providers.md`](../providers.md)
 - [`../deployment.md`](../deployment.md)
 - [`probe-semantics.md`](probe-semantics.md)
+
+MCP v4 的 acquisition 仅在结果顶层出现一次，单篇/批量统一从 acceptance.provenance 取 fallback_codes、warning_codes、failure_codes。未请求资产时摘要只保留 requested/profile；材料只返回身份、发现完整性和必要计数。成功与失败均注册可分页 diagnostics，批量别名共享快照。navigate_content 在保留 Markdown 上返回标题、章节和字面搜索范围，Unicode 码点偏移直接供 read_content 使用。
+
+公开日期直接使用 publication_dates，不保留 published 别名。日期和文献关系跨 provider、元数据合并、模型编解码、候选、文件命名及渲染传递；未知日期不推测，不自动跟抓关联 DOI。

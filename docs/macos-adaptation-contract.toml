@@ -49,6 +49,12 @@ project_directory = ".agents/skills/paper-fetch-skill"
 current_skill_path_only = true
 check_is_read_only = true
 
+[host_config.codex]
+home_override = "CODEX_HOME"
+default_directory = "~/.codex"
+register_unregister_same_path = true
+print_destination = true
+
 [browser]
 byparr_version = "3.1.1"
 native_engine = "camoufox"

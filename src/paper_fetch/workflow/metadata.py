@@ -53,7 +53,7 @@ def metadata_from_resolution(resolved) -> ProviderMetadata:
         "doi": resolved.doi,
         "title": resolved.title,
         "journal_title": None,
-        "published": None,
+        "publication_dates": [],
         "landing_page_url": resolved.landing_url,
         "authors": [],
         "keywords": [],

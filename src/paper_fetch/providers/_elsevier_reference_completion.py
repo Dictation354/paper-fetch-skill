@@ -6,6 +6,8 @@ All matching evidence is internal; conversion to ArticleModel performs no I/O.
 
 from __future__ import annotations
 
+from ..publication_dates import citation_date
+
 from copy import copy
 from dataclasses import dataclass, replace
 import re
@@ -106,7 +108,7 @@ def metadata_citation(record: Mapping[str, Any], *, work=False) -> Citation:
         ),
         title=str(record.get("title") or record.get("article-title") or ""),
         first_author=first_author,
-        year=str(record.get("published") or "")[:4]
+        year=str(citation_date(record.get("publication_dates")) or "")[:4]
         if work
         else str(record.get("year") or ""),
         volume=str(extra.get("volume") or record.get("volume") or ""),

@@ -22,7 +22,7 @@ from ..reason_codes import ERROR, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED
 from ..service import PaperFetchFailure
 from ..tracing import TraceEvent
 
-MCP_OUTPUT_SCHEMA_VERSION = 3
+MCP_OUTPUT_SCHEMA_VERSION = 4
 
 
 class ToolArgumentError(ValueError):

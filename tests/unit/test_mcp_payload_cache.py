@@ -176,7 +176,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         payload = payload_from_envelope(envelope, request)
         round_trip = envelope_from_payload(payload)
 
-        self.assertEqual(payload["schema_version"], 3)
+        self.assertEqual(payload["schema_version"], 4)
         self.assertEqual(len(payload["trace"]), 2)
         self.assertNotIn("trace", payload["quality"])
         self.assertNotIn("quality", payload["article"])
@@ -207,6 +207,7 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "open_world_hint": True,
             },
             "read_content": {"read_only_hint": True, "open_world_hint": False},
+            "navigate_content": {"read_only_hint": True, "open_world_hint": False},
             "list_cached": {"read_only_hint": True, "open_world_hint": False},
             "get_cached": {"read_only_hint": True, "open_world_hint": False},
             "batch_resolve": {"read_only_hint": True, "open_world_hint": True},
@@ -521,7 +522,9 @@ class McpPayloadCacheTests(unittest.TestCase):
         envelope.article.metadata = Metadata(
             title=title,
             authors=["Annu Panwar", "Maik Renner", "Axel Kleidon"],
-            published="20 October 2020",
+            publication_dates=[
+                {"kind": "unspecified", "value": "20 October 2020", "source": "test"}
+            ],
         )
         envelope.markdown = f"# {title}\n\nExample body.\n"
 
@@ -543,7 +546,9 @@ class McpPayloadCacheTests(unittest.TestCase):
             )
             self.assertTrue(saved_path.exists())
             self.assertIn(f"# {title}", saved_path.read_text(encoding="utf-8"))
-            self.assertEqual(payload["metadata"]["published"], "20 October 2020")
+            self.assertEqual(
+                payload["metadata"]["publication_dates"][0]["value"], "20 October 2020"
+            )
             self.assertIn(
                 trace_facts(trace_event("download", "markdown", "saved")),
                 trace_facts(retained_view(payload, "diagnostics")["trace"]),

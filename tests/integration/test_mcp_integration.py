@@ -78,7 +78,7 @@ SERVER_SCRIPT = textwrap.dedent(
                 authors=["Alice Example"],
                 abstract="Example abstract",
                 journal="Example Journal",
-                published="2026-01-01",
+                publication_dates=[{"kind": "unspecified", "value": "2026-01-01", "source": "test"}],
             ),
             sections=[Section(heading="Introduction", level=2, kind="body", text="Example body.")],
             references=[],

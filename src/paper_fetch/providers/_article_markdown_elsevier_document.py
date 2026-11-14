@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import citation_date
+
 from dataclasses import dataclass
 from copy import deepcopy
 from pathlib import Path
@@ -346,7 +348,7 @@ def _build_elsevier_article_structure(
     title = normalize_text(str(metadata.get("title") or "")) or "Untitled Article"
     doi = normalize_text(str(metadata.get("doi") or ""))
     journal_title = normalize_text(str(metadata.get("journal_title") or ""))
-    published = normalize_text(str(metadata.get("published") or ""))
+    published = citation_date(metadata.get("publication_dates")) or ""
     landing_page = normalize_text(str(metadata.get("landing_page_url") or ""))
     authors = extract_article_authors(root)
     references: list[Reference] = []
@@ -659,7 +661,7 @@ def write_article_markdown(
         str(metadata.get("doi") or ""),
         metadata.get("title"),
         authors=metadata.get("authors") or None,
-        year=_extract_year(str(metadata.get("published") or "") or None),
+        year=_extract_year(citation_date(metadata.get("publication_dates"))),
     )
     document = build_markdown_document(
         provider=provider,

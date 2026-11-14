@@ -39,6 +39,20 @@ class PdfFallbackHelperTests(unittest.TestCase):
     def setUp(self) -> None:
         _pdf_common._clear_pdf_markdown_render_cache()
 
+        # Unit contracts mock the process boundary; real isolation lives in integration.
+        def render(path, *, image_dir=None, mode="default"):
+            if mode == "transparent":
+                return _pdf_common._render_transparent_pdf_markdown_in_process(path)
+            return _pdf_common._render_default_pdf_markdown_in_process(
+                path, image_dir=image_dir
+            )
+
+        patcher = mock.patch.object(
+            _pdf_common, "_render_pdf_in_subprocess", side_effect=render
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def tearDown(self) -> None:
         _pdf_common._clear_pdf_markdown_render_cache()
 
@@ -1622,3 +1636,57 @@ class PdfFallbackHelperTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_pdf_byte_transport_is_recorded_at_the_branch_that_obtains_bytes(
+    monkeypatch, tmp_path
+):
+    captured = []
+
+    def collect(**kwargs):
+        captured.append(kwargs)
+        return object()
+
+    monkeypatch.setattr(_pdf_common, "pdf_fetch_result_from_bytes", collect)
+    monkeypatch.setattr(_pdf_fallback, "pdf_fetch_result_from_bytes", collect)
+    _pdf_common.pdf_fetch_result_from_response(
+        {
+            "body": b"%PDF-1.7 minimal",
+            "headers": {"content-type": "application/pdf"},
+            "url": "https://example.org/http-final.pdf",
+        },
+        artifact_dir=None,
+        source_url="https://example.org/source.pdf",
+        not_pdf_message="expected PDF",
+    )
+    assert captured[-1]["bytes_transport"] == "http"
+    assert captured[-1]["final_url"] == "https://example.org/http-final.pdf"
+    response = types.SimpleNamespace(
+        headers={"content-type": "application/pdf"},
+        body=lambda: b"%PDF-1.7 minimal",
+        url="https://example.org/browser-final.pdf",
+    )
+    _pdf_fallback._response_to_pdf_result(
+        response,
+        artifact_dir=tmp_path,
+        source_url="https://example.org/source.pdf",
+        final_url="https://example.org/page",
+    )
+    assert captured[-1]["bytes_transport"] == "browser_response"
+    assert captured[-1]["final_url"] == response.url
+
+    class Download:
+        suggested_filename = "paper.pdf"
+        url = "https://example.org/download-final.pdf"
+
+        def save_as(self, path):
+            Path(path).write_bytes(b"%PDF-1.7 minimal")
+
+    _pdf_fallback._download_to_pdf_result(
+        Download(),
+        artifact_dir=tmp_path,
+        source_url="https://example.org/source.pdf",
+        final_url="https://example.org/page",
+    )
+    assert captured[-1]["bytes_transport"] == "browser_download"
+    assert captured[-1]["final_url"] == Download.url

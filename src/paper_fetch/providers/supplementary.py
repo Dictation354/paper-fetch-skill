@@ -10,6 +10,7 @@ from typing import Any
 from bs4 import BeautifulSoup
 
 from ..acquisition import AcquisitionProvenance
+from ..provider_catalog import provider_supports_supplementary
 from ..arxiv_id import arxiv_id_from_query, canonical_arxiv_abs_url
 from ..config import resolve_asset_download_concurrency
 from ..extraction.html import decode_html
@@ -500,17 +501,7 @@ def fetch_provider_supplementary(
     browser_index_client = (
         isinstance(client, BrowserWorkflowClient) and client.name != "elsevier"
     )
-    supported = {
-        "arxiv",
-        "springer",
-        "ieee",
-        "plos",
-        "frontiers",
-        "copernicus",
-        "elsevier",
-        "oxfordacademic",
-    }
-    if not browser_index_client and client.name not in supported:
+    if not provider_supports_supplementary(client.name):
         raise ProviderFailure(
             NOT_SUPPORTED, f"{client.name} does not support supplementary retrieval."
         )

@@ -338,7 +338,9 @@ class ServiceRuntimeTests(unittest.TestCase):
                     "Pierre Gentine",
                     "Yanlan Liu",
                 ],
-                "published": "2025-10-02",
+                "publication_dates": [
+                    {"kind": "unspecified", "value": "2025-10-02", "source": "test"}
+                ],
             },
             needs_local_copy=True,
         )

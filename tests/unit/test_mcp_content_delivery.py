@@ -314,3 +314,72 @@ def test_handle_diagnostics_include_image_delivery_warnings(monkeypatch):
         all_text(store, result.structured_content["content_ref"], "diagnostics", 20000)
     )
     assert warning in diagnostics["response_warnings"]
+
+
+def test_navigation_preserves_unicode_ranges_sections_and_literal_search():
+    from paper_fetch.mcp.schemas import NavigateContentRequest
+
+    text = "# 中文😀\nintro\n## Methods\nStraße α.B\n### Detail\nα.b\n```\n# fake\n```\n## Results\nend"
+    store = ContentStore()
+    ref = store.register_many([ContentSnapshot({"markdown": text})])[0]
+
+    def navigate(**kwargs):
+        return store.navigate(
+            NavigateContentRequest(content_id=ref["content_id"], **kwargs)
+        )
+
+    first = navigate(mode="headings", max_results=2)
+    assert [item["title"] for item in first["results"]] == ["中文😀", "Methods"]
+    assert first["results"][1]["section_end"] == text.index("## Results")
+    second = navigate(mode="headings", offset=first["next_offset"])
+    assert [item["title"] for item in second["results"]] == ["Detail", "Results"]
+    assert second["eof"]
+    hit = navigate(mode="search", query="Α.b", max_results=1, context_chars=2)
+    assert text[hit["results"][0]["start"] : hit["results"][0]["end"]] == "α.B"
+    assert (
+        hit["results"][0]["context"]
+        == text[hit["results"][0]["context_start"] : hit["results"][0]["context_end"]]
+    )
+    tail = navigate(mode="search", query="Α.b", offset=hit["next_offset"])
+    assert len(tail["results"]) == 1 and tail["eof"]
+    assert navigate(mode="search", query="does not exist")["results"] == []
+    assert (
+        navigate(mode="headings", offset=len(text) + 1)["code"]
+        == "content_range_out_of_bounds"
+    )
+    diagnostic = store.register_many([ContentSnapshot({"diagnostics": "{}"})])[0]
+    assert (
+        store.navigate(NavigateContentRequest(content_id=diagnostic["content_id"]))[
+            "code"
+        ]
+        == "content_view_unavailable"
+    )
+
+
+def test_raw_provider_diagnostics_survive_envelope_cache_and_handle_projection():
+    from paper_fetch.mcp.fetch_cache import payload_from_envelope
+    from paper_fetch.models.codec import envelope_from_payload
+
+    envelope = sample_envelope(modes={"article", "markdown"})
+    envelope.diagnostics = envelope.article.diagnostics = {
+        "pdf": {
+            "bytes_transport": "browser_download",
+            "final_url": "https://example.org/paper.pdf",
+        },
+        "html_failure": {
+            "stage": "browser_context_create",
+            "raw": ["raw diagnostic"] * 500,
+        },
+    }
+    request = FetchPaperRequest(query=envelope.doi)
+    cached = envelope_from_payload(payload_from_envelope(envelope, request))
+    assert cached.diagnostics == envelope.diagnostics
+    store = ContentStore()
+    result = build_fetch_tool_result(
+        cached, request, content_store=store
+    ).structured_content
+    assert "diagnostics" not in result
+    assert (
+        json.loads(all_text(store, result["content_ref"], "diagnostics"))["diagnostics"]
+        == envelope.diagnostics
+    )

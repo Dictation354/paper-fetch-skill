@@ -719,3 +719,11 @@ macOS 出版社状态使用原生持久目录；升级保留状态与现有路�
 
 macOS 的浏览器预置与重试使用[浏览器安装与准备](#浏览器安装与准备)的统一入口；
 组件随包 inventory、checksum 与 SBOM 的边界见[受管 Byparr](browser-backends.md#统一受管-byparr)。
+
+## 活动 Codex 配置与接口刷新
+
+Unix 和 Windows 直接注册、卸载共用路径规则：非空 CODEX_HOME 优先，其下 config.toml 为实际目的地；否则使用宿主默认 ~/.codex/config.toml（Windows：USERPROFILE/.codex/config.toml）。安装器打印实际目的地，Codex CLI 可用时仍优先注册；skill 位置保持 ~/.agents/skills/paper-fetch-skill。macOS 的相同规则见 macos-adaptation-contract.toml 的 host_config.codex。
+
+升级后可用受管绝对 wrapper 执行 doctor --catalog --json，查看运行版本、解释器、模块及安装来源。未注册、进程启动失败和宿主目录未刷新分别检查活动配置、启动错误及宿主/MCP 重载。不要从工具命名空间推测 resource server 名：先发现资源，再使用发现结果中的 server 与 URI。
+
+MCP 业务输出为 v4，fetch-envelope sidecar 为 v7；旧缓存按版本不匹配处理，不迁移。CLI manifest 和完整 acceptance 仍为 v2，cache index 仍为 v3。成功与失败完整 diagnostics 使用会话句柄分页读取；CLI 完整证据保留原语义。

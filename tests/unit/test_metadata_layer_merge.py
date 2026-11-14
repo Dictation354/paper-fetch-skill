@@ -146,7 +146,9 @@ def test_ieee_merge_uses_landing_scalars_and_keeps_base_fallbacks() -> None:
             "title": "Base title",
             "abstract": "Base abstract",
             "journal": "Base Journal",
-            "published": "2023",
+            "publication_dates": [
+                {"kind": "unspecified", "value": "2023", "source": "test"}
+            ],
             "authors": ["Base Author"],
             "keywords": ["Random access memory", "near-data processing"],
         },
@@ -172,7 +174,7 @@ def test_ieee_merge_uses_landing_scalars_and_keeps_base_fallbacks() -> None:
     assert merged["title"] == "Landing title"
     assert merged["abstract"] == "Landing abstract"
     assert merged["journal_title"] == "IEEE Access"
-    assert merged["published"] == "2024"
+    assert {entry["value"] for entry in merged["publication_dates"]} == {"2023", "2024"}
     assert merged["authors"] == ["Landing Author", "Base Author"]
     assert merged["keywords"] == [
         "Random access memory",

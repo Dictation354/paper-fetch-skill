@@ -8,10 +8,11 @@ from unittest import mock
 
 from paper_fetch import provider_catalog as runtime_catalog
 from paper_fetch.config import DEFAULT_USER_AGENT
-from paper_fetch.mcp.provider_catalog import (
+from paper_fetch.provider_catalog import provider_supports_supplementary
+from paper_fetch.catalog_payload import (
     PROVIDER_CATALOG_RESOURCE_URI,
     PROVIDER_CATALOG_SCHEMA_VERSION,
-    provider_catalog_resource_payload,
+    provider_catalog_payload,
 )
 from paper_fetch.mcp.server import build_server
 
@@ -36,7 +37,7 @@ def _expected_routes(
 
 
 def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
-    payload = provider_catalog_resource_payload()
+    payload = provider_catalog_payload()
     specs = runtime_catalog.ordered_provider_specs()
 
     assert "client_factory" not in json.dumps(payload)
@@ -66,6 +67,12 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
             "routes": _expected_routes(spec),
             "capabilities": {
                 "html": spec.html_capable,
+                "targets": ["paper"]
+                + (
+                    ["supplementary"]
+                    if provider_supports_supplementary(spec.name)
+                    else []
+                ),
                 "metadata_probe": spec.probe_capability or None,
                 "provider_managed_abstract_only": (spec.provider_managed_abstract_only),
                 "runtime_kind": (
@@ -137,7 +144,7 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
         mock.patch.object(runtime_catalog, "PROVIDER_CATALOG", updated_specs),
         mock.patch.object(runtime_catalog, "SOURCE_PROVIDER_MAP", updated_sources),
     ):
-        payload = provider_catalog_resource_payload()
+        payload = provider_catalog_payload()
 
     synthetic_payload = payload["providers"][-1]
     assert synthetic_payload["provider"] == synthetic.name
@@ -165,7 +172,7 @@ def test_server_registers_readable_provider_catalog_resource() -> None:
     raw_payload, mime_type = asyncio.run(read_resource())
     assert mime_type == "application/json"
     assert isinstance(raw_payload, str)
-    assert json.loads(raw_payload) == provider_catalog_resource_payload()
+    assert json.loads(raw_payload) == provider_catalog_payload()
 
 
 def test_catalog_runtime_facts_are_read_only_and_derived_from_runtime_owners(
@@ -179,7 +186,7 @@ def test_catalog_runtime_facts_are_read_only_and_derived_from_runtime_owners(
 
     monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", forbidden)
     monkeypatch.setattr(byparr_preparation, "download", forbidden)
-    facts = provider_catalog_resource_payload()["browser_runtime"]
+    facts = provider_catalog_payload()["browser_runtime"]
     assert facts["backend"] == "byparr"
     assert (
         facts["byparr_version"]

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...publication_dates import publication_date, normalize_publication_dates
+
 import html
 import re
 import urllib.parse
@@ -207,12 +209,20 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
     article_type = first(
         "citation_article_type", "dc.type", "prism.section", "article:section"
     )
-    published = first(
-        "citation_publication_date",
-        "citation_online_date",
-        "dc.date",
-        "prism.publicationdate",
-    )
+    dates = [
+        date
+        for key, kind in (
+            ("citation_publication_date", "unspecified"),
+            ("citation_online_date", "online"),
+            ("citation_date", "unspecified"),
+            ("dc.date.issued", "issued"),
+            ("dc.date.created", "created"),
+            ("dc.date", "unspecified"),
+            ("prism.publicationdate", "unspecified"),
+        )
+        for value in parser.meta.get(key, [])
+        for date in publication_date(kind, html.unescape(value), key)
+    ]
     citation_fulltext_html_url = normalize_lookup_url(
         first("citation_fulltext_html_url"), source_url
     )
@@ -232,7 +242,7 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         "abstract": abstract,
         "journal_title": journal_title,
         "article_type": article_type,
-        "published": published,
+        "publication_dates": dates,
         "landing_page_url": parser.canonical_url or source_url,
         "citation_fulltext_html_url": citation_fulltext_html_url,
         "citation_abstract_html_url": citation_abstract_html_url,
@@ -254,7 +264,6 @@ def merge_html_metadata(
     for key in (
         "title",
         "journal_title",
-        "published",
         "landing_page_url",
         "doi",
         "article_type",
@@ -264,6 +273,12 @@ def merge_html_metadata(
         merged[key] = (
             normalize_text(str(base.get(key) or html_metadata.get(key) or "")) or None
         )
+    merged["publication_dates"] = normalize_publication_dates(
+        [
+            *(base.get("publication_dates") or []),
+            *(html_metadata.get("publication_dates") or []),
+        ]
+    )
     merged["abstract"] = (
         normalize_text(str(html_metadata.get("abstract") or base.get("abstract") or ""))
         or None

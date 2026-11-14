@@ -216,7 +216,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
     assert payload["status"] == "ok"
     assert payload["acceptance"]["overall"] == "complete"
     assert payload["acceptance"]["content_requested"] is False
-    assert len(payload["supplementary"]["assets"]) == 1
+    assert payload["supplementary"]["asset_count"] == 1
     assert len(list((tmp_path / "single").glob("*_supplementary.md"))) == 1
     result = asyncio.run(
         batch_fetch_tool_async(
@@ -231,7 +231,7 @@ def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tm
     assert not result.is_error
     assert payload["results"][0]["target"] == "supplementary"
     assert payload["results"][0]["acceptance"]["overall"] == "complete"
-    assert len(payload["results"][0]["supplementary"]["assets"]) == 1
+    assert payload["results"][0]["supplementary"]["asset_count"] == 1
     assert sorted(calls) == ["/article", "/article", "/support.csv", "/support.csv"]
 
 
@@ -243,7 +243,19 @@ def test_mcp_discovery_without_archival(supplementary_server, tmp_path, options)
     )
     assert result["status"] == "ok"
     assert result["acceptance"]["overall"] == "degraded"
-    assert result["supplementary"]["assets"][0]["archive_state"] == "not_archived"
+    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
+    from paper_fetch.mcp.schemas import ReadContentRequest
+
+    diagnostic = json.loads(
+        DEFAULT_CONTENT_STORE.read(
+            ReadContentRequest(
+                content_id=result["content_ref"]["content_id"],
+                view="diagnostics",
+                max_chars=20000,
+            )
+        )["text"]
+    )
+    assert diagnostic["supplementary"]["assets"][0]["archive_state"] == "not_archived"
     assert calls == ["/article"]
     assert not list(tmp_path.rglob("*.csv"))
 

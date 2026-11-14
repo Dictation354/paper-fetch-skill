@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import publication_date, normalize_publication_dates
+
 import copy
 from datetime import datetime
 from typing import Any, cast
@@ -54,7 +56,6 @@ _ARXIV_SCALAR_KEYS = (
     "external_doi",
     "title",
     "abstract",
-    "published",
     "updated",
     "journal_title",
     "publisher",
@@ -178,7 +179,11 @@ def metadata_from_arxiv_result(
         "title": normalize_text(getattr(result, "title", "")) or None,
         "authors": _result_authors(result),
         "abstract": normalize_text(getattr(result, "summary", "")) or None,
-        "published": _datetime_to_date(getattr(result, "published", None)),
+        "publication_dates": publication_date(
+            "issued",
+            _datetime_to_date(getattr(result, "published", None)),
+            "arxiv:published",
+        ),
         "updated": _datetime_to_date(getattr(result, "updated", None)),
         "journal_title": "arXiv",
         "publisher": "arXiv",
@@ -329,7 +334,11 @@ def _extract_arxiv_watermark_metadata(root: Any) -> dict[str, Any]:
         return {
             "arxiv_id": arxiv_id,
             "primary_category": primary_category or None,
-            "published": _arxiv_date_to_iso(match.group("date")),
+            "publication_dates": publication_date(
+                "unspecified",
+                _arxiv_date_to_iso(match.group("date")),
+                "arxiv:watermark",
+            ),
         }
     return {}
 
@@ -391,8 +400,13 @@ def _extract_arxiv_html_frontmatter(
         html_metadata["authors"] = authors
     if abstract:
         html_metadata["abstract"] = abstract
-    if watermark_metadata.get("published"):
-        html_metadata["published"] = watermark_metadata["published"]
+    if watermark_metadata.get("publication_dates"):
+        html_metadata["publication_dates"] = normalize_publication_dates(
+            [
+                *(html_metadata.get("publication_dates") or []),
+                *watermark_metadata["publication_dates"],
+            ]
+        )
     if watermark_metadata.get("primary_category"):
         html_metadata["primary_category"] = watermark_metadata["primary_category"]
         html_metadata["categories"] = [watermark_metadata["primary_category"]]

@@ -629,6 +629,27 @@ class ReadContentRequest(BaseModel):
     max_chars: ContentMaxCharsInput = 6000
 
 
+NavigateMaxResultsInput: TypeAlias = Annotated[int, Field(ge=1, le=100)]
+NavigateContextCharsInput: TypeAlias = Annotated[int, Field(ge=0, le=2000)]
+
+
+class NavigateContentRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid", strict=True)
+
+    content_id: str = Field(min_length=1)
+    mode: Literal["headings", "search"] = "headings"
+    query: str | None = None
+    offset: ContentOffsetInput = 0
+    max_results: NavigateMaxResultsInput = 20
+    context_chars: NavigateContextCharsInput = 200
+
+    @model_validator(mode="after")
+    def validate_search(self) -> NavigateContentRequest:
+        if self.mode == "search" and not self.query:
+            raise ValueError("query must not be empty in search mode.")
+        return self
+
+
 class FetchPaperRequest(_FetchOptionsRequest, _RequiredQueryRequest):
     pass
 
@@ -833,6 +854,7 @@ MCP_TOOL_REQUEST_MODELS: dict[str, type[BaseModel]] = {
     "batch_fetch": BatchFetchRequest,
     "provider_status": ProviderStatusRequest,
     "read_content": ReadContentRequest,
+    "navigate_content": NavigateContentRequest,
     "browser_preflight": BrowserPreflightRequest,
 }
 

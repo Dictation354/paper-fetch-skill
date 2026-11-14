@@ -75,3 +75,9 @@ MCP/CLI/library 进入所选 browser 时按需准备 runtime；纯 HTTP 和 cach
 ## 离线安装后的可选配置
 
 离线安装器在核心 smoke 后提供可选配置；非交互/静默安装跳过，reuse-env-file 保持外部配置只读。凭据隐藏输入、留空保留原值，下载/安装默认关闭。可选失败或取消不影响核心安装，跳过 browser 准备不关闭后续自动准备。升级保留凭据和可选工具，卸载默认保留可选工具及共享 browser cache；配置或升级后重启已运行宿主/MCP。
+
+## 入口和会话接口诊断
+
+按[CLI 入口发现](cli-workflow.md#窄-fallback)使用 PATH、已有注册或受管 wrapper，最后才尝试已知可导入包的解释器。doctor --catalog --json 返回运行版本、解释器、模块和安装来源；它不能证明宿主工具目录已刷新。
+
+Codex 直接注册及卸载使用非空 CODEX_HOME/config.toml，否则使用宿主默认 ~/.codex/config.toml（Windows 为 USERPROFILE/.codex/config.toml），安装器打印实际目的地。Codex CLI 可用时仍优先注册。skill 用户位置保持 ~/.agents/skills/paper-fetch-skill。

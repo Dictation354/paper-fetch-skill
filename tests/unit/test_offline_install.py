@@ -38,6 +38,9 @@ class OfflineInstallTests(unittest.TestCase):
     def test_windows_installer_helper_uses_camoufox_runtime_smoke(self) -> None:
         script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
 
+        self.assertIn("function Get-CodexConfigPath", script)
+        self.assertIn("$env:CODEX_HOME", script)
+        self.assertEqual(script.count("$configPath = Get-CodexConfigPath"), 2)
         self.assertNotIn("[switch]$ProbeLaunch", script)
         self.assertIn("[string]$LogPath", script)
         self.assertIn("Invoke-InstallerStep", script)

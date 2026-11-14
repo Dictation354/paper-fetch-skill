@@ -445,9 +445,14 @@ function Remove-CodexMcpTables {
     return $result.ToArray()
 }
 
+function Get-CodexConfigPath {
+    $activeHome = if (-not [string]::IsNullOrEmpty($env:CODEX_HOME)) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
+    return Join-Path $activeHome "config.toml"
+}
+
 function Write-CodexConfigToml {
-    $codexHome = Join-Path $env:USERPROFILE ".codex"
-    $configPath = Join-Path $codexHome "config.toml"
+    $configPath = Get-CodexConfigPath
+    $codexHome = Split-Path -Parent $configPath
     New-Item -ItemType Directory -Force -Path $codexHome | Out-Null
     Backup-File $configPath
 
@@ -477,7 +482,7 @@ function Write-CodexConfigToml {
 }
 
 function Remove-CodexConfigToml {
-    $configPath = Join-Path (Join-Path $env:USERPROFILE ".codex") "config.toml"
+    $configPath = Get-CodexConfigPath
     if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
         return
     }
@@ -492,7 +497,7 @@ function Register-CodexMcp {
     $python = ConvertTo-FullPath (Get-RuntimePython)
     if ($null -ne $codex) {
         try {
-            Write-Log "Registering Codex MCP server '$McpName' with Codex CLI"
+            Write-Log "Registering Codex MCP server '$McpName' with Codex CLI ($(Get-CodexConfigPath))"
             Invoke-Checked -FilePath $codex.Source -Arguments @("mcp", "remove", $McpName) -IgnoreFailure
             $args = @("mcp", "add")
             foreach ($entry in (Get-McpEnv).GetEnumerator()) {
@@ -509,6 +514,7 @@ function Register-CodexMcp {
 }
 
 function Unregister-CodexMcp {
+    Write-Log "Removing Codex MCP config from $(Get-CodexConfigPath)"
     $codex = Get-Command codex -ErrorAction SilentlyContinue
     if ($null -ne $codex) {
         Invoke-Checked -FilePath $codex.Source -Arguments @("mcp", "remove", $McpName) -IgnoreFailure

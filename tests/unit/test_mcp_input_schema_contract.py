@@ -33,6 +33,7 @@ def test_public_tool_schemas_are_valid_and_forbid_unknown_fields() -> None:
         "list_cached",
         "provider_status",
         "read_content",
+        "navigate_content",
         "resolve_paper",
     }
     for schema in schemas.values():

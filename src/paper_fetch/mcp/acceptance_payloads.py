@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
 from typing import Any
 
 from ..workflow.acceptance import FetchAcceptanceReport
@@ -29,13 +28,22 @@ def compact_acceptance_payload(
         "asset": report.asset.status.value,
         "output": report.output.status.value,
         "provenance": report.provenance.status.value,
-        "acquisition": (
-            asdict(report.provenance.acquisition)
-            if report.provenance.acquisition is not None
-            else None
-        ),
         "has_fulltext": report.content.has_fulltext,
         "has_abstract": report.content.has_abstract,
         "token_estimate": report.content.token_estimate,
-        "asset_summary": report.asset.model_dump(mode="json"),
+        "asset_summary": (
+            report.asset.model_dump(mode="json")
+            if report.asset.requested
+            else {
+                "requested": False,
+                "profile": report.asset.profile,
+            }
+        ),
+    }
+
+
+def acceptance_reason_codes(report: FetchAcceptanceReport) -> dict[str, Any]:
+    return {
+        name: list(getattr(report.provenance, name))
+        for name in ("fallback_codes", "warning_codes", "failure_codes")
     }

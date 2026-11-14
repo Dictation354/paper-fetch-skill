@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 import json
+import re
 import threading
 import time
 from typing import Any
@@ -13,7 +14,7 @@ from uuid import uuid4
 from cachetools import TLRUCache
 
 from .results import _tool_result, error_payload_from_exception, with_schema_version
-from .schemas import ReadContentRequest
+from .schemas import ReadContentRequest, NavigateContentRequest
 
 CONTENT_IDLE_TTL_SECONDS = 24 * 60 * 60
 CONTENT_STORE_MAX_BYTES = 256 * 1024 * 1024
@@ -122,6 +123,102 @@ class ContentStore:
                 }
             )
 
+    def navigate(self, request: NavigateContentRequest) -> dict[str, Any]:
+        # Read through the same owner to preserve TTL, capacity and error semantics.
+        page = self.read(
+            ReadContentRequest(
+                content_id=request.content_id,
+                offset=request.offset,
+                max_chars=1,
+            )
+        )
+        if page["status"] != "ok":
+            return page
+        with self._lock:
+            snapshot = self._cache.get(request.content_id)
+            if snapshot is None:
+                return self._error(
+                    "content_handle_expired",
+                    "Content handle is expired, evicted, or unknown.",
+                )
+            markdown = snapshot.views["markdown"]
+        if request.mode == "headings":
+            from ..markdown.math import markdown_code_spans
+
+            code = list(markdown_code_spans(markdown))
+            headings = [
+                m
+                for m in re.finditer(
+                    r"^(#{1,6})[ \t]+(.+?)[ \t]*#*[ \t]*$",
+                    markdown,
+                    re.M,
+                )
+                if not any(start <= m.start() < end for start, end in code)
+            ]
+            entries = []
+            for index, match in enumerate(headings):
+                if match.start() < request.offset:
+                    continue
+                section_end = next(
+                    (
+                        other.start()
+                        for other in headings[index + 1 :]
+                        if len(other[1]) <= len(match[1])
+                    ),
+                    len(markdown),
+                )
+                entries.append(
+                    {
+                        "title": match[2],
+                        "level": len(match[1]),
+                        "start": match.start(),
+                        "end": match.end(),
+                        "section_start": match.start(),
+                        "section_end": section_end,
+                    }
+                )
+                if len(entries) > request.max_results:
+                    break
+        else:
+            # Regex IGNORECASE retains original offsets even for Unicode case pairs.
+            entries = []
+            for match in re.finditer(
+                re.escape(request.query or ""), markdown[request.offset :], re.I
+            ):
+                start, end = (
+                    request.offset + match.start(),
+                    request.offset + match.end(),
+                )
+                context_start = max(0, start - request.context_chars)
+                context_end = min(len(markdown), end + request.context_chars)
+                entries.append(
+                    {
+                        "start": start,
+                        "end": end,
+                        "context_start": context_start,
+                        "context_end": context_end,
+                        "context": markdown[context_start:context_end],
+                    }
+                )
+                if len(entries) > request.max_results:
+                    break
+        more = len(entries) > request.max_results
+        returned = entries[: request.max_results]
+        next_offset = entries[-1]["start"] if more else len(markdown)
+        return with_schema_version(
+            {
+                "status": "ok",
+                "content_id": request.content_id,
+                "mode": request.mode,
+                "results": returned,
+                "offset": request.offset,
+                "total_chars": len(markdown),
+                "next_offset": next_offset,
+                "eof": not more,
+                "render_truncated": snapshot.render_truncated,
+            }
+        )
+
     @staticmethod
     def _error(code: str, reason: str) -> dict[str, Any]:
         return with_schema_version(
@@ -142,3 +239,11 @@ def read_content_tool(store: ContentStore, **arguments: Any):
 
 def json_view(value: Any) -> str:
     return json.dumps(value, ensure_ascii=False, separators=(",", ":"))
+
+
+def navigate_content_tool(store: ContentStore, **arguments: Any):
+    try:
+        payload = store.navigate(NavigateContentRequest.model_validate(arguments))
+    except Exception as error:
+        payload = error_payload_from_exception(error)
+    return _tool_result(payload, is_error=payload["status"] != "ok")

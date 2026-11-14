@@ -6,6 +6,8 @@ from collections.abc import Mapping
 from pathlib import Path
 from typing import Literal, Any
 
+from pydantic import ValidationError
+
 from mcp import types as mcp_types
 from mcp.server.lowlevel.server import NotificationOptions
 from mcp.server.mcpserver import Context, MCPServer
@@ -23,15 +25,16 @@ from .cache_payloads import (
     get_cached_tool,
     list_cached_tool,
 )
-from .content_store import ContentStore, read_content_tool
+from .content_store import ContentStore, read_content_tool, navigate_content_tool
+from .results import _tool_result, error_payload_from_exception
 from .fetch_tool import (
     fetch_paper_tool_async,
     provider_status_tool,
     resolve_paper_tool,
 )
-from .provider_catalog import (
+from ..catalog_payload import (
     PROVIDER_CATALOG_RESOURCE_URI,
-    provider_catalog_resource_payload,
+    provider_catalog_payload,
 )
 from .schemas import (
     MCP_TOOL_REQUEST_MODELS,
@@ -47,6 +50,8 @@ from .schemas import (
     ContentViewInput,
     ContentOffsetInput,
     ContentMaxCharsInput,
+    NavigateMaxResultsInput,
+    NavigateContextCharsInput,
     FetchStrategyToolInput,
     IncludeRefsInput,
     MaxTokensInput,
@@ -89,7 +94,10 @@ class PaperFetchMCPServer(MCPServer):
 
         request_model = MCP_TOOL_REQUEST_MODELS.get(name)
         if request_model is not None:
-            validated = request_model.model_validate(arguments)
+            try:
+                validated = request_model.model_validate(arguments)
+            except ValidationError as error:
+                return _tool_result(error_payload_from_exception(error), is_error=True)
             normalized = validated.model_dump(mode="python", exclude_unset=True)
             arguments = dict(normalized) if isinstance(normalized, Mapping) else {}
         return await super().call_tool(name, arguments, context)
@@ -163,7 +171,7 @@ def build_server() -> PaperFetchMCPServer:
 
     server.add_resource(
         FunctionResource.from_function(
-            provider_catalog_resource_payload,
+            provider_catalog_payload,
             uri=PROVIDER_CATALOG_RESOURCE_URI,
             name="provider_catalog",
             description=(
@@ -268,6 +276,33 @@ def build_server() -> PaperFetchMCPServer:
             view=view,
             offset=offset,
             max_chars=max_chars,
+        )
+
+    @server.tool(
+        name="navigate_content",
+        description=(
+            "Navigate retained Markdown headings or case-insensitive literal matches. "
+            "Ranges use original Unicode code points for read_content; never refetches."
+        ),
+        annotations=_read_only_annotations(open_world=False),
+        structured_output=False,
+    )
+    def navigate_content(
+        content_id: str,
+        mode: Literal["headings", "search"] = "headings",
+        query: str | None = None,
+        offset: ContentOffsetInput = 0,
+        max_results: NavigateMaxResultsInput = 20,
+        context_chars: NavigateContextCharsInput = 200,
+    ) -> CallToolResult:
+        return navigate_content_tool(
+            content_store,
+            content_id=content_id,
+            mode=mode,
+            query=query,
+            offset=offset,
+            max_results=max_results,
+            context_chars=context_chars,
         )
 
     @server.tool(

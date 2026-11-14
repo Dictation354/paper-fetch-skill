@@ -150,23 +150,18 @@ def test_successful_fetch_returns_ok_status_and_compact_acceptance() -> None:
         "asset": "not_requested",
         "output": "complete",
         "provenance": "complete",
-        "acquisition": {
-            "provider": "elsevier",
-            "route": "xml_api",
-            "representation": "xml",
-            "transport": "api",
-            "fallback_used": False,
-        },
         "has_fulltext": True,
         "has_abstract": True,
         "token_estimate": 128,
     }
-    assert asset_summary["status"] == "not_requested"
-    assert asset_summary["require_local_body_assets"] is False
-    assert asset_summary["require_full_size_body_assets"] is False
-    assert asset_summary["body_discovered"] == 0
-    assert asset_summary["local_body_assets_satisfied"] is True
-    assert asset_summary["full_size_body_assets_satisfied"] is True
+    assert asset_summary == {"requested": False, "profile": "none"}
+    assert payload["acquisition"]["provider"] == "elsevier"
+    assert (
+        payload["fallback_codes"]
+        == payload["warning_codes"]
+        == payload["failure_codes"]
+        == []
+    )
 
     assert_mcp_tool_omits_output_schema(build_server(), "fetch_paper", payload)
 

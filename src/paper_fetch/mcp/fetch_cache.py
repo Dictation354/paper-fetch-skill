@@ -154,7 +154,7 @@ class _CacheQualitySchema(BaseModel):
 class _CacheEnvelopePayloadSchema(BaseModel):
     model_config = ConfigDict(extra="forbid", strict=True)
 
-    schema_version: Literal[3]
+    schema_version: Literal[4]
     doi: str
     source: str = Field(min_length=1)
     target: Literal["paper", "supplementary"]
@@ -165,6 +165,7 @@ class _CacheEnvelopePayloadSchema(BaseModel):
     article: dict[str, Any] | None
     markdown: str | None
     metadata: dict[str, Any] | None
+    diagnostics: dict[str, Any]
     diagnostic_artifacts: list[dict[str, Any]]
 
 
@@ -324,7 +325,7 @@ def payload_from_envelope(
     retain_article_for_inline_assets: bool = False,
 ) -> dict[str, Any]:
     payload = envelope.to_dict()
-    payload["schema_version"] = 3
+    payload["schema_version"] = 4
     if (
         "article" not in request.requested_modes()
         and not retain_article_for_inline_assets
@@ -421,7 +422,7 @@ def _metadata_has_useful_content(metadata: Metadata | None) -> bool:
         or normalize_text(metadata.abstract)
         or metadata.authors
         or normalize_text(metadata.journal)
-        or normalize_text(metadata.published)
+        or bool(metadata.publication_dates)
     )
 
 

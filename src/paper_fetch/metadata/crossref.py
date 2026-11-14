@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import publication_date
+
 import urllib.parse
 from typing import Any
 from collections.abc import Mapping
@@ -244,12 +246,42 @@ class CrossrefLookupClient:
             "authors": authors,
             "keywords": keywords,
             "abstract": strip_html_tags(message.get("abstract")),
-            "published": first_non_empty(
-                date_parts_to_string(message.get("published-print")),
-                date_parts_to_string(message.get("published-online")),
-                date_parts_to_string(message.get("issued")),
-                date_parts_to_string(message.get("created")),
-            ),
+            "article_type": message.get("type"),
+            "publication_dates": [
+                date
+                for key, kind in (
+                    ("published-print", "print"),
+                    ("published-online", "online"),
+                    ("issued", "issued"),
+                    ("published", "unspecified"),
+                    ("created", "created"),
+                )
+                for date in publication_date(
+                    kind, date_parts_to_string(message.get(key)), "crossref:" + key
+                )
+            ],
+            "relations": [
+                {
+                    "kind": kind,
+                    "doi": normalize_doi(str(relation["id"])),
+                    "source": "crossref:relation",
+                }
+                for kind, relations in (message.get("relation") or {}).items()
+                for relation in relations
+                if isinstance(relation, dict)
+                and relation.get("id-type") == "doi"
+                and relation.get("id")
+            ],
+            "update_to": [
+                {
+                    "kind": item.get("type") or "unspecified",
+                    "doi": normalize_doi(str(item.get("DOI") or "")),
+                    "source": "crossref:update-to",
+                    "updated": item.get("updated"),
+                }
+                for item in message.get("update-to") or []
+                if isinstance(item, dict)
+            ],
             "landing_page_url": first_non_empty(
                 message.get("resource", {}).get("primary", {}).get("URL")
                 if isinstance(message.get("resource"), dict)

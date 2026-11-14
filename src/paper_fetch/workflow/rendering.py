@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import citation_date
+
 from ..tracing import extend_trace
 
 from ..models.markdown import replace_markdown_image_url
@@ -358,7 +360,7 @@ def _markdown_filename(
         envelope.article.metadata if envelope.article is not None else envelope.metadata
     )
     authors = list(meta.authors) if meta and meta.authors else None
-    year = _extract_year(meta.published if meta else None)
+    year = _extract_year(citation_date(meta.publication_dates if meta else []))
     title = meta.title if meta else None
     suffix = "_supplementary" if envelope.target == "supplementary" else ""
     return f"{format_paper_stem(authors, year, title, doi=envelope.doi)}{suffix}.md"
@@ -455,6 +457,7 @@ def build_fetch_envelope(
         acquisition=article.acquisition,
         trace=list(trace or article.trace),
         quality=article.quality,
+        diagnostics=dict(article.diagnostics),
         article=article if "article" in modes else None,
         markdown=markdown,
         metadata=metadata,

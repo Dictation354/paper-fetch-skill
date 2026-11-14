@@ -6,14 +6,14 @@ from dataclasses import asdict
 import json
 from typing import Any
 
-from ..config import DEFAULT_USER_AGENT, build_runtime_env
-from ..browser_runtime_policy import (
+from .config import DEFAULT_USER_AGENT, build_runtime_env
+from .browser_runtime_policy import (
     BYPARR_MANIFEST_PATH,
     UPDATE_CHECK_INTERVAL_SECONDS,
     engine_name,
     selected_backend,
 )
-from .. import provider_catalog as runtime_catalog
+from . import provider_catalog as runtime_catalog
 
 PROVIDER_CATALOG_RESOURCE_URI = "resource://paper-fetch/provider-catalog"
 PROVIDER_CATALOG_SCHEMA_VERSION = 1
@@ -44,7 +44,7 @@ def runtime_tool_version() -> str:
     )
 
 
-def provider_catalog_resource_payload() -> dict[str, Any]:
+def provider_catalog_payload() -> dict[str, Any]:
     """Build the resource directly from the discovered provider/source catalog."""
 
     grouped_sources = runtime_catalog.sources_by_provider()
@@ -60,6 +60,12 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
             ],
             "capabilities": {
                 "html": spec.html_capable,
+                "targets": ["paper"]
+                + (
+                    ["supplementary"]
+                    if runtime_catalog.provider_supports_supplementary(spec.name)
+                    else []
+                ),
                 "metadata_probe": spec.probe_capability or None,
                 "provider_managed_abstract_only": (spec.provider_managed_abstract_only),
                 "runtime_kind": (
@@ -99,6 +105,7 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
     return {
         "schema_version": PROVIDER_CATALOG_SCHEMA_VERSION,
         "tool_version": runtime_tool_version(),
+        "runtime": runtime_identity(),
         "resource_uri": PROVIDER_CATALOG_RESOURCE_URI,
         "provider_count": len(providers),
         "source_count": len(source_provider_map),
@@ -120,6 +127,50 @@ def provider_catalog_resource_payload() -> dict[str, Any]:
 __all__ = [
     "PROVIDER_CATALOG_RESOURCE_URI",
     "PROVIDER_CATALOG_SCHEMA_VERSION",
-    "provider_catalog_resource_payload",
+    "provider_catalog_payload",
     "runtime_tool_version",
 ]
+
+
+def runtime_identity() -> dict[str, Any]:
+    import sys
+    from pathlib import Path
+    from importlib.metadata import distribution
+
+    module_path = str(Path(__file__).resolve())
+    try:
+        from .update import find_installation
+
+        installation_root = str(find_installation().root)
+    except (ValueError, OSError):
+        installation_root = None
+    try:
+        direct_url = json.loads(
+            distribution("paper-fetch-skill").read_text("direct_url.json") or "null"
+        )
+    except Exception:
+        direct_url = None
+    return {
+        "tool_version": runtime_tool_version(),
+        "executable": sys.executable,
+        "python_version": sys.version.split()[0],
+        "module_path": module_path,
+        "installation_root": installation_root,
+        "direct_url": direct_url,
+    }
+
+
+def canonical_provider_hint(value: str) -> str | None:
+    """Only suggest a canonical ID when catalog identity/domain evidence is unique."""
+    from .provider_catalog import provider_domains
+
+    token = value.strip().lower()
+    matches = {
+        spec.name
+        for spec in runtime_catalog.ordered_provider_specs()
+        if token == spec.display_name.lower()
+        or any(
+            token in domain.lower().split(".") for domain in provider_domains(spec.name)
+        )
+    }
+    return next(iter(matches)) if len(matches) == 1 else None

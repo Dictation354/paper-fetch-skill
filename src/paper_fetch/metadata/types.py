@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import PublicationDate
+
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
@@ -47,7 +49,9 @@ class ProviderMetadata(TypedDict, total=False):
     authors: list[str]
     keywords: list[str]
     abstract: str | None
-    published: str | None
+    publication_dates: list[PublicationDate]
+    relations: list[dict[str, Any]]
+    update_to: list[dict[str, Any]]
     landing_page_url: str | None
     citation_fulltext_html_url: str | None
     citation_abstract_html_url: str | None
@@ -188,7 +192,11 @@ def merge_metadata_layers(
     merged: dict[str, Any] = {}
     fill_empty = set(rule.fill_empty)
     overwrite = set(rule.overwrite)
-    concat_unique = set(rule.concat_unique)
+    concat_unique = set(rule.concat_unique) | {
+        "publication_dates",
+        "relations",
+        "update_to",
+    }
     take_first_non_empty = set(rule.take_first_non_empty)
     scalarize = set(rule.scalarize)
     blank_blocks = set(rule.blank_primary_blocks_secondary)
@@ -234,11 +242,13 @@ _PRIMARY_SECONDARY_SCALAR_KEYS = (
     "doi",
     "title",
     "journal_title",
-    "published",
     "abstract",
     "publisher",
 )
 _PRIMARY_SECONDARY_LIST_KEYS = (
+    "publication_dates",
+    "relations",
+    "update_to",
     "authors",
     "keywords",
     "license_urls",

@@ -37,6 +37,7 @@ from ..publisher_identity import (
 )
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
 from ..utils import canonical_author_key, normalize_text
+from ..publication_dates import publication_years
 
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
@@ -152,13 +153,6 @@ def candidate_score(query: str, candidate_title: str) -> float:
     return round((0.7 * jaccard) + (0.3 * ratio), 6)
 
 
-def _published_year(value: Any) -> int | None:
-    match = re.search(r"\b(1\d{3}|2\d{3})\b", str(value or ""))
-    if not match:
-        return None
-    return int(match.group(1))
-
-
 def _candidate_author_keys(candidate: Mapping[str, Any]) -> set[str]:
     return {
         key
@@ -171,33 +165,106 @@ def _candidate_author_keys(candidate: Mapping[str, Any]) -> set[str]:
     }
 
 
+def _author_name_parts(value: str) -> tuple[str, list[str]]:
+    parts = value.casefold().split(",", 1)
+
+    def tokens(text: str) -> list[str]:
+        return re.findall(r"[^\W\d_]+", text, re.UNICODE)
+
+    if len(parts) == 2:
+        return " ".join(tokens(parts[0])), tokens(parts[1])
+    words = tokens(value.casefold())
+    return (words[-1], words[:-1]) if words else ("", [])
+
+
+def _author_evidence(left: str, right: str) -> float:
+    surname, given = _author_name_parts(left)
+    other_surname, other_given = _author_name_parts(right)
+    if not surname or surname != other_surname:
+        return 0.0
+    if not given or not other_given:
+        return 0.5
+    for first, second in zip(given, other_given, strict=False):
+        if first != second and not (
+            first[0] == second[0] and min(len(first), len(second)) == 1
+        ):
+            return 0.0
+    if given == other_given and all(len(part) > 1 for part in given):
+        return 1.0
+    return 0.8
+
+
 def _author_match_score(
     requested_authors: tuple[str, ...], candidate: Mapping[str, Any]
 ) -> float:
-    requested_keys = {
-        key
-        for key in (canonical_author_key(author) for author in requested_authors)
-        if key
-    }
-    if not requested_keys:
+    requested = [author for author in requested_authors if normalize_text(author)]
+    authors = [
+        str(author)
+        for author in candidate.get("authors") or []
+        if normalize_text(author)
+    ]
+    if not requested or not authors:
         return 0.0
-    candidate_keys = _candidate_author_keys(candidate)
-    if not candidate_keys:
-        return 0.0
-    return len(requested_keys & candidate_keys) / len(requested_keys)
+    # Rectangular Hungarian assignment with dummy authors: each candidate can
+    # support only one requested name, and unmatched names contribute zero.
+    n, m = len(requested), max(len(requested), len(authors))
+    costs = [
+        [-_author_evidence(name, author) for author in authors]
+        + [0.0] * (m - len(authors))
+        for name in requested
+    ]
+    u, v, assignment = [0.0] * (n + 1), [0.0] * (m + 1), [0] * (m + 1)
+    for row in range(1, n + 1):
+        assignment[0] = row
+        column, minimum, used, previous = (
+            0,
+            [float("inf")] * (m + 1),
+            [False] * (m + 1),
+            [0] * (m + 1),
+        )
+        while True:
+            used[column] = True
+            active = assignment[column]
+            delta, next_column = float("inf"), 0
+            for j in range(1, m + 1):
+                if used[j]:
+                    continue
+                cost = costs[active - 1][j - 1] - u[active] - v[j]
+                if cost < minimum[j]:
+                    minimum[j], previous[j] = cost, column
+                if minimum[j] < delta:
+                    delta, next_column = minimum[j], j
+            for j in range(m + 1):
+                if used[j]:
+                    u[assignment[j]] += delta
+                    v[j] -= delta
+                else:
+                    minimum[j] -= delta
+            column = next_column
+            if assignment[column] == 0:
+                break
+        while column:
+            previous_column = previous[column]
+            assignment[column] = assignment[previous_column]
+            column = previous_column
+    return round(
+        sum(-costs[row - 1][j - 1] for j, row in enumerate(assignment[1:], 1) if row)
+        / n,
+        6,
+    )
 
 
 def _year_match_score(year: int | None, candidate: Mapping[str, Any]) -> float:
     if year is None:
         return 0.0
-    candidate_year = _published_year(candidate.get("published"))
-    if candidate_year is None:
-        return 0.0
-    if candidate_year == year:
-        return 1.0
-    if abs(candidate_year - year) == 1:
-        return 0.5
-    return 0.0
+    years = publication_years(candidate.get("publication_dates"))
+    return max(
+        (
+            1.0 if value == year else 0.5 if abs(value - year) == 1 else 0.0
+            for value in years
+        ),
+        default=0.0,
+    )
 
 
 def is_preprint_candidate(candidate: Mapping[str, Any]) -> bool:
@@ -223,7 +290,7 @@ def score_candidates(
         _candidate_author_keys(item) for item in candidates
     )
     use_year_score = request.year is not None and any(
-        _published_year(item.get("published")) is not None for item in candidates
+        bool(publication_years(item.get("publication_dates"))) for item in candidates
     )
     author_weight = 0.12 if use_author_score else 0.0
     year_weight = 0.06 if use_year_score else 0.0
@@ -251,7 +318,10 @@ def score_candidates(
                 "title": item.get("title"),
                 "authors": item.get("authors") or [],
                 "journal_title": item.get("journal_title"),
-                "published": item.get("published"),
+                "publication_dates": item.get("publication_dates") or [],
+                "article_type": item.get("article_type"),
+                "relations": item.get("relations") or [],
+                "update_to": item.get("update_to") or [],
                 "landing_page_url": item.get("landing_page_url"),
                 "provider_hint": provider_hint,
                 "score": score,

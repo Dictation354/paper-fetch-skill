@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import normalize_publication_dates
+
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, cast
@@ -34,7 +36,9 @@ def metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
         abstract=normalize_text(value.get("abstract")) or None,
         journal=normalize_text(value.get("journal")) or None,
         article_type=normalize_text(value.get("article_type")) or None,
-        published=normalize_text(value.get("published")) or None,
+        publication_dates=normalize_publication_dates(value.get("publication_dates")),
+        relations=list(value.get("relations") or []),
+        update_to=list(value.get("update_to") or []),
         keywords=[
             normalize_text(item)
             for item in value.get("keywords") or []
@@ -112,6 +116,7 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
         source=cast(SourceKind, normalize_text(value.get("source")) or "crossref_meta"),
         metadata=metadata,
         acquisition=coerce_acquisition_provenance(value.get("acquisition")),
+        diagnostics=dict(value.get("diagnostics") or {}),
         sections=sections,
         references=references,
         assets=[
@@ -174,7 +179,9 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
     trace = trace_from_payload(payload["trace"])
     article_payload = payload.get("article")
     if isinstance(article_payload, Mapping):
-        if {"quality", "acquisition", "trace"}.intersection(article_payload):
+        if {"quality", "acquisition", "trace", "diagnostics"}.intersection(
+            article_payload
+        ):
             raise ValueError("Envelope article must contain content fields only.")
         article = article_from_payload(
             {
@@ -182,6 +189,7 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
                 "quality": payload["quality"],
                 "acquisition": payload["acquisition"],
                 "trace": payload["trace"],
+                "diagnostics": payload.get("diagnostics") or {},
             }
         )
     else:
@@ -196,6 +204,7 @@ def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
         else None,
         quality=quality,
         acquisition=acquisition,
+        diagnostics=dict(payload.get("diagnostics") or {}),
         trace=trace,
         article=article,
         markdown=payload["markdown"],
@@ -210,6 +219,6 @@ def model_to_payload(
     """Encode exactly the public dataclass wire shape."""
     payload = asdict(model)
     if isinstance(model, FetchEnvelope) and payload["article"] is not None:
-        for key in ("quality", "acquisition", "trace"):
+        for key in ("quality", "acquisition", "trace", "diagnostics"):
             payload["article"].pop(key)
     return payload

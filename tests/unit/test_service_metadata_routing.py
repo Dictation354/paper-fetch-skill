@@ -420,6 +420,7 @@ class ServiceMetadataRoutingTests(unittest.TestCase):
                 "acquisition",
                 "trace",
                 "diagnostic_artifacts",
+                "diagnostics",
                 "quality",
                 "article",
                 "markdown",

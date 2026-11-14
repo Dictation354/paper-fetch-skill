@@ -897,11 +897,20 @@ write_shell_startup_file() {
   log "Updated shell startup file at $SHELL_STARTUP_TARGET"
 }
 
-write_codex_config_toml() {
-  [ -n "${HOME:-}" ] || die "HOME is required to update Codex MCP config."
+codex_config_path() {
+  if [ -n "${CODEX_HOME:-}" ]; then
+    printf '%s/config.toml\n' "$CODEX_HOME"
+  else
+    [ -n "${HOME:-}" ] || die "HOME is required to locate Codex MCP config."
+    printf '%s/.codex/config.toml\n' "$HOME"
+  fi
+}
 
-  local codex_home="$HOME/.codex"
-  local config_path="$codex_home/config.toml"
+write_codex_config_toml() {
+  local config_path
+  config_path="$(codex_config_path)"
+  local codex_home
+  codex_home="$(dirname "$config_path")"
   local tmp key mcp_table_re
   tmp="$(mktemp)"
   mcp_table_re="^[[:space:]]*[[]mcp_servers[.]$(mcp_name_regex)([.].*)?[]][[:space:]]*$"
@@ -941,7 +950,7 @@ register_codex_mcp() {
   codex_bin="$(command -v codex || true)"
 
   if [ -n "$codex_bin" ]; then
-    log "Registering Codex MCP server '$MCP_NAME' with Codex CLI"
+    log "Registering Codex MCP server '$MCP_NAME' with Codex CLI ($(codex_config_path))"
     "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
 
     local args=(mcp add)
@@ -953,7 +962,7 @@ register_codex_mcp() {
     if "$codex_bin" "${args[@]}"; then
       return
     fi
-    warn "Codex CLI MCP registration failed; falling back to $HOME/.codex/config.toml"
+    warn "Codex CLI MCP registration failed; falling back to $(codex_config_path)"
   fi
 
   write_codex_config_toml
@@ -1112,9 +1121,8 @@ remove_installed_skills() {
 }
 
 remove_codex_config_toml() {
-  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
-
-  local config_path="$HOME/.codex/config.toml"
+  local config_path
+  config_path="$(codex_config_path)"
   local tmp mode mcp_table_re
   [ -f "$config_path" ] || return 0
 
@@ -1141,7 +1149,7 @@ unregister_codex_mcp() {
   local codex_bin
   codex_bin="$(command -v codex || true)"
   if [ -n "$codex_bin" ]; then
-    log "Removing Codex MCP server '$MCP_NAME' with Codex CLI"
+    log "Removing Codex MCP server '$MCP_NAME' with Codex CLI ($(codex_config_path))"
     "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
   fi
   remove_codex_config_toml

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .publication_dates import citation_date
+
 from .workflow.batch_session import BatchExecutionSession
 
 import argparse
@@ -140,7 +142,23 @@ class FetchProgress:
                     )
                 elif event == "terminal":
                     record = data["record"]
-                    detail = record["record_status"]
+                    acceptance = record["acceptance"]
+                    content = acceptance["content"]
+                    scope = (
+                        "fulltext"
+                        if content["has_fulltext"]
+                        else "abstract_only"
+                        if content["has_abstract"]
+                        else "metadata_only"
+                    )
+                    detail = f"{record['record_status']} acceptance={acceptance['overall']} scope={scope}"
+                    paths = [
+                        item["path"]
+                        for item in record.get("output_artifacts", [])
+                        if item.get("path")
+                    ]
+                    if paths:
+                        detail += " paths=" + ", ".join(paths)
                     if record.get("error"):
                         detail += ": " + str(record["error"].get("reason", ""))
                 else:
@@ -471,7 +489,7 @@ def _formatted_output_filename(
         envelope.article.metadata if envelope.article is not None else envelope.metadata
     )
     authors = list(meta.authors) if meta and meta.authors else None
-    year = _extract_year(meta.published if meta else None)
+    year = _extract_year(citation_date(meta.publication_dates if meta else []))
     title = meta.title if meta else None
     doi = envelope.doi or (
         _expected_doi_for_query(fallback_query) if fallback_query else None
@@ -1488,6 +1506,12 @@ def _add_fetch_arguments(
         default=_default(False, suppress_defaults=suppress_defaults),
         help="Read cooperative cancellation commands from stdin (requires --progress jsonl).",
     )
+    parser.add_argument(
+        "--preset",
+        choices=("temporary_read", "archive"),
+        default=_default(None, suppress_defaults=suppress_defaults),
+        help="Fill omitted options for temporary reading or text archiving.",
+    )
     query_group = parser.add_mutually_exclusive_group()
     query_group.add_argument(
         "--query",
@@ -1738,6 +1762,20 @@ def _write_doctor_human(report: Mapping[str, Any]) -> None:
 
 
 def _run_doctor_namespace(args: argparse.Namespace) -> int:
+    if args.catalog:
+        from .catalog_payload import provider_catalog_payload
+
+        report = provider_catalog_payload()
+        if args.output_json:
+            print(json.dumps(report, ensure_ascii=False, indent=2))
+        else:
+            print(f"paper-fetch {report['tool_version']} catalog")
+            print(json.dumps(report["runtime"], ensure_ascii=False))
+            for provider in report["providers"]:
+                print(
+                    f"{provider['provider']}: {provider['display_name']} targets={','.join(provider['capabilities']['targets'])}"
+                )
+        return 0
     try:
         report = build_doctor_payload(
             provider=args.provider,
@@ -1761,6 +1799,18 @@ def _run_doctor_namespace(args: argparse.Namespace) -> int:
     return 1
 
 
+def _doctor_provider(value: str) -> str:
+    if value in provider_status_provider_names():
+        return value
+    from .catalog_payload import canonical_provider_hint
+
+    hint = canonical_provider_hint(value)
+    raise argparse.ArgumentTypeError(
+        f"unknown provider {value!r}."
+        + (f" Use {hint!r}." if hint else " Use doctor --catalog.")
+    )
+
+
 def _register_doctor_subcommand(
     subparsers: argparse._SubParsersAction,
 ) -> None:
@@ -1773,9 +1823,14 @@ def _register_doctor_subcommand(
         ),
     )
     doctor_parser.add_argument(
+        "--catalog",
+        action="store_true",
+        help="Show the shared runtime provider catalog without network access.",
+    )
+    doctor_parser.add_argument(
         "--provider",
-        choices=provider_status_provider_names(),
-        help="Inspect one provider instead of the full catalog.",
+        type=_doctor_provider,
+        help="Inspect one canonical provider ID; use --catalog to discover IDs.",
     )
     doctor_parser.add_argument(
         "--group",
@@ -2083,6 +2138,30 @@ def _write_single_failure_manifest(
             progress.complete(1, lambda _cancelled: record)
 
 
+def _apply_cli_preset(args: argparse.Namespace, raw_args: list[str]) -> None:
+    preset = getattr(args, "preset", None)
+    if preset is None:
+        return
+    defaults = {
+        "format": "markdown",
+        "include_refs": "all",
+        "max_tokens": "full_text",
+        "asset_profile": "none",
+        "artifact_mode": "none",
+    }
+    materials_archive = args.target == "supplementary" and preset == "archive"
+    if materials_archive:
+        defaults.update(asset_profile="all", artifact_mode="markdown-assets")
+    elif (
+        _has_explicit_option(raw_args, "--asset-profile")
+        and args.asset_profile != "none"
+    ):
+        defaults["artifact_mode"] = "markdown-assets"
+    for name, value in defaults.items():
+        if not _has_explicit_option(raw_args, "--" + name.replace("_", "-")):
+            setattr(args, name, value)
+
+
 def _run_fetch_namespace(args: argparse.Namespace) -> int:
     parser = args._command_parser
     raw_args = args._raw_args
@@ -2093,6 +2172,7 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
 
     if args.control_stdin and args.progress != "jsonl":
         parser.error("--control-stdin requires --progress jsonl.")
+    _apply_cli_preset(args, raw_args)
     artifact_mode = _effective_artifact_mode(args)
     args.output_is_explicit = _has_explicit_option(raw_args, "--output")
     batch_mode = bool(args.query_file)
@@ -2107,7 +2187,9 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
     if not batch_mode and args.batch_results:
         parser.error("--batch-results requires --query-file.")
     args.primary_output_to_output_dir = (
-        batch_mode or _should_write_primary_output_to_output_dir(args)
+        batch_mode
+        or _should_write_primary_output_to_output_dir(args)
+        or (args.preset == "archive" and not args.output_is_explicit)
     )
     args.save_output_copy = _should_save_formatted_output_copy(
         args,

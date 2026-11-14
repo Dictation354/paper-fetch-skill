@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import publication_date
+
 from collections.abc import Callable
 from dataclasses import dataclass, field
 import html as html_lib
@@ -188,7 +190,6 @@ _IEEE_METADATA_SCALAR_KEYS = (
     "title",
     "abstract",
     "journal_title",
-    "published",
     "landing_page_url",
     "article_number",
     "articleNumber",
@@ -205,7 +206,6 @@ _IEEE_METADATA_TEXT_KEYS = (
     "title",
     "abstract",
     "journal_title",
-    "published",
     "landing_page_url",
     "article_number",
     "articleNumber",
@@ -403,9 +403,17 @@ def _merge_ieee_metadata(
         "title": title or None,
         "abstract": abstract or None,
         "journal_title": _first_metadata_text(landing_metadata, "publicationTitle"),
-        "published": _first_metadata_text(
-            landing_metadata, "publicationDate", "onlineDate", "publicationYear"
-        ),
+        "publication_dates": [
+            date
+            for key, kind in (
+                ("publicationDate", "unspecified"),
+                ("onlineDate", "online"),
+                ("publicationYear", "unspecified"),
+            )
+            for date in publication_date(
+                kind, _first_metadata_text(landing_metadata, key), "ieee:" + key
+            )
+        ],
         "keywords": _keywords_from_ieee_metadata(landing_metadata),
         "landing_page_url": response_url,
         "article_number": article_number or None,

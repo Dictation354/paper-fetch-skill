@@ -49,11 +49,7 @@ def test_transparent_text_uses_helpers_output_verbatim(tmp_path):
             )
         document.save(path)
     expected = pymupdf_rag.to_markdown(str(path), ignore_alpha=True, hdr_info=False)
-    with mock.patch.object(
-        pymupdf_rag, "to_markdown", wraps=pymupdf_rag.to_markdown
-    ) as converter:
-        actual = _pdf_common._render_transparent_pdf_markdown(path)
-    converter.assert_called_once_with(str(path), ignore_alpha=True, hdr_info=False)
+    actual = _pdf_common._render_transparent_pdf_markdown(path)
     assert actual == expected
     assert "Transparent satellite observations" in actual
     assert _pdf_common._pdf_text_layer_stats(path).transparent_words > 0
@@ -114,3 +110,49 @@ def test_pdf_body_image_respects_artifact_mode(tmp_path, pdf_with_body_image, pe
         assert result.markdown_text == rendered[0]
         assert result.assets == []
         assert list(tmp_path.iterdir()) == []
+
+
+def test_concurrent_converter_processes_isolate_import_stdout_and_preserve_results(
+    tmp_path,
+):
+    import json
+    import os
+    import subprocess
+    import sys
+    import textwrap
+
+    # Deliberately noisy dependency, imported in two real converter processes.
+    (tmp_path / "pymupdf4llm.py").write_text(
+        textwrap.dedent("""
+        import os
+        import sys
+        print("converter import noise")
+        os.write(1, b"native converter noise\\n")
+        print("converter import warning", file=sys.stderr)
+        def to_markdown(path, **kwargs):
+            print("conversion progress")
+            return "# 原样😀\\n\\n  body with spaces  \\n"
+    """),
+        encoding="utf-8",
+    )
+    script = textwrap.dedent("""
+        from concurrent.futures import ThreadPoolExecutor
+        import json
+        from pathlib import Path
+        from paper_fetch.providers._pdf_common import _render_default_pdf_markdown
+        with ThreadPoolExecutor(2) as executor:
+            values = list(executor.map(lambda _: _render_default_pdf_markdown(Path("paper.pdf")), range(2)))
+        print(json.dumps(values, ensure_ascii=False))
+    """)
+    process = subprocess.run(
+        [sys.executable, "-c", script],
+        env={
+            **os.environ,
+            "PYTHONPATH": str(tmp_path) + os.pathsep + os.environ.get("PYTHONPATH", ""),
+        },
+        capture_output=True,
+        text=True,
+        check=True,
+    )
+    assert json.loads(process.stdout) == ["# 原样😀\n\n  body with spaces  \n"] * 2
+    assert process.stderr == ""

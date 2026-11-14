@@ -335,3 +335,108 @@ def test_stdio_requires_explicit_scope_and_archive_uses_markdown_directory(tmp_p
             assert Path(payload["output_artifacts"][0]["path"]).parent == directory
 
     asyncio.run(exercise())
+
+
+def test_stdio_validation_errors_are_structured_without_provider_calls(tmp_path):
+    async def exercise():
+        async with Client(parameters(tmp_path)) as client:
+            for tool, arguments in (
+                ("fetch_paper", {"query": "10.1000/invalid", "include_refs": "full"}),
+                ("fetch_paper", {"query": "10.1000/invalid", "unknown": True}),
+                ("read_content", {"content_id": "unknown", "offset": -1}),
+                (
+                    "navigate_content",
+                    {"content_id": "unknown", "mode": "search", "query": ""},
+                ),
+            ):
+                result = await client.call_tool(tool, arguments)
+                assert result.is_error and result.content == []
+                assert result.structured_content["code"] == "validation_error"
+                assert result.structured_content["schema_version"] == 4
+
+    asyncio.run(exercise())
+    assert not list(tmp_path.rglob("*"))
+
+
+def test_stdio_failure_diagnostics_and_materials_are_complete_and_paged(tmp_path):
+    script = SERVER.replace(
+        "    envelope = sample_envelope(modes=modes, doi=query)",
+        """    from paper_fetch.service import PaperFetchFailure
+    from paper_fetch.failure import FailureDiagnostics
+    from paper_fetch.models import FetchEnvelope, SupplementaryResult, Metadata
+    if query.endswith("failure"):
+        raise PaperFetchFailure("no_access", "Blocked", doi=query,
+            diagnostics=FailureDiagnostics(provider="pnas", route="browser_html", stage="fetch",
+                http_status=403, retryable=False, details={"page_diagnostic": {"events": ["原始😀" * 1000] * 30}}))
+    if query.endswith("materials"):
+        return FetchEnvelope(doi=query, source="springer_html", target="supplementary",
+            metadata=Metadata(title="Material identity"),
+            supplementary=SupplementaryResult(identity_verified=True, discovery_complete=True,
+                source_urls=["https://example.org/index"],
+                assets=[{"heading": f"File {i}", "url": f"https://example.org/{i}.docx"} for i in range(300)],
+                asset_failures=[{"reason": "download_failed", "details": {"raw": "详细失败" * 1000}}]))
+    envelope = sample_envelope(modes=modes, doi=query)""",
+    )
+
+    async def exercise():
+        args = parameters(tmp_path)
+        args.args = ["-c", script]
+        async with Client(args) as client:
+
+            async def diagnostics(ref):
+                chunks, offset = [], 0
+                while True:
+                    page = (
+                        await client.call_tool(
+                            "read_content",
+                            {
+                                "content_id": ref["content_id"],
+                                "view": "diagnostics",
+                                "offset": offset,
+                                "max_chars": 777,
+                            },
+                        )
+                    ).structured_content
+                    assert page["status"] == "ok"
+                    chunks.append(page["text"])
+                    offset = page["next_offset"]
+                    if page["eof"]:
+                        return json.loads("".join(chunks))
+
+            failed = await client.call_tool("fetch_paper", {"query": "10.1000/failure"})
+            p = failed.structured_content
+            assert failed.is_error and len(json.dumps(p)) < 6000
+            assert p["http_status"] == 403 and p["provider"] == "pnas"
+            assert set(p["content_ref"]["views"]) == {"diagnostics"}
+            raw = await diagnostics(p["content_ref"])
+            assert raw["details"]["page_diagnostic"]["events"] == ["原始😀" * 1000] * 30
+            assert raw["acceptance"]["overall"] == "action_required"
+            batch = await client.call_tool(
+                "batch_fetch",
+                {
+                    "queries": [
+                        "10.1000/batch-failure",
+                        "https://doi.org/10.1000/batch-failure",
+                    ]
+                },
+            )
+            items = batch.structured_content["results"]
+            assert items[0]["content_ref"] == items[1]["content_ref"]
+            assert (await diagnostics(items[0]["content_ref"]))["error"]["details"][
+                "page_diagnostic"
+            ] == raw["details"]["page_diagnostic"]
+            material = (
+                await client.call_tool(
+                    "fetch_paper",
+                    {"query": "10.1000/materials", "target": "supplementary"},
+                )
+            ).structured_content
+            assert material["supplementary"]["asset_count"] == 300
+            assert "assets" not in material["supplementary"]
+            raw_material = (await diagnostics(material["content_ref"]))["supplementary"]
+            assert len(raw_material["assets"]) == 300
+            assert (
+                raw_material["asset_failures"][0]["details"]["raw"] == "详细失败" * 1000
+            )
+
+    asyncio.run(exercise())

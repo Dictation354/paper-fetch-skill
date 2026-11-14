@@ -449,7 +449,20 @@ def test_supplementary_failure_preserves_resolved_identity_and_provenance(
     assert payload["target"] == "supplementary"
     assert payload["route"] is None
     assert payload["retryable"] is False
-    assert payload["trace"] and "source_trail" not in payload
+    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
+    from paper_fetch.mcp.schemas import ReadContentRequest
+    import json
+
+    diagnostic = json.loads(
+        DEFAULT_CONTENT_STORE.read(
+            ReadContentRequest(
+                content_id=payload["content_ref"]["content_id"],
+                view="diagnostics",
+                max_chars=20000,
+            )
+        )["text"]
+    )
+    assert diagnostic["trace"] and "source_trail" not in payload
     assert payload["acceptance"]["identity"] == "resolved"
     from paper_fetch.manifest import build_manifest_record
 
@@ -460,7 +473,7 @@ def test_supplementary_failure_preserves_resolved_identity_and_provenance(
         query=DOI,
         request_parameters={"target": "supplementary"},
         asset_profile="all",
-        error=payload,
+        error=diagnostic,
         expected_doi=DOI,
     )
     assert record.identity.status == "resolved"

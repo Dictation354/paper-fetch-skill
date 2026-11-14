@@ -207,7 +207,7 @@ class SharedHtmlHelperTests(unittest.TestCase):
         self.assertEqual(metadata["authors"], ["Alice Example", "Bob Example"])
         self.assertEqual(metadata["doi"], "10.1234/example")
         self.assertEqual(metadata["journal_title"], "Journal of HTML")
-        self.assertEqual(metadata["published"], "2026-01-15")
+        self.assertEqual(metadata["publication_dates"][0]["value"], "2026-01-15")
 
     def test_extract_figure_assets_reads_generic_figure_blocks(self) -> None:
         html = """

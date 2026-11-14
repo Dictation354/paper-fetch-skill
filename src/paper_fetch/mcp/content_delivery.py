@@ -85,6 +85,8 @@ def content_snapshot(
         for key, value in payload.items()
         if key not in {"article", "markdown"}
     }
+    if envelope.article is not None:
+        diagnostics["assets"] = [asdict(asset) for asset in envelope.article.assets]
     diagnostics["response_warnings"] = list(response_warnings or [])
     diagnostics["acceptance"] = acceptance or evaluate_fetch_acceptance(
         envelope,
@@ -137,7 +139,11 @@ def handle_payload(
             "quality",
             "events",
             "diagnostic_artifacts",
+            "diagnostics",
             "token_estimate_breakdown",
+            "assets",
+            "asset_failures",
+            "source_urls",
         }
     }
     metadata = (
@@ -151,5 +157,64 @@ def handle_payload(
             :8
         ]
     ]
+    if envelope.supplementary is not None:
+        result["supplementary"] = supplementary_summary(envelope.supplementary)
+    attach_content_ref(result, ref)
+    return result
+
+
+def supplementary_summary(materials: Any) -> dict[str, Any]:
+    return {
+        "identity_verified": materials.identity_verified,
+        "discovery_complete": materials.discovery_complete,
+        "asset_count": len(materials.assets),
+        "local_count": sum(bool(asset.get("path")) for asset in materials.assets),
+        "failure_count": len(materials.asset_failures),
+    }
+
+
+def compact_error(payload: Mapping[str, Any]) -> dict[str, Any]:
+    """Keep actionable routing/configuration facts; raw diagnostics live in the snapshot."""
+    result = {
+        key: value
+        for key, value in payload.items()
+        if key not in {"details", "trace", "warnings"}
+    }
+    details = payload.get("details") or {}
+    if isinstance(details, Mapping):
+        result["details"] = {
+            key: value
+            for key, value in details.items()
+            if key
+            in {
+                "provider",
+                "route",
+                "stage",
+                "http_status",
+                "retryable",
+                "challenge_reason",
+                "window_mode",
+                "headless",
+                "profile_dir",
+                "missing_env",
+                "required_config",
+                "reason",
+                "target",
+            }
+        }
+    return result
+
+
+def error_snapshot(payload: Mapping[str, Any]) -> ContentSnapshot:
+    return ContentSnapshot({"diagnostics": json_view(payload)})
+
+
+def error_handle_payload(
+    payload: Mapping[str, Any], store: ContentStore | None
+) -> dict[str, Any]:
+    result = compact_error(payload)
+    ref = (
+        store.register_many([error_snapshot(payload)])[0] if store is not None else None
+    )
     attach_content_ref(result, ref)
     return result

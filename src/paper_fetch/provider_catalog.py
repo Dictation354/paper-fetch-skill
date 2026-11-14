@@ -723,3 +723,10 @@ class _ProviderBundles(Sequence[ProviderBundle]):
 
 PROVIDER_BUNDLE_MAP = _ProviderBundleMap()
 PROVIDER_BUNDLES = _ProviderBundles()
+
+
+def provider_supports_supplementary(provider: str) -> bool:
+    from .providers._definitions import PROVIDER_DEFINITIONS
+
+    definition = PROVIDER_DEFINITIONS.get(_normalize_catalog_token(provider))
+    return definition is not None and "supplementary" in definition.targets

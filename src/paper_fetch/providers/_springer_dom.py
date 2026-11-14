@@ -244,7 +244,6 @@ _SPRINGER_BASE_FIRST_SCALAR_KEYS = frozenset(
     {
         "title",
         "journal_title",
-        "published",
         "landing_page_url",
         "doi",
         "article_type",

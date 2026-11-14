@@ -1460,6 +1460,31 @@ exec /bin/mv "$@"
                 f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", claude_add
             )
 
+    def test_codex_direct_registration_and_uninstall_use_active_codex_home(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir)
+            bundle, fake_bin, home = self._create_bundle(root)
+            default = home / ".codex" / "config.toml"
+            _write_file(default, "# untouched default config\n")
+            active_home = root / "active codex"
+            active = active_home / "config.toml"
+            _write_file(active, "# keep active content\n")
+            env = {"CODEX_HOME": str(active_home)}
+            registered = self._run_installer(bundle, fake_bin, home, extra_env=env)
+            self.assertEqual(registered.returncode, 0, registered.stderr)
+            self.assertIn("[mcp_servers.paper-fetch]", active.read_text())
+            self.assertIn(str(active), registered.stdout)
+            self.assertEqual(default.read_text(), "# untouched default config\n")
+            removed = self._run_installer(
+                bundle, fake_bin, home, "--uninstall", extra_env=env
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertNotIn("[mcp_servers.paper-fetch]", active.read_text())
+            self.assertIn("# keep active content", active.read_text())
+            self.assertEqual(default.read_text(), "# untouched default config\n")
+
     def test_missing_codex_cli_writes_config_toml_with_headless_without_browser_paths(
         self,
     ) -> None:

@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ..publication_dates import normalize_publication_dates
+
 import re
 
 from collections.abc import Sequence
@@ -194,7 +196,11 @@ def build_metadata(metadata: Mapping[str, Any]) -> Metadata:
         )
         or None,
         article_type=normalize_inline_html_text(metadata.get("article_type")) or None,
-        published=normalize_inline_html_text(metadata.get("published")) or None,
+        publication_dates=normalize_publication_dates(
+            metadata.get("publication_dates")
+        ),
+        relations=list(metadata.get("relations") or []),
+        update_to=list(metadata.get("update_to") or []),
         keywords=[
             normalize_inline_html_text(item)
             for item in (metadata.get("keywords") or [])

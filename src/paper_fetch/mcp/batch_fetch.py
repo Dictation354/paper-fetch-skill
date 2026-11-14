@@ -69,9 +69,15 @@ from .fetch_tool import (
 )
 from .log_bridge import PaperFetchLogBridge
 from .content_store import DEFAULT_CONTENT_STORE, ContentStore, ContentSnapshot
-from .content_delivery import content_snapshot, attach_content_ref
+from .content_delivery import (
+    content_snapshot,
+    attach_content_ref,
+    compact_error,
+    error_snapshot,
+    supplementary_summary,
+)
 from .output_artifacts import artifact_payload
-from .provider_catalog import runtime_tool_version
+from ..catalog_payload import runtime_tool_version
 from .results import _tool_result, error_payload_from_exception, with_schema_version
 from .schemas import BatchFetchRequest, FetchStrategyInput
 
@@ -437,7 +443,9 @@ def _compact_run_payload(
     for record in ordered_records:
         key = (record.index, record.attempt)
         error_payload = (
-            record.error.model_dump(mode="json") if record.error is not None else None
+            compact_error(record.error.model_dump(mode="json"))
+            if record.error is not None
+            else None
         )
         item = {
             "index": record.index,
@@ -472,7 +480,7 @@ def _compact_run_payload(
             and envelope.supplementary is not None
         ):
             item["target"] = envelope.target
-            item["supplementary"] = asdict(envelope.supplementary)
+            item["supplementary"] = supplementary_summary(envelope.supplementary)
         if envelope is not None:
             metadata = (
                 envelope.article.metadata if envelope.article else envelope.metadata
@@ -480,7 +488,7 @@ def _compact_run_payload(
             item["metadata"] = asdict(metadata) if metadata else None
             attach_content_ref(item, (content_refs or {}).get(key))
         else:
-            item["content_ref"] = None
+            attach_content_ref(item, (content_refs or {}).get(key))
         results.append(item)
 
     latest_sequences = sorted(
@@ -832,8 +840,6 @@ async def _execute_batch_fetch(
     for record in ordered_records:
         key = (record.index, record.attempt)
         envelope = envelopes.get(key)
-        if envelope is None:
-            continue
         owner = owner_by_index.get(record.index, record.index)
         if owner not in snapshot_keys:
             snapshot_keys[owner] = len(snapshots)
@@ -843,6 +849,8 @@ async def _execute_batch_fetch(
                     request.to_fetch_request(record.query),
                     acceptance=record.acceptance.model_dump(mode="json"),
                 )
+                if envelope is not None
+                else error_snapshot(record.model_dump(mode="json"))
             )
     refs = (
         content_store.register_many(snapshots)

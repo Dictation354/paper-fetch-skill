@@ -37,7 +37,7 @@ metadata/probe 请求失败的 warnings 表达证据不足或环境受限，不�
 batch_check(queries=["10.1186/1471-2105-11-421"], mode="metadata", concurrency=1)
 ```
 
-- 顶层包含 `schema_version=3`、`mode="metadata"`、按输入顺序的 `results`、
+- 顶层包含 `schema_version=4`、`mode="metadata"`、按输入顺序的 `results`、
   `aborted`、`abort_reason` 和 `progress`。
 - 每项保留稳定 1-based `index`、`query`、`status`、`error`、`provider_lane`，
   从 `probe_state`、`evidence`、`warnings` 读取预判；歧义候选在 `error.candidates`。

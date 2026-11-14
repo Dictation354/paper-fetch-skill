@@ -58,9 +58,9 @@ def test_pdf_imports_and_core_api():
 
 def test_mock_converter(monkeypatch):
     import pymupdf4llm
-    from paper_fetch.providers._pdf_common import _render_default_pdf_markdown
+    from paper_fetch.providers._pdf_common import _render_default_pdf_markdown_in_process
     monkeypatch.setattr(pymupdf4llm, "to_markdown", lambda *a, **kw: "mock output")
-    assert _render_default_pdf_markdown("unused.pdf") == "mock output"
+    assert _render_default_pdf_markdown_in_process("unused.pdf") == "mock output"
 
 def test_process():
     subprocess.run([sys.executable, "-c", "raise SystemExit(99)"])
