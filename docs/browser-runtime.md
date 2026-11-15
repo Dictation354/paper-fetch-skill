@@ -4,6 +4,12 @@
 管理线程、context、状态目录与资源释放。组件和状态模式见[浏览器后端](browser-backends.md)，
 安装与预置见[部署指南](deployment.md#浏览器安装与准备)。
 
+`browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
+安装 InvisiblePlaywright 0.49.1、invisible-core 61.62.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
+不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
+`>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
+x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
+
 ## 依赖方向
 
 ```text

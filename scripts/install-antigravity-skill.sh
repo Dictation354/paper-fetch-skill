@@ -113,8 +113,8 @@ PY
 
 pf_host_print_registered_note() {
     echo "  2. Antigravity MCP server '$PF_MCP_NAME' is registered in $(pf_antigravity_mcp_config_path) and will launch via the current python3 environment."
-    echo "     Browser-backed providers automatically prepare managed Camoufox before launch."
-    echo "     For offline use, prepare it while online with 'python -m camoufox fetch'."
+    echo "     Browser-backed providers automatically prepare Byparr and the platform engine before launch."
+    echo "     For offline use, run the installed browser preparation command while online."
 }
 
 pf_skill_main "$@"

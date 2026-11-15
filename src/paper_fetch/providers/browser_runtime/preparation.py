@@ -98,6 +98,11 @@ class FetchBrowserPreparation:
         return future.result()
 
     def prepare(self, env: Mapping[str, str], cancel_check: Callable[[], None]) -> None:
+        from .byparr_engine import engine_name
+
+        if engine_name() == "invisible":
+            cancel_check()
+            return
         if not browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR) and all(
             find_spec(name) is not None for name in ("camoufox", "playwright")
         ):

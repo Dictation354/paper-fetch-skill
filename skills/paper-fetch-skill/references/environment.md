@@ -2,6 +2,12 @@
 
 仅在配置、凭证、runtime 或工具链影响任务时读取。普通抓取自动准备 runtime，无需 agent 先做更新检查。provider/source/capability 以[运行时 catalog](tool-contract.md#static-provider-catalog)为准。
 
+`browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
+安装 InvisiblePlaywright 0.49.1、invisible-core 61.62.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
+不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
+`>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
+x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
+
 ## 配置来源与离线 wrapper
 
 优先级：**进程环境 > 调用方显式 env_file > PAPER_FETCH_ENV_FILE > platformdirs 用户配置 > 内置默认值**。CLI diagnostics 的显式层为 `doctor --env-file <path>`；同一路径只读取一次并归因显式层。仓库 `.env` 不隐式加载。
@@ -43,7 +49,7 @@ Byparr 自动处理支持的 Cloudflare interstitial。实际 fetch/preflight �
 MCP/CLI/library 进入所选 browser 时按需准备 runtime；纯 HTTP 和 cache 命中不触发。单次及批量请求共享准备状态，doctor、状态查询、解析及帮助保持只读。
 
 - 安装器准备锁定 Byparr 和平台引擎依赖；源码/pip 安装自动下载固定组件。Byparr 损坏需重新准备，缺 Python browser extra 不自动安装依赖；自定义 executable 不自动删除或更新。
-- 抓取/auth/preflight/安装准备共享持久检查记录。成功且组件有效时 24 小时内复用，失败或取消不延长成功窗口；组件缺失、损坏、不兼容或 pin/渠道变化时重新判断。
+- Camoufox 的抓取/auth/preflight/安装准备共享持久检查记录。成功且组件有效时 24 小时内复用，失败或取消不延长成功窗口；组件缺失、损坏、不兼容或 pin/渠道变化时重新判断。
 - Camoufox 使用锁定 Python 包，默认 official/prerelease 选择当前平台最新兼容 browser；official/stable 仅正式版。显式渠道、版本 pin、SHA 和 executable 优先，不自动升级 Python 包。
 - 更新失败但本地仍有效时继续使用；无可用引擎则报告准备失败。进度和错误写 stderr，取消继续传播。读取 backend/code/stage/runtime_state/version/diagnostic_path 定位，不把组件故障报成 publisher 拒绝。
 

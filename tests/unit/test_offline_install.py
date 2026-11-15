@@ -30,8 +30,8 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn("camoufox.ensure_runtime()", linux_script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', linux_script)
         self.assertIn(
-            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
-            "CamoufoxBrowserManager",
+            "from paper_fetch.providers.browser_runtime.byparr_engine import "
+            "verify_package_installation",
             linux_script,
         )
 
@@ -57,15 +57,14 @@ class OfflineInstallTests(unittest.TestCase):
         )
         self.assertIn("Invoke-RuntimePythonScript -Script @'", script)
         self.assertIn("Invoke-RuntimePythonScript -Script $browserRuntimeCheck", script)
-        self.assertIn("import camoufox", script)
-        self.assertIn("import camoufox", script)
+        self.assertIn("verify_package_installation", script)
+        self.assertIn("verify_package_installation", script)
         self.assertIn("import playwright", script)
         self.assertIn(
-            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
-            "CamoufoxBrowserManager",
+            "from paper_fetch.providers.browser_runtime.byparr_engine import "
+            "verify_package_installation",
             script,
         )
-        self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
         self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
         self.assertIn("$OfflineEnvKeys = @(", script)

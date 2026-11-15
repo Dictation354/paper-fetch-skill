@@ -500,7 +500,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f"{fake_bin / 'python3'}\n",
             )
             self.assertIn(
-                "Default browser backend: Byparr + managed Camoufox for all browser providers (headless: true)",
+                "Default browser backend: Byparr + platform engine for all browser providers (headless: true)",
                 result.stdout,
             )
 
@@ -1053,7 +1053,8 @@ exec /bin/mv "$@"
             self.assertNotIn("CLOAKBROWSER_", offline_env)
             self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="false"', offline_env)
             self.assertIn(
-                "Default browser backend: Camoufox (headless: false)", result.stdout
+                "Default browser backend: Byparr + platform engine (headless: false)",
+                result.stdout,
             )
             self.assertIn("--prepare-browsers", result.stdout)
 

@@ -67,6 +67,20 @@ def _snapshot_tree(root: Path) -> dict[str, tuple[int, int, int]]:
 def _preserve_installed_camoufox_executable() -> None:
     """Retain the prepared runtime while pytest isolates writable cache roots."""
 
+    from paper_fetch.browser_runtime_policy import engine_name
+
+    if engine_name() == "invisible":
+        try:
+            from invisible_core.download import cache_dir_for_seal
+
+            engine_dir = cache_dir_for_seal()
+            if engine_dir.is_dir():
+                os.environ.setdefault(
+                    "INVISIBLE_PLAYWRIGHT_ENGINE_DIR", str(engine_dir.parent)
+                )
+        except ImportError:
+            pass
+        return
     preserved_executable = os.environ.get(
         PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR, ""
     ).strip()

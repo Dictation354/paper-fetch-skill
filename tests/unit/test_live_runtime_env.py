@@ -198,7 +198,7 @@ def test_live_preflight_uses_nested_browser_runtime_availability() -> None:
     result = _ready_preflight()
 
     with (
-        mock.patch.object(_runtime_env, "require_camoufox_or_skip"),
+        mock.patch.object(_runtime_env, "require_browser_or_skip"),
         mock.patch.object(
             _runtime_env,
             "static_browser_capabilities",
@@ -237,7 +237,7 @@ def test_live_aip_preflight_does_not_persist_fingerprint_bound_state() -> None:
     result = _ready_preflight("aip")
 
     with (
-        mock.patch.object(_runtime_env, "require_camoufox_or_skip"),
+        mock.patch.object(_runtime_env, "require_browser_or_skip"),
         mock.patch.object(
             _runtime_env,
             "static_browser_capabilities",
@@ -267,7 +267,7 @@ def test_live_aip_preflight_does_not_persist_fingerprint_bound_state() -> None:
 
 def test_live_preflight_skips_nested_unavailable_browser_runtime() -> None:
     with (
-        mock.patch.object(_runtime_env, "require_camoufox_or_skip"),
+        mock.patch.object(_runtime_env, "require_browser_or_skip"),
         mock.patch.object(
             _runtime_env,
             "static_browser_capabilities",
@@ -294,7 +294,7 @@ def test_live_preflight_skips_nested_unavailable_browser_runtime() -> None:
 
 def test_live_preflight_rejects_malformed_static_capability_report() -> None:
     with (
-        mock.patch.object(_runtime_env, "require_camoufox_or_skip"),
+        mock.patch.object(_runtime_env, "require_browser_or_skip"),
         mock.patch.object(
             _runtime_env,
             "static_browser_capabilities",

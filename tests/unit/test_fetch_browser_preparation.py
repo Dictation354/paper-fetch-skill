@@ -32,6 +32,10 @@ _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 @pytest.fixture
 def prepare(monkeypatch):
     monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
+        lambda: "camoufox",
+    )
+    monkeypatch.setattr(
         preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER
     )
     check = Mock(return_value=preparation.CamoufoxRuntimeProbe("ready", True, True))

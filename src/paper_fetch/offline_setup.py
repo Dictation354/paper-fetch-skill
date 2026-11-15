@@ -306,6 +306,11 @@ def apt_supported() -> bool:
 @contextmanager
 def preparation_warnings():
     """Shorten only the known Canvas warning during installer launch checks."""
+    from .browser_runtime_policy import engine_name
+
+    if engine_name() == "invisible":
+        yield
+        return
     from camoufox._warnings import LeakWarning, WARNINGS_DATA
 
     with warnings.catch_warnings():

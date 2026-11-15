@@ -93,7 +93,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
             self.assertNotIn('rm -f "$output_path"', block)
         self.assertIn('chmod 0644 "$temporary_output"', blocks[1])
 
-    def test_posix_build_uses_resolved_camoufox_wheel_version(self) -> None:
+    def test_posix_build_uses_selected_engine_wheel(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         runtime_block = _shell_function(
             script,
@@ -103,25 +103,11 @@ class OfflinePackageBuildTests(unittest.TestCase):
 
         self.assertNotIn("locked_camoufox_version()", script)
         self.assertNotIn('"camoufox==$CAMOUFOX_PYTHON_PACKAGE_VERSION"', runtime_block)
-        self.assertIn('CAMOUFOX_PYTHON_PACKAGE_VERSION="$(', runtime_block)
-        self.assertIn('[ "${#camoufox_wheels[@]}" -eq 1 ]', runtime_block)
-        self.assertIn("from email.parser import BytesParser", runtime_block)
-        self.assertIn("from zipfile import ZipFile", runtime_block)
-        self.assertIn(
-            "Camoufox dependency wheel has no version",
-            runtime_block,
-        )
-        self.assertIn("from importlib.metadata import distributions", runtime_block)
-        self.assertIn(
-            "distributions(path=[str(site_packages)])",
-            runtime_block,
-        )
-        self.assertIn(
-            "Installed Camoufox runtime must match resolved wheel version",
-            runtime_block,
-        )
+        self.assertIn('local browser_package="camoufox"', runtime_block)
+        self.assertIn('browser_package="invisible_playwright"', runtime_block)
+        self.assertIn("engine_package_versions(sys.argv[1])", runtime_block)
 
-    def test_posix_manifest_records_verified_camoufox_version(self) -> None:
+    def test_posix_manifest_records_verified_engine_versions(self) -> None:
         script = BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8")
         manifest_block = _shell_function(
             script,
@@ -129,13 +115,15 @@ class OfflinePackageBuildTests(unittest.TestCase):
             "create_self_extracting_installer",
         )
 
-        self.assertIn("resolved_camoufox_version = sys.argv[10]", manifest_block)
+        self.assertIn(
+            "resolved_browser_versions = json.loads(sys.argv[10])", manifest_block
+        )
         self.assertIn(
             "distributions(path=[str(site_packages)])",
             manifest_block,
         )
         self.assertIn(
-            '"python_package_version": camoufox_version',
+            '"python_package_version": installed[package]',
             manifest_block,
         )
 
@@ -153,8 +141,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("write_cmd_wrappers", script)
         self.assertIn("$bin/paper-fetch", script)
         self.assertIn("$bin/paper-fetch-install-formula-tools", script)
-        self.assertIn("camoufox-*.whl", script)
-        self.assertIn("Expected one Camoufox dependency wheel", script)
+        self.assertIn('"$browser_package"-*.whl', script)
+        self.assertIn("Expected one $browser_package dependency wheel", script)
         self.assertIn("-m compileall", script)
         self.assertNotIn("copy_source_snapshot", script)
         self.assertNotIn("source_snapshot", script)
@@ -186,9 +174,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn('"skill_bundle": skill_bundle', manifest_block)
         self.assertIn('"python_runtime": "runtime/site-packages"', manifest_block)
         self.assertIn('"command_wrappers": "bin"', manifest_block)
-        self.assertIn('"camoufox"', manifest_block)
-        self.assertIn('"camoufox"', manifest_block)
-        self.assertIn('"browser_binary": "not_bundled"', manifest_block)
+        self.assertIn("engine: browser_component", manifest_block)
+        self.assertIn("engine: browser_component", manifest_block)
+        self.assertIn('"browser_binary": "not_bundled"', script)
         self.assertIn('"platform": target_platform', manifest_block)
         self.assertIn('"arch": target_arch', manifest_block)
         self.assertIn("README.offline.md", script)
@@ -330,15 +318,9 @@ class OfflinePackageBuildTests(unittest.TestCase):
         )
         self.assertIn("Offline install should not include the build wheelhouse", script)
         self.assertIn("Purge did not remove the install directory", script)
-        self.assertIn("import camoufox", script)
-        self.assertIn("import camoufox", script)
+        self.assertIn("verify_package_installation", script)
+        self.assertIn("verify_package_installation", script)
         self.assertIn("import playwright", script)
-        self.assertIn(
-            "from paper_fetch.providers.browser_runtime.camoufox_manager import "
-            "CamoufoxBrowserManager",
-            script,
-        )
-        self.assertIn('assert hasattr(camoufox, "Camoufox")', script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
         self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=true", script)
         self.assertIn("Antigravity skill was not installed", script)
@@ -372,10 +354,12 @@ class OfflinePackageBuildTests(unittest.TestCase):
             '$sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName', script
         )
         self.assertIn(
-            'Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl"', script
+            'Get-ChildItem -Path $wheelhouse -Filter "invisible_playwright-*.whl"',
+            script,
         )
         self.assertIn(
-            'Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl"', script
+            'Get-ChildItem -Path $wheelhouse -Filter "invisible_playwright-*.whl"',
+            script,
         )
         self.assertIn('browser_binary = "not_bundled"', script)
         self.assertIn("Write-OfflineReadme", script)
@@ -471,8 +455,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("paper-fetch.cmd", wrapper_block)
         self.assertIn("paper-fetch-mcp.cmd", wrapper_block)
         self.assertIn('command_wrappers = "bin"', manifest_block)
-        self.assertIn("camoufox = [ordered]@{", manifest_block)
-        self.assertIn("camoufox = [ordered]@{", manifest_block)
+        self.assertIn("invisible = [ordered]@{", manifest_block)
+        self.assertIn("invisible = [ordered]@{", manifest_block)
         self.assertIn("$OfflineEnvKeys", script)
         self.assertIn("$InstallerManifest.mcp.env_keys", script)
         self.assertIn('Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }', script)

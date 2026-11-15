@@ -81,6 +81,8 @@ update_check_interval_seconds = 86400
 default_channel = "official/prerelease"
 prerelease_includes_stable = true
 python_package_spec = "camoufox==0.5.9"
+playwright_spec = ">=1.58,<1.63"
+platform_dependencies_exclusive = true
 native_bundle_gate = true
 cooperative_cancel_owner_thread_cleanup = true
 request_local_browser_session_owner = true

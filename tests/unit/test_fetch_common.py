@@ -111,7 +111,11 @@ class FetchCommonTests(unittest.TestCase):
                 for dependency in optional_dependencies[extra_name]
                 if Requirement(dependency).name.casefold() == "camoufox"
             ]
-            self.assertEqual(camoufox_requirements, ["camoufox==0.5.9"])
+            self.assertEqual(
+                [str(Requirement(r).specifier) for r in camoufox_requirements],
+                ["==0.5.9"],
+            )
+            self.assertIsNotNone(Requirement(camoufox_requirements[0]).marker)
 
         camoufox_packages = [
             package
@@ -137,7 +141,7 @@ class FetchCommonTests(unittest.TestCase):
                 requirement
                 for requirement in locked_requirements
                 if requirement["name"].casefold() == "camoufox"
-                and requirement.get("marker") == marker
+                and marker in requirement.get("marker", "")
             ]
             self.assertEqual(len(camoufox_edges), 1)
             self.assertEqual(
@@ -182,7 +186,11 @@ class FetchCommonTests(unittest.TestCase):
             for dependency in extra
         )
 
-        pinned_versions = {"camoufox": "0.5.9", "invisible-playwright": "0.49.1"}
+        pinned_versions = {
+            "camoufox": "0.5.9",
+            "invisible-playwright": "0.49.1",
+            "invisible-core": "61.62.0",
+        }
         for dependency in dependencies:
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}

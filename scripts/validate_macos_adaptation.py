@@ -13,6 +13,7 @@ from pathlib import Path
 from typing import Any
 
 import yaml
+from packaging.requirements import Requirement
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 CONTRACT_PATH = REPO_ROOT / "docs" / "macos-adaptation-contract.toml"
@@ -255,12 +256,34 @@ def validate_contract(
     ):
         if browser.get(key) != expected:
             errors.append(f"browser.{key} must be {expected}")
+    if browser.get("playwright_spec") != ">=1.58,<1.63":
+        errors.append("browser.playwright_spec must be >=1.58,<1.63")
+    if browser.get("platform_dependencies_exclusive") is not True:
+        errors.append("browser.platform_dependencies_exclusive must be true")
     extras = project.get("project", {}).get("optional-dependencies", {})
     for extra in ("browser", "full"):
-        if browser.get("python_package_spec") not in extras.get(extra, []):
-            errors.append(
-                f"browser.python_package_spec must match project {extra} extra"
-            )
+        for machine in ("arm64", "aarch64", "x86_64"):
+            env = {"sys_platform": "darwin", "platform_machine": machine}
+            requirements = [Requirement(value) for value in extras.get(extra, [])]
+            active = {
+                r.name: r
+                for r in requirements
+                if not r.marker or r.marker.evaluate(env)
+            }
+            camoufox = active.get("camoufox")
+            if camoufox is None or str(camoufox.specifier) != "==0.5.9":
+                errors.append(
+                    f"browser.python_package_spec must match project {extra} extra"
+                )
+            playwright = active.get("playwright")
+            if playwright is None or str(playwright.specifier) != "<1.63,>=1.58":
+                errors.append(
+                    f"browser.playwright_spec must match project {extra} extra"
+                )
+            if {"invisible-playwright", "invisible-core"} & active.keys():
+                errors.append(
+                    f"browser.platform_dependencies_exclusive must match project {extra} extra"
+                )
 
     release = contract.get("release", {})
     if release.get("installer_manifest") != "installer/manifest.json":

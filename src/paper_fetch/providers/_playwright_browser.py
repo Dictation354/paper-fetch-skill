@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from .browser_runtime.byparr_engine import engine_name
+
 from .browser_runtime.navigation import (
     navigate_page,
     evaluate_get,
@@ -1676,7 +1678,7 @@ def fetch_html_with_playwright(
     normalized_wait_for_selector = normalize_text(readiness.selector)
     trace: dict[str, Any] = {
         "backend": backend_name,
-        "engine": "camoufox",
+        "engine": engine_name() if backend_name == "byparr" else "camoufox",
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "navigation_count": 0,
@@ -1958,7 +1960,9 @@ def fetch_html_with_playwright(
                             "paper_fetch_html_fetcher": backend_name,
                             "diagnostics": {
                                 "browser_backend": backend_name,
-                                "browser_engine": "camoufox",
+                                "browser_engine": engine_name()
+                                if backend_name == "byparr"
+                                else "camoufox",
                             },
                         },
                     )
@@ -2109,7 +2113,9 @@ def fetch_html_with_playwright(
                         "paper_fetch_html_fetcher": backend_name,
                         "diagnostics": {
                             "browser_backend": backend_name,
-                            "browser_engine": "camoufox",
+                            "browser_engine": engine_name()
+                            if backend_name == "byparr"
+                            else "camoufox",
                         },
                     },
                 )

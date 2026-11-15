@@ -139,9 +139,9 @@ jobs:
             "$smoke_python" -c "from importlib.metadata import version; from paper_fetch.mcp.server import build_server; assert version('mcp').split('.', 1)[0] == '2'; assert build_server().name == 'paper-fetch'"
             "$smoke_python" -m paper_fetch.cli --version
             if [ "$install_kind" = "full" ]; then
-              "$smoke_python" -c "import camoufox, fitz, invisible_playwright, lxml, playwright, pymupdf4llm, trafilatura"
+              "$smoke_python" -c "import fitz, lxml, playwright, pymupdf4llm, trafilatura; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()"
             else
-              "$smoke_python" -c "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ('camoufox', 'fitz', 'invisible_playwright', 'lxml', 'playwright', 'pymupdf4llm', 'trafilatura'))"
+              "$smoke_python" -c "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ('camoufox', 'fitz', 'invisible_playwright', 'invisible_core', 'lxml', 'playwright', 'pymupdf4llm', 'trafilatura'))"
             fi
           done
 
@@ -203,6 +203,11 @@ jobs:
         run: >-
           PYTHONPATH=src uv run python -m pytest
           tests/integration/test_camoufox_native_macos.py -q -n 0
+      - name: Verify Camoufox package preparation on native macOS
+        run: >-
+          PYTHONPATH=src uv run python -m pytest
+          tests/integration/test_camoufox_backend.py
+          tests/integration/test_camoufox_preparation.py -q
       - name: Verify provider page preparation on native macOS
         run: |
           PYTHONPATH=src uv run python -m pytest -q \

@@ -1,4 +1,4 @@
-"""Request-owned shared Camoufox/Byparr lifecycle and accepted JSON state."""
+"""Request-owned platform engine/Byparr lifecycle and accepted JSON state."""
 
 from __future__ import annotations
 
@@ -24,6 +24,7 @@ from .byparr_preparation import (
     cache_lock,
     prepare_components,
 )
+from .byparr_engine import engine_name
 from .paths import _filtered_storage_state_mapping
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 from ...config import resolve_user_data_dir
@@ -57,7 +58,7 @@ class ByparrManager:
         self.diagnostics: dict[str, Any] = {
             "provider": config.provider,
             "backend": "byparr",
-            "engine": "camoufox",
+            "engine": engine_name(),
             "context_reused": False,
         }
         self.metadata: dict[str, Any] = {}
@@ -112,7 +113,6 @@ class ByparrManager:
             self.diagnostics.update(
                 byparr_version="3.1.1",
                 engine=engine_name(),
-                invisible_playwright_version="0.49.1",
                 camoufox_version="0.5.9",
                 playwright_captcha_version="0.1.5",
             )

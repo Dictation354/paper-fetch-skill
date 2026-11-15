@@ -615,7 +615,21 @@ def test_detected_image_reports_ready_once_with_conversion_evidence(
 
 def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, capsys):
     import warnings
-    from camoufox._warnings import LeakWarning, WARNINGS_DATA
+    import sys
+    from types import SimpleNamespace
+
+    class LeakWarning(UserWarning):
+        pass
+
+    WARNINGS_DATA = {"canvas_noise": "Known Canvas warning"}
+    monkeypatch.setitem(
+        sys.modules,
+        "camoufox._warnings",
+        SimpleNamespace(LeakWarning=LeakWarning, WARNINGS_DATA=WARNINGS_DATA),
+    )
+    monkeypatch.setattr(
+        "paper_fetch.browser_runtime_policy.engine_name", lambda: "camoufox"
+    )
 
     original = warnings.showwarning
     manager = Mock()

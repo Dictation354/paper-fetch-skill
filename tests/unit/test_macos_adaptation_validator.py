@@ -68,6 +68,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["prerelease_includes_stable"] = False
         contract["browser"]["update_check_interval_seconds"] = 0
         contract["browser"]["python_package_spec"] = "camoufox>=0.5.9"
+        contract["browser"]["playwright_spec"] = ">=1.58,<2"
+        contract["browser"]["platform_dependencies_exclusive"] = False
         contract["browser"]["cooperative_cancel_owner_thread_cleanup"] = False
         contract["browser"]["html_snapshot_owner_thread"] = False
         contract["browser"]["supplementary_index_without_body"] = False
@@ -99,6 +101,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("prerelease_includes_stable must be true", diagnostic)
         self.assertIn("update_check_interval_seconds must be 86400", diagnostic)
         self.assertIn("python_package_spec must be camoufox==0.5.9", diagnostic)
+        self.assertIn("playwright_spec must be >=1.58,<1.63", diagnostic)
+        self.assertIn("platform_dependencies_exclusive must be true", diagnostic)
         self.assertIn(
             "cooperative_cancel_owner_thread_cleanup must be true", diagnostic
         )

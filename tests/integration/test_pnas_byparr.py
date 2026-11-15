@@ -29,7 +29,6 @@ from paper_fetch.providers.browser_runtime.types import (
 )
 from paper_fetch.runtime import RuntimeContext
 
-from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
 
 pytestmark = pytest.mark.browser
 
@@ -49,18 +48,11 @@ def _exited(process):
     return not process.is_running() or process.status() == "zombie"
 
 
-@pytest.fixture(
-    params=["auto", "camoufox"] if engine_name() == "invisible" else ["auto"]
-)
-def prepared(monkeypatch, request):
-    if request.param == "camoufox":
-        monkeypatch.setattr(
-            "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
-            lambda: "camoufox",
-        )
+@pytest.fixture
+def prepared(monkeypatch):
     cache = os.environ.get("PAPER_FETCH_TEST_BYPARR_CACHE")
     if not cache or not supported_platform():
-        pytest.skip("requires preprepared Byparr component and Camoufox")
+        pytest.skip("requires preprepared Byparr component and platform engine")
     cache = Path(cache)
     root, _, identity = prep.runtime_location(cache)
     if (cache / "ready.json").is_file():
@@ -270,6 +262,14 @@ def test_owned_shared_session_collects_original_asset_bytes_and_cleans_processes
         assert manager.new_context() is context
         assert manager.diagnostics["context_reused"]
         assert result.browser_context_seed["diagnostics"]["browser_backend"] == "byparr"
+        assert (
+            result.browser_context_seed["diagnostics"]["browser_engine"]
+            == manager.diagnostics["engine"]
+        )
+        assert (
+            result.diagnostics["browser_runtime_trace"]["engine"]
+            == manager.diagnostics["engine"]
+        )
         assert "Scientific results" in result.html
         assert calls[0] == "/doi/full/10.1073/pnas.test"
         assert "/" not in calls
@@ -694,7 +694,8 @@ def test_challenged_get_recovers_once_in_same_context(prepared, site, tmp_path):
         assert not any(
             event["kind"] in {"solver_called", "solver_click"} for event in events
         )
-        assert context._paper_fetch_navigator.browser.contexts == [context]
+        browser = context._paper_fetch_navigator.browser
+        assert browser is context or browser.contexts == [context]
     finally:
         owner.close()
 

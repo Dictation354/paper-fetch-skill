@@ -8,18 +8,19 @@
   },
   "license": "GPL-3.0-only",
   "shared_packages": [
-    "camoufox==0.5.9",
-    "playwright>=1.58,<1.63",
+    "camoufox==0.5.9; (sys_platform != 'linux' and sys_platform != 'win32') or (platform_machine != 'x86_64' and platform_machine != 'AMD64' and platform_machine != 'amd64')",
+    "playwright>=1.58,<1.63; (sys_platform != 'linux' and sys_platform != 'win32') or (platform_machine != 'x86_64' and platform_machine != 'AMD64' and platform_machine != 'amd64')",
+    "playwright>=1.58,<2; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
     "pydantic>=2,<3",
-    "httpx",
+    "httpx>=0.28,<1",
     "anyio",
     "certifi",
     "idna",
     "urllib3",
     "typing-extensions",
     "typing-inspection",
-    "invisible-playwright==0.49.1",
-    "invisible-core==61.62.0"
+    "invisible-playwright==0.49.1; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
+    "invisible-core==61.62.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')"
   ],
   "packages": [
     {

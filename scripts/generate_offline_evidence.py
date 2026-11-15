@@ -596,14 +596,17 @@ def generate_evidence(
     embedded_runtime = _embedded_runtime_inventory(staging, offline_manifest)
     node_runtime = _node_runtime_inventory(staging, offline_manifest)
     setup_components = _setup_component_inventory(offline_manifest)
-    camoufox = next(
-        (
-            package
-            for package in python_packages
-            if package["name"].casefold() == "camoufox"
-        ),
-        None,
-    )
+    browser_packages = {
+        name: next(
+            (
+                p
+                for p in python_packages
+                if p["name"].casefold().replace("_", "-") == name
+            ),
+            None,
+        )
+        for name in ("camoufox", "invisible-playwright", "invisible-core", "playwright")
+    }
 
     component_root = staging / "runtime/browser-components/byparr"
     browser_components = []
@@ -638,11 +641,14 @@ def generate_evidence(
         "native_components": native_components,
         "setup_components": setup_components,
         "browser": {
-            "camoufox_python_package": (
-                {"name": camoufox["name"], "version": camoufox["version"]}
-                if camoufox is not None
-                else None
-            ),
+            **{
+                name.replace("-", "_") + "_python_package": {
+                    "name": package["name"],
+                    "version": package["version"],
+                }
+                for name, package in browser_packages.items()
+                if package is not None
+            },
             "browser_binary": "not_bundled",
         },
         **(

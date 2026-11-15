@@ -96,11 +96,19 @@ def build_isolated_live_env(
 
 
 def require_browser_or_skip(testcase, env: Mapping[str, str], *, provider: str) -> None:
-    if importlib.util.find_spec("playwright.sync_api") is None:
+    if importlib.util.find_spec("playwright") is None:
         testcase.skipTest("Playwright Python package is not installed.")
     selected_backend(env, provider=provider)
-    if importlib.util.find_spec("camoufox") is None:
-        testcase.skipTest("Camoufox Python package is not installed.")
+    from paper_fetch.browser_runtime_policy import engine_name
+
+    packages = (
+        ("invisible_playwright", "invisible_core")
+        if engine_name() == "invisible"
+        else ("camoufox",)
+    )
+    for package in packages:
+        if importlib.util.find_spec(package) is None:
+            testcase.skipTest(f"{package} Python package is not installed.")
 
 
 def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:

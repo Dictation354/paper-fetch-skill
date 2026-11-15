@@ -71,7 +71,10 @@ def _preflight_deps(markdown_title: str = "Sample"):
     )
 
 
-def test_static_browser_capabilities_never_claims_live_health() -> None:
+def test_static_browser_capabilities_never_claims_live_health(monkeypatch) -> None:
+    monkeypatch.setattr(
+        "paper_fetch.browser_runtime_policy.engine_name", lambda: "camoufox"
+    )
     status = ProviderStatusResult(
         provider="wiley",
         status="ready",

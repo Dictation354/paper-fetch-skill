@@ -2,6 +2,8 @@
 
 from __future__ import annotations
 
+from ...browser_runtime_policy import engine_name
+
 from typing import Any
 from collections.abc import Mapping
 import urllib.parse
@@ -150,7 +152,10 @@ def browser_context_seed_from_session(
         "browser_user_agent": normalize_text(user_agent) or None,
         "browser_final_url": normalize_text(final_url) or None,
         "paper_fetch_html_fetcher": fetcher_name,
-        "diagnostics": {"browser_backend": backend_name, "browser_engine": "camoufox"},
+        "diagnostics": {
+            "browser_backend": backend_name,
+            "browser_engine": engine_name() if backend_name == "byparr" else "camoufox",
+        },
     }
 
 

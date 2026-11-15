@@ -101,8 +101,14 @@ class CamoufoxBackend(PlaywrightBackend):
 
         return PublisherProfileManager(config, runtime_context=runtime_context)
 
+    def dependency_details(self):
+        return _dependency_details()
+
+    def engine_label(self):
+        return "Camoufox"
+
     def ensure_runtime_ready(self, config: BrowserRuntimeConfig) -> None:
-        details = _dependency_details()
+        details = self.dependency_details()
         if not _package_ready(details):
             raise ProviderFailure(
                 NOT_CONFIGURED,
@@ -118,8 +124,9 @@ class CamoufoxBackend(PlaywrightBackend):
         deep: bool = False,
     ) -> ProviderStatusResult:
         checks = []
+        engine = self.engine_label()
         config: BrowserRuntimeConfig | None = None
-        details = _dependency_details()
+        details = self.dependency_details()
         package_ready = _package_ready(details)
         runtime_installed = _runtime_installed(details)
         available = False
@@ -131,9 +138,9 @@ class CamoufoxBackend(PlaywrightBackend):
                     "runtime_env",
                     OK if available else NOT_CONFIGURED,
                     (
-                        f"{provider} Camoufox runtime environment is configured."
+                        f"{provider} {engine} runtime environment is configured."
                         if available
-                        else f"{provider} requires compatible camoufox and playwright packages."
+                        else f"{provider} requires compatible {engine} and playwright packages."
                     ),
                     details={
                         "backend": self.name,
@@ -164,9 +171,9 @@ class CamoufoxBackend(PlaywrightBackend):
                 "playwright_dependency",
                 OK if package_ready else NOT_CONFIGURED,
                 (
-                    "Camoufox and Playwright Python packages are importable; no browser is launched."
+                    f"{engine} and Playwright Python packages are compatible; no browser is launched."
                     if package_ready
-                    else "Camoufox or Playwright Python package is not installed."
+                    else f"{engine} or Playwright Python package is missing or incompatible."
                 ),
                 details=details,
             )
@@ -176,13 +183,13 @@ class CamoufoxBackend(PlaywrightBackend):
                 "browser_runtime",
                 OK if available else NOT_CONFIGURED,
                 (
-                    "Camoufox browser runtime is installed or an explicit executable is configured."
+                    f"{engine} browser runtime is installed or an explicit executable is configured."
                     if available
                     else (
-                        "Camoufox Python packages are installed, but the browser runtime "
+                        f"{engine} Python packages are installed, but the browser runtime "
                         "will be prepared automatically when a browser session is first needed."
                         if package_ready
-                        else "Camoufox browser runtime cannot be used until its Python packages are installed."
+                        else f"{engine} browser runtime cannot be used until its Python packages are installed."
                     )
                 ),
                 details={
@@ -197,10 +204,14 @@ class CamoufoxBackend(PlaywrightBackend):
                     "runtime_state": details.get("runtime_state"),
                     "runtime_version": details.get("runtime_version"),
                     "prepare_command": (
-                        'python -c "from paper_fetch.providers.browser_runtime.preparation '
-                        "import prepare_camoufox_managed_runtime; "
-                        "from camoufox.fpgen_model import ensure_fpgen_model; "
-                        'prepare_camoufox_managed_runtime(); ensure_fpgen_model()"'
+                        'python -c "from paper_fetch.providers.browser_runtime.byparr_engine import prepare_executable; prepare_executable()"'
+                        if engine == "Invisible"
+                        else (
+                            'python -c "from paper_fetch.providers.browser_runtime.preparation '
+                            "import prepare_camoufox_managed_runtime; "
+                            "from camoufox.fpgen_model import ensure_fpgen_model; "
+                            'prepare_camoufox_managed_runtime(); ensure_fpgen_model()"'
+                        )
                     ),
                 },
             )
@@ -215,7 +226,7 @@ class CamoufoxBackend(PlaywrightBackend):
                 deep_check = build_provider_status_check(
                     "browser_context",
                     OK,
-                    "Native Camoufox browser context can be created.",
+                    f"Native {engine} browser context can be created.",
                     details={"duration_seconds": round(time.monotonic() - started, 3)},
                 )
             except Exception as exc:

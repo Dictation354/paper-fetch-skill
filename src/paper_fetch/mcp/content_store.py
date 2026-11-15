@@ -142,7 +142,9 @@ class ContentStore:
             if request.view == "diagnostics" and snapshot.asset_context is not None:
                 details = json.loads(value or "{}")
                 details["image_index"] = snapshot.asset_context.assets
-                details["image_discovery_complete"] = snapshot.asset_context.discovery_complete
+                details["image_discovery_complete"] = (
+                    snapshot.asset_context.discovery_complete
+                )
                 if snapshot.asset_context.results:
                     details["asset_fetches"] = snapshot.asset_context.results
                 value = json_view(details)

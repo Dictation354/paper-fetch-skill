@@ -3,6 +3,8 @@ import json
 from types import SimpleNamespace
 from unittest import mock
 import pytest
+
+pytest.importorskip("camoufox")
 from paper_fetch.providers.browser_runtime import preparation
 
 

@@ -1440,7 +1440,7 @@ EOF
 check_browser_runtime_package() {
   local runtime_python
   runtime_python="$(mcp_python_bin)"
-  "$runtime_python" -c 'import camoufox; import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager; assert hasattr(camoufox, "Camoufox"); assert CamoufoxBrowserManager is not None'
+  "$runtime_python" -c 'import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
 }
 
 run_smoke_checks() {
@@ -1715,9 +1715,9 @@ main() {
   echo "Python interpreter: $PYTHON_BIN"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
   if [ "$HOST_PLATFORM" = "linux" ]; then
-    echo "Default browser backend: Byparr + managed Camoufox for all browser providers (headless: $(browser_headless_value))"
+    echo "Default browser backend: Byparr + platform engine for all browser providers (headless: $(browser_headless_value))"
   else
-    echo "Default browser backend: Camoufox (headless: $(browser_headless_value))"
+    echo "Default browser backend: Byparr + platform engine (headless: $(browser_headless_value))"
   fi
   browser_preparation_summary
   echo "Browser preparation runs by default and may download browser components and fingerprint models."

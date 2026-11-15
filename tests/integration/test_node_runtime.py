@@ -91,13 +91,15 @@ def test_independent_node_drives_playwright_and_exits():
 import asyncio
 from playwright.sync_api import sync_playwright
 from playwright.async_api import async_playwright
-with sync_playwright() as driver:
-    process = driver._impl_obj._connection._transport._proc
+manager = sync_playwright()
+with manager as driver:
+    process = (manager._client._transport if hasattr(manager, "_client") else manager._connection._transport)._proc
     assert driver.chromium.name == 'chromium'
 assert process.returncode == 0
 async def check():
-    async with async_playwright() as driver:
-        process = driver._impl_obj._connection._transport._proc
+    manager = async_playwright()
+    async with manager as driver:
+        process = (manager._client._transport if hasattr(manager, "_client") else manager._connection._transport)._proc
         assert driver.firefox.name == 'firefox'
     assert process.returncode == 0
 asyncio.run(check())

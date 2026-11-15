@@ -1,4 +1,4 @@
-"""Publisher Byparr backend using the shared managed Camoufox runtime."""
+"""Publisher Byparr backend using the selected platform engine."""
 
 from __future__ import annotations
 
@@ -12,18 +12,76 @@ from ...base import ProviderFailure
 from ....config import (
     resolve_user_data_dir,
 )
-from ....reason_codes import NOT_CONFIGURED, OK, READY
+from ....reason_codes import NOT_CONFIGURED
 
 
 def _dependency_details():
-    from importlib.util import find_spec
+    from importlib import metadata, util
     from ..byparr_engine import engine_name
 
-    details = camoufox._dependency_details()
-    if engine_name() == "invisible":
-        details["packages"]["invisible_playwright"] = (
-            find_spec("invisible_playwright") is not None
-        )
+    if engine_name() != "invisible":
+        details = camoufox._dependency_details()
+    else:
+        packages = {
+            name: util.find_spec(name) is not None
+            for name in ("playwright", "invisible_playwright", "invisible_core")
+        }
+        details = {
+            "packages": packages,
+            "runtime_installed": False,
+            "runtime_valid": False,
+            "runtime_path": None,
+        }
+    packages = details["packages"]
+    errors = []
+    for package, present in packages.items():
+        if not present:
+            errors.append(f"{package} Python package is not installed")
+            continue
+        try:
+            value = metadata.version(package)
+            details[f"{package}_version"] = value
+            if package == "playwright":
+                pair = tuple(int(p) for p in value.split(".")[:2])
+                upper = (2, 0) if engine_name() == "invisible" else (1, 63)
+                if not (1, 58) <= pair < upper:
+                    required = (
+                        ">=1.58,<2" if engine_name() == "invisible" else ">=1.58,<1.63"
+                    )
+                    errors.append(f"Playwright {required} required; found {value}")
+            elif package in {"invisible_playwright", "invisible_core", "camoufox"}:
+                expected = {
+                    "invisible_playwright": "0.49.1",
+                    "invisible_core": "61.62.0",
+                    "camoufox": "0.5.9",
+                }[package]
+                if value != expected:
+                    errors.append(f"{package} requires {expected}; found {value}")
+        except (metadata.PackageNotFoundError, ValueError):
+            errors.append(f"Cannot determine compatible {package} version")
+    ready = all(packages.values()) and not errors
+    details.update(
+        package_ready=ready,
+        compatibility_errors=errors,
+        engine=engine_name(),
+        download_required=ready and not details.get("runtime_valid", False),
+    )
+    if engine_name() == "invisible" and ready:
+        try:
+            from invisible_core.download import engine_status, cache_dir_for_seal
+            from invisible_core.seal import active_seal
+
+            installed, message = engine_status()
+            details.update(
+                runtime_installed=installed,
+                runtime_valid=installed,
+                runtime_path=str(cache_dir_for_seal()),
+                runtime_version=active_seal().tag,
+                runtime_probe_message=message,
+                download_required=not installed,
+            )
+        except Exception as exc:
+            details["runtime_probe_error"] = str(exc)
     return details
 
 
@@ -102,20 +160,21 @@ class ByparrBackend(CamoufoxBackend):
             else None,
         )
 
-    def ensure_runtime_ready(self, config):
-        details = _dependency_details()
-        if not all(details["packages"].values()):
-            raise ProviderFailure(
-                NOT_CONFIGURED,
-                "Byparr requires compatible camoufox and playwright packages.",
-            )
-        from importlib.metadata import version
+    def dependency_details(self):
+        return _dependency_details()
 
-        major, minor = (int(p) for p in version("playwright").split(".")[:2])
-        if (major, minor) < (1, 58) or (major, minor) >= (1, 63):
+    def engine_label(self):
+        from ..byparr_engine import engine_name
+
+        return "Invisible" if engine_name() == "invisible" else "Camoufox"
+
+    def ensure_runtime_ready(self, config):
+        details = self.dependency_details()
+        if not details.get("package_ready", all(details["packages"].values())):
             raise ProviderFailure(
                 NOT_CONFIGURED,
-                "Byparr requires Playwright >=1.58,<1.63 for shared browser connections.",
+                f"Byparr requires compatible {self.engine_label()} and Playwright packages. "
+                + "; ".join(details.get("compatibility_errors", [])),
             )
 
     def probe_runtime_status(
@@ -132,57 +191,6 @@ class ByparrBackend(CamoufoxBackend):
             return result
         from ..byparr_engine import engine_name
 
-        if engine_name() == "invisible":
-            from importlib.util import find_spec
-
-            details = next(
-                (
-                    check.details
-                    for check in result.checks
-                    if check.name == "playwright_dependency"
-                ),
-                {},
-            )
-            packages = dict(details.get("packages", {}))
-            packages["invisible_playwright"] = (
-                find_spec("invisible_playwright") is not None
-            )
-            ready = bool(packages) and all(packages.values())
-            installed_engine = False
-            engine_details = {"engine": "invisible", "package_ready": ready}
-            if ready:
-                from invisible_core.download import engine_status, cache_dir_for_seal
-                from invisible_core.seal import active_seal
-
-                installed_engine, detail = engine_status()
-                engine_details.update(
-                    runtime_installed=installed_engine,
-                    runtime_path=str(cache_dir_for_seal()),
-                    runtime_version=active_seal().tag,
-                    runtime_probe_message=detail,
-                )
-            available = ready and (installed_engine or bool(config.binary_path))
-            checks = []
-            for check in result.checks:
-                check.details.update(engine_details)
-                check.details["download_required"] = not available
-                checks.append(
-                    replace(
-                        check,
-                        status=OK if ready else NOT_CONFIGURED,
-                        message=(
-                            "Byparr uses the sealed Invisible engine; preparation is on demand."
-                            if ready
-                            else "Byparr requires the browser extra including invisible-playwright."
-                        ),
-                    )
-                )
-            result = replace(
-                result,
-                checks=checks,
-                available=ready,
-                status=READY if ready else NOT_CONFIGURED,
-            )
         root, _, identity = runtime_location(
             config.component_cache_dir or resolve_user_data_dir(env) / "byparr"
         )

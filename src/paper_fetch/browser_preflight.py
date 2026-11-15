@@ -292,10 +292,16 @@ def static_browser_capabilities(
     selected_backend = choose_backend(env, provider=provider_key)
 
     def package_capability(package: str) -> dict[str, object]:
-        available = bool(
-            package_states.get(package)
-            if package in package_states
-            else importlib_util.find_spec(package) is not None
+        from .browser_runtime_policy import engine_name
+
+        available = (
+            False
+            if package == "camoufox" and engine_name() == "invisible"
+            else bool(
+                package_states.get(package)
+                if package in package_states
+                else importlib_util.find_spec(package) is not None
+            )
         )
         return {
             "status": "ready" if available else "not_configured",
@@ -416,7 +422,7 @@ def _failure_result(
                     diagnostic_payload.get("browser_runtime_trace")
                     or diagnostic_payload.get("trace")
                     or {}
-                ).get("backend", "camoufox"),
+                ).get("backend", "byparr"),
                 details=diagnostic_payload,
             ),
         )

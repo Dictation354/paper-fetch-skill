@@ -31,7 +31,8 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     staging = tmp_path / "staging"
     site_packages = staging / "runtime" / "Lib" / "site-packages"
     _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
-    _install_fake_distribution(site_packages, "camoufox", "0.5.7")
+    _install_fake_distribution(site_packages, "invisible-playwright", "0.49.1")
+    _install_fake_distribution(site_packages, "invisible-core", "61.62.0")
 
     formula_package = staging / "formula-tools" / "node_modules" / "mathml-to-latex"
     formula_package.mkdir(parents=True)
@@ -136,7 +137,8 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert {
         (item["name"], item["version"]) for item in dependency["python_packages"]
     } == {
-        ("camoufox", "0.5.7"),
+        ("invisible-playwright", "0.49.1"),
+        ("invisible-core", "61.62.0"),
         ("paper-fetch-skill", "5.6.0"),
     }
     assert {item["name"] for item in dependency["node_packages"]} == {
@@ -148,7 +150,14 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         "texmath.exe",
     }
     assert dependency["browser"] == {
-        "camoufox_python_package": {"name": "camoufox", "version": "0.5.7"},
+        "invisible_playwright_python_package": {
+            "name": "invisible-playwright",
+            "version": "0.49.1",
+        },
+        "invisible_core_python_package": {
+            "name": "invisible-core",
+            "version": "61.62.0",
+        },
         "browser_binary": "not_bundled",
     }
     assert dependency["node_runtime"]["version"] == "26.13.0"
@@ -187,8 +196,10 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     sbom = json.loads(sbom_path.read_text(encoding="utf-8"))
     assert sbom["specVersion"] == "1.6"
     component_names = {component["name"] for component in sbom["components"]}
+    assert "camoufox" not in component_names
     assert {
-        "camoufox",
+        "invisible-playwright",
+        "invisible-core",
         "paper-fetch-skill",
         "mathml-to-latex",
         "playwright-core",

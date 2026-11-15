@@ -664,13 +664,9 @@ assert "providers" in payload
 '@
 
     $browserRuntimeCheck = @'
-import camoufox
 import playwright
 import pymupdf
-from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager
-
-assert hasattr(camoufox, "Camoufox")
-assert CamoufoxBrowserManager is not None
+from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()
 '@
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck
     Invoke-RuntimePythonScript -Arguments @($texmath) -Script @'

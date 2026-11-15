@@ -10,7 +10,7 @@ PACKAGE_NAME=""
 PYTHON_BIN="${PYTHON_BIN:-python3}"
 INSTALLER_MANIFEST_FILE="$REPO_DIR/installer/manifest.json"
 MACOS_MINIMUM_OS_VERSION="15.0"
-CAMOUFOX_PYTHON_PACKAGE_VERSION=""
+BROWSER_PACKAGE_VERSIONS=""
 STAGING_OWNERSHIP_MARKER_NAME=".paper-fetch-offline-staging-owner"
 STAGING_OWNERSHIP_MARKER_MAGIC="paper-fetch-offline-staging-v1"
 
@@ -315,44 +315,14 @@ build_project_runtime() {
     --only-binary=:all: \
     "${wheels[0]}[full]"
 
+  BROWSER_ENGINE="$(PYTHONPATH="$REPO_DIR/src" "$PYTHON_BIN" -c 'from paper_fetch.browser_runtime_policy import engine_name; print(engine_name())')"
+  local browser_package="camoufox"
+  [ "$BROWSER_ENGINE" != "invisible" ] || browser_package="invisible_playwright"
   shopt -s nullglob
-  local camoufox_wheels=("$wheelhouse"/camoufox-*.whl)
+  local browser_wheels=("$wheelhouse"/"$browser_package"-*.whl)
   shopt -u nullglob
-  [ "${#camoufox_wheels[@]}" -eq 1 ] \
-    || die "Expected one Camoufox dependency wheel, found ${#camoufox_wheels[@]}."
-
-  CAMOUFOX_PYTHON_PACKAGE_VERSION="$(
-    "$PYTHON_BIN" - "${camoufox_wheels[0]}" <<'PY'
-from __future__ import annotations
-
-from email.parser import BytesParser
-from pathlib import Path
-import sys
-from zipfile import ZipFile
-
-wheel = Path(sys.argv[1])
-with ZipFile(wheel) as archive:
-    candidates = []
-    for name in archive.namelist():
-        if not name.endswith(".dist-info/METADATA"):
-            continue
-        metadata = BytesParser().parsebytes(archive.read(name))
-        if str(metadata.get("Name") or "").casefold() == "camoufox":
-            candidates.append(str(metadata.get("Version") or ""))
-
-if len(candidates) != 1:
-    raise SystemExit(
-        "Camoufox wheel must contain exactly one Camoufox distribution; "
-        f"found {len(candidates)} in {wheel.name}"
-    )
-resolved_version = candidates[0].strip()
-if not resolved_version:
-    raise SystemExit(
-        f"Camoufox dependency wheel has no version in {wheel.name}"
-    )
-print(resolved_version)
-PY
-  )" || die "Could not resolve the Camoufox package version from its wheel metadata."
+  [ "${#browser_wheels[@]}" -eq 1 ] \
+    || die "Expected one $browser_package dependency wheel, found ${#browser_wheels[@]}."
 
   log "Installing project runtime into package"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -363,37 +333,13 @@ PY
     --only-binary=:all: \
     "${wheels[0]}[full]"
 
-  "$PYTHON_BIN" - "$site_packages" "$CAMOUFOX_PYTHON_PACKAGE_VERSION" <<'PY'
-from __future__ import annotations
-
-from importlib.metadata import distributions
-from pathlib import Path
-import sys
-
-site_packages = Path(sys.argv[1])
-expected_version = sys.argv[2]
-matches = [
-    distribution
-    for distribution in distributions(path=[str(site_packages)])
-    if str(distribution.metadata.get("Name") or "").casefold() == "camoufox"
-]
-if len(matches) != 1:
-    raise SystemExit(
-        "Installed runtime must contain exactly one Camoufox distribution; "
-        f"found {len(matches)}"
-    )
-if matches[0].version != expected_version:
-    raise SystemExit(
-        f"Installed Camoufox runtime must match resolved wheel version {expected_version}; "
-        f"found {matches[0].version or '<missing>'}"
-    )
-PY
+  BROWSER_PACKAGE_VERSIONS="$(PYTHONPATH="$site_packages" "$PYTHON_BIN" -c 'import json, sys; from paper_fetch.providers.browser_runtime.byparr_engine import engine_package_versions; print(json.dumps(engine_package_versions(sys.argv[1])))' "$site_packages")"
 
   log "Precompiling Python runtime bytecode"
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import camoufox; import playwright; import pymupdf; import paper_fetch; import paper_fetch.mcp.server; from paper_fetch.providers.browser_runtime.camoufox_manager import CamoufoxBrowserManager; assert hasattr(camoufox, "Camoufox"); assert CamoufoxBrowserManager is not None'
+    "$PYTHON_BIN" -X utf8 -c 'import playwright; import pymupdf; import paper_fetch.mcp.server; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
 
   staging_is_owned "$staging" "$package_name" \
     || die "Offline staging ownership changed during runtime assembly: $staging"
@@ -706,7 +652,7 @@ The package includes official Node.js under `runtime/node/`, with its license an
 The package includes Python dependencies, not a Python interpreter. Linux installation defaults to `/usr/bin/python3`; macOS defaults to `python3` on PATH.
 Pass `--python /path/to/python` (or `--python=/path/to/python`) to select an interpreter matching the package ABI. Command names are also accepted.
 Selection priority is `--python`, then `PAPER_FETCH_OFFLINE_PYTHON_BIN`, then the platform default. The selected absolute path is recorded in `runtime/python-bin` and reused by CLI and MCP.
-It does not redistribute the Camoufox browser binary for browser-backed providers.
+It does not redistribute browser engine binaries.
 After core smoke checks, browsers are prepared by default, including non-interactive installs.
 Use `--skip-browser-prepare` to skip preparation. System packages retain their existing permission rules.
 The optional wizard configures credentials and image tools. Failures preserve the core installation.
@@ -716,12 +662,12 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-On Linux x64, PNAS and Elsevier browser routes use managed Camoufox and Byparr;
-other browser routes use Camoufox. macOS uses Camoufox and skips Elsevier browser routes.
-Linux x64 bundles pinned Byparr source and private Python dependencies under
-`runtime/browser-components/byparr/` on Linux and macOS.
-Preparation manages Camoufox binaries/fingerprint models shared with Byparr.
-Only successful online checks establish a 24-hour reuse window; failures/cancellation can retry.
+All browser routes use Byparr. Linux x64 uses InvisiblePlaywright; macOS uses Camoufox.
+Linux and macOS bundle pinned Byparr source and private Python dependencies under
+`runtime/browser-components/byparr/`.
+Preparation manages the selected platform engine; only Camoufox needs fingerprint models.
+Camoufox reuses successful update checks for 24 hours; failed/cancelled checks can retry.
+Invisible uses its pinned release seal and reuses valid local engine binaries.
 See `browser-setup-results.txt`, or rerun the shared preparation command above.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
@@ -805,7 +751,7 @@ write_manifest_and_checksums() {
   )"
 
   log "Writing manifest and checksums"
-  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$minimum_os_version" "$INSTALLER_MANIFEST_FILE" "$skill_bundle_json" "$CAMOUFOX_PYTHON_PACKAGE_VERSION" <<'PY'
+  "$PYTHON_BIN" - "$staging" "$version" "$git_revision" "$target_platform" "$target_arch" "$python_tag" "$minimum_os_version" "$INSTALLER_MANIFEST_FILE" "$skill_bundle_json" "$BROWSER_PACKAGE_VERSIONS" <<'PY'
 from __future__ import annotations
 
 from importlib.metadata import distributions
@@ -824,25 +770,23 @@ python_tag = sys.argv[6]
 minimum_os_version = sys.argv[7] or None
 installer_manifest = json.loads(Path(sys.argv[8]).read_text(encoding="utf-8"))
 skill_bundle = json.loads(sys.argv[9])
-resolved_camoufox_version = sys.argv[10]
+resolved_browser_versions = json.loads(sys.argv[10])
 site_packages = staging / "runtime" / "site-packages"
 installed_packages = sorted(path.name for path in site_packages.glob("*.dist-info"))
-camoufox_distributions = [
-    distribution
-    for distribution in distributions(path=[str(site_packages)])
-    if str(distribution.metadata.get("Name") or "").casefold() == "camoufox"
-]
-if len(camoufox_distributions) != 1:
-    raise SystemExit(
-        "Offline manifest requires exactly one installed Camoufox distribution; "
-        f"found {len(camoufox_distributions)}"
-    )
-camoufox_version = camoufox_distributions[0].version
-if camoufox_version != resolved_camoufox_version:
-    raise SystemExit(
-        f"Offline manifest requires resolved Camoufox {resolved_camoufox_version}; "
-        f"found {camoufox_version or '<missing>'}"
-    )
+installed = {str(d.metadata["Name"]).lower().replace("_", "-"): d.version
+             for d in distributions(path=[str(site_packages)])}
+if any(installed.get(name) != version for name, version in resolved_browser_versions.items()):
+    raise SystemExit("Offline manifest browser versions differ from installed packages")
+engine = "invisible" if target_platform in {"linux", "windows"} and target_arch == "x86_64" else "camoufox"
+package = "invisible-playwright" if engine == "invisible" else "camoufox"
+browser_component = {
+    "python_package": "runtime/site-packages",
+    "python_package_version": installed[package],
+    "playwright_version": installed["playwright"],
+    "browser_binary": "not_bundled",
+}
+if engine == "invisible":
+    browser_component["core_version"] = installed["invisible-core"]
 manifest_name_key = f"{target_platform}_manifest_name"
 
 payload = {
@@ -872,11 +816,7 @@ payload = {
         "formula_tools": "formula-tools",
         "node_runtime": json.loads((staging / "runtime/node/node-runtime.json").read_text(encoding="utf-8")),
         "image_tools": "image-tools",
-        "camoufox": {
-            "python_package": "runtime/site-packages",
-            "python_package_version": camoufox_version,
-            "browser_binary": "not_bundled",
-        },
+        engine: browser_component,
     },
 }
 

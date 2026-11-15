@@ -4818,6 +4818,19 @@
         "kind": "infrastructure",
         "scope": "真实 MCP stdio 与 CLI 子进程，使用最小来源页和图片 transport double 验证资产交付、文件生命周期和 JSON。"
       }
+    },
+    "tests/unit/test_browser_dependencies.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "platform browser dependency matrix and selected-engine boundaries"
+      }
+    },
+    "tests/integration/test_camoufox_preparation.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "camoufox backend",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
     }
   }
 }

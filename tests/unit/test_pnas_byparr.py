@@ -12,6 +12,9 @@ import zipfile
 
 import pytest
 
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    _dependency_details as _REAL_DEPENDENCY_DETAILS,
+)
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.browser_runtime import platforms, selection
 from paper_fetch.providers.browser_runtime import byparr_preparation as prep
@@ -262,21 +265,43 @@ def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
     assert captured[0]["use_runtime_shared_browser"] is True
 
 
-@pytest.mark.parametrize("version", ["1.57.0", "1.64.0"])
-def test_shared_playwright_version_boundary(monkeypatch, tmp_path, version):
-    from paper_fetch.providers.browser_runtime.backends import byparr
+@pytest.mark.parametrize(
+    "engine,version,accepted",
+    [
+        ("camoufox", "1.57.0", False),
+        ("camoufox", "1.62.0", True),
+        ("camoufox", "1.63.0", False),
+        ("invisible", "1.57.0", False),
+        ("invisible", "1.65.2", True),
+        ("invisible", "2.0.0", False),
+    ],
+)
+def test_shared_playwright_version_boundary(
+    monkeypatch, tmp_path, engine, version, accepted
+):
+    from paper_fetch.providers.browser_runtime.backends import byparr, camoufox
+    from paper_fetch.providers.browser_runtime import byparr_engine
     import importlib.metadata
+    import importlib.util
 
+    monkeypatch.setattr(byparr_engine, "engine_name", lambda: engine)
+    monkeypatch.setattr(byparr, "_dependency_details", _REAL_DEPENDENCY_DETAILS)
     monkeypatch.setattr(
-        byparr,
+        camoufox,
         "_dependency_details",
-        lambda: {
-            "runtime_valid": True,
-            "packages": {"playwright": True, "camoufox": True},
-        },
+        lambda: {"packages": {"camoufox": True, "playwright": True}},
     )
-    monkeypatch.setattr(importlib.metadata, "version", lambda _: version)
-    with pytest.raises(ProviderFailure, match="Playwright >=1.58,<1.63"):
-        byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(
-            BrowserRuntimeConfig("pnas", "doi", tmp_path, True, None, backend="byparr")
-        )
+    monkeypatch.setattr(importlib.util, "find_spec", lambda _: object())
+    versions = {
+        "playwright": version,
+        "camoufox": "0.5.9",
+        "invisible_playwright": "0.49.1",
+        "invisible_core": "61.62.0",
+    }
+    monkeypatch.setattr(importlib.metadata, "version", versions.__getitem__)
+    config = BrowserRuntimeConfig("pnas", "doi", tmp_path, True, None, backend="byparr")
+    if accepted:
+        byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(config)
+    else:
+        with pytest.raises(ProviderFailure, match="Playwright"):
+            byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(config)
