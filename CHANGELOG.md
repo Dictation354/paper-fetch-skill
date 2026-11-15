@@ -6,6 +6,20 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.3 - 2026-11-15
+
+### Targeted image retrieval and reading
+
+- Add MCP `fetch_assets` and CLI `fetch-assets` to retrieve selected article images by asset ID, recognized URL, or formula-image group. Reuse provider discovery, download validation and authenticated browser recovery without refetching the full article or converting PDFs.
+- Retain image indexes and per-file acquisition results with content handles; reuse downloaded files and preserve body snapshots, offsets and original acceptance. Return bounded inline images or local paths, with explicit delivery reasons and temporary-file ownership. Update the Skill to hand required formulas and figure panels to the host reader.
+
+### Platform browser dependencies and installation
+
+- Remove Camoufox from Windows/Linux x64 browser/full installations. Use InvisiblePlaywright 0.49.1, invisible-core 61.62.0 and Playwright `>=1.58,<2` (locked to 1.65.2); retain Camoufox 0.5.9 with Playwright `>=1.58,<1.63` (locked to 1.62.0) on macOS and existing ARM fallback paths. Keep Linux arm64 online-only.
+- Check packages, versions, status and preparation against the selected engine. Invisible paths do not import or prepare Camoufox browsers or fingerprint models; preserve Byparr sessions, native authentication profiles, cookie synchronization, HTTP requests and cleanup.
+- Verify the target engine in installer smoke checks and offline builds. Record actual package and Playwright versions under `components.invisible` or `components.camoufox`, including Invisible's core version, and derive dependency evidence and SBOMs from the installed package set. Update platform contracts and move Camoufox package-dependent tests to native integration coverage.
+- Refresh compatible locks for idutils, isbnlib2, jsonpointer, onnxruntime, Ruff and soupsieve, preserving Python/platform compatibility branches and existing strict pins. Declare Byparr's shared httpx dependency explicitly.
+
 ## 7.6.2 - 2026-11-14
 
 ### MCP delivery and content navigation

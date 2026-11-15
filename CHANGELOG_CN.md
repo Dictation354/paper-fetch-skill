@@ -6,6 +6,20 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.6.3 - 2026-11-15
+
+### 定向补取图片与阅读
+
+- 新增 MCP `fetch_assets` 和 CLI `fetch-assets`，按 asset ID、已识别的图片 URL 或公式图片组补取指定论文图片；复用 provider 发现、下载校验与浏览器认证恢复，不重新抓取整篇正文或转换 PDF。
+- 内容句柄保留图片索引与逐项获取结果，重复补取复用已有文件，正文快照、字符偏移和原始 acceptance 保持不变。按上限返回内联图片或本地路径，明确交付原因与临时文件归属；更新 skill，将问题所需的公式和图件面板交给宿主 reader 实际读取。
+
+### 平台浏览器依赖与安装
+
+- Windows／Linux x64 的 browser/full 安装不再包含 Camoufox，改用 InvisiblePlaywright 0.49.1、invisible-core 61.62.0 和 Playwright `>=1.58,<2`（锁定 1.65.2）；macOS 与既有 ARM 回退路径保留 Camoufox 0.5.9 和 Playwright `>=1.58,<1.63`（锁定 1.62.0）。Linux arm64 继续仅提供在线安装。
+- 依实际引擎检查包、版本、状态并按需准备。Invisible 路径不导入或准备 Camoufox 浏览器及指纹模型，保留 Byparr 会话、原生认证目录、Cookie 同步、HTTP 请求及清理机制。
+- 安装 smoke 与离线构建验证目标引擎，在 `components.invisible` 或 `components.camoufox` 记录实际包及 Playwright 版本，Invisible 另记录 core 版本；依实际安装集合生成依赖证据和 SBOM。同步平台契约，将依赖 Camoufox 包的测试移至对应平台的 integration 层。
+- 更新 idutils、isbnlib2、jsonpointer、onnxruntime、Ruff 和 soupsieve 的兼容锁定版本，保留 Python／平台兼容分支及现有严格 pin；显式声明 Byparr 共用的 httpx 依赖。
+
 ## 7.6.2 - 2026-11-14
 
 ### MCP 内容交付与正文导航
