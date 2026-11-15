@@ -699,6 +699,9 @@ def build_fetch_tool_result(
         content_store=content_store,
         response_warnings=image_warnings,
     )
+    payload["image_delivery"]["returned_images"] = sum(
+        isinstance(item, ImageContent) for item in extra_content
+    )
     return _tool_result(payload, is_error=False, extra_content=extra_content)
 
 

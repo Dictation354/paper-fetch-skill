@@ -226,7 +226,20 @@ def _try_official_provider(
                 ),
             )
         if provider_result.content is not None:
-            observed_article.diagnostics = dict(provider_result.content.diagnostics)
+            observed_article.diagnostics = {
+                **provider_result.content.diagnostics,
+                **{
+                    key: value
+                    for key, value in observed_article.diagnostics.items()
+                    if key
+                    in {
+                        "image_index",
+                        "image_discovery_complete",
+                        "image_source_url",
+                        "image_provider",
+                    }
+                },
+            }
         workflow_trace[:] = merge_trace(workflow_trace, provider_result.trace)
         extend_unique(warnings, provider_result.warnings)
         download_warnings, download_trail = artifact_store.save_provider_payload(

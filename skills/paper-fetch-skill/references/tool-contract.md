@@ -63,9 +63,19 @@ await readNext(reading[0]);
 
 ### 正文导航
 
-`navigate_content(content_id, mode="headings"|"search", query=None, offset=0, max_results=20, context_chars=200)` 只导航保留的 Markdown。headings 返回 title/level/start/end/section_start/section_end；search 为不区分大小写的字面匹配，返回匹配 start/end 和有界 context/context_start/context_end。位置均为原文 Unicode 码点、左闭右开；offset 是原文字位置，next_offset/eof 分页导航结果，接着用 read_content 读章节或命中范围。max_results 为 1..100，context_chars 为 0..2000，search 要求非空 query。导航沿用句柄错误和有效期，不改写正文或触发获取。
+`navigate_content(content_id, mode="headings"|"search", query=None, offset=0, max_results=20, context_chars=200)` 只导航保留的 Markdown。headings 返回 title/level/start/end/section_start/section_end；search 为不区分大小写的字面匹配，返回匹配 start/end 和有界 context/context_start/context_end。位置均为原文 Unicode 码点、左闭右开；offset 是原文字位置，next_offset/eof 分页导航结果，导航上下文已完整覆盖任务证据时可直接使用；不足时用 read_content 补读章节或命中范围，不要求为局部问题通读全文。max_results 为 1..100，context_chars 为 0..2000，search 要求非空 query。导航沿用句柄错误和有效期，不改写正文或触发获取。
 
-### 独立补充材料任务
+### 定向补图与图片交付
+
+`fetch_assets(content_id, asset_ids=None, urls=None, kind=None, output_dir=None, inline_image_budget=None, overwrite=false)`：`asset_ids`、`urls` 与 `kind="formula"` 必须且只能选择一种，列表非空；URL 必须属于当前论文已识别的图片资产。ID 稳定保存在 diagnostics 的 `image_index`。选择先于下载，未选资产不发起下载；已有本地文件直接复用。索引缺失时只按需读取来源页并恢复认证，不重新抓全文或转换 PDF。
+
+业务结果在 structuredContent，含 content_id、doi、provider、source_url、discovery_complete、temporary、results；每项保留 asset_id、kind、状态、来源、path，失败含 reason / failures。部分成功为 partial，完整失败为 error。默认临时路径由正文句柄所有，句柄过期/淘汰或服务关闭时回收；显式 output_dir 的归档不清理，overwrite=false 拒绝覆盖不同内容。
+
+图片通过 `result.content` 的 ImageContent 返回，调用方需显式转发，示例见[图件交接](reading-handoff.md#指定图件)。默认及最高限额为 3 张、每张 2 MiB、累计 8 MiB；inline_image_budget 可降低限额，设 0 可关闭。未内联的本地文件仍有 path 和 inline_reason，交给宿主 reader。正文快照、偏移和原 acceptance 不变；补取索引及失败见 diagnostics 的 image_index / asset_fetches。
+
+单篇和批量获取结果的 `image_delivery={discovery_complete,formula_images,local_images,returned_images}` 分别表达图片发现是否完整、最终 Markdown 中的公式图片数、本地图片数、本次返回 ImageContent 数。零公式且发现不完整不表示没有公式图片；图片交付也不表示调用方已实际阅读。未请求图片不降低全文获取验收。
+
+## 独立补充材料任务
 
 `fetch_paper` / `batch_fetch` 的 `target` 默认为 `paper`，`target="supplementary"` 只获取材料，不执行正文充分性检查、正文组装或正文 PDF fallback。范围由 provider 定义，含明确补充区、Source Data、Extended Data 和多媒体；普通数据仓库链接不自动纳入。正文付费不影响公开材料发现，不支持的来源返回 `not_supported`，保留已解析 DOI、trace 和来源；已知 provider、stage="supplementary"、target 和 retryable=false 明确返回，未执行 route 为 null。缺少实际 DOI 是 identity unavailable，只有显式冲突或实际/期望 DOI 均存在且不同时是 mismatch。正文的 `asset_profile`、引用和 token 选项不影响材料范围。
 
@@ -173,7 +183,7 @@ batch_fetch(
 | `markdown_output_dir` | `null` |
 | `markdown_filename` | `null` |
 
-`strategy.asset_profile=null` 使用最终 provider route 的默认范围；显式 none 禁用正文任务的资产解析和下载。`include_refs=null` 在 full_text 时等同 all，正整数 max_tokens 时等同 top10。
+`strategy.asset_profile=null` 使用最终 provider route 的默认范围；显式 none 禁用资产下载；已获取 HTML/XML 及现有提取结果仍保留图片索引。`include_refs=null` 在 full_text 时等同 all，正整数 max_tokens 时等同 top10。
 
 ## Fetch Notes
 

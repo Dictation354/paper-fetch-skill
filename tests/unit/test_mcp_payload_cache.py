@@ -200,6 +200,12 @@ class McpPayloadCacheTests(unittest.TestCase):
                 "idempotent_hint": False,
                 "open_world_hint": True,
             },
+            "fetch_assets": {
+                "read_only_hint": False,
+                "destructive_hint": False,
+                "idempotent_hint": False,
+                "open_world_hint": True,
+            },
             "batch_fetch": {
                 "read_only_hint": False,
                 "destructive_hint": False,

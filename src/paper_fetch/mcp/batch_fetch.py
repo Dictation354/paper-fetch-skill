@@ -38,6 +38,7 @@ from ..models import (
 )
 from ..reason_codes import RATE_LIMITED
 from ..runtime import RuntimeContext
+from ..targeted_assets import image_delivery
 from ..workflow.batch_routing import (
     expected_doi_from_query,
     initial_provider_lane,
@@ -486,6 +487,7 @@ def _compact_run_payload(
                 envelope.article.metadata if envelope.article else envelope.metadata
             )
             item["metadata"] = asdict(metadata) if metadata else None
+            item["image_delivery"] = image_delivery(envelope)
             attach_content_ref(item, (content_refs or {}).get(key))
         else:
             attach_content_ref(item, (content_refs or {}).get(key))

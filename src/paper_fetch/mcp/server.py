@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 from collections.abc import Mapping
+from contextlib import asynccontextmanager
 from pathlib import Path
 from typing import Literal, Any
 
@@ -19,6 +20,7 @@ from ..version import __version__
 from ._deps import default_mcp_deps
 from ._instructions import fetch_tool_description, server_instructions
 from .batch import batch_check_tool_async, batch_resolve_tool_async
+from .assets import fetch_assets_tool
 from .batch_fetch import batch_fetch_tool_async
 from .browser_preflight import browser_preflight_tool_async
 from .cache_payloads import (
@@ -47,6 +49,7 @@ from .schemas import (
     CacheDetailInput,
     ConcurrencyInput,
     FetchPresetInput,
+    InlineImageBudgetToolInput,
     ContentViewInput,
     ContentOffsetInput,
     ContentMaxCharsInput,
@@ -163,8 +166,17 @@ def _browser_preflight_annotations() -> ToolAnnotations:
 def build_server() -> PaperFetchMCPServer:
     deps = default_mcp_deps()
     content_store = ContentStore()
+
+    @asynccontextmanager
+    async def lifespan(_server):
+        try:
+            yield {}
+        finally:
+            content_store.close()
+
     server = PaperFetchMCPServer(
         name="paper-fetch",
+        lifespan=lifespan,
         instructions=server_instructions(),
         version=__version__,
     )
@@ -200,6 +212,38 @@ def build_server() -> PaperFetchMCPServer:
             authors=authors,
             year=year,
             deps=deps,
+        )
+
+    @server.tool(
+        name="fetch_assets",
+        description=(
+            "Fetch only selected images from a paper handle. Choose exactly one of asset_ids, "
+            "recognized urls, or kind='formula'. Reuses local files and session seeds. Returns "
+            "temporary paths owned by the handle (removed on expiry/eviction/shutdown), or "
+            "archives into output_dir. At most 3 ImageContent blocks, 2 MiB each and 8 MiB "
+            "total; omitted images keep paths and reasons. Delivery does not mean reading."
+        ),
+        annotations=_fetch_annotations(),
+        structured_output=False,
+    )
+    async def fetch_assets(
+        content_id: str,
+        asset_ids: list[str] | None = None,
+        urls: list[str] | None = None,
+        kind: Literal["formula"] | None = None,
+        output_dir: str | None = None,
+        inline_image_budget: InlineImageBudgetToolInput | None = None,
+        overwrite: bool = False,
+    ) -> CallToolResult:
+        return await fetch_assets_tool(
+            content_store,
+            content_id=content_id,
+            asset_ids=asset_ids,
+            urls=urls,
+            kind=kind,
+            output_dir=output_dir,
+            inline_image_budget=inline_image_budget,
+            overwrite=overwrite,
         )
 
     @server.tool(

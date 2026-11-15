@@ -305,6 +305,59 @@ InlineImageBudgetToolInput: TypeAlias = Annotated[
 ]
 
 
+class FetchAssetsRequest(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+    content_id: str = Field(min_length=1)
+    asset_ids: list[str] | None = Field(default=None, min_length=1)
+    urls: list[str] | None = Field(default=None, min_length=1)
+    kind: Literal["formula"] | None = None
+    output_dir: str | None = None
+    inline_image_budget: InlineImageBudgetToolInput | None = None
+    overwrite: bool = False
+
+    @field_validator("asset_ids", "urls")
+    @classmethod
+    def nonempty_items(cls, value: list[str] | None) -> list[str] | None:
+        if value is not None and any(not item.strip() for item in value):
+            raise ValueError("Asset selectors must not contain blank strings.")
+        return value
+
+    @field_validator("urls")
+    @classmethod
+    def image_urls(cls, value: list[str] | None) -> list[str] | None:
+        for url in value or []:
+            parsed = urlparse(url)
+            if (
+                parsed.scheme not in {"http", "https"}
+                or not parsed.hostname
+                or parsed.username is not None
+                or parsed.password is not None
+            ):
+                raise ValueError(
+                    "urls must contain HTTP(S) image URLs without embedded credentials."
+                )
+        return value
+
+    @field_validator("output_dir")
+    @classmethod
+    def nonempty_output(cls, value: str | None) -> str | None:
+        if value is not None and not value.strip():
+            raise ValueError("output_dir must not be blank.")
+        return value
+
+    @model_validator(mode="after")
+    def one_selector(self) -> FetchAssetsRequest:
+        if (
+            sum(value is not None for value in (self.asset_ids, self.urls, self.kind))
+            != 1
+        ):
+            raise ValueError(
+                "Choose exactly one selector: asset_ids, urls, or kind='formula'."
+            )
+        return self
+
+
 class ResolvePaperRequest(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
@@ -847,6 +900,7 @@ class BrowserPreflightRequest(BaseModel):
 MCP_TOOL_REQUEST_MODELS: dict[str, type[BaseModel]] = {
     "resolve_paper": ResolvePaperRequest,
     "fetch_paper": FetchPaperToolRequest,
+    "fetch_assets": FetchAssetsRequest,
     "list_cached": ListCachedRequest,
     "get_cached": GetCachedRequest,
     "batch_resolve": BatchResolveRequest,

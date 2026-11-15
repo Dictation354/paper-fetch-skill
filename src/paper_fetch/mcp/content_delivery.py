@@ -9,6 +9,7 @@ from typing import Any
 
 from ..markdown.math import markdown_code_spans, markdown_math_spans
 from ..models import FetchEnvelope, TRUNCATION_WARNING
+from ..targeted_assets import context_from_envelope, image_delivery
 from ..workflow.acceptance import evaluate_fetch_acceptance
 from ..workflow.types import effective_asset_profile
 from .acceptance_payloads import expected_doi_from_query
@@ -105,7 +106,14 @@ def content_snapshot(
     truncated = TRUNCATION_WARNING in warnings
     diagnostics["render_truncated"] = truncated
     views["diagnostics"] = json_view(diagnostics)
-    return ContentSnapshot(views=views, render_truncated=truncated)
+    state = (
+        context_from_envelope(envelope).fork() if envelope.target == "paper" else None
+    )
+    if state is not None:
+        diagnostics["image_index"] = state.assets
+        diagnostics["image_discovery_complete"] = state.discovery_complete
+        views["diagnostics"] = json_view(diagnostics)
+    return ContentSnapshot(views=views, render_truncated=truncated, asset_context=state)
 
 
 def attach_content_ref(
@@ -159,6 +167,7 @@ def handle_payload(
     ]
     if envelope.supplementary is not None:
         result["supplementary"] = supplementary_summary(envelope.supplementary)
+    result["image_delivery"] = image_delivery(envelope)
     attach_content_ref(result, ref)
     return result
 

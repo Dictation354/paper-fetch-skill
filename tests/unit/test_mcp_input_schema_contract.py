@@ -29,6 +29,7 @@ def test_public_tool_schemas_are_valid_and_forbid_unknown_fields() -> None:
         "batch_resolve",
         "browser_preflight",
         "fetch_paper",
+        "fetch_assets",
         "get_cached",
         "list_cached",
         "provider_status",

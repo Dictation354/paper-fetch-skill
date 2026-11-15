@@ -25,10 +25,28 @@ CONTENT_STORE_CAPACITY_EXCEEDED = "content_store_capacity_exceeded"
 class ContentSnapshot:
     views: Mapping[str, str]
     render_truncated: bool = False
+    asset_context: Any = None
 
     @property
     def size(self) -> int:
-        return sum(len(value.encode("utf-8")) for value in self.views.values())
+        return sum(len(value.encode("utf-8")) for value in self.views.values()) + (
+            self.asset_context.size if self.asset_context is not None else 0
+        )
+
+
+class _SnapshotCache(TLRUCache):
+    def expire(self, time=None):
+        expired = super().expire(time)
+        for _, snapshot in expired:
+            if snapshot.asset_context is not None:
+                snapshot.asset_context.close()
+        return expired
+
+    def popitem(self):
+        key, snapshot = super().popitem()
+        if snapshot.asset_context is not None:
+            snapshot.asset_context.close()
+        return key, snapshot
 
 
 class ContentStore:
@@ -43,7 +61,7 @@ class ContentStore:
     ) -> None:
         self.idle_ttl = idle_ttl
         self._lock = threading.RLock()
-        self._cache: TLRUCache[str, ContentSnapshot] = TLRUCache(
+        self._cache: TLRUCache[str, ContentSnapshot] = _SnapshotCache(
             maxsize=max_bytes,
             ttu=lambda _key, _value, now: now + idle_ttl,
             timer=timer,
@@ -61,7 +79,9 @@ class ContentStore:
             for snapshot in snapshots:
                 # Take an immutable-in-practice copy of the caller's mapping.
                 snapshot = ContentSnapshot(
-                    dict(snapshot.views), snapshot.render_truncated
+                    dict(snapshot.views),
+                    snapshot.render_truncated,
+                    snapshot.asset_context,
                 )
                 if snapshot.size > remaining:
                     refs.append(None)
@@ -85,8 +105,30 @@ class ContentStore:
                 self._cache[content_id] = snapshot
         return refs
 
+    def get_asset_context(self, content_id: str):
+        with self._lock:
+            self._cache.expire()
+            snapshot = self._cache.get(content_id)
+            if snapshot is None:
+                return None
+            del self._cache[content_id]
+            self._cache[content_id] = snapshot
+            return snapshot.asset_context
+
+    def close(self) -> None:
+        with self._lock:
+            snapshots = [
+                *self._cache.values(),
+                *(value for _, value in self._cache.expire()),
+            ]
+            for snapshot in snapshots:
+                if snapshot.asset_context is not None:
+                    snapshot.asset_context.close()
+            self._cache.clear()
+
     def read(self, request: ReadContentRequest) -> dict[str, Any]:
         with self._lock:
+            self._cache.expire()
             snapshot = self._cache.get(request.content_id)
             if snapshot is None:
                 return self._error(
@@ -97,6 +139,13 @@ class ContentStore:
             del self._cache[request.content_id]
             self._cache[request.content_id] = snapshot
             value = snapshot.views.get(request.view)
+            if request.view == "diagnostics" and snapshot.asset_context is not None:
+                details = json.loads(value or "{}")
+                details["image_index"] = snapshot.asset_context.assets
+                details["image_discovery_complete"] = snapshot.asset_context.discovery_complete
+                if snapshot.asset_context.results:
+                    details["asset_fetches"] = snapshot.asset_context.results
+                value = json_view(details)
             if value is None:
                 return self._error(
                     "content_view_unavailable",
@@ -135,6 +184,7 @@ class ContentStore:
         if page["status"] != "ok":
             return page
         with self._lock:
+            self._cache.expire()
             snapshot = self._cache.get(request.content_id)
             if snapshot is None:
                 return self._error(

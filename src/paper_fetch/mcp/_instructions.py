@@ -89,7 +89,12 @@ def server_instructions() -> str:
         "unless explicitly overridden; they may add bounded ImageContent. Runtime preparation "
         "is independent of paper writes and on demand. Business payloads: schema_version=4 "
         "only in structuredContent; request article explicitly. Saved files appear in output_artifacts; "
-        "body content stays in content_ref/read_content; navigate_content locates headings/literal matches. Judge acquisition by acceptance, text by "
+        "body content stays in content_ref/read_content (max_chars 1-20000; continue at next_offset); "
+        "navigate_content locates headings/literal matches. Use sufficient navigation context directly, "
+        "otherwise read the relevant ranges. image_delivery distinguishes formula images, local files "
+        "and returned images. Reuse files, then fetch_assets for selected IDs/recognized URLs or kind=formula. "
+        "Forward ImageContent explicitly or read returned paths with the host reader; verify formulas and "
+        "figure values from the actual expression/image. Judge acquisition by acceptance, text by "
         "pagination/truncation, reading completion by consumed portions. Provider/platform facts: "
         f"{PROVIDER_CATALOG_RESOURCE_URI}. Respect access controls and manual-auth boundaries."
     )

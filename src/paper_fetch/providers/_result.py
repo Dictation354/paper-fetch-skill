@@ -171,6 +171,15 @@ def assemble_provider_result(
             downloaded_assets=downloaded_assets,
             asset_failures=asset_failures,
         )
+        from ..targeted_assets import capture_asset_context
+
+        capture_asset_context(
+            article,
+            raw_payload.content,
+            provider=client.name,
+            client=client,
+            context=context,
+        )
         if not policy.snapshot_results_before_assets:
             warnings = list(raw_payload.warnings)
             trace = list(raw_payload.trace)

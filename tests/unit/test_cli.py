@@ -171,7 +171,7 @@ class CliTests(unittest.TestCase):
         help_text = paper_fetch_cli.build_parser().format_help()
         normalized_help = " ".join(help_text.split())
 
-        self.assertIn("{fetch,auth,browser-preflight,doctor,update}", help_text)
+        self.assertIn("{fetch,fetch-assets,auth,browser-preflight,doctor,update}", help_text)
         self.assertIn("Fetch one paper or a query-file batch.", help_text)
         self.assertIn("Open a headed browser", help_text)
         self.assertIn("Live-check browser-backed providers", help_text)
@@ -182,7 +182,7 @@ class CliTests(unittest.TestCase):
             (): (
                 "usage: paper-fetch",
                 "commands:",
-                "{fetch,auth,browser-preflight,doctor,update}",
+                "{fetch,fetch-assets,auth,browser-preflight,doctor,update}",
                 "Doctor performs static, network-free checks.",
             ),
             ("fetch",): (

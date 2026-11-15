@@ -1899,6 +1899,23 @@ def build_parser(
         _command_parser=fetch_parser,
     )
 
+    assets_parser = subparsers.add_parser(
+        "fetch-assets",
+        help="Fetch selected paper images without fetching the full text.",
+    )
+    assets_parser.add_argument(
+        "--query", required=True, help="Known paper DOI, URL, or title."
+    )
+    selectors = assets_parser.add_mutually_exclusive_group(required=True)
+    selectors.add_argument("--asset-id", action="append", dest="asset_ids")
+    selectors.add_argument("--asset-url", action="append", dest="urls")
+    selectors.add_argument("--kind", choices=["formula"])
+    assets_parser.add_argument(
+        "--output-dir", help="Archive images; otherwise retain files in system temp."
+    )
+    assets_parser.add_argument("--overwrite", action="store_true")
+    assets_parser.set_defaults(_command_handler=_run_fetch_assets_namespace)
+
     auth_parser = subparsers.add_parser(
         "auth",
         help="Open a headed browser and save provider authentication state.",
@@ -1941,6 +1958,33 @@ def build_parser(
     )
     update_parser.set_defaults(_command_handler=_run_update_namespace)
     return parser
+
+
+def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
+    from .targeted_assets import context_from_query, fetch_selected_assets
+
+    try:
+        with RuntimeContext(artifact_mode="none") as runtime:
+            state = context_from_query(args.query, runtime)
+            state.cleanup_temporary = args.output_dir is not None
+            payload = fetch_selected_assets(
+                state,
+                asset_ids=args.asset_ids,
+                urls=args.urls,
+                kind=args.kind,
+                output_dir=args.output_dir,
+                overwrite=args.overwrite,
+                runtime=runtime,
+            )
+            # CLI files outlive this process so a host reader can open the paths.
+            payload["query"] = args.query
+            sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+            return 0 if payload["status"] == "ok" else 1
+    except Exception as error:
+        payload = _error_payload(error)
+        sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+        sys.stderr.write(str(error) + "\n")
+        return exit_code_for_error(error)
 
 
 def _run_update_namespace(_args: argparse.Namespace) -> int:

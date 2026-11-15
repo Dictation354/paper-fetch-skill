@@ -4805,6 +4805,19 @@
         "scope": "Typed date/relationship codecs and weighted one-to-one identity matching on minimal upstream records.",
         "reason": "只验证最小元数据片段和评分契约，不宣称整篇内容覆盖。"
       }
+    },
+    "tests/unit/test_targeted_assets.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "最小 HTML/XML 与下载边界 mock：定向图片选择、句柄资源和图片交付契约。",
+        "reason": "仅验证定向补图机制，不证明出版社正文完整性。"
+      }
+    },
+    "tests/integration/test_targeted_assets.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "真实 MCP stdio 与 CLI 子进程，使用最小来源页和图片 transport double 验证资产交付、文件生命周期和 JSON。"
+      }
     }
   }
 }

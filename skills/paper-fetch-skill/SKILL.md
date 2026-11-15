@@ -25,7 +25,7 @@ text(page);
 // 后续使用 page.next_offset 继续，直到读完任务所需范围。
 ```
 
-`callTool` 代表宿主实际工具调用。只消费 structuredContent。以 acceptance 区分全文、摘要和元数据；工具取得全文不代表调用方已读完。多篇用 `batch_fetch(queries=[...], preset="temporary_read", concurrency=4)`，逐项保存身份、句柄和阅读进度。追问先用 `navigate_content(content_id, mode="search", query="关键词")` 或 `mode="headings"` 定位，再用 `read_content` 读取原文范围。完整错误、材料清单和来源按需读取 `view="diagnostics"`。
+`callTool` 代表宿主实际工具调用。业务载荷消费 structuredContent；图片内容需显式转发 ImageContent。`read_content.max_chars` 为 **1–20000**，示例使用 6000，按 `next_offset` 续读。以 acceptance 区分全文、摘要和元数据；工具取得全文不代表调用方已读完。多篇用 `batch_fetch(queries=[...], preset="temporary_read", concurrency=4)`，逐项保存身份、句柄和阅读进度。追问可用 `navigate_content(content_id, mode="search", query="关键词")` 或 `mode="headings"` 定位。导航上下文已完整覆盖所需证据时可直接使用；不足时用 `read_content` 补读对应范围，局部问题不要求通读全文。完整错误、材料清单和来源按需读取 `view="diagnostics"`。
 
 CLI 临时阅读：`paper-fetch fetch --preset temporary_read --query "10.1186/1471-2105-11-421" --progress jsonl`。入口不可用时按[入口发现](references/cli-workflow.md#窄-fallback)查受管 wrapper。
 
@@ -33,9 +33,10 @@ CLI 临时阅读：`paper-fetch fetch --preset temporary_read --query "10.1186/1
 
 - 沿用用户明确的路径、资产范围、执行面和覆盖授权；预设只补全未指定项。需用户决定的情形见[工作流](references/workflow.md#blocking-白名单)。
 - 用户显式指定的文件或来源优先；否则先复用有效会话句柄，再查合格本地正文，最后获取。允许缓存且 scope 明确时直接 `fetch_paper(prefer_cache=true)`；临时阅读不为查询缓存而要求目录。
-- 阅读用 默认 `preset="temporary_read"`，多篇用批量句柄，再以 `read_content` 分段消费；需要 article 时显式请求。只消费 structuredContent 中的业务载荷，保存身份、句柄和进度供追问复用，示例见[正文读取](references/tool-contract.md#正文句柄与读取)。区分工具取得全文、返回片段和调用方已读完；仅探测不自动升级为抓取。
+- 阅读用 默认 `preset="temporary_read"`，多篇用批量句柄，再以 `read_content` 分段消费；需要 article 时显式请求。消费 structuredContent 中的业务载荷，保存身份、句柄和进度供追问复用，示例见[正文读取](references/tool-contract.md#正文句柄与读取)。区分工具取得全文、返回片段和调用方已读完；仅探测不自动升级为抓取。
 - 工具按需准备浏览器 runtime；配置、状态和安装问题见[环境说明](references/environment.md)。实际返回 `challenge` / `auth_required` 时进入人工认证，遵守登录、验证码、付费墙和访问控制边界。
 - 消费统一 acceptance，并核对任务要求的响应、资产和实际文件。保留来源及影响任务的降级。
+- 核对公式定义、符号或图内数值时，实际读取相关表达或图片；图片链接、图注及周围文字不能替代公式原文核验。`image_delivery` 区分最终正文中的公式图片、本地文件和本次返回的图片内容，交付不代表已阅读。优先复用已有图片，再用 `fetch_assets(content_id, asset_ids=[...])`、`urls=[...]` 或 `kind="formula"` 定向补取，详见[图件交接](references/reading-handoff.md#指定图件)。
 - PDF 正文以现有转换器输出为边界，不清洗或修复内容。
 
 ## 按需参考

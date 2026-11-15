@@ -42,6 +42,20 @@ paper-fetch fetch --preset temporary_read --query "10.1186/1471-2105-11-421" \
 
 上面的命令是临时阅读：正文写 stdout，不归档论文文件。CLI 仍会准备显式的 `./.paper-fetch-tmp` 工作目录，MCP 临时阅读预设可关闭论文产物与 fetch cache 写入，浏览器运行时仍可能写入状态。CLI 没有 cache-only / `prefer_cache` 选项，也没有与 `batch_check(mode="metadata")` 等价的低成本批量 probe。
 
+## 定向补取图片
+
+```bash
+paper-fetch fetch-assets --query "10.1038/nclimate1907" --kind formula
+paper-fetch fetch-assets --query "论文DOI" --asset-url "已识别的图片URL" --output-dir ./images
+paper-fetch fetch-assets --query "论文DOI" --asset-id img_... --asset-id img_...
+```
+
+`--asset-id` 和 `--asset-url` 可重复，二者与 `--kind formula` 互斥，必须选择一种。URL 必须属于该论文来源页识别的图片资产；选择先于下载，单图请求不会下载其他图片，公式组只选已识别的公式图片。使用现有 provider 提取、候选 URL、下载校验和浏览器认证恢复，只读取资产来源页，不重新获取整篇正文或转换 PDF。
+
+stdout 输出完整 JSON，含 query、doi、provider、source_url、discovery_complete、temporary 和逐项 results，保留成功路径及失败原因；诊断写 stderr。全部成功退出 0，部分或全部失败为非零。未指定目录时图片留在系统临时目录，命令结束后仍可读取，由调用方用完后清理；指定 `--output-dir` 时归档，已有不同文件须 `--overwrite` 才覆盖。图片下载成功不等于调用方已实际阅读，核对公式或图内数值需将路径交给宿主 reader。
+
+MCP 对应 `fetch_assets(content_id, asset_ids?|urls?|kind="formula", ...)`，默认临时文件随句柄或服务回收；返回路径以及有界 ImageContent，详见[工具契约](../skills/paper-fetch-skill/references/tool-contract.md#定向补图与图片交付)。
+
 ## 独立补充材料任务
 
 ```bash

@@ -451,7 +451,7 @@ def build_fetch_envelope(
         else None
     )
     metadata = article.metadata if "metadata" in modes else None
-    return FetchEnvelope(
+    envelope = FetchEnvelope(
         doi=article.doi,
         source=public_source_for_article(article),
         acquisition=article.acquisition,
@@ -463,3 +463,6 @@ def build_fetch_envelope(
         metadata=metadata,
         diagnostic_artifacts=[dict(item) for item in (diagnostic_artifacts or [])],
     )
+    if hasattr(article, "_asset_context"):
+        envelope.__dict__["_asset_context"] = article._asset_context
+    return envelope
