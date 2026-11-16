@@ -62,6 +62,7 @@ def test_macos_empty_system_proxy_is_direct_in_browser_and_gpu_probe(monkeypatch
     monkeypatch.setattr(camoufox_options.subprocess, "run", query)
     original = {"webgl.force-enabled": True}
     original_probe = mock.Mock(return_value=("Apple", "Apple GPU"))
+    original_probe._paper_fetch_proxy_startup = False
     rendering = SimpleNamespace(GPU_PREFS=original, _host_gpu=original_probe)
     monkeypatch.setitem(sys.modules, "camoufox.host_rendering", rendering)
     startup_env = {"CAMOU_PREFS_1": '{"network.proxy.type":0}'}
