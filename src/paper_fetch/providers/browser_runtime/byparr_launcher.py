@@ -16,6 +16,8 @@ from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 
 def main():
+    import faulthandler
+    faulthandler.dump_traceback_later(25, repeat=True)
     settings = json.loads(Path(sys.argv[1]).read_text())
     root = Path(settings["work_dir"])
     while not (root / "start").exists():

@@ -142,7 +142,7 @@ class ByparrManager:
             child_env = {**os.environ, "PYTHONDONTWRITEBYTECODE": "1"}
             with log.open("wb") as output:
                 self.process = subprocess.Popen[bytes](
-                    [sys.executable, "-I", "-S", str(launcher), str(settings)],
+                    [sys.executable, "-I", "-S", "-u", str(launcher), str(settings)],
                     stdout=output,
                     stderr=output,
                     env=child_env,
@@ -187,6 +187,7 @@ class ByparrManager:
             if self.work_dir is not None:
                 import traceback
 
+                print((self.work_dir / "service.log").read_text(errors="replace")[-10000:], file=sys.stderr, flush=True)
                 (self.work_dir / "service.log").write_text(
                     getattr(exc, "stack", None) or traceback.format_exc()
                 )
