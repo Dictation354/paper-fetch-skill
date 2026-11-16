@@ -6,7 +6,7 @@ permissions:
 jobs:
   diagnose:
     runs-on: macos-15
-    timeout-minutes: 10
+    timeout-minutes: 18
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-python-deps
@@ -51,3 +51,8 @@ jobs:
                   os.killpg(process.pid, signal.SIGKILL)
                   process.wait()
           DIAG
+      - name: Verify shared browser contracts with beta.42
+        env:
+          PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr
+          PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
+        run: PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
