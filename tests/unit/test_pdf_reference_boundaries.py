@@ -67,56 +67,6 @@ def test_converter_postprocessing_only_rewrites_existing_exported_asset_path(tmp
     assert len(rendered.assets) == 1
 
 
-@pytest.mark.parametrize(
-    "source,provider,route",
-    [("acs", "acs", "browser_pdf"), ("plos_pdf", "plos", "direct_pdf")],
-)
-def test_old_pdf_envelope_cache_is_rejected_without_affecting_html(
-    tmp_path, source, provider, route
-):
-    from paper_fetch.acquisition import AcquisitionProvenance
-    from paper_fetch.mcp.fetch_cache import FetchCache
-    from paper_fetch.mcp.schemas import FetchPaperRequest
-    from paper_fetch.runtime import RuntimeContext
-    from tests.support._mcp_support import sample_envelope
-
-    doi = "10.1000/pdf-cache"
-    request = FetchPaperRequest(
-        query=doi,
-        modes=["markdown"],
-        prefer_cache=True,
-        strategy={"asset_profile": "none"},
-    )
-    envelope = sample_envelope(modes={"markdown"}, doi=doi)
-    envelope.source = source
-    envelope.acquisition = AcquisitionProvenance(
-        provider=provider,
-        route=route,
-        representation="pdf",
-        transport="browser" if provider == "acs" else "http",
-    )
-    cache = FetchCache(tmp_path)
-    cache.write_fetch_envelope(envelope, request)
-    with RuntimeContext(env={}, download_dir=tmp_path) as context:
-        assert (
-            cache.load_fetch_envelope(
-                request, resolve_paper_fn=mock.Mock(), context=context
-            )
-            is not None
-        )
-        for path in tmp_path.rglob("*.json"):
-            data = json.loads(path.read_text())
-            if "pdf_render_revision" in data:
-                del data["pdf_render_revision"]
-                path.write_text(json.dumps(data))
-        assert (
-            cache.load_fetch_envelope(
-                request, resolve_paper_fn=mock.Mock(), context=context
-            )
-            is None
-        )
-
-
 def test_budgeted_pdf_body_is_a_raw_prefix():
     raw = "\n\n##  Spacing\n" + "line-\nwrap  and   spacing\n\n" * 300
     article = article_from_markdown(

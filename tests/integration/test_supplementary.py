@@ -1,6 +1,5 @@
 """CLI/MCP supplementary outputs with real HTTP, downloads and index files."""
 
-import asyncio
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
 from pathlib import Path
@@ -9,8 +8,6 @@ import threading
 import pytest
 
 from paper_fetch import cli, service
-from paper_fetch.mcp.fetch_tool import fetch_paper_payload
-from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.resolve.query import ResolvedQuery
@@ -126,6 +123,8 @@ def test_cli_single_downloads_only_material_and_writes_index(
                 metadata["doi"],
                 "--target",
                 "supplementary",
+                "--preset",
+                "archive",
                 "--output-dir",
                 str(tmp_path),
                 "--format",
@@ -166,6 +165,8 @@ def test_cli_empty_single_and_batch_return_nonzero_with_empty_lists(
                 DOI,
                 "--target",
                 "supplementary",
+                "--preset",
+                "archive",
                 "--output-dir",
                 str(single),
                 "--format",
@@ -188,6 +189,8 @@ def test_cli_empty_single_and_batch_return_nonzero_with_empty_lists(
                 str(queries),
                 "--target",
                 "supplementary",
+                "--preset",
+                "archive",
                 "--output-dir",
                 str(batch),
                 "--format",
@@ -198,66 +201,6 @@ def test_cli_empty_single_and_batch_return_nonzero_with_empty_lists(
     )
     record = json.loads((batch / "batch-results.jsonl").read_text().splitlines()[0])
     assert record["acceptance"]["fetch"]["code"] == "no_result"
-
-
-@pytest.mark.parametrize(
-    "supplementary_server", ["springer", "oxfordacademic"], indirect=True
-)
-def test_mcp_single_and_batch_keep_structured_materials(supplementary_server, tmp_path):
-    metadata, calls = supplementary_server
-    payload = fetch_paper_payload(
-        query=metadata["doi"],
-        target="supplementary",
-        preset="archive",
-        download_dir=tmp_path / "single",
-        save_markdown=True,
-        env={},
-    )
-    assert payload["status"] == "ok"
-    assert payload["acceptance"]["overall"] == "complete"
-    assert payload["acceptance"]["content_requested"] is False
-    assert payload["supplementary"]["asset_count"] == 1
-    assert len(list((tmp_path / "single").glob("*_supplementary.md"))) == 1
-    result = asyncio.run(
-        batch_fetch_tool_async(
-            queries=[metadata["doi"]],
-            target="supplementary",
-            preset="archive",
-            download_dir=tmp_path / "batch",
-            env={},
-        )
-    )
-    payload = result.structured_content
-    assert not result.is_error
-    assert payload["results"][0]["target"] == "supplementary"
-    assert payload["results"][0]["acceptance"]["overall"] == "complete"
-    assert payload["results"][0]["supplementary"]["asset_count"] == 1
-    assert sorted(calls) == ["/article", "/article", "/support.csv", "/support.csv"]
-
-
-@pytest.mark.parametrize("options", [{"no_download": True}, {"artifact_mode": "none"}])
-def test_mcp_discovery_without_archival(supplementary_server, tmp_path, options):
-    _, calls = supplementary_server
-    result = fetch_paper_payload(
-        query=DOI, target="supplementary", download_dir=tmp_path, env={}, **options
-    )
-    assert result["status"] == "ok"
-    assert result["acceptance"]["overall"] == "degraded"
-    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
-    from paper_fetch.mcp.schemas import ReadContentRequest
-
-    diagnostic = json.loads(
-        DEFAULT_CONTENT_STORE.read(
-            ReadContentRequest(
-                content_id=result["content_ref"]["content_id"],
-                view="diagnostics",
-                max_chars=20000,
-            )
-        )["text"]
-    )
-    assert diagnostic["supplementary"]["assets"][0]["archive_state"] == "not_archived"
-    assert calls == ["/article"]
-    assert not list(tmp_path.rglob("*.csv"))
 
 
 @pytest.mark.browser

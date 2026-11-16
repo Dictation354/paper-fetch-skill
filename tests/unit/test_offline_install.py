@@ -35,64 +35,6 @@ class OfflineInstallTests(unittest.TestCase):
             linux_script,
         )
 
-    def test_windows_installer_helper_uses_camoufox_runtime_smoke(self) -> None:
-        script = WINDOWS_INSTALLER_HELPER.read_text(encoding="utf-8")
-
-        self.assertIn("function Get-CodexConfigPath", script)
-        self.assertIn("$env:CODEX_HOME", script)
-        self.assertEqual(script.count("$configPath = Get-CodexConfigPath"), 2)
-        self.assertNotIn("[switch]$ProbeLaunch", script)
-        self.assertIn("[string]$LogPath", script)
-        self.assertIn("Invoke-InstallerStep", script)
-        self.assertIn('Invoke-InstallerStep -Name "smoke checks"', script)
-        self.assertIn("non-critical warning", script)
-        self.assertIn("exit 2", script)
-        self.assertIn("exit 0", script)
-        self.assertIn("function Invoke-RuntimePythonScript", script)
-        self.assertIn("[System.IO.Path]::GetTempPath()", script)
-        self.assertIn("[System.Guid]::NewGuid()", script)
-        self.assertIn(
-            "Remove-Item -LiteralPath $scriptPath -Force -ErrorAction SilentlyContinue",
-            script,
-        )
-        self.assertIn("Invoke-RuntimePythonScript -Script @'", script)
-        self.assertIn("Invoke-RuntimePythonScript -Script $browserRuntimeCheck", script)
-        self.assertIn("verify_package_installation", script)
-        self.assertIn("verify_package_installation", script)
-        self.assertIn("import playwright", script)
-        self.assertIn(
-            "from paper_fetch.providers.browser_runtime.byparr_engine import "
-            "verify_package_installation",
-            script,
-        )
-        self.assertNotIn('assert hasattr(camoufox, "launch")', script)
-        self.assertNotIn("PAPER_FETCH_BROWSER_USER_AGENT", script)
-        self.assertIn("$OfflineEnvKeys = @(", script)
-        self.assertIn("$manifest.mcp.env_keys", script)
-        self.assertIn('Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }', script)
-        self.assertIn("Format-DotenvAssignment", script)
-        self.assertNotIn("CLOAKBROWSER_", script)
-        self.assertNotIn("probe-launch", script)
-        self.assertIn("MATHML_TO_LATEX_NODE_BIN", script)
-        self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", script)
-        self.assertIn("runtime/node/node.exe", script)
-        self.assertIn('PAPER_FETCH_BROWSER_HEADLESS = "true"', script)
-        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)
-        self.assertIn('@("--version")', script)
-        self.assertIn(
-            '$args += @("--", $McpName, $python, "-X", "utf8", "-m", "paper_fetch.mcp.server")',
-            script,
-        )
-        self.assertIn('$args = @("mcp", "add", "-s", "user")', script)
-        self.assertIn('"remove", "-s", "user"', script)
-        self.assertNotIn('"-X", "utf8", "-c"', script)
-        self.assertNotIn("sessions.list", script)
-        self.assertNotIn("playwright.sync_api", script)
-        self.assertIn("function Test-SkillBundleIntegrity", script)
-        self.assertIn('Join-Path $InstallRoot "scripts/skill_integrity.py"', script)
-        self.assertIn('Name "bundled skill integrity" -Required', script)
-        self.assertIn('Name "skill installation" -Required', script)
-
     def test_windows_inno_installer_preserves_user_payload_and_restores_offline_env_before_helper(
         self,
     ) -> None:
@@ -169,15 +111,15 @@ class OfflineInstallTests(unittest.TestCase):
             (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
         )
 
-        mcp_env_keys = manifest["mcp"]["env_keys"]
+        mcp_env_keys = manifest["runtime"]["env_keys"]
         self.assertEqual(manifest["schema_version"], 1)
         self.assertEqual(manifest["skill"], {"name": "paper-fetch-skill"})
         self.assertNotIn("env_sets", manifest)
         self.assertIn("MATHML_TO_LATEX_NODE_BIN", mcp_env_keys)
         self.assertIn("PAPER_FETCH_IMAGE_TOOLS_DIR", mcp_env_keys)
         installer = LINUX_INSTALLER.read_text(encoding="utf-8")
-        self.assertIn('SHELL_ENV_KEYS=("${MCP_ENV_KEYS[@]}")', installer)
-        self.assertIn('ACTIVATE_ENV_KEYS=("${MCP_ENV_KEYS[@]}")', installer)
+        self.assertIn('SHELL_ENV_KEYS=("${RUNTIME_ENV_KEYS[@]}")', installer)
+        self.assertIn('ACTIVATE_ENV_KEYS=("${RUNTIME_ENV_KEYS[@]}")', installer)
         self.assertIn('[ "$key" != "PAPER_FETCH_ENV_FILE" ]', installer)
 
     def test_windows_offline_build_writes_default_mathml_node_env(self) -> None:

@@ -10,12 +10,11 @@ Set-StrictMode -Version Latest
 $ErrorActionPreference = "Stop"
 
 $SkillName = "paper-fetch-skill"
-$McpName = "paper-fetch"
 $OfflineManagedBegin = "# BEGIN paper-fetch offline managed"
 $OfflineManagedEnd = "# END paper-fetch offline managed"
 $CodexManagedBegin = "# BEGIN paper-fetch installer managed"
 $CodexManagedEnd = "# END paper-fetch installer managed"
-$McpEnvKeys = @(
+$RuntimeEnvKeys = @(
     "PYTHONUTF8",
     "PYTHONIOENCODING",
     "PAPER_FETCH_ENV_FILE",
@@ -26,7 +25,7 @@ $McpEnvKeys = @(
     "PLAYWRIGHT_NODEJS_PATH",
     "PAPER_FETCH_BROWSER_HEADLESS"
 )
-$OfflineEnvKeys = @($McpEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" })
+$OfflineEnvKeys = @($RuntimeEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" })
 $InstallerWarnings = New-Object System.Collections.Generic.List[string]
 
 if ([string]::IsNullOrWhiteSpace($InstallRoot)) {
@@ -42,33 +41,31 @@ function Import-InstallerManifest {
     }
     $manifest = Get-Content -LiteralPath $manifestPath -Raw | ConvertFrom-Json
     $script:SkillName = [string]$manifest.skill.name
-    $script:McpName = [string]$manifest.mcp.name
     $script:OfflineManagedBegin = [string]$manifest.managed_blocks.offline.begin
     $script:OfflineManagedEnd = [string]$manifest.managed_blocks.offline.end
     $script:CodexManagedBegin = [string]$manifest.managed_blocks.codex.begin
     $script:CodexManagedEnd = [string]$manifest.managed_blocks.codex.end
-    $script:McpEnvKeys = @($manifest.mcp.env_keys | ForEach-Object { [string]$_ })
-    Normalize-McpEnvKeys
+    $script:RuntimeEnvKeys = @($manifest.runtime.env_keys | ForEach-Object { [string]$_ })
+    Normalize-RuntimeEnvKeys
     $script:OfflineEnvKeys = @(
-        $script:McpEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }
+        $script:RuntimeEnvKeys | Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }
     )
 
     if ([string]::IsNullOrWhiteSpace($script:SkillName) -or
-        [string]::IsNullOrWhiteSpace($script:McpName) -or
         [string]::IsNullOrWhiteSpace($script:OfflineManagedBegin) -or
         [string]::IsNullOrWhiteSpace($script:OfflineManagedEnd) -or
         [string]::IsNullOrWhiteSpace($script:CodexManagedBegin) -or
         [string]::IsNullOrWhiteSpace($script:CodexManagedEnd) -or
-        $script:McpEnvKeys.Count -eq 0 -or
+        $script:RuntimeEnvKeys.Count -eq 0 -or
         $script:OfflineEnvKeys.Count -eq 0) {
         throw "installer manifest is missing required installer constants."
     }
 }
 
-function Normalize-McpEnvKeys {
+function Normalize-RuntimeEnvKeys {
     $filtered = New-Object System.Collections.Generic.List[string]
     $seenHeadless = $false
-    foreach ($key in $script:McpEnvKeys) {
+    foreach ($key in $script:RuntimeEnvKeys) {
         if ($key -in @(
             "PLAYWRIGHT_BROWSERS_PATH"
         )) {
@@ -82,7 +79,7 @@ function Normalize-McpEnvKeys {
     if (-not $seenHeadless) {
         $filtered.Add("PAPER_FETCH_BROWSER_HEADLESS")
     }
-    $script:McpEnvKeys = $filtered.ToArray()
+    $script:RuntimeEnvKeys = $filtered.ToArray()
 }
 
 Import-InstallerManifest
@@ -199,7 +196,7 @@ function ConvertTo-TomlString {
     return '"' + $escaped + '"'
 }
 
-function Get-McpEnv {
+function Get-RuntimeEnv {
     $offlineEnv = Join-Path $InstallRoot "offline.env"
     $downloads = Join-Path $InstallRoot "downloads"
     $formulaTools = Join-Path $InstallRoot "formula-tools"
@@ -217,9 +214,9 @@ function Get-McpEnv {
         PAPER_FETCH_BROWSER_HEADLESS = "true"
     }
     $ordered = [ordered]@{}
-    foreach ($key in $McpEnvKeys) {
+    foreach ($key in $RuntimeEnvKeys) {
         if (-not $values.ContainsKey($key)) {
-            throw "Unknown MCP env key in installer manifest: $key"
+            throw "Unknown runtime env key in installer manifest: $key"
         }
         $ordered[$key] = $values[$key]
     }
@@ -227,7 +224,7 @@ function Get-McpEnv {
 }
 
 function Set-ProcessRuntimeEnv {
-    foreach ($entry in (Get-McpEnv).GetEnumerator()) {
+    foreach ($entry in (Get-RuntimeEnv).GetEnumerator()) {
         [Environment]::SetEnvironmentVariable($entry.Key, [string]$entry.Value, "Process")
     }
 }
@@ -235,7 +232,7 @@ function Set-ProcessRuntimeEnv {
 function Get-OfflineEnvValue {
     param([string]$Name)
 
-    $envMap = Get-McpEnv
+    $envMap = Get-RuntimeEnv
     if (-not $envMap.Contains($Name)) {
         throw "Unknown offline env key in installer manifest: $Name"
     }
@@ -416,235 +413,9 @@ function Backup-File {
     }
 }
 
-function Remove-CodexMcpTables {
-    param([string[]]$Lines)
-
-    $result = New-Object System.Collections.Generic.List[string]
-    $skip = $false
-    $mcpTablePattern = '^\s*\[mcp_servers\.' + [regex]::Escape($McpName) + '(?:\..*)?\]\s*$'
-    foreach ($line in $Lines) {
-        if ($line -eq $CodexManagedBegin) {
-            $skip = $true
-            continue
-        }
-        if ($line -eq $CodexManagedEnd) {
-            $skip = $false
-            continue
-        }
-        if ($line -match $mcpTablePattern) {
-            $skip = $true
-            continue
-        }
-        if ($skip -and $line -match '^\s*\[') {
-            $skip = $false
-        }
-        if (-not $skip) {
-            $result.Add($line)
-        }
-    }
-    return $result.ToArray()
-}
-
-function Get-CodexConfigPath {
-    $activeHome = if (-not [string]::IsNullOrEmpty($env:CODEX_HOME)) { $env:CODEX_HOME } else { Join-Path $env:USERPROFILE ".codex" }
-    return Join-Path $activeHome "config.toml"
-}
-
-function Write-CodexConfigToml {
-    $configPath = Get-CodexConfigPath
-    $codexHome = Split-Path -Parent $configPath
-    New-Item -ItemType Directory -Force -Path $codexHome | Out-Null
-    Backup-File $configPath
-
-    $existing = @()
-    if (Test-Path -LiteralPath $configPath -PathType Leaf) {
-        $existing = Get-Content -LiteralPath $configPath
-    }
-    $lines = New-Object System.Collections.Generic.List[string]
-    foreach ($line in (Remove-CodexMcpTables $existing)) {
-        $lines.Add($line)
-    }
-
-    $python = ConvertTo-FullPath (Get-RuntimePython)
-    $lines.Add("")
-    $lines.Add($CodexManagedBegin)
-    $lines.Add("[mcp_servers.$McpName]")
-    $lines.Add("command = $(ConvertTo-TomlString $python)")
-    $lines.Add('args = ["-X", "utf8", "-m", "paper_fetch.mcp.server"]')
-    $lines.Add("")
-    $lines.Add("[mcp_servers.$McpName.env]")
-    foreach ($entry in (Get-McpEnv).GetEnumerator()) {
-        $lines.Add("$($entry.Key) = $(ConvertTo-TomlString ([string]$entry.Value))")
-    }
-    $lines.Add($CodexManagedEnd)
-    [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.UTF8Encoding]::new($false))
-    Write-Log "Updated Codex MCP config at $configPath"
-}
-
-function Remove-CodexConfigToml {
-    $configPath = Get-CodexConfigPath
-    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
-        return
-    }
-    Backup-File $configPath
-    $lines = Remove-CodexMcpTables (Get-Content -LiteralPath $configPath)
-    [System.IO.File]::WriteAllLines($configPath, $lines, [System.Text.UTF8Encoding]::new($false))
-    Write-Log "Removed Codex MCP config from $configPath"
-}
-
-function Register-CodexMcp {
-    $codex = Get-Command codex -ErrorAction SilentlyContinue
-    $python = ConvertTo-FullPath (Get-RuntimePython)
-    if ($null -ne $codex) {
-        try {
-            Write-Log "Registering Codex MCP server '$McpName' with Codex CLI ($(Get-CodexConfigPath))"
-            Invoke-Checked -FilePath $codex.Source -Arguments @("mcp", "remove", $McpName) -IgnoreFailure
-            $args = @("mcp", "add")
-            foreach ($entry in (Get-McpEnv).GetEnumerator()) {
-                $args += @("--env", "$($entry.Key)=$($entry.Value)")
-            }
-            $args += @($McpName, "--", $python, "-X", "utf8", "-m", "paper_fetch.mcp.server")
-            Invoke-Checked -FilePath $codex.Source -Arguments $args
-            return
-        } catch {
-            Write-Warn "Codex CLI MCP registration failed; falling back to config.toml. $($_.Exception.Message)"
-        }
-    }
-    Write-CodexConfigToml
-}
-
-function Unregister-CodexMcp {
-    Write-Log "Removing Codex MCP config from $(Get-CodexConfigPath)"
-    $codex = Get-Command codex -ErrorAction SilentlyContinue
-    if ($null -ne $codex) {
-        Invoke-Checked -FilePath $codex.Source -Arguments @("mcp", "remove", $McpName) -IgnoreFailure
-    }
-    Remove-CodexConfigToml
-}
-
-function Register-ClaudeMcp {
-    $claude = Get-Command claude -ErrorAction SilentlyContinue
-    if ($null -eq $claude) {
-        Write-Log "Claude CLI not found; installed the skill and skipped Claude MCP registration"
-        return
-    }
-
-    try {
-        $python = ConvertTo-FullPath (Get-RuntimePython)
-        Write-Log "Registering Claude MCP server '$McpName' with Claude CLI"
-        Invoke-Checked -FilePath $claude.Source -Arguments @("mcp", "remove", "-s", "user", $McpName) -IgnoreFailure
-        $args = @("mcp", "add", "-s", "user")
-        foreach ($entry in (Get-McpEnv).GetEnumerator()) {
-            $args += @("-e", "$($entry.Key)=$($entry.Value)")
-        }
-        $args += @("--", $McpName, $python, "-X", "utf8", "-m", "paper_fetch.mcp.server")
-        Invoke-Checked -FilePath $claude.Source -Arguments $args
-    } catch {
-        Write-Warn "Claude MCP registration failed and was skipped. $($_.Exception.Message)"
-    }
-}
-
-function Unregister-ClaudeMcp {
-    $claude = Get-Command claude -ErrorAction SilentlyContinue
-    if ($null -ne $claude) {
-        Invoke-Checked -FilePath $claude.Source -Arguments @("mcp", "remove", "-s", "user", $McpName) -IgnoreFailure
-    }
-}
-
-function Register-AntigravityMcp {
-    # Antigravity has no `mcp add` CLI; it reads servers from mcp_config.json.
-    $agHome = Get-AntigravityHome
-    $configPath = Join-Path $agHome "mcp_config.json"
-    New-Item -ItemType Directory -Force -Path $agHome | Out-Null
-    Backup-File $configPath
-
-    $python = ConvertTo-FullPath (Get-RuntimePython)
-    $envMap = [ordered]@{}
-    foreach ($entry in (Get-McpEnv).GetEnumerator()) {
-        $envMap[$entry.Key] = [string]$entry.Value
-    }
-    $envJson = ($envMap | ConvertTo-Json -Compress -Depth 5)
-
-    [Environment]::SetEnvironmentVariable("PF_CONFIG_PATH", (ConvertTo-FullPath $configPath), "Process")
-    [Environment]::SetEnvironmentVariable("PF_MCP_NAME", $McpName, "Process")
-    [Environment]::SetEnvironmentVariable("PF_PYTHON_BIN", $python, "Process")
-    [Environment]::SetEnvironmentVariable("PF_ENV_JSON", $envJson, "Process")
-    try {
-        Write-Log "Registering Antigravity MCP server '$McpName' in $configPath"
-        Invoke-RuntimePythonScript -Script @'
-import json
-import os
-from pathlib import Path
-
-path = Path(os.environ["PF_CONFIG_PATH"])
-name = os.environ["PF_MCP_NAME"]
-
-data = {}
-if path.exists():
-    try:
-        data = json.loads(path.read_text(encoding="utf-8") or "{}")
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"Existing {path} is not valid JSON: {exc}")
-if not isinstance(data, dict):
-    raise SystemExit(f"Existing {path} must contain a JSON object")
-
-servers = data.setdefault("mcpServers", {})
-if not isinstance(servers, dict):
-    raise SystemExit(f"'mcpServers' in {path} must be a JSON object")
-
-env = json.loads(os.environ.get("PF_ENV_JSON") or "{}")
-entry = {
-    "command": os.environ["PF_PYTHON_BIN"],
-    "args": ["-X", "utf8", "-m", "paper_fetch.mcp.server"],
-}
-if env:
-    entry["env"] = env
-
-servers[name] = entry
-path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-'@
-    } finally {
-        foreach ($key in @("PF_CONFIG_PATH", "PF_MCP_NAME", "PF_PYTHON_BIN", "PF_ENV_JSON")) {
-            [Environment]::SetEnvironmentVariable($key, $null, "Process")
-        }
-    }
-    Write-Log "Updated Antigravity MCP config at $configPath"
-}
-
-function Unregister-AntigravityMcp {
-    $configPath = Join-Path (Get-AntigravityHome) "mcp_config.json"
-    if (-not (Test-Path -LiteralPath $configPath -PathType Leaf)) {
-        return
-    }
-    Backup-File $configPath
-
-    [Environment]::SetEnvironmentVariable("PF_CONFIG_PATH", (ConvertTo-FullPath $configPath), "Process")
-    [Environment]::SetEnvironmentVariable("PF_MCP_NAME", $McpName, "Process")
-    try {
-        Invoke-RuntimePythonScript -Script @'
-import json
-import os
-from pathlib import Path
-
-path = Path(os.environ["PF_CONFIG_PATH"])
-name = os.environ["PF_MCP_NAME"]
-try:
-    data = json.loads(path.read_text(encoding="utf-8") or "{}")
-except json.JSONDecodeError:
-    raise SystemExit(0)
-if not isinstance(data, dict):
-    raise SystemExit(0)
-servers = data.get("mcpServers")
-if isinstance(servers, dict):
-    servers.pop(name, None)
-path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-'@
-    } finally {
-        foreach ($key in @("PF_CONFIG_PATH", "PF_MCP_NAME")) {
-            [Environment]::SetEnvironmentVariable($key, $null, "Process")
-        }
-    }
-    Write-Log "Removed Antigravity MCP config from $configPath"
+function Remove-LegacyIntegration {
+    $migration = Join-Path $InstallRoot "scripts/cleanup_legacy_mcp.py"
+    Invoke-Checked -FilePath (Join-Path $InstallRoot "runtime/python.exe") -Arguments @("-X", "utf8", $migration, "--install-root", $InstallRoot)
 }
 
 function Invoke-SmokeChecks {
@@ -657,7 +428,7 @@ function Invoke-SmokeChecks {
     Write-Log "Running bundled Python smoke checks"
     Invoke-RuntimePythonScript -Script @'
 import paper_fetch
-from paper_fetch.mcp.fetch_tool import provider_status_payload
+from paper_fetch.diagnostics import provider_status_payload
 
 payload = provider_status_payload()
 assert "providers" in payload
@@ -695,9 +466,7 @@ switch ($Action) {
         Invoke-InstallerStep -Name "offline.env update" -Required -ScriptBlock { Write-ManagedEnvFile }
         Invoke-InstallerStep -Name "skill installation" -Required -ScriptBlock { Install-Skills }
         Invoke-InstallerStep -Name "PATH update" -ScriptBlock { Add-UserPathEntry (Join-Path $InstallRoot "bin") }
-        Invoke-InstallerStep -Name "Codex MCP registration" -ScriptBlock { Register-CodexMcp }
-        Invoke-InstallerStep -Name "Claude MCP registration" -ScriptBlock { Register-ClaudeMcp }
-        Invoke-InstallerStep -Name "Antigravity MCP registration" -ScriptBlock { Register-AntigravityMcp }
+        Invoke-InstallerStep -Name "legacy integration cleanup" -Required -ScriptBlock { Remove-LegacyIntegration }
         if (-not $SkipSmoke) {
             Invoke-InstallerStep -Name "smoke checks" -ScriptBlock { Invoke-SmokeChecks }
         }
@@ -707,11 +476,9 @@ switch ($Action) {
         }
     }
     "Uninstall" {
+        Remove-LegacyIntegration
         try { Remove-Skills } catch { Write-Warn $_.Exception.Message }
         try { Remove-UserPathEntry (Join-Path $InstallRoot "bin") } catch { Write-Warn $_.Exception.Message }
-        try { Unregister-CodexMcp } catch { Write-Warn $_.Exception.Message }
-        try { Unregister-ClaudeMcp } catch { Write-Warn $_.Exception.Message }
-        try { Unregister-AntigravityMcp } catch { Write-Warn $_.Exception.Message }
     }
     "Smoke" {
         $bundledSkill = Join-Path (Join-Path $InstallRoot "skills") $SkillName

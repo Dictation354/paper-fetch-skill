@@ -5,11 +5,11 @@ import json
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
-from paper_fetch.mcp.fetch_cache import (
+from paper_fetch.delivery.fetch_cache import (
     envelope_from_payload,
     payload_from_envelope,
 )
-from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.models import (
     AcquisitionProvenance,
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,

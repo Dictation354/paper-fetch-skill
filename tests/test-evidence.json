@@ -838,82 +838,6 @@
         }
       }
     },
-    "tests/unit/test_mcp_async_tools.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp async tools",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_batch_fetch.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp batch fetch",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_batch_resolve_payloads.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp batch resolve payloads",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_browser_preflight.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp browser preflight",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_cache_compact.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp cache compact",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_fetch_acceptance.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp fetch acceptance",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_input_schema_contract.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp input schema contract",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_logging_inline_images.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp logging inline images",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_payload_cache.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp payload cache",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
-    "tests/unit/test_mcp_provider_catalog.py": {
-      "default": {
-        "kind": "infrastructure",
-        "scope": "mcp provider catalog"
-      }
-    },
-    "tests/unit/test_mcp_server.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp server",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
     "tests/unit/test_mdpi_provider.py": {
       "default": {
         "kind": "mechanism",
@@ -1661,13 +1585,6 @@
         "scope": "Canonical build reuse preserves caller isolation and route distinctions."
       }
     },
-    "tests/integration/test_mcp_integration.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "mcp integration",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
     "tests/integration/test_offline_evidence.py": {
       "default": {
         "kind": "infrastructure",
@@ -1695,7 +1612,7 @@
     "tests/integration/test_paywall_stop_replay.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "Real subscription HTML stops fetching and still lands CLI/MCP reports.",
+        "scope": "Real subscription HTML stops fetching and still lands CLI reports.",
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
@@ -1728,7 +1645,7 @@
     "tests/integration/test_tandf_lst_replay.py": {
       "default": {
         "kind": "mechanism",
-        "scope": "Replay the publisher HTML through provider, service, CLI and MCP outputs.",
+        "scope": "Replay the publisher HTML through provider, service, CLI and CLI outputs.",
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
@@ -3610,19 +3527,7 @@
     "tests/live/test_live_ieee_protected.py": {
       "default": {
         "kind": "content",
-        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
-        "primary": [
-          "live_response"
-        ],
-        "auxiliary": [
-          "snapshot"
-        ]
-      }
-    },
-    "tests/live/test_live_mcp.py": {
-      "default": {
-        "kind": "content",
-        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
+        "scope": "在线 provider/CLI 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
         "primary": [
           "live_response"
         ],
@@ -3634,7 +3539,7 @@
     "tests/live/test_live_publishers.py": {
       "default": {
         "kind": "content",
-        "scope": "在线 provider/MCP 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
+        "scope": "在线 provider/CLI 身份、正文可用性与资产契约；本轮仅收集分类，不作离线原文覆盖。",
         "primary": [
           "live_response"
         ],
@@ -4586,7 +4491,7 @@
     "tests/integration/test_supplementary.py": {
       "default": {
         "kind": "infrastructure",
-        "scope": "Real local HTTP requests and attachment downloads through CLI/MCP single and batch outputs."
+        "scope": "Real local HTTP requests and attachment downloads through CLI single and batch outputs."
       }
     },
     "tests/unit/test_supplementary_elsevier_auth.py": {
@@ -4771,20 +4676,6 @@
         "reason": "最小契约场景、独立 Python 进程或真实线程配合边界 mock；不使用论文内容作为完整性证据。"
       }
     },
-    "tests/unit/test_mcp_content_delivery.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "MCP content snapshot pagination, lifecycle, alias sharing and presentation contracts",
-        "reason": "Synthetic text and mocked fetch boundaries isolate delivery from provider acquisition."
-      }
-    },
-    "tests/integration/test_mcp_content_delivery.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "Real MCP stdio delivery, snapshot files and cache reuse",
-        "reason": "Synthetic provider data exercises actual process, pagination, persistence and saved-file contracts."
-      }
-    },
     "tests/unit/test_native_models.py": {
       "default": {
         "kind": "mechanism",
@@ -4816,7 +4707,7 @@
     "tests/integration/test_targeted_assets.py": {
       "default": {
         "kind": "infrastructure",
-        "scope": "真实 MCP stdio 与 CLI 子进程，使用最小来源页和图片 transport double 验证资产交付、文件生命周期和 JSON。"
+        "scope": "真实 CLI 子进程，使用最小来源页和图片 transport double 验证资产交付、文件生命周期和 JSON。"
       }
     },
     "tests/unit/test_browser_dependencies.py": {
@@ -4830,6 +4721,75 @@
         "kind": "mechanism",
         "scope": "camoufox backend",
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_delivery_batch_resolve_payloads.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "delivery batch resolve payloads",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_delivery_cache_compact.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "delivery cache compact",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_delivery_logging_inline_images.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "delivery logging inline images",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_delivery_payload_cache.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "delivery payload cache",
+        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
+      }
+    },
+    "tests/unit/test_delivery_provider_catalog.py": {
+      "default": {
+        "kind": "infrastructure",
+        "scope": "delivery provider catalog"
+      }
+    },
+    "tests/unit/test_delivery_content_delivery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "MCP content snapshot pagination, lifecycle, alias sharing and presentation contracts",
+        "reason": "Synthetic text and mocked fetch boundaries isolate delivery from provider acquisition."
+      }
+    },
+    "tests/unit/test_cli_delivery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "CLI file receipts, profile admission and legacy migration contracts",
+        "reason": "最小片段和边界 mock 验证当前迁移行为。"
+      }
+    },
+    "tests/integration/test_profile_admission.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "CLI file receipts, profile admission and legacy migration contracts",
+        "reason": "最小片段和边界 mock 验证当前迁移行为。"
+      }
+    },
+    "tests/unit/test_legacy_cleanup.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "CLI file receipts, profile admission and legacy migration contracts",
+        "reason": "最小片段和边界 mock 验证当前迁移行为。"
+      }
+    },
+    "tests/integration/test_cli_receipts.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Real CLI subprocess persistence and cancellation with synthetic acquisition",
+        "reason": "验证文件回执和逐项交付，不证明出版社抓取质量。"
       }
     }
   }

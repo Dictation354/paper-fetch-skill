@@ -115,7 +115,7 @@ jobs:
           PYTHONPATH=src uv run python -m pytest -q \
             tests/unit/test_acquisition_provenance.py \
             tests/unit/test_config.py \
-            tests/unit/test_mcp_fetch_acceptance.py \
+            tests/unit/test_cli_delivery.py \
             tests/unit/test_models_render.py \
             tests/unit/test_provider_catalog.py \
             tests/unit/test_table_grid.py
@@ -136,7 +136,7 @@ jobs:
               "$smoke_python" -m pip install "$wheel"
             fi
             "$smoke_python" -c "import paper_fetch; print(paper_fetch.__version__)"
-            "$smoke_python" -c "from importlib.metadata import version; from paper_fetch.mcp.server import build_server; assert version('mcp').split('.', 1)[0] == '2'; assert build_server().name == 'paper-fetch'"
+            "$smoke_python" -c "import importlib.util; import paper_fetch.cli; assert importlib.util.find_spec('mcp') is None"
             "$smoke_python" -m paper_fetch.cli --version
             if [ "$install_kind" = "full" ]; then
               "$smoke_python" -c "import fitz, lxml, playwright, pymupdf4llm, trafilatura; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()"

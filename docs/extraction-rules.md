@@ -268,7 +268,7 @@ arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及�
 - 如果违反，用户只会看到笼统的 `asset_download_failure`，看不出是 full-size 被拦截、preview 可接受、supplementary 失败，还是图片真的缺失。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json`](../tests/fixtures/golden_criteria/_scenarios/asset_download_diagnostics/article_payload.json)
-  - `_scenarios/asset_download_diagnostics` 锁住 MCP / model payload 的成功下载诊断字段；它不是 DOI 级真实 replay。
+  - `_scenarios/asset_download_diagnostics` 锁住 CLI / model payload 的成功下载诊断字段；它不是 DOI 级真实 replay。
 - 边界说明：
   - 本规则只要求诊断字段不丢失，不要求所有 provider 使用同一种远端下载实现。
   - Springer/Nature 的 `media.springernature.com/lwNN/springer-static/...` 与对应 `/full/...` 是同一远端对象的尺寸 rendition；provider 必须复用既有 full-size URL promotion 规则规范化 retry identity。成功的 `/full/...` 本地记录覆盖预览别名后只能进入一次逻辑资产验收，不能让无本地路径的 `lwNN` 别名另计为 `missing_path` 或 `asset_remote_only`；真正没有对应本地记录的远端资产仍按失败处理。
@@ -320,7 +320,7 @@ arXiv 旧版单个 `ltx_personname` 内可以包含多个逗号分隔姓名及�
 - 边界说明：
   - 每个分组独立聚合质量状态；`exact` / `normalized` 成功组不计降级，只有真实失败并退成列表的组才各计一次 `table_fallback_count` / `table_layout_degraded_count`。
   - 某个分组失败不能拖累其它可安全展开的分组；失败组仍须保留全部可读 cell 文本。
-  - 本规则只扩展内部 XML 表格 IR 和渲染，不改变 Article、CLI 或 MCP 的公共数据结构。
+  - 本规则只扩展内部 XML 表格 IR 和渲染，不改变 Article、CLI 或 CLI 的公共数据结构。
 
 <a id="rule-html-list-marker-rendering"></a>
 ### HTML 列表必须只保留一层 Markdown marker
@@ -671,7 +671,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - real XML 锁住 `ce:e-component` 主干；两个 scenario XML 分别锁住 supplementary display 的正文排除行为，以及无 display 时已下载 supplementary 文件仍进入 Supplementary Materials。
   - 这条规则不是说 supplementary 资产不能下载或不能暴露给用户。
   - 它约束的是“补充材料不属于正文主体”，不是限制 supplementary 元数据的存在。
-  - 当 `asset_profile='all'` 时，supplementary 应作为独立文件资产下载并落到 `section="supplementary"` / `download_tier="supplementary_file"`；它不属于正文 figure inline 逻辑，也不会进入 MCP inline `ImageContent`。
+  - 当 `asset_profile='all'` 时，supplementary 应作为独立文件资产下载并落到 `section="supplementary"` / `download_tier="supplementary_file"`；它不属于正文 figure inline 逻辑。
 
 <a id="rule-elsevier-appendix-context"></a>
 ### Appendix figure/table 保持 appendix 语境，不因正文交叉引用被提到正文

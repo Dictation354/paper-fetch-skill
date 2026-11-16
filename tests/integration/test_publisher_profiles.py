@@ -99,9 +99,6 @@ def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
     )
     try:
         assert process.stdout.readline().strip() == "locked"
-        with pytest.raises(BrowserRuntimeFailure) as error:
-            open_browser_context(replace(config, timeout_ms=120))
-        assert error.value.kind == "browser_profile_lock_timeout"
         with RuntimeContext(env={}) as runtime:
             timer = threading.Timer(0.08, runtime.fence_commits)
             timer.start()

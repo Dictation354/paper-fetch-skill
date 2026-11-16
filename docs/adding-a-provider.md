@@ -14,7 +14,7 @@
 
 Provider 必须返回现有 typed payload，并让统一 acceptance 决定最终结果。route/source trace 必须来自真实 acquisition；失败应使用现有 `ProviderFailure` 和 reason code。不要在 provider 内复制全局 retry、cache、browser、asset、acceptance 或 Markdown 渲染状态机。
 
-catalog 只加载固定清单的静态定义并检查冲突。runtime bundle 在 provider 首次使用时加载和缓存，registry 隔离选中实现的导入或 client 构造失败；`provider_bundle()`、模块的 `PROVIDER_BUNDLE` 和原 client 导入入口继续可用。`ProviderSpec` 只保存可描述的 catalog 事实，运行 callable 不进入 MCP provider catalog 或其它公开序列化 payload。
+catalog 只加载固定清单的静态定义并检查冲突。runtime bundle 在 provider 首次使用时加载和缓存，registry 隔离选中实现的导入或 client 构造失败；`provider_bundle()`、模块的 `PROVIDER_BUNDLE` 和原 client 导入入口继续可用。`ProviderSpec` 只保存可描述的 catalog 事实，运行 callable 不进入 CLI provider catalog 或其它公开序列化 payload。
 
 访问受限、challenge、正文不足、非 PDF wrapper 和身份不匹配必须 fail closed。敏感 header、cookie、token、带签名 URL 和本地凭据路径不得写入 fixture、artifact 或诊断文本。
 

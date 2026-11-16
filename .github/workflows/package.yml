@@ -69,10 +69,10 @@ jobs:
           import sys
 
           import paper_fetch
-          from paper_fetch.mcp.server import build_server
+          from paper_fetch.cli import build_parser
 
           assert paper_fetch.__version__
-          assert build_server().name == "paper-fetch"
+          assert build_parser().prog == "paper-fetch"
           formula = resources.files("paper_fetch.resources.formula")
           manifest = resources.files("paper_fetch.resources.manifest")
           assert formula.joinpath("mathml_to_latex_cli.mjs").is_file()

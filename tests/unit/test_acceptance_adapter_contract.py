@@ -6,13 +6,13 @@ from pathlib import Path
 from unittest import mock
 from paper_fetch import cli
 from paper_fetch.manifest import ManifestRecord, build_manifest_record
-from paper_fetch.mcp.fetch_cache import (
+from paper_fetch.delivery.fetch_cache import (
     FetchCache,
     envelope_from_payload,
     payload_from_envelope,
     request_cache_payload,
 )
-from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.models import AssetQualitySummary, SemanticLosses
 from paper_fetch.tracing import TraceContext, trace_event
 from paper_fetch.workflow.acceptance import (

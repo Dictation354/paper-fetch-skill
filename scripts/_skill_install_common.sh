@@ -3,14 +3,10 @@
 
 PF_REPO_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
 PF_SKILL_NAME="${PF_SKILL_NAME:-paper-fetch-skill}"
-PF_MCP_NAME="${PF_MCP_NAME:-paper-fetch}"
 PF_SCOPE="user"
 PF_UNINSTALL=0
 PF_CHECK=0
 PF_CHECK_CONFLICT=0
-PF_REGISTER_MCP=0
-PF_MCP_ENV_FILE=""
-PF_MCP_SCOPE=""
 
 pf_skill_log() { printf '\033[1;34m==>\033[0m %s\n' "$*"; }
 pf_skill_warn() { printf '\033[1;33m!!\033[0m %s\n' "$*" >&2; }
@@ -56,29 +52,6 @@ pf_skill_parse_args() {
             --user)
                 PF_SCOPE="user"
                 ;;
-            --register-mcp)
-                PF_REGISTER_MCP=1
-                PF_CHECK_CONFLICT=1
-                ;;
-            --env-file)
-                shift
-                [ "$#" -gt 0 ] || pf_skill_die "--env-file requires a path"
-                PF_MCP_ENV_FILE="$1"
-                PF_CHECK_CONFLICT=1
-                ;;
-            --mcp-name)
-                shift
-                [ "$#" -gt 0 ] || pf_skill_die "--mcp-name requires a value"
-                PF_MCP_NAME="$1"
-                PF_CHECK_CONFLICT=1
-                ;;
-            --mcp-scope)
-                [ "${PF_SUPPORTS_MCP_SCOPE:-0}" = "1" ] || pf_skill_die "--mcp-scope is only supported by the Claude installer"
-                shift
-                [ "$#" -gt 0 ] || pf_skill_die "--mcp-scope requires one of: local, user, project"
-                PF_MCP_SCOPE="$1"
-                PF_CHECK_CONFLICT=1
-                ;;
             --uninstall)
                 PF_UNINSTALL=1
                 PF_CHECK_CONFLICT=1
@@ -104,26 +77,10 @@ pf_skill_validate_args() {
     PF_SOURCE_SKILL_DIR="$PF_REPO_DIR/skills/$PF_SKILL_NAME"
 
     if [ "$PF_CHECK" = "1" ] && [ "$PF_CHECK_CONFLICT" = "1" ]; then
-        pf_skill_usage_error "--check is read-only and cannot be combined with uninstall or MCP mutation options"
+        pf_skill_usage_error "--check is read-only and cannot be combined with uninstall"
     fi
 
-    if [ "${PF_SUPPORTS_MCP_SCOPE:-0}" = "1" ]; then
-        if [ -z "$PF_MCP_SCOPE" ]; then
-            if [ "$PF_SCOPE" = "project" ]; then
-                PF_MCP_SCOPE="project"
-            else
-                PF_MCP_SCOPE="user"
-            fi
-        fi
-        case "$PF_MCP_SCOPE" in
-            local|user|project) ;;
-            *) pf_skill_die "Unsupported --mcp-scope '$PF_MCP_SCOPE' (expected: local, user, project)" ;;
-        esac
-    fi
 
-    if [ -n "$PF_MCP_ENV_FILE" ]; then
-        PF_MCP_ENV_FILE="$(pf_skill_abspath "$PF_MCP_ENV_FILE")"
-    fi
 }
 
 pf_skill_install_package() {
@@ -164,9 +121,7 @@ pf_skill_verify_installed_bundle() {
 pf_skill_unregister_if_requested() {
     rm -rf "$PF_SKILL_DIR"
     pf_skill_log "Removed $PF_SKILL_DIR"
-    if [ "$PF_REGISTER_MCP" = "1" ]; then
-        pf_host_unregister_mcp
-    fi
+
 }
 
 pf_skill_print_next_steps() {
@@ -177,12 +132,8 @@ pf_skill_print_next_steps() {
     echo
     echo "Next steps:"
     echo "  1. Restart $PF_RESTART_NAME so it rescans installed skills."
-    if [ "$PF_REGISTER_MCP" = "1" ]; then
-        pf_host_print_registered_note
-    else
-        echo "  2. If you want MCP tools too, rerun with --register-mcp or register a stdio server that runs 'paper-fetch-mcp'."
-    fi
-    echo "  3. If you fetch Elsevier papers, request a key at https://dev.elsevier.com/ and set ELSEVIER_API_KEY in ~/.config/paper-fetch/.env or pass --env-file when registering MCP."
+    echo "  2. Read a paper: paper-fetch fetch --query DOI"
+    echo "  3. For Elsevier request a key at https://dev.elsevier.com/ and set ELSEVIER_API_KEY in ~/.config/paper-fetch/.env."
     echo "  4. Re-run this installer after upgrading the repo to install the new package build."
     echo "  5. Verify the active skill without changing anything: $0$check_scope --check"
 }
@@ -196,6 +147,7 @@ pf_skill_main() {
         exit $?
     fi
 
+    PYTHONDONTWRITEBYTECODE=1 python3 "$PF_REPO_DIR/src/paper_fetch/legacy_cleanup.py" --project "$PF_REPO_DIR" --install-root "$PF_REPO_DIR"
     if [ "$PF_UNINSTALL" = "1" ]; then
         pf_skill_unregister_if_requested
         exit 0
@@ -205,9 +157,7 @@ pf_skill_main() {
     pf_skill_copy_static_skill
     pf_skill_verify_installed_bundle
 
-    if [ "$PF_REGISTER_MCP" = "1" ]; then
-        pf_host_register_mcp
-    fi
+
 
     pf_skill_print_next_steps
 }

@@ -8,11 +8,11 @@ from paper_fetch.capability_scope import (
     CapabilityScopeBuilder,
     capability_scopes_for_query,
 )
-from paper_fetch.mcp.fetch_cache import FetchCache, PUBLIC_CREDENTIAL_SCOPE
-from paper_fetch.mcp.cache_payloads import list_cached_payload
-from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.delivery.fetch_cache import FetchCache, PUBLIC_CREDENTIAL_SCOPE
+from paper_fetch.delivery.cache_inspection import list_cached_payload
+from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
-from tests.support._mcp_support import sample_envelope
+from tests.support.fetch_fixtures import sample_envelope
 
 
 DOI = "10.1000/variant-selection"
@@ -171,7 +171,7 @@ def test_index_entry_without_scope_fails_closed(
     FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
         sample_envelope(modes={"markdown"}, doi=DOI), request
     )
-    index_path = tmp_path / ".paper-fetch-mcp-cache.json"
+    index_path = tmp_path / ".paper-fetch-cache.json"
     index = json.loads(index_path.read_text(encoding="utf-8"))
     for entry in index["entries"]:
         entry.pop("credential_scope", None)

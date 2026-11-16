@@ -197,6 +197,9 @@ def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
     assert {artifact.kind for artifact in record.output_artifacts} == {
         "primary_json",
         "saved_markdown",
+        "reading_markdown",
+        "image_index",
+        "diagnostic",
     }
     for artifact in record.output_artifacts:
         body = Path(artifact.path).read_bytes()
@@ -205,7 +208,7 @@ def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
         assert artifact.verification_status == "verified"
 
 
-def test_single_default_does_not_write_a_manifest(tmp_path: Path) -> None:
+def test_single_default_writes_an_independent_manifest(tmp_path: Path) -> None:
     with (
         mock.patch.object(cli, "build_runtime_env", return_value={}),
         mock.patch.object(cli, "resolve_cli_download_dir", return_value=tmp_path),
@@ -227,7 +230,7 @@ def test_single_default_does_not_write_a_manifest(tmp_path: Path) -> None:
         )
 
     assert exit_code == 0
-    write_manifest.assert_not_called()
+    assert write_manifest.call_count == 1
 
 
 def test_single_manifest_cannot_overwrite_the_primary_output(tmp_path: Path) -> None:
@@ -298,12 +301,12 @@ def test_single_failure_manifest_preserves_exit_code_and_null_output_fields(
         )
 
     record = parse_manifest_record(json.loads(manifest_path.read_text("utf-8")))
-    assert exit_code == 3
+    assert exit_code == 1
     assert json.loads(stderr.getvalue())["status"] == "no_access"
     assert record.record_status == ManifestRecordStatus.FAILED
     assert record.error is not None
     assert record.error.status == "no_access"
-    assert record.output_artifacts == ()
+    assert all(a.kind == "diagnostic" for a in record.output_artifacts)
     assert record.warnings == ("license required",)
 
 
@@ -638,7 +641,7 @@ def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
         parse_manifest_record(json.loads(line))
         for line in results_path.read_text("utf-8").splitlines()
     ]
-    assert exit_code == 4
+    assert exit_code == 1
     assert calls == ["10.1016/first"]
     assert len(records) == 3
     assert {record.index for record in records} == {1, 2, 3}
@@ -706,7 +709,7 @@ def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
         parse_manifest_record(json.loads(line))
         for line in results_path.read_text("utf-8").splitlines()
     ]
-    assert exit_code == 4
+    assert exit_code == 1
     assert calls == ["10.1016/limited", "10.1111/continues"]
     assert [record.error.status if record.error else "ok" for record in records] == [
         RATE_LIMITED,
@@ -828,7 +831,7 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
     assert all(item["session_cache"] for item in observed)
 
 
-def test_metadata_only_batch_status_ok_remains_zero_exit(tmp_path: Path) -> None:
+def test_metadata_only_batch_retains_results_with_nonzero_exit(tmp_path: Path) -> None:
     results_path = tmp_path / "results.jsonl"
     args = _args(batch_results=str(results_path))
     outcome = cli.SingleFetchResult(_envelope("metadata_only"))
@@ -852,7 +855,7 @@ def test_metadata_only_batch_status_ok_remains_zero_exit(tmp_path: Path) -> None
         )
 
     record = parse_manifest_record(json.loads(results_path.read_text("utf-8").strip()))
-    assert exit_code == 0
+    assert exit_code == 1
     assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.LIMITED
     assert record.acceptance.content.has_fulltext is False

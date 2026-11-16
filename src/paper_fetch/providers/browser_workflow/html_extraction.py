@@ -461,7 +461,6 @@ def _fetch_browser_html_payload(
     prior_state: BrowserHtmlPriorAttemptState = BrowserHtmlPriorAttemptState(),
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
     configured_timeout_ms = max(1, int(runtime.timeout_ms))
-    context.initialize_deadline(configured_timeout_ms / 1000.0)
     operation_cap_ms = min(
         configured_timeout_ms,
         policy.max_timeout_ms
@@ -469,7 +468,7 @@ def _fetch_browser_html_payload(
         else configured_timeout_ms,
     )
     try:
-        operation_timeout_ms = context.remaining_timeout_ms(operation_cap_ms)
+        operation_timeout_ms = context.browser_remaining_timeout_ms(operation_cap_ms)
     except TimeoutError as exc:
         raise BrowserRuntimeFailure(
             "browser_connect_timeout",
@@ -553,7 +552,7 @@ def _fetch_browser_html_payload(
         "elapsed_ms": round((time.monotonic() - operation_started_at) * 1000, 3),
         "remaining_ms": max(
             0,
-            int(context.remaining_seconds() * 1000),
+            int(context.browser_remaining_seconds(configured_timeout_ms / 1000) * 1000),
         ),
     }
     attempt_record: dict[str, Any] = {

@@ -129,6 +129,8 @@ class RuntimeContext:
     capability_uses: list[dict[str, Any]] = field(default_factory=list)
     request_started_at: float = field(default_factory=time.monotonic)
     deadline_monotonic: float | None = None
+    browser_deadline_monotonic: float | None = None
+    browser_execution_started_at: float | None = None
     _parse_cache_lock: threading.RLock = field(
         default_factory=threading.RLock, init=False, repr=False
     )
@@ -339,6 +341,34 @@ class RuntimeContext:
         self.refresh_browser_profiles()
         with self._capability_uses_lock:
             return tuple(copy.deepcopy(self.capability_uses))
+
+    def start_browser_budget(self, timeout_seconds: float) -> float:
+        if self.browser_deadline_monotonic is None:
+            self.browser_execution_started_at = time.monotonic()
+            self.browser_deadline_monotonic = self.browser_execution_started_at + max(
+                0, timeout_seconds
+            )
+        return self.browser_deadline_monotonic
+
+    def browser_remaining_seconds(self, maximum: float | None = None) -> float:
+        self.raise_if_cancelled()
+        remaining = (
+            max(0.0, self.browser_deadline_monotonic - time.monotonic())
+            if self.browser_deadline_monotonic is not None
+            else float("inf")
+        )
+        return min(remaining, max(0.0, maximum)) if maximum is not None else remaining
+
+    def admit_browser(self, config: Any) -> Any:
+        return self.new_browser_context_for_runtime_config(config)
+
+    def browser_remaining_timeout_ms(
+        self, maximum_ms: int, *, minimum_ms: int = 1
+    ) -> int:
+        remaining = self.browser_remaining_seconds(maximum_ms / 1000)
+        if remaining <= 0:
+            raise TimeoutError("Browser request deadline exceeded.")
+        return max(minimum_ms, min(maximum_ms, int(remaining * 1000)))
 
     def initialize_deadline(self, timeout_seconds: float) -> float:
         """Initialize the request deadline once from the request start time."""

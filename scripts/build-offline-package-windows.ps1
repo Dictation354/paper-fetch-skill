@@ -15,7 +15,7 @@ $SkillName = [string]$InstallerManifest.skill.name
 $OfflineManagedBegin = [string]$InstallerManifest.managed_blocks.offline.begin
 $OfflineManagedEnd = [string]$InstallerManifest.managed_blocks.offline.end
 $OfflineEnvKeys = @(
-    $InstallerManifest.mcp.env_keys |
+    $InstallerManifest.runtime.env_keys |
         ForEach-Object { [string]$_ } |
         Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }
 )
@@ -169,6 +169,7 @@ function Copy-RuntimeAssets {
     Copy-Item -LiteralPath $InstallerManifestPath -Destination (Join-Path $installerDir "manifest.json")
     Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "windows-installer-helper.ps1") -Destination (Join-Path $scriptsDir "windows-installer-helper.ps1")
     Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "skill_integrity.py") -Destination (Join-Path $scriptsDir "skill_integrity.py")
+    Copy-Item -LiteralPath (Join-Path $RepoDir "src/paper_fetch/legacy_cleanup.py") -Destination (Join-Path $scriptsDir "cleanup_legacy_mcp.py")
 
     $sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName
     if (-not (Test-Path -LiteralPath (Join-Path $sourceSkill "SKILL.md") -PathType Leaf)) {
@@ -284,7 +285,7 @@ function Install-EmbeddedPythonPackages {
     }
 
     $runtimePython = Join-Path $runtime "python.exe"
-    Invoke-Native $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.mcp.server; print('embedded runtime ok')"
+    Invoke-Native $runtimePython -X utf8 -c "import paper_fetch; import paper_fetch.cli; print('embedded runtime ok')"
 }
 
 function Add-FormulaTools {
@@ -379,20 +380,6 @@ set "PYTHONIOENCODING=utf-8"
 exit /b %ERRORLEVEL%
 '@
     Set-Content -LiteralPath (Join-Path $bin "paper-fetch.cmd") -Value $paperFetch -Encoding ASCII
-
-    $mcp = @'
-@echo off
-setlocal
-set "PAPER_FETCH_ROOT=%~dp0.."
-if not defined PAPER_FETCH_ENV_FILE set "PAPER_FETCH_ENV_FILE=%PAPER_FETCH_ROOT%\offline.env"
-if not defined MATHML_TO_LATEX_NODE_BIN set "MATHML_TO_LATEX_NODE_BIN=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
-if not defined PLAYWRIGHT_NODEJS_PATH set "PLAYWRIGHT_NODEJS_PATH=%PAPER_FETCH_ROOT%\runtime\node\node.exe"
-set "PYTHONUTF8=1"
-set "PYTHONIOENCODING=utf-8"
-"%PAPER_FETCH_ROOT%\runtime\python.exe" -X utf8 -m paper_fetch.mcp.server %*
-exit /b %ERRORLEVEL%
-'@
-    Set-Content -LiteralPath (Join-Path $bin "paper-fetch-mcp.cmd") -Value $mcp -Encoding ASCII
 
     $imageTools = @'
 @echo off
@@ -612,12 +599,12 @@ function Assert-RuntimeOnlyStaging {
         "runtime/python.exe",
         "runtime/Lib/site-packages/paper_fetch/__init__.py",
         "bin/paper-fetch.cmd",
-        "bin/paper-fetch-mcp.cmd",
         "bin/paper-fetch-install-image-tools.cmd",
         "skills/$SkillName/SKILL.md",
         "installer/manifest.json",
         "scripts/windows-installer-helper.ps1",
-        "scripts/skill_integrity.py"
+        "scripts/skill_integrity.py",
+        "scripts/cleanup_legacy_mcp.py"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $Staging $relative))) {
             throw "Windows runtime staging is missing required path: $relative"

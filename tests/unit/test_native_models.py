@@ -6,11 +6,11 @@ from paper_fetch.models.codec import (
     article_from_payload,
     trace_from_payload,
 )
-from paper_fetch.mcp.fetch_cache import FetchCache
-from paper_fetch.mcp.cache_index import read_cache_index
-from paper_fetch.mcp.schemas import FetchPaperRequest
+from paper_fetch.delivery.fetch_cache import FetchCache
+from paper_fetch.delivery.cache_index import read_cache_index
+from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.tracing import trace_event, TraceContext
-from tests.support._mcp_support import sample_envelope
+from tests.support.fetch_fixtures import sample_envelope
 
 
 def test_envelope_round_trip_has_one_quality_and_acquisition_owner():
@@ -48,7 +48,7 @@ def test_removed_model_projections_and_string_trace_are_rejected():
 def test_old_cache_versions_are_reported_and_bytes_preserved(tmp_path):
     envelope = sample_envelope(modes={"markdown"})
     cache = FetchCache(tmp_path)
-    request = FetchPaperRequest(query=envelope.doi, preset="cacheable_read")
+    request = FetchPaperRequest(query=envelope.doi, prefer_cache=True)
     cache.write_fetch_envelope(envelope, request)
     for path in tmp_path.glob("*.fetch-envelope.json"):
         value = json.loads(path.read_text())
@@ -62,7 +62,7 @@ def test_old_cache_versions_are_reported_and_bytes_preserved(tmp_path):
     assert all(path.read_bytes() == value for path, value in before.items())
     index = tmp_path / ".paper-fetch-cache-index.json"
     # The index owner's filename is public through its cache record.
-    from paper_fetch.mcp.cache_index import INDEX_FILENAME
+    from paper_fetch.delivery.cache_index import INDEX_FILENAME
 
     index = tmp_path / INDEX_FILENAME
     value = json.loads(index.read_text())

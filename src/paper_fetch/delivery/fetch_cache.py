@@ -1,4 +1,4 @@
-"""MCP fetch-envelope cache abstraction."""
+"""fetch-envelope cache abstraction."""
 
 from __future__ import annotations
 
@@ -62,7 +62,7 @@ from ..models.codec import (
     article_from_payload as article_from_payload,
     envelope_from_payload as envelope_from_payload,
 )
-from .schemas import FetchPaperRequest
+from .requests import FetchPaperRequest
 
 PUBLIC_CREDENTIAL_SCOPE = PUBLIC_CAPABILITY_SCOPE
 _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE = "_paper_fetch_capability_scope"
@@ -198,7 +198,7 @@ class CacheSidecarInspection:
 
 @dataclass(frozen=True, slots=True)
 class FetchCacheDependencies:
-    """Replaceable cache-index operations used by the MCP cache facade."""
+    """Replaceable cache-index operations used by the cache facade."""
 
     read_index: Callable[..., CacheIndexResult] = read_cache_index
     list_entries: Callable[[Path], list[dict[str, Any]]] = list_cache_entries
@@ -322,19 +322,17 @@ def payload_from_envelope(
     envelope: FetchEnvelope,
     request: FetchPaperRequest,
     *,
-    retain_article_for_inline_assets: bool = False,
+    retain_article_for_assets: bool = False,
 ) -> dict[str, Any]:
     payload = envelope.to_dict()
+    # Retain the historical sidecar payload revision for compatible cache reads.
     payload["schema_version"] = 4
-    if (
-        "article" not in request.requested_modes()
-        and not retain_article_for_inline_assets
-    ):
+    if "article" not in request.requested_modes() and not retain_article_for_assets:
         payload["article"] = None
     return payload
 
 
-def _request_needs_article_for_inline_assets(
+def _request_needs_article_for_assets(
     request: FetchPaperRequest,
     *,
     source_name: str | None,
@@ -342,7 +340,6 @@ def _request_needs_article_for_inline_assets(
     return (
         request.target == "paper"
         and not request.save_markdown
-        and not request.strategy.resolved_inline_image_budget().disabled
         and effective_asset_profile(
             request.strategy.asset_profile,
             source_name=source_name,
@@ -392,7 +389,7 @@ def cached_payload_satisfies_request(
     if "article" in requested_modes and payload.get("article") is None:
         return False
     if (
-        _request_needs_article_for_inline_assets(
+        _request_needs_article_for_assets(
             request,
             source_name=normalize_text(payload.get("source")) or None,
         )
@@ -579,7 +576,7 @@ def mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> None:
 
 
 class FetchCache:
-    """Cache facade for MCP fetch-envelope sidecars and cache index refresh."""
+    """Cache facade for fetch-envelope sidecars and cache index refresh."""
 
     def __init__(
         self,
@@ -726,8 +723,8 @@ class FetchCache:
             "payload": payload_from_envelope(
                 envelope,
                 request,
-                retain_article_for_inline_assets=(
-                    _request_needs_article_for_inline_assets(
+                retain_article_for_assets=(
+                    _request_needs_article_for_assets(
                         request,
                         source_name=envelope.source,
                     )

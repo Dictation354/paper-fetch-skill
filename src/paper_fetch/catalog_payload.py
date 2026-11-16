@@ -1,4 +1,4 @@
-"""Machine-readable MCP view of the runtime provider catalog."""
+"""Machine-readable view of the runtime provider catalog."""
 
 from __future__ import annotations
 
@@ -15,7 +15,7 @@ from .browser_runtime_policy import (
 )
 from . import provider_catalog as runtime_catalog
 
-PROVIDER_CATALOG_RESOURCE_URI = "resource://paper-fetch/provider-catalog"
+PROVIDER_CATALOG_ID = "paper-fetch/provider-catalog"
 PROVIDER_CATALOG_SCHEMA_VERSION = 1
 
 
@@ -106,7 +106,7 @@ def provider_catalog_payload() -> dict[str, Any]:
         "schema_version": PROVIDER_CATALOG_SCHEMA_VERSION,
         "tool_version": runtime_tool_version(),
         "runtime": runtime_identity(),
-        "resource_uri": PROVIDER_CATALOG_RESOURCE_URI,
+        "catalog_id": PROVIDER_CATALOG_ID,
         "provider_count": len(providers),
         "source_count": len(source_provider_map),
         "providers": providers,
@@ -125,7 +125,7 @@ def provider_catalog_payload() -> dict[str, Any]:
 
 
 __all__ = [
-    "PROVIDER_CATALOG_RESOURCE_URI",
+    "PROVIDER_CATALOG_ID",
     "PROVIDER_CATALOG_SCHEMA_VERSION",
     "provider_catalog_payload",
     "runtime_tool_version",

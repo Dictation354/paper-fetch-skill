@@ -87,6 +87,10 @@ def _fake_python_script(
       shift 2
     done
 
+    if [[ "${{1:-}}" == *cleanup_legacy_mcp.py ]]; then
+      exec "$REAL_PYTHON" "$@"
+    fi
+
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
       printf 'POST_INSTALL_SETUP %s\\n' "$*"
       if [[ "$*" == *'--prepare-browsers'* ]]; then
@@ -283,6 +287,10 @@ class OfflineInstallTests(unittest.TestCase):
             bundle / "runtime" / "site-packages" / "paper_fetch" / "__init__.py", "\n"
         )
         (bundle / "scripts").mkdir()
+        shutil.copy2(
+            REPO_ROOT / "src/paper_fetch/legacy_cleanup.py",
+            bundle / "scripts/cleanup_legacy_mcp.py",
+        )
         shutil.copy2(
             REPO_ROOT / "scripts" / "skill_integrity.py",
             bundle / "scripts" / "skill_integrity.py",
@@ -1411,7 +1419,7 @@ exec /bin/mv "$@"
             self.assertIn('USER_NOTE="keep"', uninstalled_env)
             self.assertNotIn("# BEGIN paper-fetch offline managed", uninstalled_env)
 
-    def test_cli_registration_uses_offline_env_with_headless_without_legacy_browser_paths(
+    def test_cli_skill_install_does_not_register_protocol_services(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1424,41 +1432,9 @@ exec /bin/mv "$@"
             result = self._run_installer(bundle, fake_bin, home)
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            calls = [
-                line.split("\t")
-                for line in cli_log.read_text(encoding="utf-8").splitlines()
-            ]
-            codex_add = next(
-                call for call in calls if call[:3] == ["codex", "mcp", "add"]
-            )
-            self.assertIn(f"PAPER_FETCH_ENV_FILE={bundle / 'offline.env'}", codex_add)
-            self.assertIn(
-                f"MATHML_TO_LATEX_NODE_BIN={bundle / 'runtime' / 'node' / 'bin' / 'node'}",
-                codex_add,
-            )
-            self.assertIn(
-                f"PLAYWRIGHT_NODEJS_PATH={bundle / 'runtime/node/bin/node'}", codex_add
-            )
-            self.assertIn(
-                f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", codex_add
-            )
-            self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=true", codex_add)
-            self.assertFalse(
-                any(arg.startswith("CLOAKBROWSER_BINARY_PATH=") for arg in codex_add)
-            )
-            self.assertFalse(
-                any("PLAYWRIGHT_BROWSERS_PATH" in arg for arg in codex_add)
-            )
-            claude_add = next(
-                call for call in calls if call[:3] == ["claude", "mcp", "add"]
-            )
-            self.assertIn("-s", claude_add)
-            self.assertIn("user", claude_add)
-            self.assertIn("--", claude_add)
-            self.assertLess(claude_add.index("--"), claude_add.index("paper-fetch"))
-            self.assertIn(f"PAPER_FETCH_ENV_FILE={bundle / 'offline.env'}", claude_add)
-            self.assertIn(
-                f"PAPER_FETCH_IMAGE_TOOLS_DIR={bundle / 'image-tools'}", claude_add
+            self.assertFalse(cli_log.exists())
+            self.assertTrue(
+                (home / ".agents/skills/paper-fetch-skill/SKILL.md").is_file()
             )
 
     def test_codex_direct_registration_and_uninstall_use_active_codex_home(
@@ -1471,11 +1447,14 @@ exec /bin/mv "$@"
             _write_file(default, "# untouched default config\n")
             active_home = root / "active codex"
             active = active_home / "config.toml"
-            _write_file(active, "# keep active content\n")
+            _write_file(
+                active,
+                '# keep active content\n[mcp_servers.custom]\ncommand="python"\nargs=["-m", "paper_fetch.mcp.server"]\n',
+            )
             env = {"CODEX_HOME": str(active_home)}
             registered = self._run_installer(bundle, fake_bin, home, extra_env=env)
             self.assertEqual(registered.returncode, 0, registered.stderr)
-            self.assertIn("[mcp_servers.paper-fetch]", active.read_text())
+            self.assertNotIn("[mcp_servers.custom]", active.read_text())
             self.assertIn(str(active), registered.stdout)
             self.assertEqual(default.read_text(), "# untouched default config\n")
             removed = self._run_installer(
@@ -1495,70 +1474,9 @@ exec /bin/mv "$@"
             result = self._run_installer(bundle, fake_bin, home)
 
             self.assertEqual(result.returncode, 0, result.stderr)
-            config = (home / ".codex" / "config.toml").read_text(encoding="utf-8")
-            self.assertIn("# BEGIN paper-fetch installer managed", config)
-            self.assertIn("[mcp_servers.paper-fetch]", config)
-            self.assertIn(f'PAPER_FETCH_ENV_FILE = "{bundle / "offline.env"}"', config)
-            self.assertIn('MATHML_TO_LATEX_NODE_BIN = "', config)
-            self.assertIn(
-                f'PAPER_FETCH_IMAGE_TOOLS_DIR = "{bundle / "image-tools"}"', config
-            )
-            self.assertIn('PAPER_FETCH_BROWSER_HEADLESS = "true"', config)
-            self.assertNotIn("CLOAKBROWSER_BINARY_PATH", config)
-            self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", config)
-
-    def test_antigravity_mcp_config_uses_manifest_env_keys_and_preserves_existing_servers(
-        self,
-    ) -> None:
-        with tempfile.TemporaryDirectory() as tmpdir:
-            root = Path(tmpdir)
-            bundle, fake_bin, home = self._create_bundle(root)
-            antigravity_home = home / ".gemini" / "antigravity-cli"
-            _write_file(
-                antigravity_home / "mcp_config.json",
-                json.dumps({"mcpServers": {"keep-server": {"command": "keep"}}}),
-            )
-
-            result = self._run_installer(bundle, fake_bin, home)
-
-            self.assertEqual(result.returncode, 0, result.stderr)
+            self.assertFalse((home / ".codex/config.toml").exists())
             self.assertTrue(
-                (
-                    antigravity_home / "skills" / "paper-fetch-skill" / "SKILL.md"
-                ).exists()
-            )
-            data = json.loads(
-                (antigravity_home / "mcp_config.json").read_text(encoding="utf-8")
-            )
-            servers = data["mcpServers"]
-            self.assertIn("keep-server", servers)
-            entry = servers["paper-fetch"]
-            self.assertEqual(
-                entry["command"], str(bundle / "runtime" / "paper-fetch-python")
-            )
-            self.assertEqual(
-                entry["args"], ["-X", "utf8", "-m", "paper_fetch.mcp.server"]
-            )
-            manifest = json.loads(
-                (REPO_ROOT / "installer" / "manifest.json").read_text(encoding="utf-8")
-            )
-            self.assertEqual(set(entry["env"]), set(manifest["mcp"]["env_keys"]))
-            self.assertEqual(entry["env"]["PYTHONUTF8"], "1")
-            self.assertEqual(entry["env"]["PYTHONIOENCODING"], "utf-8")
-            self.assertEqual(
-                entry["env"]["PAPER_FETCH_ENV_FILE"], str(bundle / "offline.env")
-            )
-            self.assertEqual(
-                entry["env"]["PAPER_FETCH_IMAGE_TOOLS_DIR"],
-                str(bundle / "image-tools"),
-            )
-            self.assertEqual(
-                entry["env"]["MATHML_TO_LATEX_NODE_BIN"],
-                str(bundle / "runtime" / "node" / "bin" / "node"),
-            )
-            self.assertEqual(
-                entry["env"]["PLAYWRIGHT_NODEJS_PATH"],
-                entry["env"]["MATHML_TO_LATEX_NODE_BIN"],
+                (home / ".agents/skills/paper-fetch-skill/SKILL.md").is_file()
             )
 
     def test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs(
@@ -1805,7 +1723,10 @@ exec /bin/mv "$@"
                     {
                         "mcpServers": {
                             "keep-server": {"command": "keep"},
-                            "paper-fetch": {"command": "old", "args": []},
+                            "paper-fetch": {
+                                "command": "python",
+                                "args": ["-m", "paper_fetch.mcp.server"],
+                            },
                         }
                     }
                 )
@@ -1864,9 +1785,13 @@ exec /bin/mv "$@"
             )
             calls = [
                 line.split("\t")
-                for line in cli_log.read_text(encoding="utf-8").splitlines()
+                for line in (
+                    cli_log.read_text(encoding="utf-8").splitlines()
+                    if cli_log.exists()
+                    else []
+                )
             ]
-            self.assertIn(["codex", "mcp", "remove", "paper-fetch"], calls)
+            self.assertFalse(any(call[:2] == ["codex", "mcp"] for call in calls))
             self.assertFalse(any(call[:3] == ["codex", "mcp", "add"] for call in calls))
             self.assertIn("Install directory was left in place", result.stdout)
 
@@ -2327,65 +2252,6 @@ def test_windows_texmath_python_smoke_captures_both_streams(tmp_path, exit_code)
         assert "TEXMATH_STDOUT" in result.stderr and "TEXMATH_STDERR" in result.stderr
     else:
         assert result.stdout == result.stderr == ""
-
-
-@pytest.mark.parametrize("option", ["--python", "--python="])
-@pytest.mark.parametrize("target", ["linux", "macos"])
-def test_python_option_overrides_environment_and_binds_real_launchers(
-    tmp_path, option, target
-):
-    from tests.support._installer_support import write_posix_command_wrappers
-
-    harness = OfflineInstallTests()
-    host = (
-        {}
-        if target == "linux"
-        else {
-            "target_platform": "macos",
-            "target_arch": "arm64",
-            "uname_kernel": "Darwin",
-            "uname_machine": "arm64",
-        }
-    )
-    bundle, fake_bin, home = harness._create_bundle(tmp_path, **host)
-    chosen = fake_bin / "selected python"
-    calls = tmp_path / "python-calls"
-    _write_executable(
-        chosen,
-        f"""#!/usr/bin/env bash
-printf '%s\\n' "$*" >> {shlex.quote(str(calls))}
-exec {shlex.quote(str(fake_bin / "python3"))} "$@"
-""",
-    )
-    write_posix_command_wrappers(bundle)
-    _write_checksums(bundle)
-    # Exercise relative paths with spaces, and a conflicting inherited override.
-    relative = os.path.relpath(chosen, bundle)
-    args = [option, relative] if option == "--python" else [option + relative]
-    result = harness._run_installer(
-        bundle,
-        fake_bin,
-        home,
-        *args,
-        "--non-interactive",
-        "--skip-browser-prepare",
-        skip_smoke=False,
-        extra_env={"PAPER_FETCH_OFFLINE_PYTHON_BIN": "/missing/python"},
-    )
-    assert result.returncode == 0, result.stderr
-    bound = (bundle / "runtime/python-bin").read_text().strip()
-    assert Path(bound).is_absolute()
-    assert Path(bound).resolve() == chosen.resolve()
-    assert f"Python interpreter: {bound}" in result.stdout
-    assert "-m paper_fetch.cli --help" in calls.read_text()
-    before = calls.read_text()
-    env = {**os.environ, "PATH": f"{fake_bin}:/usr/bin:/bin"}
-    env.pop("PAPER_FETCH_OFFLINE_PYTHON_BIN", None)
-    result = subprocess.run(
-        [str(bundle / "bin/paper-fetch-mcp")], env=env, capture_output=True
-    )
-    assert result.returncode == 0, result.stderr
-    assert "-m paper_fetch.mcp.server" in calls.read_text()[len(before) :]
 
 
 def test_linux_default_ignores_path_python(tmp_path):

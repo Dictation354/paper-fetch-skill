@@ -33,15 +33,18 @@ def _fetch_through_service(
         stack.enter_context(
             mock.patch.object(client, "fetch_metadata", return_value=metadata)
         )
+        context = stack.enter_context(
+            service.RuntimeContext(
+                env={},
+                download_dir=output_dir,
+                clients={fixture.provider: client, "crossref": crossref},
+            )
+        )
         return service.fetch_paper(
             fixture.doi,
             modes={"article"},
             strategy=service.FetchStrategy(
                 allow_metadata_only_fallback=True, asset_profile=asset_profile
             ),
-            context=service.RuntimeContext(
-                env={},
-                download_dir=output_dir,
-                clients={fixture.provider: client, "crossref": crossref},
-            ),
+            context=context,
         )

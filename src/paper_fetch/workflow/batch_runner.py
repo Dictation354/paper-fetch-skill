@@ -423,8 +423,11 @@ class BatchRunner(Generic[ItemT, ResultT]):
         cancellation_escalated_at: float | None = None
 
         loop = asyncio.get_running_loop()
+        from .execution_slots import ExecutionSlots
+
+        slots = ExecutionSlots(self._max_workers)
         executor = ThreadPoolExecutor(
-            max_workers=self._max_workers,
+            max_workers=max(1, total),
             thread_name_prefix="paper-fetch-batch",
         )
         shutdown_wait = True
@@ -538,7 +541,9 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 key = lane_keys[index]
                 if key in lane_cooldowns:
                     continue
-                if lane_in_flight[key] < _effective_lane_limit(
+                if lane_in_flight[key] - slots.waiting_by_lane[
+                    key
+                ] < _effective_lane_limit(
                     self._lane_limits,
                     key,
                     max_workers=self._max_workers,
@@ -572,7 +577,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 )
 
         def fill_available_slots() -> None:
-            while len(pending) < self._max_workers:
+            while len(pending) - slots.waiting < self._max_workers:
                 position = find_eligible_position()
                 if position is None:
                     return
@@ -583,8 +588,10 @@ class BatchRunner(Generic[ItemT, ResultT]):
                 future = loop.run_in_executor(
                     executor,
                     worker_context.run,
+                    slots.run,
                     self._worker,
                     item_values[index],
+                    key,
                 )
                 pending[future] = (index, key, submitted_at)
                 lane_in_flight[key] += 1
@@ -602,6 +609,7 @@ class BatchRunner(Generic[ItemT, ResultT]):
                     return_when=asyncio.FIRST_COMPLETED,
                 )
                 if not done:
+                    fill_available_slots()
                     if self._item_cancel_check is None and _cancellation_isolation_due(
                         escalated=cancellation_escalated,
                         escalated_at=cancellation_escalated_at,

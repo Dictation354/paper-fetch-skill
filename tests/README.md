@@ -3,7 +3,7 @@
 | 层级 | 责任 | 输入与执行边界 |
 | --- | --- | --- |
 | unit | 局部解析、状态、请求、错误分类、模型和渲染选项 | 最小来源片段或现有 contract scenario；依赖在边界 mock；允许临时文件和必要的线程 |
-| integration | provider/service/CLI/MCP、acceptance、cache/artifact、安装器和进程契约 | 受控响应、代表性输入；真实浏览器仅使用已准备 runtime 和本地页面 |
+| integration | provider/service/CLI、acceptance、cache/artifact、安装器和进程契约 | 受控响应、代表性输入；真实浏览器仅使用已准备 runtime 和本地页面 |
 | golden | 完整论文回放、HTML/XML 内容、资产集合、正负样本及来源 | 现有 canonical manifest/catalog/provider adapter；PDF 仅获取、身份、完整性、来源及转换结果透传 |
 
 ```bash
@@ -81,7 +81,7 @@ PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
 ## Live 测试
 
 live 仅在本地具备合法访问条件时显式运行，依赖共享远端状态与浏览器线程边界，使用
-`-n 0`。未启用 `PAPER_FETCH_RUN_LIVE=1` 时 publisher/MCP 测试跳过。
+`-n 0`。未启用 `PAPER_FETCH_RUN_LIVE=1` 时 publisher 测试跳过。
 pytest 隔离用户目录、profile 和 storage-state，复用已由官方包管理器确认的浏览器依赖缓存；
 出版社会话不写入共享 dependency cache。安装与准备见[部署指南](../docs/deployment.md#浏览器安装与准备)。
 
@@ -92,17 +92,17 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_LIVE_ARTIFACT_DIR=failures/live-publishers \
   -q -n 0 -o junit_family=legacy --junitxml=failures/live-publishers.xml
 ```
 
-publisher catalog 和 MCP 抓取用例只检查本地依赖、配置和凭据，直接执行 fetch；显式
-CLI `browser-preflight` / MCP `browser_preflight` 保留为独立诊断，不作为抓取前置访问。
+publisher catalog 抓取用例只检查本地依赖、配置和凭据，直接执行 fetch；显式
+CLI `browser-preflight` 保留为独立诊断，不作为抓取前置访问。
 报告保留 `preflight=null`、`preflight_seconds=0`；导航、readiness 与资产 timing 来自本次
-fetch 的诊断，各资产时间之和不代表整次抓取墙钟时间。MCP 每个用例使用独立持久目录，
+fetch 的诊断，各资产时间之和不代表整次抓取墙钟时间。每个用例使用独立持久目录，
 失败也保留结果与诊断。
 
 publisher catalog 按默认 `body` 资产策略要求统一 acceptance 为 `complete`，记录每个 provider
 终态、墙钟时间、readiness、导航和资产 timing。`live-acceptance.json` 按 runtime catalog
 报告已执行和未执行项。只有结构化 challenge/auth/no-access 边界可 skip；解析失败、空壳和
 未知错误仍为失败。skip 不代表 catalog 验证完成。严格本地/原图验收使用公开的两个严格参数。
-普通 publisher/MCP live 不由 GitHub Actions 触发。
+普通 publisher live 不由 GitHub Actions 触发。
 
 AIP 冷启动专项为每轮创建独立 profile，要求 HTML 路线及完整 acceptance，不能由 PDF 降级通过：
 

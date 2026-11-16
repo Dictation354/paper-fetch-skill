@@ -31,7 +31,6 @@ from paper_fetch.provider_catalog import (
     provider_html_path_templates,
     provider_managed_abstract_only_names,
     provider_metadata_probe_short_circuit,
-    provider_names,
     provider_pdf_source_path_templates,
     provider_pdf_path_templates,
     provider_persists_provider_html,
@@ -52,7 +51,6 @@ from paper_fetch.quality.html_profiles import site_rule_for_publisher
 from paper_fetch.models.schema import SourceKind
 from paper_fetch.providers import _pdf_candidates, html_springer_nature
 from paper_fetch import utils
-from paper_fetch.mcp.fetch_tool import _PROVIDER_STATUS_ORDER
 from paper_fetch.providers.registry import build_clients
 from paper_fetch.workflow import fulltext, routing
 
@@ -212,10 +210,6 @@ class ProviderCatalogTests(unittest.TestCase):
                 if spec.provider_managed_abstract_only
             },
         )
-
-    def test_runtime_provider_order_is_catalog_derived(self) -> None:
-        self.assertEqual(_PROVIDER_STATUS_ORDER, provider_names())
-        self.assertEqual(_PROVIDER_STATUS_ORDER, provider_status_order())
 
     def test_provider_display_name_helper_wraps_catalog(self) -> None:
         for name, display_name in provider_display_names().items():

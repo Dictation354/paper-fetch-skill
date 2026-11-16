@@ -1,7 +1,7 @@
 # Paper Fetch Skill 架构与业务流程
 
-本文说明可复用核心库、CLI、MCP adapter 和 thin skill 的职责、数据契约及扩展边界。
-稳定入口为 `paper-fetch` 和 `paper-fetch-mcp`；运行时代码位于 `src/paper_fetch/`，
+本文说明可复用核心库、CLI adapter 和 thin skill 的职责、数据契约及扩展边界。
+稳定入口为 `paper-fetch` 和静态 Skill；运行时代码位于 `src/paper_fetch/`，
 静态 skill 位于 `skills/paper-fetch-skill/`。provider 配置与获取顺序见
 [provider 指南](../providers.md)，提取语义见[规则文档](../extraction-rules.md)。
 
@@ -15,38 +15,17 @@
 - 创建/关闭 `RuntimeContext`，通过 `FetchPipeline` 调用 service 层，并负责 CLI 输出与 Markdown 保存生命周期
 - 控制 stdout / stderr / 输出文件 / 退出码
 
-不负责 provider 选择、正文抓取策略、MCP 序列化。
+不负责 provider 选择、正文抓取策略、CLI 序列化。
 
-### 2. MCP 层
+### 2. 文件交付与缓存层
 
-入口：`src/paper_fetch/mcp/`
-
-- 暴露 MCP tools 与静态 provider-catalog resource，校验工具参数
-- 把 service 结果序列化成 JSON-safe payload
-- 通过 `FetchCache` 管理 fetch-envelope sidecar，供 `list_cached` / `get_cached` 查询，并管理 Markdown 注册和 cancellation commit guard；`FetchPipeline` 只复用 service 调用
-- 管理 progress、structured log、cancellation
-
-实现边界：
-
-- MCP runtime 基于官方 Python SDK 2.x 的 `MCPServer` 与 stdio transport；server 同时服务 2025 握手协议与 2026-07-28 无状态协议，只保留静态 provider catalog resource。
-- payload/tool 入口通过 `paper_fetch.mcp._deps.MCPDeps` 显式注入 runtime env、service、provider registry 与 cache index 依赖；生产默认由 `default_mcp_deps()` 装配，测试通过构造定制 deps 注入。
-- 所有 MCP tool JSON payload 顶层都带 `schema_version=4`；错误 payload 保留兼容字段 `status` / `reason`，并补充 `code`、`http_status`、`error_category`、`retry_after_seconds`、`provider` 及路由、阶段、HTTP/重试语义供 host 判断；完整 warnings/trace/details 保留在 diagnostics 句柄。完整 envelope 仅保存一份 quality、acquisition、trace、diagnostics，article 部分仅保存内容字段。
-- 工具都不在 `tools/list` 发布协议级 `outputSchema`。工具结果继续通过 `CallToolResult.structured_content` 返回带 `schema_version=4` 的 payload；该版本化 payload 契约不等同于 MCP output schema。
-- `resource://paper-fetch/provider-catalog` 由轻量 MCP catalog adapter 在读取时直接投影 runtime `ProviderSpec` 和 `SOURCE_PROVIDER_MAP`；provider/source、browser/runtime、status/preflight 与资产默认不在 server instructions、tool description 或 skill contract 中维护第二张静态表。
-- `fetch_paper` 和批量工具把阻塞抓取放到有界 `ThreadPoolExecutor`，事件循环继续处理 progress / log / cancellation；批量工具保持输入顺序，遇到 rate-limit status/code/category、HTTP 429 或 retry-after 后停止对应 provider/resource lane 的新提交。
-- async `fetch_paper` 用 `RuntimeContext(cancel_check=...)` 创建 cancel-aware `HttpTransport`，service/workflow 只消费 transport。
-
-- 正文始终由 content_ref / read_content 读取，实例内 UTF-8 容量为 256 MiB，Unicode 码点分页，24 小时闲置期限与 LRU 淘汰。临时句柄不进入 manifest、JSONL、cache 或请求指纹。
-- 单篇与批量 `output_artifacts` 共用实际文件快照（绝对路径、kind、size、SHA-256、完成时间及验证状态）；保存时仍抑制内联正文，句柄模式可继续读取已获取正文。
-- diagnostics 保存完整质量、来源、trace、警告、acceptance 及最终 Markdown 上的公式定位；只对已有 `final_latex` 做完整数学片段匹配，重复保留候选，缺失标为未定位，不改写正文或判断数学正确性。
-
-不负责 provider 路由决策、正文抓取瀑布、Markdown 转换细节。
+`src/paper_fetch/delivery/` 拥有独立版本化 CLI 回执、图片索引、文件核验及缓存。每篇原子保存 schema-v2 manifest 后立即输出回执，批量最终汇总仍按输入顺序。缓存核验身份、请求与 credential scope；旧索引只兼容读取，新写入通用名称。
 
 ### 3. Skill 层
 
 入口：`skills/paper-fetch-skill/`
 
-- 告诉 agent 什么时候调用哪些 MCP 工具，提供薄说明和渐进式引用文档
+- 告诉 agent 何时使用 CLI 获取并阅读本地文件，提供薄说明和渐进式引用文档
 - `scripts/skill_integrity.py` 由构建器和安装器调用，对路径排序后的完整 regular-file inventory 计算稳定 aggregate SHA-256/version；offline staging/manifest 与 host 安装副本共用该语义，missing/extra/symlink/special 均 fail closed
 - `agents/openai.yaml` 是仓库内 canonical 静态模板，随 bundle 一起哈希和发布，不在安装时动态生成
 
@@ -69,11 +48,11 @@
 - `routing`：provider 候选、probe、fallback eligibility
 - `fulltext`：provider 主链与 abstract-only / metadata-only fallback，并通过 `ArtifactStore` 应用 artifact 写盘策略
 - `rendering`：`FetchEnvelope`、结构化 trace 传递、最终结果组装
-- `pipeline`：在调用方提供的 `RuntimeContext` 中执行 CLI/MCP 真正共享的 service 调用
+- `pipeline`：在调用方提供的 `RuntimeContext` 中执行 CLI 真正共享的 service 调用
 
 #### 增量 batch runner 与 provider lane
 
-`paper_fetch.workflow.batch_runner` 是面向 CLI/MCP 的共享批量调度状态机，新增批量入口必须复用它。单项 worker 仍按 resolution → metadata/routing → fulltext → rendering 的阶段顺序执行；runner 只在同一批的项之间提供受控并发，不把单篇抓取的阶段拆散或乱序。现有 MCP batch 和 CLI batch 都复用这一 runner；执行面 adapter 只负责把共享终态转换为各自的 response 或 manifest record。
+`paper_fetch.workflow.batch_runner` 是面向 CLI 的共享批量调度状态机，新增批量入口必须复用它。单项 worker 仍按 resolution → metadata/routing → fulltext → rendering 的阶段顺序执行；runner 只在同一批的项之间提供受控并发，不把单篇抓取的阶段拆散或乱序。CLI 批量入口复用这一 runner；执行面 adapter 只负责把共享终态转换为各自的 response 或 manifest record。
 
 - 全局 worker 与每个 provider/resource lane 的并发上限都限制在公开范围 `1..8`。runner 最多只维持全局上限数量的 in-flight future，并在每次完成后增量扫描未提交输入；某个 lane 暂时占满时，其他可运行 lane 不会被队首阻塞。
 - lane key 由调用方在调度前提供。worker 通过结构化 failure/result classifier 报告既有 `rate_limited` reason code 和可选 `retry_after_seconds`；runner 不解析 warning 文案。观察到限流后，该 lane 在本次 run 内不提交新项，并用可注入的单调 clock 记录 `limited_at`、解析后的 cooldown 与 `cooldown_until`；其他 lane 继续运行。本模块不跨 run 学习或维护全局限流服务。
@@ -81,13 +60,11 @@
 - stop predicate 或 cancel event 只阻止新的增量提交；已在途 worker 依靠 `RuntimeContext.cancel_check` 协作退出。取消超过宽限期且仍有 pending worker 时，runner 只调用一次显式 escalation callback 关闭共享 browser manager，随后仍等待 worker 收敛。worker 已观察到的异常和取消、以及因 stop/cancel/lane cooldown 未调度的输入，都会生成结构化终态，避免批次尾部静默丢失。
 - 每个终态（包括 `not_scheduled`）依次触发一次 completion callback 和一次 progress callback；两者都可同步或异步。callback 是观察者：异常写入 `BatchRunResult.callback_failures`，不覆盖 item 终态，也不隐式改变停止策略；需要把 callback 失败升级为 run 失败的 adapter 必须显式检查该字段。callback 内设置 cancel event 会在下一次增量提交前生效。
 
-MCP `batch_resolve` / `batch_check` 保持既有兼容调度；`batch_fetch` 在提交前只调用 catalog-backed URL/DOI 身份 helper 推断 provider lane，一个 lane 限流后把该 lane 的后续输入终态化为未调度，其他 lane 继续。它的 `results` 按原 1-based input index 返回，`completion_order` 单独投影完成顺序，progress 使用完整终态计数。
-
 `RuntimeContext` 显式提供 env、transport、clients、下载目录、取消与 artifact store，以及当前抓取的 parse/session cache。公共 service 入口未收到 context 时自行创建并关闭；内部 workflow 要求显式传入。所有权见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。
 
 #### 统一抓取验收模型
 
-`paper_fetch.workflow.acceptance` 是 CLI、MCP、cache 和 manifest 唯一可复用的抓取验收语义。`evaluate_fetch_acceptance()` 是纯函数：它只消费 `FetchEnvelope` / 结构化失败 code、请求的 `asset_profile`、请求输出集合和可选的 `AssetAcceptanceSummary`，不联网、不访问或写入文件，也不重新运行 provider 质量判断。文件存在性、hash、MIME 等 I/O 事实由外层 adapter 收集后再以结构化事实传入；验收层不解析 warning 文案。
+`paper_fetch.workflow.acceptance` 是 CLI、cache 和 manifest 唯一可复用的抓取验收语义。`evaluate_fetch_acceptance()` 是纯函数：它只消费 `FetchEnvelope` / 结构化失败 code、请求的 `asset_profile`、请求输出集合和可选的 `AssetAcceptanceSummary`，不联网、不访问或写入文件，也不重新运行 provider 质量判断。文件存在性、hash、MIME 等 I/O 事实由外层 adapter 收集后再以结构化事实传入；验收层不解析 warning 文案。
 
 `FetchAcceptanceReport` 固定包含七个分面：
 
@@ -115,11 +92,11 @@ MCP `batch_resolve` / `batch_check` 保持既有兼容调度；`batch_fetch` 在
 
 验收 schema 当前为 v2。每份报告都必须序列化 `schema_version=2` 和 `minimum_reader_schema_version=2`。v2 包含 `accepted_preview`、`fallback_preview`、稳定 `issue_codes`、正文资产计数与 `require_local_body_assets` / `require_full_size_body_assets`（后者隐含前者），并要求 `preview == accepted_preview + fallback_preview`。严格分母只包含需要独立归档文件的正文逻辑资产；已经以内联语义完成且没有 binary payload/remote/failure 的 table、formula 或 figure 不会被误算为缺少本地文件。两项约束默认关闭且只适用于 `body|all`；未满足时 asset/overall 降为 `degraded`，已经取得的全文仍保持 `fetch=ok`。reader 可忽略未知 additive field，但缺少版本、v1 或未来不支持的版本必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
 
-`FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保存质量事实，独立 ArticleModel 保留完整结构化 trace。acceptance、manifest 与 MCP 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。
+`FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保存质量事实，独立 ArticleModel 保留完整结构化 trace。acceptance、manifest 与 CLI 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。
 
 #### 版本化 manifest record
 
-`paper_fetch.manifest` 是单篇 CLI、CLI batch 和 MCP `batch_fetch` 共用的 manifest record owner。adapter 只向 `build_manifest_record()` 提交原 query、JSON-safe 请求参数、`FetchEnvelope` 或结构化 error、输出文件声明和 run/index/attempt；schema 字段、验收摘要、trace 与文件快照均由 builder 统一派生。builder 保持纯逻辑，不写输出文件。
+`paper_fetch.manifest` 是单篇 CLI、CLI batch 共用的 manifest record owner。adapter 只向 `build_manifest_record()` 提交原 query、JSON-safe 请求参数、`FetchEnvelope` 或结构化 error、输出文件声明和 run/index/attempt；schema 字段、验收摘要、trace 与文件快照均由 builder 统一派生。builder 保持纯逻辑，不写输出文件。
 
 manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_schema_version=2` 都是必填常量。每条记录以 `record_status` 表示 `completed/failed/aborted`，以 `error.status` 表示失败分类，以 `output_artifacts` 记录最终文件；完整度读取同一 record 内的 `acceptance.overall/content/asset`。
 
@@ -136,7 +113,7 @@ manifest record schema 当前为 v2，`schema_version=2` 和 `minimum_reader_sch
 
 #### 批量最终结果
 
-CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSONL：每个输入恰好一条 schema-v2 record，并按输入 `index` 排列。写入复用 `ArtifactStore` 的同目录临时文件、flush/fsync、commit fence 与原子替换；默认拒绝覆盖，显式 `overwrite` 才允许替换。批处理不维护 run manifest、append-only journal、审计或恢复状态。
+CLI 的 `--batch-results` 与 批量 都只写一次最终 JSONL：每个输入恰好一条 schema-v2 record，并按输入 `index` 排列。写入复用 `ArtifactStore` 的同目录临时文件、flush/fsync、commit fence 与原子替换；默认拒绝覆盖，显式 `overwrite` 才允许替换。每篇完成后另有独立 manifest，取消时已完成文件可独立读取。
 
 ### 6. Extraction 层
 
@@ -172,8 +149,8 @@ CLI 的 `--batch-results` 与 MCP 的 `batch_results` 都只写一次最终 JSON
 | `formula-rendering` | `paper_fetch.extraction.markdown_render.formulas`、`paper_fetch.extraction.html.formula_rules`、`provider_rules`、`_article_markdown_math`、`paper_fetch.formula.convert` | MathML / LaTeX / 公式图片 fallback 渲染。 |
 | `markdown-normalization` | `paper_fetch.models.markdown`、provider postprocess、`extraction.html._runtime` / `renderer` | Markdown 块边界、空白、行内语义和去重。 |
 | `references-rendering` | `providers._html_references`、`_article_markdown_elsevier_document`、`paper_fetch.markdown.citations` | 参考文献抽取与渲染。 |
-| `final-rendering` | `paper_fetch.models.render`、`ArticleModel.to_ai_markdown`、`paper_fetch.mcp.schemas` | 最终 Markdown / MCP payload 输出。 |
-| `artifact-storage` | `paper_fetch.artifacts.ArtifactStore`、`paper_fetch.mcp.fetch_cache` | 原始 payload、publisher HTML、下载资产和 fetch-envelope sidecar 落盘。 |
+| `final-rendering` | `paper_fetch.models.render`、`ArticleModel.to_ai_markdown`、`paper_fetch.delivery.requests` | 最终 Markdown / CLI payload 输出。 |
+| `artifact-storage` | `paper_fetch.artifacts.ArtifactStore`、`paper_fetch.delivery.fetch_cache` | 原始 payload、publisher HTML、下载资产和 fetch-envelope sidecar 落盘。 |
 
 核心约束：
 
@@ -213,9 +190,9 @@ provider fulltext 内部链路统一接收同一个 `RuntimeContext`：workflow 
 - `ArtifactStore` / `DownloadPolicy` 管理 provider payload、Markdown、资产、诊断和 cache JSON。所有 writer 使用目标 path lock、同目录唯一 staging、flush/fsync 与原子 replace；取消 fence 与最终 replace 在同一临界区线性化。`overwrite=false` 时相同字节幂等，不同字节冲突；显式 overwrite 允许原子替换。
 - `artifact_mode=all` 下失败页面保留隐私清洗后的 HTML 与诊断 JSON，manifest 对其记录 size/hash；不自动保存原始失败 HTML 或截图。逐资产 timing 属于资产结果，请求墙钟由调用方观察。
 
-`FetchCache` 拥有 MCP fetch-envelope sidecar 的匹配和写入，`models.codec` 负责结构编码/解码并保持 wire shape；两者均不修复 PDF。当前 sidecar version 为 7，cache index version 为 3，要求完整 acquisition。旧 sidecar 以 `version_mismatch` 失效并重新抓取，既有 Markdown 不删除。cache index 只信任显式注册且仍通过 DOI/hash/scope 校验的条目，不扫描文件名推断身份，也不自动迁移或修复。
+`FetchCache` 拥有 CLI fetch-envelope sidecar 的匹配和写入，`models.codec` 负责结构编码/解码并保持 wire shape；两者均不修复 PDF。当前 sidecar version 为 7，cache index version 为 3，要求完整 acquisition。旧 sidecar 以 `version_mismatch` 失效并重新抓取，既有 Markdown 不删除。cache index 只信任显式注册且仍通过 DOI/hash/scope 校验的条目，不扫描文件名推断身份，也不自动迁移或修复。
 
-`CapabilityScopeBuilder` 统一构造 credential scope。browser state 只在成功注入 context 后记录实际 use，绑定 provider、backend、canonical 路径及最终内容摘要；空配置不制造 private scope，状态后续消失也不降为 public。loader、inspector 和 compact projection 只查当前请求的精确 variant，再单向回退 canonical/public；public 与不同 private scope 不能横向读取。`get_cached(detail="compact")` 通过 `cached_request_matches()` 判断请求兼容，质量摘要复用统一 acceptance。
+`CapabilityScopeBuilder` 统一构造 credential scope。browser state 只在成功注入 context 后记录实际 use，绑定 provider、backend、canonical 路径及最终内容摘要；空配置不制造 private scope，状态后续消失也不降为 public。loader、inspector 和 compact projection 只查当前请求的精确 variant，再单向回退 canonical/public；public 与不同 private scope 不能横向读取。内部缓存摘要通过 `cached_request_matches()` 判断请求兼容，质量摘要复用统一 acceptance。
 
 本地转换工具复用有界的探测、公式与 PDF 渲染缓存；缓存只减少重复调用，不改变转换输出。PDF 文本透传边界见 [PDF 规则](../extraction-rules.md#rule-pdf-conversion-boundary)。
 
@@ -233,7 +210,7 @@ Fulltext provider identity evidence 保留 domain、publisher、DOI 的一致与
 
 两种平台引擎的 navigation、redirect、子资源与 service worker 使用浏览器原生行为；项目不安装 BrowserContext-wide URL/DNS interceptor，也不把带 cookie 或 storage state 的 context 绑定到单一 origin。Provider image/font/media 优化只在 page scope 按资源类型生效。Browser 资产恢复可以直接返回 browser-owned image/file/PDF bytes，再进入统一预算与 staging。
 
-日志出口与 MCP bridge 使用同一递归 scanner，过滤 URL query/fragment、header map、query map 和文本中的标准/provider secret。MCP 只安装一个 ref-counted process-global router handler，当前 request target 存在 `ContextVar`，并显式传播到项目创建的 worker context。Target 自身用锁线性化 emit 与失效：bridge 退出会先将自己的 target 标记 inactive，再恢复 ContextVar、递减 handler 引用；因此保留 copied context 的迟到 worker 既不能写入已结束 session，也不能串到仍活跃的其它请求。Handler 在构造 notification coroutine 前同时拒绝 inactive target 与停止/关闭的 loop，重叠请求不会互收日志或乱序恢复 logger level。
+日志由 `logging_utils` 输出并脱敏，CLI 进度写 stderr；stdout 保留给简短文件回执或显式正文导出。完整 trace 在逐篇 manifest 与本地诊断文件中。
 
 ### 10. CI / 回归验证边界
 
@@ -247,12 +224,12 @@ service facade
 -> workflow.metadata (uses workflow.routing for route signals and probes)
 -> workflow.fulltext
 -> workflow.rendering
--> CLI / MCP / cache
+-> CLI / delivery / cache
 ```
 
 ### 1. resolve
 
-`resolve_paper()` 把 DOI / URL / 标题输入标准化成 `ResolvedQuery`，产出 `query_kind`、`doi`、`landing_url`、`provider_hint`、`candidates`、`title`。MCP structured `title` / `authors` / `year` 以结构化 request 进入 resolver：Crossref bibliographic search 只使用 title，authors 局部按完整姓名/首字母/仅姓氏给出 1.0/0.8/0.5 证据并一对一匹配，明确姓名冲突为零，公共去重 key 不变；year 消费候选 publication_dates 中明确发表年份并排除 created 后参与加权消歧。DOI cleanup 保留宽松输入清理后用 `idutils` 校验/规范化；标题候选用 token Jaccard + `rapidfuzz.fuzz.ratio` 评分，confidence threshold 和 ambiguity margin 控制。候选不够确定时保留 `candidates`，由上层返回 `ambiguous`，不猜测性继续抓取。
+`resolve_paper()` 把 DOI / URL / 标题输入标准化成 `ResolvedQuery`，产出 `query_kind`、`doi`、`landing_url`、`provider_hint`、`candidates`、`title`。Python API structured `title` / `authors` / `year` 以结构化 request 进入 resolver：Crossref bibliographic search 只使用 title，authors 局部按完整姓名/首字母/仅姓氏给出 1.0/0.8/0.5 证据并一对一匹配，明确姓名冲突为零，公共去重 key 不变；year 消费候选 publication_dates 中明确发表年份并排除 created 后参与加权消歧。DOI cleanup 保留宽松输入清理后用 `idutils` 校验/规范化；标题候选用 token Jaccard + `rapidfuzz.fuzz.ratio` 评分，confidence threshold 和 ambiguity margin 控制。候选不够确定时保留 `candidates`，由上层返回 `ambiguous`，不猜测性继续抓取。
 
 ### 2. routing signal
 
@@ -293,9 +270,9 @@ metadata fallback 的 `quality.has_fulltext=false`，结构化 trace 包含
 逐 provider 例外见
 [回退语义](../providers.md#4-abstract-only--metadata-only-fallback)。
 
-### 6. render / envelope / cache / MCP 暴露
+### 6. render / envelope / cache / CLI 暴露
 
-拿到最终 `ArticleModel` 后，workflow.rendering 构造 `FetchEnvelope`，对外结果含 `trace: list[TraceEvent]`。质量状态只由 `Quality` 实例持有；有 article 时 `FetchEnvelope.quality` 与 `ArticleModel.quality` 引用同一实例，质量字段统一通过 quality 访问。随后 `ArtifactStore` 已处理 provider payload / HTML copy / asset 诊断；CLI adapter 决定是否写 Markdown、overwrite 和相对资源链接改写；MCP adapter 负责 `FetchCache` 复用/写入、credential scope、Markdown 注册和 inline images。两者都只通过 `FetchPipeline` 共享显式 context 下的 service 调用。
+拿到最终 `ArticleModel` 后，workflow.rendering 构造 `FetchEnvelope`，对外结果含 `trace: list[TraceEvent]`。质量状态只由 `Quality` 实例持有；有 article 时 `FetchEnvelope.quality` 与 `ArticleModel.quality` 引用同一实例，质量字段统一通过 quality 访问。随后 `ArtifactStore` 已处理 provider payload / HTML copy / asset 诊断；CLI adapter 决定是否写 Markdown、overwrite 和相对资源链接改写；delivery 拥有缓存复用、credential scope、逐篇 manifest 与图片索引。正文获取通过 `FetchPipeline` 在显式 context 中调用 service。
 
 ## 数据契约与角色边界
 
@@ -311,7 +288,7 @@ metadata fallback 的 `quality.has_fulltext=false`，结构化 trace 包含
 
 固定返回形状的公开抓取结果。始终承载 doi、source、acquisition、quality、trace。按 modes 决定 article、markdown、metadata；完整 envelope 只序列化一份 quality、acquisition 和 trace，article 仅保存内容字段。独立 ArticleModel 仍包含自身完整质量与来源。无法从 provider 原点确认 acquisition 时保持 null，不做启发式补全。
 
-MCP tool 与 sidecar 业务 payload 使用 `schema_version=4` 的 JSON-safe 形状；sidecar wrapper 版本与匹配规则见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。reader 仅接受新结构，旧 sidecar/index 返回版本不匹配，不迁移或删除。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
+CLI tool 与 sidecar 业务 payload 使用 `schema_version=4` 的 JSON-safe 形状；sidecar wrapper 版本与匹配规则见 [Runtime / Artifact / Cache 边界](#8-runtime--artifact--cache-边界)。reader 仅接受新结构，旧 sidecar/index 返回版本不匹配，不迁移或删除。失败时 `status` 是兼容客户端可读的粗粒度状态，细粒度失败原因放在 `code` / `error_category`，HTTP 与限流细节放在 `http_status` / `retry_after_seconds`。
 
 ### `ArticleModel`
 
@@ -327,28 +304,28 @@ MCP tool 与 sidecar 业务 payload 使用 `schema_version=4` 的 JSON-safe 形�
 
 在抓取前报告本地环境是否就绪。本地检查边界与各 provider check 名称以 [`../providers.md`](../providers.md#provider-status-local-boundary) 为准；IEEE 的 direct 路线与可选 `browser_fallback` 分开报告。
 
-`paper_fetch.diagnostics` 是 CLI `doctor` 与 MCP `provider_status` 的共享 owner：provider/group/detail 筛选先由 catalog-backed schema 校验，随后只构建目标 provider 的静态状态。full 报告复用 `config.resolve_runtime_env()` 的来源元数据、`browser_preflight.static_browser_capabilities()` 的非 live 浏览器能力和 `image_tools.probe_image_conversion_backends()` 的本地可执行文件探测；compact 只保留路由字段。该层可以构造 transport 供 provider client 保持原接口，但禁止调用 transport、启动/连接浏览器或检查远端页面。
+`paper_fetch.diagnostics` 是 CLI `doctor` 与 内部 `provider_status_payload` 的共享 owner：provider/group/detail 筛选先由 catalog-backed schema 校验，随后只构建目标 provider 的静态状态。full 报告复用 `config.resolve_runtime_env()` 的来源元数据、`browser_preflight.static_browser_capabilities()` 的非 live 浏览器能力和 `image_tools.probe_image_conversion_backends()` 的本地可执行文件探测；compact 只保留路由字段。该层可以构造 transport 供 provider client 保持原接口，但禁止调用 transport、启动/连接浏览器或检查远端页面。
 
-CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provider_preflight()` 为唯一 orchestration owner；`paper_fetch.mcp.browser_preflight` 只做 Pydantic 入参、状态分类、progress/cancel 转接和 JSON-safe structured output。共享核心串行保留逐 provider 结果，把 `RuntimeContext.cancel_check` 传入现有 browser HTML bootstrap，并复用与 auth、fetch 相同的原生 profile；不得复制 provider workflow 或转入 PDF fallback。
+CLI live 预检入口复用 `paper_fetch.browser_preflight.run_browser_provider_preflight()`。抓取、认证和补图共享实际 profile 租约。
 
-诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` / MCP `browser_preflight` 才证明一次真实样例页面链路并可更新原生 profile；auth 是明确的人工副作用入口。三层结果不得相互冒充。
+诊断语义分三层：`provider_status` / `doctor` 只证明静态配置与本地依赖；CLI `browser-preflight` 才证明一次真实样例页面链路并可更新原生 profile；auth 是明确的人工副作用入口。三层结果不得相互冒充。
 
 ### `has_fulltext`
 
-区分两个层面：`fetch_paper().quality.has_fulltext` 是完整抓取瀑布后的最终 verdict；MCP 的 `batch_check(queries=[query])` 是只用更弱信号的廉价 probe，`mode` 默认且仅允许 `"metadata"`。真实批量抓取使用 `batch_fetch` 并读取 acceptance。两者不要求逐案完全一致（见 [`probe-semantics.md`](probe-semantics.md)）。
+区分完整 fetch 验收与仅探测：`paper-fetch check` 复用 metadata/landing 信号，`paper-fetch fetch` 执行正文 waterfall。两者不要求逐案一致（见 [probe-semantics.md](probe-semantics.md)）。
 
 ## 输出与可观测性
 
 - **`warnings`** 常见内容：abstract-only / metadata-only 降级、HTML / provider fallback 提示、资产部分下载失败、preview 资产可接受降级或不可接受 fallback、表格版式降级 / 语义丢失、公式 fallback / missing、token 截断。
 - **`trace`** 使用结构化 TraceEvent，stage 包括 resolve、route、metadata、fulltext、fallback、download。
 - **`token_estimate_breakdown`** 拆成 `abstract` / `body` / `refs`，帮 host 决定是否截断、哪段最占预算、是否改 metadata-only / summary-first。
-- **MCP cache tools**：`list_cached` / `get_cached` 在显式 `download_dir` scope 内查询索引与条目。`FetchCache` 匹配 `prefer_cache=true` 请求（按 modes、strategy、`include_refs`、`max_tokens`、sidecar version 和 `EXTRACTION_REVISION` 复用本地 fetch-envelope）；cache 不镜像为动态 MCP resources。
+- **缓存**：复用归入 fetch 流程，按请求模式、strategy、include_refs、max_tokens、提取修订、身份、文件与 credential scope 匹配；不暴露本地读取或导航命令。
 
 ## 扩展点：新增能力时应改哪一层
 
-- **新增 provider**：主要改 `src/paper_fetch/providers/`，必要时更新 provider-specific extraction / metadata adapter；在固定定义清单声明静态配置，entry module 从定义组装并导出 `PROVIDER_BUNDLE`，不手工编辑 `provider_catalog.py`、`provider_rules.py`、`quality/html_signals.py` 或 `quality/html_availability.py`，也不把 provider 逻辑塞进 CLI / MCP。
-- **新增 MCP surface**：主要改 `src/paper_fetch/mcp/`（`schemas.py`、`fetch_tool.py`、`cache_payloads.py`、`batch.py`、`batch_fetch.py`、`server.py`）；需要真正的新抓取逻辑要先落到 service / workflow 层。批量抓取入口复用 `workflow.batch_runner`、`manifest.build_manifest_record` 与 `manifest_writer.serialize_manifest_record`，最终 JSONL 由 `ArtifactStore.write_text_file` 原子写入。
-- **新增渲染能力**：正文渲染或资产展示能力优先改 `src/paper_fetch/models/` 与 provider 到 `ArticleModel` 的转换，而不是让 CLI / MCP 自己拼装业务结果。
+- **新增 provider**：主要改 `src/paper_fetch/providers/`，必要时更新 provider-specific extraction / metadata adapter；在固定定义清单声明静态配置，entry module 从定义组装并导出 `PROVIDER_BUNDLE`，不手工编辑 `provider_catalog.py`、`provider_rules.py`、`quality/html_signals.py` 或 `quality/html_availability.py`，也不把 provider 逻辑塞进 CLI / delivery。
+- **新增 CLI 命令**：参数及文件回执落在 cli/delivery，抓取策略落在 service/workflow，批量复用 batch_runner 与 manifest。
+- **新增渲染能力**：正文渲染或资产展示能力优先改 `src/paper_fetch/models/` 与 provider 到 `ArticleModel` 的转换，而不是让 CLI / delivery 自己拼装业务结果。
 
 ## 相关文档
 
@@ -357,6 +334,8 @@ CLI 与 MCP live 入口都以 `paper_fetch.browser_preflight.run_browser_provide
 - [`../deployment.md`](../deployment.md)
 - [`probe-semantics.md`](probe-semantics.md)
 
-MCP v4 的 acquisition 仅在结果顶层出现一次，单篇/批量统一从 acceptance.provenance 取 fallback_codes、warning_codes、failure_codes。未请求资产时摘要只保留 requested/profile；材料只返回身份、发现完整性和必要计数。成功与失败均注册可分页 diagnostics，批量别名共享快照。navigate_content 在保留 Markdown 上返回标题、章节和字面搜索范围，Unicode 码点偏移直接供 read_content 使用。
+CLI 回执 schema v1 与 manifest schema v2 独立版本化。完整 trace 在本地诊断与 manifest 中，正文从回执给出的文件路径读取。
 
 公开日期直接使用 publication_dates，不保留 published 别名。日期和文献关系跨 provider、元数据合并、模型编解码、候选、文件命名及渲染传递；未知日期不推测，不自动跟抓关联 DOI。
+
+浏览器资源以解析后的实际 profile 路径协调，跨进程使用文件锁。ExecutionSlots 让排队者释放批内执行名额；profile 租约覆盖 context 生命周期，预算在取得使用权后建立。HTTP 与 provider lane 限流保持独立。

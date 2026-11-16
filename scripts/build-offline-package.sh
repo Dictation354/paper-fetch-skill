@@ -285,6 +285,7 @@ copy_runtime_assets() {
   cp "$REPO_DIR/LICENSE" "$staging/LICENSE"
   cp "$INSTALLER_MANIFEST_FILE" "$staging/installer/manifest.json"
   cp "$REPO_DIR/scripts/skill_integrity.py" "$staging/scripts/skill_integrity.py"
+  cp "$REPO_DIR/src/paper_fetch/legacy_cleanup.py" "$staging/scripts/cleanup_legacy_mcp.py"
   cp -a "$REPO_DIR/skills/paper-fetch-skill" "$staging/skills/"
 }
 
@@ -339,7 +340,7 @@ build_project_runtime() {
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import playwright; import pymupdf; import paper_fetch.mcp.server; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
+    "$PYTHON_BIN" -X utf8 -c 'import playwright; import pymupdf; import paper_fetch.cli; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
 
   staging_is_owned "$staging" "$package_name" \
     || die "Offline staging ownership changed during runtime assembly: $staging"
@@ -597,17 +598,6 @@ fi
 exec "$INSTALL_ROOT/runtime/paper-fetch-python" -X utf8 -m paper_fetch.cli "$@"
 EOF
 
-  cat > "$bin/paper-fetch-mcp" <<'EOF'
-#!/usr/bin/env bash
-set -euo pipefail
-
-INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
-if [ -z "${PAPER_FETCH_ENV_FILE:-}" ]; then
-  export PAPER_FETCH_ENV_FILE="$INSTALL_ROOT/offline.env"
-fi
-exec "$INSTALL_ROOT/runtime/paper-fetch-python" -X utf8 -m paper_fetch.mcp.server "$@"
-EOF
-
   cat > "$bin/paper-fetch-install-formula-tools" <<'EOF'
 #!/usr/bin/env bash
 set -euo pipefail
@@ -627,7 +617,6 @@ EOF
   chmod +x \
     "$runtime/paper-fetch-python" \
     "$bin/paper-fetch" \
-    "$bin/paper-fetch-mcp" \
     "$bin/paper-fetch-install-formula-tools" \
     "$bin/paper-fetch-install-image-tools"
 }
@@ -651,7 +640,7 @@ The package includes official Node.js under `runtime/node/`, with its license an
 `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH` default to `runtime/node/bin/node` for formula tools, Playwright and Byparr. Explicit environment overrides are preserved.
 The package includes Python dependencies, not a Python interpreter. Linux installation defaults to `/usr/bin/python3`; macOS defaults to `python3` on PATH.
 Pass `--python /path/to/python` (or `--python=/path/to/python`) to select an interpreter matching the package ABI. Command names are also accepted.
-Selection priority is `--python`, then `PAPER_FETCH_OFFLINE_PYTHON_BIN`, then the platform default. The selected absolute path is recorded in `runtime/python-bin` and reused by CLI and MCP.
+Selection priority is `--python`, then `PAPER_FETCH_OFFLINE_PYTHON_BIN`, then the platform default. The selected absolute path is recorded in `runtime/python-bin` and reused by CLI.
 It does not redistribute browser engine binaries.
 After core smoke checks, browsers are prepared by default, including non-interactive installs.
 Use `--skip-browser-prepare` to skip preparation. System packages retain their existing permission rules.

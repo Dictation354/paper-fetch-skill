@@ -322,7 +322,7 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("verify_package_installation", script)
         self.assertIn("import playwright", script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', script)
-        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS=true", script)
+        self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)
         self.assertIn("Antigravity skill was not installed", script)
         self.assertIn("mcp_config.json", script)
         self.assertIn("activate-offline.sh executed shell code", script)
@@ -453,12 +453,12 @@ class OfflinePackageBuildTests(unittest.TestCase):
         ]
 
         self.assertIn("paper-fetch.cmd", wrapper_block)
-        self.assertIn("paper-fetch-mcp.cmd", wrapper_block)
+        self.assertNotIn("paper-fetch-mcp.cmd", wrapper_block)
         self.assertIn('command_wrappers = "bin"', manifest_block)
         self.assertIn("invisible = [ordered]@{", manifest_block)
         self.assertIn("invisible = [ordered]@{", manifest_block)
         self.assertIn("$OfflineEnvKeys", script)
-        self.assertIn("$InstallerManifest.mcp.env_keys", script)
+        self.assertIn("$InstallerManifest.runtime.env_keys", script)
         self.assertIn('Where-Object { $_ -ne "PAPER_FETCH_ENV_FILE" }', script)
         self.assertIn("Get-DefaultOfflineEnvValue", script)
         self.assertIn("PAPER_FETCH_BROWSER_HEADLESS", script)

@@ -124,17 +124,6 @@ class AssetContext:
     def __del__(self):
         self.close()
 
-    @property
-    def size(self) -> int:
-        # Include retained private descriptors and seed in the handle's byte budget.
-        import json
-
-        return len(
-            json.dumps(
-                [self.assets, self.metadata, self.browser_context_seed], default=str
-            ).encode()
-        )
-
 
 def _representation(content: ProviderContent) -> str | None:
     if content.route_kind == "pdf_fallback" or "pdf" in content.content_type:
@@ -703,3 +692,34 @@ def fetch_selected_assets(
     finally:
         if owns_runtime:
             runtime.close()
+
+
+def context_from_manifest(path: Path) -> AssetContext:
+    """Restore durable identity and image descriptors without resolving or fetching a body."""
+    import json
+    from .manifest import parse_manifest_record
+
+    record = parse_manifest_record(
+        json.loads(path.expanduser().read_text(encoding="utf-8"))
+    )
+    artifact = next(
+        (item for item in record.output_artifacts if item.kind == "image_index"), None
+    )
+    if artifact is None:
+        raise ValueError("Manifest has no image index.")
+    index_path = Path(artifact.path)
+    if not index_path.is_absolute():
+        index_path = path.parent / index_path
+    data = json.loads(index_path.read_text(encoding="utf-8"))
+    if data.get("doi") != record.doi:
+        raise ValueError("Image index identity does not match manifest.")
+    return AssetContext(
+        doi=record.doi,
+        provider=data["provider"],
+        source_url=data["source_url"],
+        assets=image_index(data.get("assets", [])),
+        metadata=data.get("metadata", {}),
+        route_kind=data.get("route_kind", "html"),
+        discovery_complete=True,
+        cleanup_temporary=False,
+    )

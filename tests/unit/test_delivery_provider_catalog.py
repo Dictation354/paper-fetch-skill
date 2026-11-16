@@ -1,7 +1,6 @@
 from __future__ import annotations
 from dataclasses import replace
 
-import asyncio
 import json
 from dataclasses import asdict
 from unittest import mock
@@ -10,11 +9,10 @@ from paper_fetch import provider_catalog as runtime_catalog
 from paper_fetch.config import DEFAULT_USER_AGENT
 from paper_fetch.provider_catalog import provider_supports_supplementary
 from paper_fetch.catalog_payload import (
-    PROVIDER_CATALOG_RESOURCE_URI,
+    PROVIDER_CATALOG_ID,
     PROVIDER_CATALOG_SCHEMA_VERSION,
     provider_catalog_payload,
 )
-from paper_fetch.mcp.server import build_server
 
 
 def _expected_routes(
@@ -46,7 +44,7 @@ def test_provider_catalog_payload_exactly_reflects_runtime_catalog() -> None:
     assert payload["tool_version"] == DEFAULT_USER_AGENT.removeprefix(
         "paper-fetch-skill/"
     )
-    assert payload["resource_uri"] == PROVIDER_CATALOG_RESOURCE_URI
+    assert payload["catalog_id"] == PROVIDER_CATALOG_ID
     assert payload["provider_count"] == len(specs)
     assert payload["source_count"] == len(runtime_catalog.SOURCE_PROVIDER_MAP)
     assert payload["source_provider_map"] == dict(
@@ -155,24 +153,6 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
     assert payload["source_provider_map"]["synthetic_html"] == synthetic.name
     assert payload["provider_count"] == len(existing_specs) + 1
     assert payload["source_count"] == len(updated_sources)
-
-
-def test_server_registers_readable_provider_catalog_resource() -> None:
-    async def read_resource() -> tuple[str, str | None]:
-        server = build_server()
-        resources = await server.list_resources()
-        assert [str(resource.uri) for resource in resources] == [
-            PROVIDER_CATALOG_RESOURCE_URI
-        ]
-        contents = await server.read_resource(PROVIDER_CATALOG_RESOURCE_URI)
-        assert isinstance(contents, list)
-        assert len(contents) == 1
-        return contents[0].content, contents[0].mime_type
-
-    raw_payload, mime_type = asyncio.run(read_resource())
-    assert mime_type == "application/json"
-    assert isinstance(raw_payload, str)
-    assert json.loads(raw_payload) == provider_catalog_payload()
 
 
 def test_catalog_runtime_facts_are_read_only_and_derived_from_runtime_owners(

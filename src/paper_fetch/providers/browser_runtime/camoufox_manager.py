@@ -95,7 +95,7 @@ class CamoufoxBrowserManager:
             if self._firefox_major_version is not None:
                 launch_kwargs["ff_version"] = self._firefox_major_version
                 launch_kwargs["i_know_what_im_doing"] = True
-            # MCP reserves stdout exclusively for JSON-RPC. Camoufox may emit
+            # CLI reserves stdout for receipts or explicit body export. Camoufox may emit
             # first-run addon extraction progress while building launch options,
             # so route third-party startup output to stderr at this boundary.
             with redirect_stdout(sys.stderr):

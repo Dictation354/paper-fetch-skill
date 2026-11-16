@@ -47,11 +47,11 @@ bundle 的 `BrowserAssetPolicy` 显式声明附件点击和 figure page 能力�
 
 显式 executable 必须匹配当前平台引擎：Invisible 校验 release seal，Camoufox 读取
 相邻 `version.json`；配置边界见[浏览器后端](browser-backends.md#选择与配置)。
-启动进度与错误写 stderr；MCP stdio 的 stdout 仅承载 JSON-RPC。
+启动进度与错误写 stderr；CLI stdout 默认只承载逐篇 JSON 回执。
 
 ## HTML 策略与资源阻断
 
-browser profile 的正文策略是内部配置，不改变 CLI/MCP schema。provider 决定候选 URL、
+browser profile 的正文策略是内部配置，不改变 CLI schema。provider 决定候选 URL、
 readiness 和允许的资源阻断；具体获取顺序与例外见[provider 指南](providers.md)。
 媒体阻断只作用于相应页面，不扩展到其他 provider 或任意 XHR/fetch。
 
@@ -107,7 +107,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 - Browser cookie 转 direct opener 时使用标准 `CookieJar`，保留 host-only/domain、
   RFC path boundary、secure 与 expiry，避免把 publisher cookie 扩到子域或相邻路径。
 - `persistent_profile` diagnostics 区分原生目录加载和同 context 复用；不导入或导出 JSON 状态。
-- MCP 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
+- CLI 私有缓存使用实际目录与从打开的 context 获取的最新摘要；无法取得可信摘要时
   禁用私有缓存读写。元数据只保存摘要，不保存 Cookie 或 localStorage 明文。
 
 ## 二进制资产与资源预算
@@ -149,7 +149,7 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 
 后端选择、环境变量及状态目录见[浏览器配置](browser-backends.md#选择与配置)，
 渠道、pin、检查间隔和失败重试见[浏览器安装与准备](deployment.md#浏览器安装与准备)。
-CLI、MCP 和 Python API 入口只建立准备作用域，首次使用后端才准备；批次共享准备
+CLI 和 Python API 入口只建立准备作用域，首次使用后端才准备；批次共享准备
 结果，浏览器会话、clients 和认证状态仍按请求隔离。原生 Camoufox 本地验证入口见
 [测试说明](../tests/README.md)。
 

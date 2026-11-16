@@ -1,4 +1,4 @@
-"""Shared compact acceptance projections for MCP fetch responses."""
+"""Shared compact acceptance projections for fetch responses."""
 
 from __future__ import annotations
 
@@ -13,7 +13,7 @@ __all__ = ["compact_acceptance_payload", "expected_doi_from_query"]
 def compact_acceptance_payload(
     report: FetchAcceptanceReport,
 ) -> dict[str, Any]:
-    """Project the canonical report into the bounded MCP acceptance contract."""
+    """Project the canonical report into the bounded acceptance contract."""
 
     return {
         **(

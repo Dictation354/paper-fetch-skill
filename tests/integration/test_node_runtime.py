@@ -137,7 +137,7 @@ def test_release_launchers_default_to_independent_node_and_preserve_overrides(
     if override:
         expected = {key: f"/custom/{key}/node" for key in keys}
         env.update(expected)
-    for name in ("paper-fetch", "paper-fetch-mcp"):
+    for name in ("paper-fetch",):
         output = subprocess.check_output(
             [str(staging / "bin" / name), "--help"], env=env, text=True
         )

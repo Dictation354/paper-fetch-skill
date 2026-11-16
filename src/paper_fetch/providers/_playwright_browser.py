@@ -1471,8 +1471,11 @@ def _browser_html_deadline(
     runtime_context: RuntimeContext | None,
 ) -> float:
     deadline = started_at + (timeout_ms / 1000.0)
-    if runtime_context is not None and runtime_context.deadline_monotonic is not None:
-        return min(deadline, runtime_context.deadline_monotonic)
+    if (
+        runtime_context is not None
+        and runtime_context.browser_deadline_monotonic is not None
+    ):
+        return min(deadline, runtime_context.browser_deadline_monotonic)
     return deadline
 
 
@@ -1736,6 +1739,14 @@ def fetch_html_with_playwright(
             runtime_context=runtime_context,
             shared_page_session=shared_page_session,
             trace=trace,
+        )
+        # Admission may have waited arbitrarily long. The page clock starts with
+        # the acquired profile, and subsequent routes share the request budget.
+        overall_started = time.monotonic()
+        local_deadline = _browser_html_deadline(
+            started_at=overall_started,
+            timeout_ms=timeout_ms,
+            runtime_context=runtime_context,
         )
         trace["persistent_profile"] = (
             runtime_context.browser_profile_diagnostics(browser_context)

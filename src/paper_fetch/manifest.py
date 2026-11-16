@@ -1,4 +1,4 @@
-"""Versioned manifest records shared by CLI and MCP adapters."""
+"""Versioned manifest records shared by CLI file delivery."""
 
 from __future__ import annotations
 

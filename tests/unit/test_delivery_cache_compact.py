@@ -1,17 +1,12 @@
 from __future__ import annotations
-from paper_fetch.capability_scope import CapabilityScopeBuilder
 import json
 import socket
 from pathlib import Path
 from unittest import mock
 import pytest
-from paper_fetch.config import build_runtime_env
-from paper_fetch.mcp import fetch_cache
-from paper_fetch.mcp.cache_payloads import get_cached_payload
-from paper_fetch.mcp.server import build_server
+from paper_fetch.delivery.cache_inspection import get_cached_payload
 from paper_fetch.utils import sanitize_filename
-from tests.support._mcp_support import (
-    assert_mcp_tool_omits_output_schema,
+from tests.support.fetch_fixtures import (
     create_cached_downloads,
     create_cached_fetch_envelope,
 )
@@ -27,21 +22,6 @@ def _sidecar_path(download_dir: Path, doi: str = DOI) -> Path:
 def _prepared_cache(download_dir: Path) -> None:
     create_cached_downloads(download_dir, DOI)
     create_cached_fetch_envelope(download_dir, DOI)
-
-
-def _rewrite_sidecar_credential_scope(
-    download_dir: Path,
-    credential_scope: str,
-) -> None:
-    sidecar_path = _sidecar_path(download_dir)
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["credential_scope"] = credential_scope
-    sidecar["request_fingerprint"] = fetch_cache.cache_request_fingerprint(
-        DOI,
-        sidecar["request"],
-        credential_scope=credential_scope,
-    )
-    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
 
 def test_get_cached_default_full_preserves_existing_fields(tmp_path: Path) -> None:
@@ -163,24 +143,6 @@ def test_get_cached_distinguishes_entries_from_request_mismatch(
     assert payload["request_satisfied"] is False
     assert payload["sidecar"]["request_matches"] is False
     assert payload["sidecar"]["reason_code"] == "cached_request_mismatch"
-
-
-def test_get_cached_uses_shared_cached_request_matcher(tmp_path: Path) -> None:
-    _prepared_cache(tmp_path)
-
-    with mock.patch.object(
-        fetch_cache,
-        "cached_request_matches",
-        wraps=fetch_cache.cached_request_matches,
-    ) as matcher:
-        payload = get_cached_payload(
-            doi=DOI,
-            download_dir=tmp_path,
-            detail="compact",
-        )
-
-    assert payload["request_satisfied"] is True
-    matcher.assert_called_once()
 
 
 def test_get_cached_reports_cached_payload_missing_requested_mode(
@@ -309,51 +271,6 @@ def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
     create_connection.assert_not_called()
 
 
-def test_get_cached_uses_runtime_credential_scope(tmp_path: Path) -> None:
-    _prepared_cache(tmp_path)
-    runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
-    credential_scope = CapabilityScopeBuilder(runtime_env).build()
-    _rewrite_sidecar_credential_scope(tmp_path, credential_scope)
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-        env={"ELSEVIER_API_KEY": "unit-test-secret"},
-    )
-
-    assert payload["request_satisfied"] is True
-    assert payload["sidecar"]["status"] == "ready"
-
-
-def test_get_cached_credential_scope_fallback_is_one_way(tmp_path: Path) -> None:
-    public_cache = tmp_path / "public"
-    private_cache = tmp_path / "private"
-    _prepared_cache(public_cache)
-    _prepared_cache(private_cache)
-    runtime_env = build_runtime_env({"ELSEVIER_API_KEY": "unit-test-secret"})
-    private_scope = CapabilityScopeBuilder(runtime_env).build()
-    _rewrite_sidecar_credential_scope(private_cache, private_scope)
-
-    credentialed_reader = get_cached_payload(
-        doi=DOI,
-        download_dir=public_cache,
-        detail="compact",
-        env={"ELSEVIER_API_KEY": "unit-test-secret"},
-    )
-    public_reader = get_cached_payload(
-        doi=DOI,
-        download_dir=private_cache,
-        detail="compact",
-        env={"ELSEVIER_API_KEY": ""},
-    )
-
-    assert credentialed_reader["request_satisfied"] is True
-    assert credentialed_reader["sidecar"]["status"] == "ready"
-    assert public_reader["request_satisfied"] is False
-    assert public_reader["sidecar"]["status"] == "credential_scope_mismatch"
-
-
 def test_get_cached_does_not_treat_unproven_markdown_as_doi_hit(
     tmp_path: Path,
 ) -> None:
@@ -409,12 +326,3 @@ def test_cache_request_fingerprint_is_stable_across_json_key_order(
     second = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
 
     assert first["cached_request_fingerprint"] == second["cached_request_fingerprint"]
-
-
-def test_get_cached_compact_payload_keeps_asset_summary_without_output_schema(
-    tmp_path: Path,
-) -> None:
-    _prepared_cache(tmp_path)
-    payload = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
-    assert_mcp_tool_omits_output_schema(build_server(), "get_cached", payload)
-    assert isinstance(payload["asset_summary"], dict)

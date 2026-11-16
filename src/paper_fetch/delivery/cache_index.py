@@ -1,4 +1,4 @@
-"""Helpers for DOI-safe MCP-visible cached download indexing."""
+"""Helpers for DOI-safe CLI-visible cached download indexing."""
 
 from __future__ import annotations
 
@@ -30,7 +30,8 @@ from .markdown_frontmatter import (
     read_markdown_front_matter_file,
 )
 
-INDEX_FILENAME = ".paper-fetch-mcp-cache.json"
+INDEX_FILENAME = ".paper-fetch-cache.json"
+LEGACY_INDEX_FILENAME = ".paper-fetch-mcp-cache.json"
 LOCK_DIRNAME = ".paper-fetch-locks"
 INDEX_LOCK_FILENAME = "cache-index.lock"
 INDEX_VERSION = 3
@@ -597,6 +598,8 @@ def _read_cache_index_unlocked(
     download_dir: Path,
 ) -> CacheIndexResult:
     index_path = cache_index_path(download_dir)
+    if not index_path.exists():
+        index_path = download_dir / LEGACY_INDEX_FILENAME
     if not index_path.exists():
         return _index_error_result(
             status=CACHE_INDEX_STATUS_MISSING,

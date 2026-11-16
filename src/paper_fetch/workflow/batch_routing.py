@@ -22,7 +22,7 @@ GENERIC_BATCH_LANE = "generic"
 
 
 class _BatchRoutingItem(Protocol):
-    """Minimum item facts shared by CLI and MCP batch routing."""
+    """Minimum item facts shared by CLI batch routing."""
 
     @property
     def index(self) -> int: ...

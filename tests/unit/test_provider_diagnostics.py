@@ -4,8 +4,6 @@ import json
 from pathlib import Path
 from unittest import mock
 
-import pytest
-from pydantic import ValidationError
 
 from paper_fetch import config
 from paper_fetch.diagnostics import (
@@ -14,7 +12,6 @@ from paper_fetch.diagnostics import (
     selected_provider_status_names,
 )
 from paper_fetch.http import HttpTransport
-from paper_fetch.mcp.schemas import ProviderStatusRequest
 from paper_fetch.provider_catalog import PROVIDER_CATALOG, provider_status_order
 from paper_fetch.providers.base import (
     ProviderStatusResult,
@@ -189,22 +186,6 @@ def test_provider_status_never_uses_the_network(tmp_path: Path) -> None:
 
     assert len(payload["providers"]) == len(provider_status_order())
     request.assert_not_called()
-
-
-@pytest.mark.parametrize(
-    "request_data",
-    [
-        {"provider": "unknown"},
-        {"group": "unknown"},
-        {"detail": "verbose"},
-        {"provider": "crossref", "group": "browser"},
-    ],
-)
-def test_invalid_provider_status_filters_fail_request_validation(
-    request_data: dict[str, str],
-) -> None:
-    with pytest.raises(ValidationError):
-        ProviderStatusRequest.model_validate(request_data)
 
 
 def test_configuration_sources_never_expose_secret_values(tmp_path: Path) -> None:

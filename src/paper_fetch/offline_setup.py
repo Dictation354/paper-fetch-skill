@@ -379,9 +379,7 @@ class Setup:
                 )
             elif value:
                 update_env(self.env_file, {key: value})
-                self.report(
-                    key, "completed", "Saved privately; restart running hosts/MCP"
-                )
+                self.report(key, "completed", "Saved privately; restart running hosts")
             else:
                 self.report(key, "skipped", "Existing value preserved")
 
@@ -577,7 +575,7 @@ class Setup:
         return (
             "Core installation preserved. Optional configuration results:\n"
             + self.result_lines()
-            + "\nRestart running hosts/MCP to reload configuration.\n"
+            + "\nRestart running hosts to reload configuration.\n"
         )
 
 

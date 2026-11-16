@@ -26,8 +26,7 @@ MANAGED_END="# END paper-fetch offline managed"
 CODEX_MANAGED_BEGIN="# BEGIN paper-fetch installer managed"
 CODEX_MANAGED_END="# END paper-fetch installer managed"
 SKILL_NAME="paper-fetch-skill"
-MCP_NAME="paper-fetch"
-MCP_ENV_KEYS=(
+RUNTIME_ENV_KEYS=(
   PYTHONUTF8
   PYTHONIOENCODING
   PAPER_FETCH_ENV_FILE
@@ -80,9 +79,8 @@ print(manifest["managed_blocks"]["offline"]["end"])
 print(manifest["managed_blocks"]["codex"]["begin"])
 print(manifest["managed_blocks"]["codex"]["end"])
 print(manifest["skill"]["name"])
-print(manifest["mcp"]["name"])
-print("[mcp.env_keys]")
-for key in manifest["mcp"]["env_keys"]:
+print("[runtime.env_keys]")
+for key in manifest["runtime"]["env_keys"]:
     print(key)
 ' "$INSTALLER_MANIFEST_FILE")
 
@@ -92,24 +90,23 @@ for key in manifest["mcp"]["env_keys"]:
   CODEX_MANAGED_BEGIN="${values[3]:-}"
   CODEX_MANAGED_END="${values[4]:-}"
   SKILL_NAME="${values[5]:-}"
-  MCP_NAME="${values[6]:-}"
   local section=""
-  local loaded_mcp_env_keys=()
-  for value in "${values[@]:7}"; do
+  local loaded_runtime_env_keys=()
+  for value in "${values[@]:6}"; do
     case "$value" in
-      "[mcp.env_keys]")
+      "[runtime.env_keys]")
         section="$value"
         continue
         ;;
     esac
     case "$section" in
-      "[mcp.env_keys]") loaded_mcp_env_keys+=("$value") ;;
+      "[runtime.env_keys]") loaded_runtime_env_keys+=("$value") ;;
     esac
   done
-  if [ "${#loaded_mcp_env_keys[@]}" -gt 0 ]; then
-    MCP_ENV_KEYS=("${loaded_mcp_env_keys[@]}")
+  if [ "${#loaded_runtime_env_keys[@]}" -gt 0 ]; then
+    RUNTIME_ENV_KEYS=("${loaded_runtime_env_keys[@]}")
   fi
-  normalize_mcp_env_keys
+  normalize_runtime_env_keys
   derive_env_key_sets
 
   [ -n "$MANAGED_BEGIN" ] || die "installer manifest is missing managed_blocks.offline.begin"
@@ -117,9 +114,8 @@ for key in manifest["mcp"]["env_keys"]:
   [ -n "$CODEX_MANAGED_BEGIN" ] || die "installer manifest is missing managed_blocks.codex.begin"
   [ -n "$CODEX_MANAGED_END" ] || die "installer manifest is missing managed_blocks.codex.end"
   [ -n "$SKILL_NAME" ] || die "installer manifest is missing skill.name"
-  [ -n "$MCP_NAME" ] || die "installer manifest is missing mcp.name"
-  [ "${#MCP_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing mcp.env_keys"
-  [ "${#OFFLINE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest mcp.env_keys does not provide offline environment keys"
+  [ "${#RUNTIME_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing runtime.env_keys"
+  [ "${#OFFLINE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest runtime.env_keys does not provide offline environment keys"
 }
 
 usage() {
@@ -143,7 +139,7 @@ Options:
   --skip-smoke            Skip local command smoke checks after installation.
   --non-interactive       Skip optional configuration; prepare browsers without system installs or elevation.
   --skip-browser-prepare  Skip installer browser preparation; runtime remains on demand.
-  --uninstall             Remove user-level shell, skill, and MCP integration without deleting the install directory.
+  --uninstall             Remove user-level shell and skill integration without deleting the install directory.
   --purge                 Remove user-level integration and delete the install directory.
   -h, --help              Show this help.
 
@@ -156,10 +152,10 @@ Optional Ghostscript/libvips installs default to No.
 EOF
 }
 
-normalize_mcp_env_keys() {
+normalize_runtime_env_keys() {
   local key seen_headless=0
   local filtered=()
-  for key in "${MCP_ENV_KEYS[@]}"; do
+  for key in "${RUNTIME_ENV_KEYS[@]}"; do
     case "$key" in
       PLAYWRIGHT_BROWSERS_PATH)
         continue
@@ -173,15 +169,15 @@ normalize_mcp_env_keys() {
   if [ "$seen_headless" != "1" ]; then
     filtered+=(PAPER_FETCH_BROWSER_HEADLESS)
   fi
-  MCP_ENV_KEYS=("${filtered[@]}")
+  RUNTIME_ENV_KEYS=("${filtered[@]}")
 }
 
 derive_env_key_sets() {
   local key
-  SHELL_ENV_KEYS=("${MCP_ENV_KEYS[@]}")
-  ACTIVATE_ENV_KEYS=("${MCP_ENV_KEYS[@]}")
+  SHELL_ENV_KEYS=("${RUNTIME_ENV_KEYS[@]}")
+  ACTIVATE_ENV_KEYS=("${RUNTIME_ENV_KEYS[@]}")
   OFFLINE_ENV_KEYS=()
-  for key in "${MCP_ENV_KEYS[@]}"; do
+  for key in "${RUNTIME_ENV_KEYS[@]}"; do
     if [ "$key" != "PAPER_FETCH_ENV_FILE" ]; then
       OFFLINE_ENV_KEYS+=("$key")
     fi
@@ -322,9 +318,6 @@ quote_toml_value() {
   printf '"%s"' "$value"
 }
 
-mcp_name_regex() {
-  printf '%s' "$MCP_NAME" | sed 's/[][\\.^$*+?{}|()]/\\&/g'
-}
 
 offline_manifest_value() {
   "$PYTHON_BIN" -I -c '
@@ -705,12 +698,10 @@ check_bundle_assets() {
   require_file "$BUNDLE_ROOT/runtime/site-packages/paper_fetch/__init__.py"
   require_file "$BUNDLE_ROOT/runtime/paper-fetch-python"
   require_file "$BUNDLE_ROOT/bin/paper-fetch"
-  require_file "$BUNDLE_ROOT/bin/paper-fetch-mcp"
   require_file "$BUNDLE_ROOT/bin/paper-fetch-install-formula-tools"
   require_file "$BUNDLE_ROOT/bin/paper-fetch-install-image-tools"
   [ -x "$BUNDLE_ROOT/runtime/paper-fetch-python" ] || die "Bundled private Python launcher is not executable: $BUNDLE_ROOT/runtime/paper-fetch-python"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch" ] || die "Bundled CLI wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch"
-  [ -x "$BUNDLE_ROOT/bin/paper-fetch-mcp" ] || die "Bundled MCP wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-mcp"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch-install-formula-tools" ] || die "Bundled formula installer wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-install-formula-tools"
   [ -x "$BUNDLE_ROOT/bin/paper-fetch-install-image-tools" ] || die "Bundled image installer wrapper is not executable: $BUNDLE_ROOT/bin/paper-fetch-install-image-tools"
   require_file "$BUNDLE_ROOT/formula-tools/bin/texmath"
@@ -735,7 +726,13 @@ check_macos_quarantine() {
   fi
 }
 
-mcp_python_bin() {
+cleanup_legacy_integration() {
+  local migration_python="$PYTHON_BIN"
+  [ ! -x "$(runtime_python_bin)" ] || migration_python="$(runtime_python_bin)"
+  "$migration_python" "$INSTALL_ROOT/scripts/cleanup_legacy_mcp.py" --install-root "$INSTALL_ROOT"
+}
+
+runtime_python_bin() {
   printf '%s\n' "$INSTALL_ROOT/runtime/paper-fetch-python"
 }
 
@@ -771,7 +768,7 @@ installer_env_value() {
   esac
 }
 
-mcp_env_value() {
+runtime_env_value() {
   installer_env_value "$1"
 }
 
@@ -901,161 +898,9 @@ codex_config_path() {
   if [ -n "${CODEX_HOME:-}" ]; then
     printf '%s/config.toml\n' "$CODEX_HOME"
   else
-    [ -n "${HOME:-}" ] || die "HOME is required to locate Codex MCP config."
+    [ -n "${HOME:-}" ] || die "HOME is required to locate Codex config."
     printf '%s/.codex/config.toml\n' "$HOME"
   fi
-}
-
-write_codex_config_toml() {
-  local config_path
-  config_path="$(codex_config_path)"
-  local codex_home
-  codex_home="$(dirname "$config_path")"
-  local tmp key mcp_table_re
-  tmp="$(mktemp)"
-  mcp_table_re="^[[:space:]]*[[]mcp_servers[.]$(mcp_name_regex)([.].*)?[]][[:space:]]*$"
-  mkdir -p "$codex_home"
-
-  if [ -f "$config_path" ]; then
-    awk -v begin="$CODEX_MANAGED_BEGIN" -v end="$CODEX_MANAGED_END" -v old_begin="$MANAGED_BEGIN" -v old_end="$MANAGED_END" -v mcp_table_re="$mcp_table_re" '
-      $0 == begin || $0 == old_begin { skip_block = 1; next }
-      $0 == end || $0 == old_end { skip_block = 0; next }
-      skip_block { next }
-      $0 ~ mcp_table_re { skip_table = 1; next }
-      skip_table && $0 ~ /^[[:space:]]*\[/ { skip_table = 0 }
-      !skip_table { print }
-    ' "$config_path" > "$tmp"
-  else
-    : > "$tmp"
-  fi
-
-  {
-    printf '\n%s\n' "$CODEX_MANAGED_BEGIN"
-    printf '[mcp_servers.%s]\n' "$MCP_NAME"
-    printf 'command = %s\n' "$(quote_toml_value "$(mcp_python_bin)")"
-    printf 'args = ["-X", "utf8", "-m", "paper_fetch.mcp.server"]\n'
-    printf '\n[mcp_servers.%s.env]\n' "$MCP_NAME"
-    for key in "${MCP_ENV_KEYS[@]}"; do
-      printf '%s = %s\n' "$key" "$(quote_toml_value "$(mcp_env_value "$key")")"
-    done
-    printf '%s\n' "$CODEX_MANAGED_END"
-  } >> "$tmp"
-
-  mv "$tmp" "$config_path"
-  log "Updated Codex MCP config at $config_path"
-}
-
-register_codex_mcp() {
-  local codex_bin key
-  codex_bin="$(command -v codex || true)"
-
-  if [ -n "$codex_bin" ]; then
-    log "Registering Codex MCP server '$MCP_NAME' with Codex CLI ($(codex_config_path))"
-    "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
-
-    local args=(mcp add)
-    for key in "${MCP_ENV_KEYS[@]}"; do
-      args+=(--env "$key=$(mcp_env_value "$key")")
-    done
-    args+=("$MCP_NAME" -- "$(mcp_python_bin)" -X utf8 -m paper_fetch.mcp.server)
-
-    if "$codex_bin" "${args[@]}"; then
-      return
-    fi
-    warn "Codex CLI MCP registration failed; falling back to $(codex_config_path)"
-  fi
-
-  write_codex_config_toml
-}
-
-register_claude_mcp() {
-  local claude_bin key
-  claude_bin="$(command -v claude || true)"
-
-  if [ -z "$claude_bin" ]; then
-    log "Claude CLI not found; installed the skill and skipped Claude MCP registration"
-    return
-  fi
-
-  log "Registering Claude MCP server '$MCP_NAME' with Claude CLI"
-  "$claude_bin" mcp remove -s user "$MCP_NAME" >/dev/null 2>&1 || true
-
-  local args=(mcp add -s user)
-  for key in "${MCP_ENV_KEYS[@]}"; do
-    args+=(-e "$key=$(mcp_env_value "$key")")
-  done
-  args+=(-- "$MCP_NAME" "$(mcp_python_bin)" -X utf8 -m paper_fetch.mcp.server)
-
-  if ! "$claude_bin" "${args[@]}"; then
-    warn "Claude MCP registration failed and was skipped."
-  fi
-}
-
-resolve_json_python() {
-  if [ -x "$(mcp_python_bin)" ]; then
-    mcp_python_bin
-  elif command -v python3 >/dev/null 2>&1; then
-    command -v python3
-  else
-    printf '\n'
-  fi
-}
-
-register_antigravity_mcp() {
-  [ -n "${HOME:-}" ] || die "HOME is required to install the Antigravity MCP config."
-
-  local config_path key
-  config_path="$(antigravity_home)/mcp_config.json"
-  mkdir -p "$(dirname "$config_path")"
-
-  local env_pairs=()
-  for key in "${MCP_ENV_KEYS[@]}"; do
-    env_pairs+=("$key=$(mcp_env_value "$key")")
-  done
-
-  log "Registering Antigravity MCP server '$MCP_NAME' in $config_path"
-  PF_CONFIG_PATH="$config_path" \
-  PF_MCP_NAME="$MCP_NAME" \
-  PF_PYTHON_BIN="$(mcp_python_bin)" \
-  PF_ENV_PAIRS="$(printf '%s\n' "${env_pairs[@]}")" \
-  "$(mcp_python_bin)" -X utf8 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-path = Path(os.environ["PF_CONFIG_PATH"])
-name = os.environ["PF_MCP_NAME"]
-
-data = {}
-if path.exists():
-    try:
-        data = json.loads(path.read_text(encoding="utf-8") or "{}")
-    except json.JSONDecodeError as exc:
-        raise SystemExit(f"Existing {path} is not valid JSON: {exc}")
-if not isinstance(data, dict):
-    raise SystemExit(f"Existing {path} must contain a JSON object")
-
-servers = data.setdefault("mcpServers", {})
-if not isinstance(servers, dict):
-    raise SystemExit(f"'mcpServers' in {path} must be a JSON object")
-
-env = {}
-for line in os.environ.get("PF_ENV_PAIRS", "").splitlines():
-    if not line:
-        continue
-    key, _, value = line.partition("=")
-    env[key] = value
-
-entry = {
-    "command": os.environ["PF_PYTHON_BIN"],
-    "args": ["-X", "utf8", "-m", "paper_fetch.mcp.server"],
-}
-if env:
-    entry["env"] = env
-
-servers[name] = entry
-path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-PY
 }
 
 remove_managed_block_from_file() {
@@ -1120,96 +965,11 @@ remove_installed_skills() {
   log "Removed Antigravity skill at $antigravity_skill"
 }
 
-remove_codex_config_toml() {
-  local config_path
-  config_path="$(codex_config_path)"
-  local tmp mode mcp_table_re
-  [ -f "$config_path" ] || return 0
-
-  tmp="$(mktemp)"
-  mode="$(file_mode "$config_path")"
-  mcp_table_re="^[[:space:]]*[[]mcp_servers[.]$(mcp_name_regex)([.].*)?[]][[:space:]]*$"
-  awk -v begin="$CODEX_MANAGED_BEGIN" -v end="$CODEX_MANAGED_END" -v old_begin="$MANAGED_BEGIN" -v old_end="$MANAGED_END" -v mcp_table_re="$mcp_table_re" '
-    $0 == begin || $0 == old_begin { skip_block = 1; next }
-    $0 == end || $0 == old_end { skip_block = 0; next }
-    skip_block { next }
-    $0 ~ mcp_table_re { skip_table = 1; next }
-    skip_table && $0 ~ /^[[:space:]]*\[/ { skip_table = 0 }
-    !skip_table { print }
-  ' "$config_path" > "$tmp"
-
-  mv "$tmp" "$config_path"
-  if [ -n "$mode" ]; then
-    chmod "$mode" "$config_path"
-  fi
-  log "Removed Codex MCP config from $config_path"
-}
-
-unregister_codex_mcp() {
-  local codex_bin
-  codex_bin="$(command -v codex || true)"
-  if [ -n "$codex_bin" ]; then
-    log "Removing Codex MCP server '$MCP_NAME' with Codex CLI ($(codex_config_path))"
-    "$codex_bin" mcp remove "$MCP_NAME" >/dev/null 2>&1 || true
-  fi
-  remove_codex_config_toml
-}
-
-unregister_claude_mcp() {
-  local claude_bin
-  claude_bin="$(command -v claude || true)"
-  if [ -n "$claude_bin" ]; then
-    log "Removing Claude MCP server '$MCP_NAME' with Claude CLI"
-    "$claude_bin" mcp remove -s user "$MCP_NAME" >/dev/null 2>&1 || true
-  else
-    log "Claude CLI not found; skipped Claude MCP removal"
-  fi
-}
-
-unregister_antigravity_mcp() {
-  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
-
-  local config_path json_python
-  config_path="$(antigravity_home)/mcp_config.json"
-  [ -f "$config_path" ] || return 0
-
-  json_python="$(resolve_json_python)"
-  if [ -z "$json_python" ]; then
-    warn "No python available to edit $config_path; left Antigravity MCP entry in place."
-    return 0
-  fi
-
-  PF_CONFIG_PATH="$config_path" \
-  PF_MCP_NAME="$MCP_NAME" \
-  "$json_python" -X utf8 - <<'PY'
-import json
-import os
-from pathlib import Path
-
-path = Path(os.environ["PF_CONFIG_PATH"])
-name = os.environ["PF_MCP_NAME"]
-try:
-    data = json.loads(path.read_text(encoding="utf-8") or "{}")
-except json.JSONDecodeError:
-    raise SystemExit(0)
-if not isinstance(data, dict):
-    raise SystemExit(0)
-
-servers = data.get("mcpServers")
-if isinstance(servers, dict):
-    servers.pop(name, None)
-path.write_text(json.dumps(data, indent=2, ensure_ascii=False) + "\n", encoding="utf-8")
-PY
-  log "Removed Antigravity MCP server '$MCP_NAME' from $config_path"
-}
-
 uninstall_user_integrations() {
   remove_installed_skills
   remove_shell_startup_blocks
   remove_user_config_blocks
-  unregister_codex_mcp
-  unregister_claude_mcp
-  unregister_antigravity_mcp
+  cleanup_legacy_integration
 
   echo
   echo "Offline user-level integration removed."
@@ -1439,7 +1199,7 @@ EOF
 
 check_browser_runtime_package() {
   local runtime_python
-  runtime_python="$(mcp_python_bin)"
+  runtime_python="$(runtime_python_bin)"
   "$runtime_python" -c 'import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
 }
 
@@ -1461,10 +1221,10 @@ run_smoke_checks() {
     "$INSTALL_ROOT/image-tools/bin/vips" --version >/dev/null
   fi
   check_browser_runtime_package
-  for key in "${MCP_ENV_KEYS[@]}"; do
-    env_args+=("$key=$(mcp_env_value "$key")")
+  for key in "${RUNTIME_ENV_KEYS[@]}"; do
+    env_args+=("$key=$(runtime_env_value "$key")")
   done
-  env "${env_args[@]}" "$(mcp_python_bin)" -c 'from paper_fetch.mcp.fetch_tool import provider_status_payload; payload = provider_status_payload(); assert "providers" in payload'
+  env "${env_args[@]}" "$(runtime_python_bin)" -c 'from paper_fetch.diagnostics import provider_status_payload; payload = provider_status_payload(); assert "providers" in payload'
 }
 
 prepare_browsers() {
@@ -1477,7 +1237,7 @@ prepare_browsers() {
   log "Core installation complete; preparing supported browsers (may use the network)"
   BROWSER_PREPARATION_STATE="not ready"
   trap ':' INT
-  if "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}"; then
+  if "$(runtime_python_bin)" -m paper_fetch.offline_setup "${args[@]}"; then
     if [ -f "$INSTALL_ROOT/browser-setup-results.txt" ] \
       && grep -qx 'Browser preparation: ready' "$INSTALL_ROOT/browser-setup-results.txt"; then
       BROWSER_PREPARATION_STATE="ready"
@@ -1492,7 +1252,7 @@ prepare_browsers() {
         echo "Browser preparation: not ready"
         echo "Preparation did not complete; core installation is preserved."
         printf 'Retry: '
-        printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
+        printf '%q ' "$(runtime_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
         printf '\n'
       } > "$INSTALL_ROOT/browser-setup-results.txt"
     fi
@@ -1509,7 +1269,7 @@ browser_preparation_summary() {
     "skipped") printf 'Prepare manually: ' ;;
     *) return 0 ;;
   esac
-  printf '%q ' "$(mcp_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
+  printf '%q ' "$(runtime_python_bin)" -m paper_fetch.offline_setup --install-root "$INSTALL_ROOT" --env-file "$OFFLINE_ENV_FILE" --prepare-browsers
   printf '\n'
 }
 
@@ -1528,7 +1288,7 @@ run_optional_configuration() {
   fi
   # A child cancellation must not terminate the successful core installation.
   trap ':' INT
-  "$(mcp_python_bin)" -m paper_fetch.offline_setup "${args[@]}" \
+  "$(runtime_python_bin)" -m paper_fetch.offline_setup "${args[@]}" \
     || warn "Optional configuration cancelled or failed; core installation remains complete."
   trap - INT
 }
@@ -1701,9 +1461,7 @@ main() {
     "Antigravity post-install"
   # Remove the previous Codex discovery entry only after all new bundles verify.
   write_shell_startup_file
-  register_codex_mcp
-  register_claude_mcp
-  register_antigravity_mcp
+  cleanup_legacy_integration
 
   prepare_browsers
   run_optional_configuration
@@ -1722,7 +1480,7 @@ main() {
   browser_preparation_summary
   echo "Browser preparation runs by default and may download browser components and fingerprint models."
   echo "--skip-browser-prepare skips installation preparation only; runtime automatic preparation remains enabled."
-  echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills and MCP registration."
+  echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."
 }
 

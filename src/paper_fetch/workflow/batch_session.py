@@ -1,4 +1,4 @@
-"""Request ownership and logical-result fan-out shared by CLI and MCP batches."""
+"""Request ownership and logical-result fan-out shared by CLI batches."""
 
 from __future__ import annotations
 

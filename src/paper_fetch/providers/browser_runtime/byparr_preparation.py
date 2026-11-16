@@ -30,7 +30,9 @@ class PreparationBudget:
             self.context.raise_if_cancelled()
         remaining = self.deadline - time.monotonic()
         if self.context is not None:
-            remaining = min(remaining, self.context.remaining_seconds(remaining))
+            remaining = min(
+                remaining, self.context.browser_remaining_seconds(remaining)
+            )
         if remaining <= 0:
             raise BrowserRuntimeFailure(
                 "byparr_timeout",

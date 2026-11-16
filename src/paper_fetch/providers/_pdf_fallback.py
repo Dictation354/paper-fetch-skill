@@ -216,9 +216,14 @@ def _prepare_pdf_browser_route_request(
         )
     allowed_hosts = tuple(request.allowed_hosts or ())
     started_monotonic = time.monotonic()
-    deadline_monotonic = request.deadline_monotonic or _pdf_deadline(
-        request.runtime,
-        timeout_seconds,
+    deadline_monotonic = (
+        (
+            request.runtime.browser_deadline_monotonic
+            if request.runtime is not None
+            else None
+        )
+        or request.deadline_monotonic
+        or (started_monotonic + timeout_seconds)
     )
     active_request = request.with_provider(active_provider_name).with_deadline(
         deadline_monotonic
@@ -422,7 +427,12 @@ def _remaining_pdf_timeout_seconds(
         context.raise_if_cancelled()
     remaining = max(0.0, deadline - time.monotonic())
     if context is not None:
-        remaining = min(remaining, context.remaining_seconds(float(maximum)))
+        clock = (
+            context.browser_remaining_seconds
+            if context.browser_deadline_monotonic == deadline
+            else context.remaining_seconds
+        )
+        remaining = min(remaining, clock(float(maximum)))
     else:
         remaining = min(remaining, max(0.0, float(maximum)))
     if remaining <= 0:
@@ -886,7 +896,7 @@ def fetch_pdf_with_browser(
     )
     browser_budget_seconds = route_request.timeout_seconds
     request_started_at = route_request.started_monotonic
-    request_deadline = route_request.deadline_monotonic
+    request_deadline = time.monotonic() + browser_budget_seconds
     active_request = route_request.request
     if not candidate_urls:
         raise PdfFallbackFailure(
@@ -894,7 +904,7 @@ def fetch_pdf_with_browser(
         )
 
     _remaining_pdf_timeout_seconds(
-        context, request_deadline, maximum=browser_budget_seconds
+        None, request_deadline, maximum=browser_budget_seconds
     )
     artifact_dir.mkdir(parents=True, exist_ok=True)
     last_failure: PdfFallbackFailure | None = None
@@ -936,6 +946,8 @@ def fetch_pdf_with_browser(
             propagate_paywall(exc)
             last_failure = exc
 
+    request_deadline = time.monotonic() + browser_budget_seconds
+    active_request = replace(active_request, deadline_monotonic=request_deadline)
     PlaywrightError, PlaywrightTimeoutError = _playwright_pdf_error_types()
 
     manager = None
@@ -951,7 +963,7 @@ def fetch_pdf_with_browser(
                     1,
                     int(
                         _remaining_pdf_timeout_seconds(
-                            context, request_deadline, maximum=browser_budget_seconds
+                            None, request_deadline, maximum=browser_budget_seconds
                         )
                         * 1000
                     ),
@@ -963,6 +975,11 @@ def fetch_pdf_with_browser(
                 browser_config=launch_config,
             ),
         )
+        if context is not None:
+            request_deadline = context.start_browser_budget(browser_budget_seconds)
+        else:
+            request_deadline = time.monotonic() + browser_budget_seconds
+        active_request = replace(active_request, deadline_monotonic=request_deadline)
         existing_pages = getattr(browser_context, "pages", None)
         if isinstance(existing_pages, list):
             initial_pages = list(existing_pages)

@@ -2,7 +2,6 @@ from __future__ import annotations
 
 import os
 import json
-import re
 import shutil
 import stat
 import shlex
@@ -15,10 +14,6 @@ from pathlib import Path
 import yaml
 import pytest
 
-from paper_fetch.mcp._instructions import (
-    DEFAULT_FETCH_VALUES,
-    ERROR_CONTRACT,
-)
 from tests.paths import REPO_ROOT, SKILL_DIR
 from tests.skill_bundle_links import (
     REQUIRED_REFERENCE_FILES,
@@ -133,38 +128,6 @@ class StaticSkillTests(unittest.TestCase):
             with self.subTest(relative_path=relative_path):
                 self.assertTrue((STATIC_WORKFLOW_PATH.parent / relative_path).is_file())
         self.assertEqual(skill_bundle_link_issues(STATIC_SKILL_DIR), [])
-
-    def test_static_skill_bundle_covers_public_tools_defaults_and_errors(self) -> None:
-        text = "\n".join(
-            path.read_text(encoding="utf-8")
-            for path in iter_skill_markdown_files(STATIC_SKILL_DIR)
-        )
-        for tool_name in (
-            "resolve_paper",
-            "batch_resolve",
-            "fetch_paper",
-            "batch_fetch",
-            "list_cached",
-            "get_cached",
-            "batch_check",
-            "provider_status",
-            "browser_preflight",
-        ):
-            self.assertIn(tool_name, text)
-        documented_defaults = {}
-        for line in text.splitlines():
-            cells = [
-                cell.strip().strip("`") for cell in line.strip().strip("|").split("|")
-            ]
-            if len(cells) == 2 and cells[0] in dict(DEFAULT_FETCH_VALUES):
-                documented_defaults[cells[0]] = json.loads(cells[1])
-        for key, value in DEFAULT_FETCH_VALUES:
-            self.assertIn(key, documented_defaults)
-            self.assertEqual(
-                documented_defaults[key], json.loads(value.split(" (", 1)[0])
-            )
-        for status, _description in ERROR_CONTRACT:
-            self.assertRegex(text, rf"\b{re.escape(status)}\b")
 
 
 class InstallerSmokeTests(unittest.TestCase):
@@ -348,7 +311,7 @@ class InstallerSmokeTests(unittest.TestCase):
                 )
                 self.assertIn("ELSEVIER_API_KEY", script)
                 self.assertIn("https://dev.elsevier.com/", script)
-                self.assertIn("--env-file", script)
+                self.assertIn("~/.config/paper-fetch/.env", script)
 
     def test_formula_bootstrap_honors_selected_python(self) -> None:
         temp_dir = tempfile.TemporaryDirectory()
@@ -395,27 +358,6 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertFalse((repo_dir / ".venv").exists())
         self.assertFalse((repo_dir / ".env").exists())
         self.assertIn("-m pip install --quiet .", log_path.read_text(encoding="utf-8"))
-
-    def test_claude_installer_can_register_mcp_server(self) -> None:
-        _, _, log_path = self.run_installer(
-            script_name="install-claude-skill.sh",
-            args=[
-                "--register-mcp",
-                "--env-file",
-                "/tmp/paper-fetch.env",
-                "--mcp-scope",
-                "project",
-            ],
-            fake_claude=True,
-        )
-
-        log_text = log_path.read_text(encoding="utf-8")
-        self.assertIn("claude mcp remove -s project paper-fetch", log_text)
-        self.assertIn(
-            "claude mcp add -s project -e PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env -- paper-fetch",
-            log_text,
-        )
-        self.assertIn("-m paper_fetch.mcp.server", log_text)
 
     def test_codex_installer_copies_canonical_openai_manifest(self) -> None:
         repo_dir, sandbox, log_path = self.run_installer(
@@ -464,50 +406,6 @@ class InstallerSmokeTests(unittest.TestCase):
         self.assertEqual(payload["reason_code"], "skill_bundle_missing")
         self.assertEqual(payload["skill_root"], str(target))
 
-    def test_codex_installer_can_register_mcp_server(self) -> None:
-        _, _, log_path = self.run_installer(
-            script_name="install-codex-skill.sh",
-            args=["--register-mcp", "--env-file", "/tmp/paper-fetch.env"],
-            fake_codex=True,
-        )
-
-        log_text = log_path.read_text(encoding="utf-8")
-        self.assertIn("codex mcp remove paper-fetch", log_text)
-        self.assertIn("--env PAPER_FETCH_ENV_FILE=/tmp/paper-fetch.env", log_text)
-        self.assertIn("paper-fetch --", log_text)
-        self.assertIn("-X utf8 -m paper_fetch.mcp.server", log_text)
-        self.assertNotIn("PLAYWRIGHT_BROWSERS_PATH", log_text)
-
-    def test_claude_installer_does_not_auto_bind_repo_env_for_mcp_registration(
-        self,
-    ) -> None:
-        _, _, log_path = self.run_installer(
-            script_name="install-claude-skill.sh",
-            args=["--register-mcp", "--mcp-scope", "project"],
-            fake_claude=True,
-            create_repo_env=True,
-        )
-
-        log_text = log_path.read_text(encoding="utf-8")
-        self.assertIn("claude mcp add -s project -- paper-fetch", log_text)
-        self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
-
-    def test_codex_installer_does_not_auto_bind_repo_env_for_mcp_registration(
-        self,
-    ) -> None:
-        _, _, log_path = self.run_installer(
-            script_name="install-codex-skill.sh",
-            args=["--register-mcp"],
-            fake_codex=True,
-            create_repo_env=True,
-        )
-
-        log_text = log_path.read_text(encoding="utf-8")
-        self.assertIn("codex mcp add paper-fetch --", log_text)
-        self.assertIn("paper-fetch --", log_text)
-        self.assertIn("-X utf8 -m paper_fetch.mcp.server", log_text)
-        self.assertNotIn("PAPER_FETCH_ENV_FILE=", log_text)
-
 
 if __name__ == "__main__":
     unittest.main()
@@ -547,6 +445,15 @@ def test_codex_scope_migration_upgrade_and_uninstall(
             else f'exec {shlex.quote(sys.executable)} "$@"\n'
         )
     )
+    migration = repo / "src/paper_fetch/legacy_cleanup.py"
+    migration.parent.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(REPO_ROOT / "src/paper_fetch/legacy_cleanup.py", migration)
+    script = python.read_text()
+    script = script.replace(
+        "exit 1\n",
+        f'if [ "$1" = "{migration}" ]; then exec {shlex.quote(sys.executable)} "$@"; fi\nexit 1\n',
+    )
+    python.write_text(script)
     python.chmod(0o755)
     env = dict(
         os.environ,

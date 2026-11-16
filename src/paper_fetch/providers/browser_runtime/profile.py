@@ -31,7 +31,7 @@ def profile_path(config: BrowserRuntimeConfig) -> Path:
         from .paths import default_provider_user_data_dir
 
         path = default_provider_user_data_dir(os.environ, provider=config.provider)
-    return Path(path).expanduser().resolve()
+    return Path(os.path.normcase(str(Path(path).expanduser().resolve())))
 
 
 def _metadata(path: Path) -> dict[str, Any]:
@@ -140,6 +140,7 @@ class PublisherProfileManager:
         self.lock = FileLock(str(self.path / PROFILE_LOCK_FILENAME), thread_local=False)
         self.manager: ByparrManager | None = None
         self.context: Any = None
+        self.execution_started_at: float | None = None
         self.metadata: dict[str, Any] = {}
         self.diagnostics: dict[str, Any] = {
             "path": str(self.path),
@@ -156,25 +157,48 @@ class PublisherProfileManager:
 
     def _acquire(self) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
-        deadline = time.monotonic() + self.config.timeout_ms / 1000
-        while True:
-            if self.runtime_context is not None:
-                self.runtime_context.raise_if_cancelled()
-                remaining = self.runtime_context.remaining_seconds(
-                    self.config.timeout_ms / 1000
-                )
-            else:
-                remaining = self.config.timeout_ms / 1000
-            if min(remaining, deadline - time.monotonic()) <= 0:
-                raise BrowserRuntimeFailure(
-                    "browser_profile_lock_timeout",
-                    f"Timed out waiting for publisher profile: {self.path}",
-                )
-            try:
-                self.lock.acquire(timeout=0)
-                return
-            except FileLockTimeout:
-                time.sleep(min(0.05, remaining, max(0, deadline - time.monotonic())))
+        from ...workflow.execution_slots import profile_wait
+        from ...http.transport import request_cancel_check
+
+        started = time.monotonic()
+        if self.runtime_context is not None:
+            self.runtime_context.report_progress(
+                "stage", stage="waiting_profile", profile=str(self.path)
+            )
+        with profile_wait(
+            self.runtime_context.raise_if_cancelled
+            if self.runtime_context is not None
+            else None
+        ):
+            while True:
+                if self.runtime_context is not None:
+                    self.runtime_context.raise_if_cancelled()
+                else:
+                    cancelled = request_cancel_check.get()
+                    if cancelled is not None and cancelled():
+                        from ...http import RequestCancelledError
+
+                        raise RequestCancelledError(
+                            "Request cancelled while waiting for profile."
+                        )
+                try:
+                    self.lock.acquire(timeout=0)
+                    break
+                except FileLockTimeout:
+                    time.sleep(0.05)
+        waited = time.monotonic() - started
+        self.diagnostics["profile_queue_seconds"] = waited
+        self.execution_started_at = time.monotonic()
+        if self.runtime_context is not None:
+            if self.runtime_context.browser_deadline_monotonic is not None:
+                self.runtime_context.browser_deadline_monotonic += waited
+            self.runtime_context.start_browser_budget(self.config.timeout_ms / 1000)
+            self.runtime_context.report_progress(
+                "stage",
+                stage="executing_browser",
+                profile=str(self.path),
+                queue_seconds=waited,
+            )
 
     def new_context(self) -> Any:
         self._assert_owner()
@@ -182,8 +206,8 @@ class PublisherProfileManager:
             self.diagnostics.update(context_reused=True, native_profile_loaded=False)
             self.refresh()
             return self.context
-        self._acquire()
         try:
+            self._acquire()
             if self.runtime_context is not None:
                 self.runtime_context.raise_if_cancelled()
             self.metadata = _metadata(self.path)
@@ -304,6 +328,21 @@ class PublisherProfileManager:
                 self.metadata["native_stamp"] = _native_stamp(self.path)
                 _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
         finally:
-            self.manager = None
-            self.context = None
-            self.lock.release()
+            try:
+                if self.execution_started_at is not None:
+                    elapsed = time.monotonic() - self.execution_started_at
+                    self.diagnostics["browser_execution_seconds"] = elapsed
+                    if self.runtime_context is not None:
+                        self.runtime_context.report_progress(
+                            "stage",
+                            stage="browser_finished",
+                            execution_seconds=elapsed,
+                            queue_seconds=self.diagnostics.get(
+                                "profile_queue_seconds", 0
+                            ),
+                        )
+                    self.execution_started_at = None
+            finally:
+                self.manager = None
+                self.context = None
+                self.lock.release()

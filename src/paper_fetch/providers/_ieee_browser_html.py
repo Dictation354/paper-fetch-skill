@@ -58,7 +58,7 @@ def _remaining_timeout_ms(
 ) -> int:
     context.raise_if_cancelled()
     try:
-        value = context.remaining_timeout_ms(maximum_ms)
+        value = context.browser_remaining_timeout_ms(maximum_ms)
         return max(1, min(maximum_ms, int(value)))
     except (AttributeError, TypeError, ValueError):
         return maximum_ms
@@ -136,8 +136,6 @@ def fetch_ieee_browser_html_payload(
         invalid_response_count=0,
     )
     request_started = time.monotonic()
-    with contextlib.suppress(AttributeError):
-        context.initialize_deadline(runtime_config.timeout_ms / 1000.0)
 
     try:
         _remaining_timeout_ms(context, runtime_config.timeout_ms)

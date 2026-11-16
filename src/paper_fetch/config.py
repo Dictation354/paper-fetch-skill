@@ -17,7 +17,7 @@ DEFAULT_USER_CONFIG_DIR = user_config_path(APP_NAME, appauthor=False)
 DEFAULT_USER_ENV_FILE = DEFAULT_USER_CONFIG_DIR / ".env"
 DEFAULT_USER_DATA_DIR = user_data_path(APP_NAME, appauthor=False)
 DEFAULT_XDG_DATA_HOME = DEFAULT_USER_DATA_DIR.parent
-DEFAULT_MCP_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
+DEFAULT_CACHE_DOWNLOAD_DIR = DEFAULT_USER_DATA_DIR / "downloads"
 DEFAULT_CLI_DOWNLOAD_DIR = Path("live-downloads")
 DEFAULT_REPO_ROOT = Path(__file__).resolve().parents[2]
 
@@ -260,7 +260,7 @@ def resolve_cli_download_dir(env: Mapping[str, str] | None = None) -> Path:
     return preferred
 
 
-def resolve_mcp_download_dir(env: Mapping[str, str] | None = None) -> Path:
+def resolve_cache_download_dir(env: Mapping[str, str] | None = None) -> Path:
     configured = _configured_download_dir(env)
     return configured or (resolve_user_data_dir(env) / "downloads")
 

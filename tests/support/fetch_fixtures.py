@@ -1,17 +1,14 @@
 from __future__ import annotations
-from dataclasses import replace
 import asyncio
 import json
 import threading
 import time
 from pathlib import Path
-from mcp.types.version import LATEST_HANDSHAKE_VERSION
-from paper_fetch.mcp._deps import MCPDeps, default_mcp_deps
-from paper_fetch.mcp.cache_index import (
+from paper_fetch.delivery.cache_index import (
     register_cache_files_for_doi,
     register_markdown_entry,
 )
-from paper_fetch.mcp.fetch_cache import (
+from paper_fetch.delivery.fetch_cache import (
     FETCH_ENVELOPE_CACHE_VERSION,
     fetch_envelope_cache_path,
     cache_request_fingerprint,
@@ -32,24 +29,6 @@ from paper_fetch.service import (
 )
 from paper_fetch.tracing import TraceContext, trace_event
 from paper_fetch.utils import sanitize_filename
-
-
-def mcp_test_deps(**overrides) -> MCPDeps:
-    return replace(default_mcp_deps(), **overrides)
-
-
-def assert_mcp_tool_omits_output_schema(
-    server, tool_name: str, payload: object
-) -> None:
-    """Assert the v6 tools/list contract while callers inspect the payload itself."""
-
-    assert payload is not None
-    tool = next(
-        tool
-        for tool in asyncio.run(server.list_native_tools())
-        if tool.name == tool_name
-    )
-    assert tool.output_schema is None
 
 
 def sample_article() -> ArticleModel:
@@ -255,54 +234,4 @@ async def wait_for_threading_event(event: threading.Event, timeout: float) -> bo
     return event.is_set()
 
 
-class FakeSession:
-    def __init__(self) -> None:
-        self.messages: list[dict[str, object]] = []
-
-    async def send_log_message(
-        self, *, level, data, logger=None, related_request_id=None
-    ) -> None:
-        self.messages.append(
-            {
-                "level": level,
-                "data": data,
-                "logger": logger,
-                "related_request_id": related_request_id,
-            }
-        )
-
-
-class FakeContext:
-    def __init__(self) -> None:
-        self.progress: list[tuple[float, float | None, str | None]] = []
-        self.session = FakeSession()
-        self.request_id = "unit-request"
-        self.protocol_version = LATEST_HANDSHAKE_VERSION
-
-    async def report_progress(
-        self, progress: float, total: float | None = None, message: str | None = None
-    ) -> None:
-        self.progress.append((progress, total, message))
-
-
 __all__ = [name for name in globals() if not name.startswith("__")]
-
-
-def retained_view(payload, view):
-    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
-    from paper_fetch.mcp.schemas import ReadContentRequest
-
-    ref = payload["content_ref"]
-    text, offset = [], 0
-    while True:
-        part = DEFAULT_CONTENT_STORE.read(
-            ReadContentRequest(
-                content_id=ref["content_id"], view=view, offset=offset, max_chars=20000
-            )
-        )
-        text.append(part["text"])
-        offset = part["next_offset"]
-        if part["eof"]:
-            break
-    result = "".join(text)
-    return result if view == "markdown" else json.loads(result)

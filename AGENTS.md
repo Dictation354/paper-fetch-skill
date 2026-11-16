@@ -36,5 +36,5 @@ uv pip install --python .venv/bin/python --no-deps --editable '.[dev,full]'
 ## Project Boundaries
 - paper-fetch 只负责已知论文的身份解析、全文获取、验收与报告；不扩展为开放式领域检索、通用研究平台或新的工作流框架。
 - PDF 解析与转换质量不纳入改进、fixture 补齐或验收目标；以现有 `pymupdf4llm` 输出为边界，禁止在其上做任何格式清洗或内容修复，包括 shared/provider/组装/渲染层的标题修复、页眉页脚删除、断行合并、引用分条或重排、公式/OCR/表格修复及占位图修复。已有清洗代码、测试或历史规则不构成例外；完整约束见 `docs/extraction-rules.md#rule-pdf-conversion-boundary`。
-- 保留并复用现有状态机、五个预设、resolver/provider adapter、CLI/MCP 落盘语义、cache/artifact、统一 acceptance、来源追踪和合法访问约束。
+- 保留并复用现有状态机、五个预设、resolver/provider adapter、CLI 落盘语义、cache/artifact、统一 acceptance、来源追踪和合法访问约束。
 - 单一 provider、执行面或失败路径的问题默认局部修复；除非存在明确的跨 provider 契约或回归证据，不调整全局 cache、retry、fallback、browser 或错误分类策略。

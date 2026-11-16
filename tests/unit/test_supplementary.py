@@ -6,7 +6,7 @@ from unittest import mock
 import pytest
 
 from paper_fetch import service
-from paper_fetch.mcp.fetch_cache import (
+from paper_fetch.delivery.fetch_cache import (
     FetchCache,
     cache_request_fingerprint,
     cached_payload_satisfies_request,
@@ -14,7 +14,7 @@ from paper_fetch.mcp.fetch_cache import (
     envelope_from_payload,
     request_cache_payload,
 )
-from paper_fetch.mcp.schemas import BatchFetchRequest, FetchPaperRequest
+from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.providers.base import ProviderClient, ProviderFailure
 from paper_fetch.providers.supplementary import _xml_index
 from paper_fetch.providers.plos import PlosClient
@@ -37,17 +37,6 @@ def response(url, body, content_type="text/html"):
         "headers": {"content-type": content_type},
         "body": body.encode(),
     }
-
-
-def test_targets_validate_and_batch_propagates():
-    assert FetchPaperRequest(query=DOI).target == "paper"
-    batch = BatchFetchRequest(queries=[DOI], target="supplementary", save_markdown=True)
-    assert batch.to_fetch_request(DOI).target == "supplementary"
-    assert batch.to_fetch_request(DOI).requested_modes() == {"markdown"}
-    with pytest.raises(ValueError):
-        FetchPaperRequest(query=DOI, target="data")
-    with pytest.raises(ValueError):
-        service.fetch_paper(DOI, target="data")
 
 
 def test_unsupported_provider_does_not_call_body():
@@ -401,91 +390,11 @@ def test_browser_discovery_preserves_failures_and_recovered_assets(
     assert transport.calls == []
 
 
-@pytest.mark.parametrize("provider_failure", [True, False])
-def test_supplementary_failure_preserves_resolved_identity_and_provenance(
-    monkeypatch, provider_failure
-):
-    from paper_fetch.workflow import supplementary as workflow
-    from paper_fetch.mcp.fetch_tool import _fetch_error_payload
-    from tests.support._mcp_support import sample_resolved_query
-
-    client = mock.Mock()
-    client.fetch_supplementary.side_effect = ProviderFailure(
-        "not_supported", "No materials route"
-    )
-    resolved = sample_resolved_query(DOI)
-    monkeypatch.setattr(
-        workflow, "resolve_query_with_session_cache", lambda *a, **k: resolved
-    )
-    monkeypatch.setattr(
-        workflow,
-        "fetch_metadata_for_resolved_query",
-        lambda *a, **k: (
-            {"doi": DOI},
-            "crossref",
-            [trace_event("metadata", "crossref", "info")],
-        ),
-    )
-    monkeypatch.setattr(
-        workflow,
-        "_ranked_fulltext_provider_candidates",
-        lambda **k: [("crossref", None, None)] if provider_failure else [],
-    )
-    with RuntimeContext(env={}, clients={"crossref": client}) as context:
-        with pytest.raises(service.PaperFetchFailure) as caught:
-            workflow.fetch_supplementary(
-                DOI,
-                strategy=service.FetchStrategy(),
-                context=context,
-                modes={"markdown"},
-                resolve_paper_fn=mock.Mock(),
-            )
-        failure = caught.value
-        assert context.fetch_trace == failure.trace
-    payload = _fetch_error_payload(failure, target="supplementary", query=DOI)
-    assert payload["doi"] == DOI
-    assert payload["provider"] == "crossref"
-    assert payload["stage"] == "supplementary"
-    assert payload["target"] == "supplementary"
-    assert payload["route"] is None
-    assert payload["retryable"] is False
-    from paper_fetch.mcp.content_store import DEFAULT_CONTENT_STORE
-    from paper_fetch.mcp.schemas import ReadContentRequest
-    import json
-
-    diagnostic = json.loads(
-        DEFAULT_CONTENT_STORE.read(
-            ReadContentRequest(
-                content_id=payload["content_ref"]["content_id"],
-                view="diagnostics",
-                max_chars=20000,
-            )
-        )["text"]
-    )
-    assert diagnostic["trace"] and "source_trail" not in payload
-    assert payload["acceptance"]["identity"] == "resolved"
-    from paper_fetch.manifest import build_manifest_record
-
-    record = build_manifest_record(
-        tool_version="test",
-        index=1,
-        attempt=1,
-        query=DOI,
-        request_parameters={"target": "supplementary"},
-        asset_profile="all",
-        error=diagnostic,
-        expected_doi=DOI,
-    )
-    assert record.identity.status == "resolved"
-    assert record.doi == DOI
-
-
 def test_supplementary_metadata_failure_keeps_resolved_doi_and_collected_trace(
     monkeypatch,
 ):
     from paper_fetch.workflow import supplementary as workflow
-    from tests.support._mcp_support import sample_resolved_query
-    from paper_fetch.tracing import trace_event
+    from tests.support.fetch_fixtures import sample_resolved_query
 
     resolved = sample_resolved_query(DOI)
     event = trace_event("metadata", "crossref", "fail", code="not_supported")

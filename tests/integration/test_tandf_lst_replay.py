@@ -1,9 +1,7 @@
-"""Replay the publisher HTML through provider, service, CLI and MCP outputs."""
+"""Replay the publisher HTML through provider, service, CLI outputs."""
 
 from __future__ import annotations
-from tests.support._mcp_support import retained_view
 from paper_fetch.tracing import trace_event
-from dataclasses import replace
 
 
 import hashlib
@@ -19,8 +17,6 @@ from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     download_assets,
 )
-from paper_fetch.mcp._deps import default_mcp_deps
-from paper_fetch.mcp.fetch_tool import fetch_paper_payload
 from paper_fetch.models import EXTRACTION_REVISION, RenderOptions
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.tandf import TandfClient
@@ -192,7 +188,7 @@ def replay(monkeypatch):
     return client
 
 
-def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
+def test_python_cli_core_saved_semantics(replay, tmp_path, capsys):
     with RuntimeContext(env={}, download_dir=tmp_path / "api") as context:
         envelope = service.fetch_paper(
             DOI,
@@ -248,51 +244,8 @@ def test_python_cli_mcp_saved_semantics(replay, tmp_path, capsys):
         record["output_artifacts"][0]["sha256"]
         == hashlib.sha256(out.read_bytes()).hexdigest()
     )
-    mcpdir = tmp_path / "mcp"
-    payload = fetch_paper_payload(
-        query=DOI,
-        modes=["article", "markdown"],
-        strategy={"asset_profile": "body", "require_full_size_body_assets": True},
-        include_refs="all",
-        max_tokens="full_text",
-        artifact_mode="markdown-assets",
-        download_dir=mcpdir,
-        save_markdown=False,
-        markdown_output_dir=str(mcpdir),
-        markdown_filename="paper.md",
-        deps=replace(
-            default_mcp_deps(),
-            build_runtime_env=lambda *a, **k: {},
-            service_fetch_paper=service.fetch_paper,
-        ),
-    )
-    assert payload["acceptance"]["overall"] == "complete"
-    saved = fetch_paper_payload(
-        query=DOI,
-        modes=["article", "markdown"],
-        strategy={"asset_profile": "body", "require_full_size_body_assets": True},
-        include_refs="all",
-        max_tokens="full_text",
-        artifact_mode="markdown-assets",
-        download_dir=mcpdir,
-        prefer_cache=True,
-        save_markdown=True,
-        markdown_output_dir=str(mcpdir),
-        markdown_filename="paper.md",
-        deps=replace(
-            default_mcp_deps(),
-            build_runtime_env=lambda *a, **k: {},
-            service_fetch_paper=service.fetch_paper,
-        ),
-    )
-    assert saved["acceptance"]["overall"] == "complete", saved["acceptance"]
-    assert "markdown" not in saved  # Saved MCP replies intentionally omit body.
-    texts = [
-        envelope.markdown,
-        out.read_text(),
-        retained_view(payload, "markdown"),
-        (mcpdir / "paper.md").read_text(),
-    ]
+    receipt = json.loads(capsys.readouterr().out)
+    texts = [envelope.markdown, out.read_text(), Path(receipt["body_path"]).read_text()]
     for text in texts:
         images = re.findall(r"!\[Figure \d+\]\(([^)]+)\)", text)
         assert len(images) == 1
@@ -318,24 +271,20 @@ def test_real_formula_loss_cannot_report_complete(replay, tmp_path, fallback):
         image = formula.find("img")
         image["src"] = "https://www.tandfonline.com/math-0001.gif"
     replay.html = str(soup)
-    payload = fetch_paper_payload(
-        query=DOI,
-        modes=["article", "markdown"],
-        strategy={"asset_profile": "none"},
-        include_refs="all",
-        no_download=True,
-        download_dir=None,
-        artifact_mode="none",
-        deps=replace(
-            default_mcp_deps(),
-            build_runtime_env=lambda *a, **k: {},
-            service_fetch_paper=service.fetch_paper,
-        ),
-    )
-    assert payload["acceptance"]["overall"] == "degraded"
-    losses = retained_view(payload, "diagnostics")["quality"]["semantic_losses"]
+    from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        envelope = service.fetch_paper(
+            DOI,
+            modes={"article", "markdown"},
+            strategy=FetchStrategy(asset_profile="none"),
+            context=context,
+        )
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+    assert report.overall.value == "degraded"
+    losses = envelope.to_dict()["quality"]["semantic_losses"]
     assert (
         losses["formula_fallback_count" if fallback else "formula_missing_count"] == 1
     )
     if not fallback:
-        assert retained_view(payload, "markdown").count("[Formula unavailable]") == 1
+        assert envelope.markdown.count("[Formula unavailable]") == 1

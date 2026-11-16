@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "paper-fetch-skill"
-version = "7.6.3"
+version = "7.7.0"
 description = "AI-friendly paper fetch tooling"
 readme = "README.md"
 requires-python = ">=3.11"
@@ -16,7 +16,7 @@ authors = [
 maintainers = [
   { name = "Jifei Huang" },
 ]
-keywords = ["papers", "markdown", "doi", "mcp", "research"]
+keywords = ["papers", "markdown", "doi", "cli", "research"]
 classifiers = [
   "Development Status :: 5 - Production/Stable",
   "Environment :: Console",
@@ -36,7 +36,6 @@ dependencies = [
   "filelock>=3.20,<5",
   "imagesize>=1.4,<3",
   "idutils>=1.5,<2",
-  "mcp>=2,<3",
   "platformdirs>=4,<5",
   "python-dotenv>=1.2,<2",
   "rapidfuzz>=3,<4",
@@ -94,7 +93,6 @@ dev = [
 
 [project.scripts]
 paper-fetch = "paper_fetch.cli:main"
-paper-fetch-mcp = "paper_fetch.mcp.server:main"
 paper-fetch-install-formula-tools = "paper_fetch.formula.install:main"
 paper-fetch-install-image-tools = "paper_fetch.image_tools.install:main"
 
@@ -126,8 +124,6 @@ src = ["src", "tests"]
 
 [tool.ruff.lint]
 select = ["E4", "E7", "E9", "F", "TID251", "UP", "RUF022", "SIM105", "B"]
-# B008: default_mcp_deps() in argument defaults is an intentional dependency-injection
-# seam (overridden in tests), not the mutable-default footgun the rule targets.
 ignore = ["B008"]
 
 [tool.ruff.lint.flake8-tidy-imports.banned-api]

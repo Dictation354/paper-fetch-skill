@@ -489,7 +489,7 @@ USER_CONFIG_FILE=""
 INSTALL_USER_CONFIG_FLAG="--no-user-config"
 mkdir -p "$GUARD_DIR" "$FAKE_HOME"
 mkdir -p "$FAKE_HOME/.gemini/antigravity-cli"
-printf '{"mcpServers":{"keep-server":{"command":"keep"}}}\n' > "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json"
+printf '{"mcpServers":{"keep-server":{"command":"keep"},"custom-legacy":{"command":"python","args":["-m","paper_fetch.mcp.server"]}}}\n' > "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json"
 if [ "$TARGET_PLATFORM" = "macos" ]; then
   mkdir -p "$FAKE_HOME/config"
   SHELL_STARTUP_EDIT_FILE="$FAKE_HOME/config/zshrc"
@@ -616,7 +616,7 @@ if grep -E -q '^[[:space:]]*PAPER_FETCH_BROWSER_USER_AGENT=' "$INSTALL_ROOT/offl
   die "Offline install must not override the default Camoufox fingerprint user agent."
 fi
 
-log "Verifying user shell, skill, and MCP registration"
+log "Verifying user shell, skill, and legacy registration cleanup"
 [ ! -L "$SHELL_STARTUP_FILE" ] || [ "$TARGET_PLATFORM" = "macos" ] \
   || die "Unexpected shell startup symlink on non-macOS verifier."
 if [ "$TARGET_PLATFORM" = "macos" ]; then
@@ -631,15 +631,7 @@ grep -F -q "$INSTALL_ROOT/image-tools/bin" "$SHELL_STARTUP_FILE"
 [ -f "$FAKE_HOME/.agents/skills/paper-fetch-skill/SKILL.md" ] || die "Codex skill was not installed."
 [ -f "$FAKE_HOME/.claude/skills/paper-fetch-skill/SKILL.md" ] || die "Claude skill was not installed."
 [ -f "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill/SKILL.md" ] || die "Antigravity skill was not installed."
-grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
-grep -F -q "codex mcp add" "$FAKE_CLI_LOG"
-grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
-grep -F -q "claude mcp add -s user" "$FAKE_CLI_LOG"
-grep -F -q "PAPER_FETCH_ENV_FILE=$INSTALL_ROOT/offline.env" "$FAKE_CLI_LOG"
-grep -F -q "PAPER_FETCH_FORMULA_TOOLS_DIR=$INSTALL_ROOT/formula-tools" "$FAKE_CLI_LOG"
-grep -F -q "PAPER_FETCH_IMAGE_TOOLS_DIR=$INSTALL_ROOT/image-tools" "$FAKE_CLI_LOG"
-grep -F -q "MATHML_TO_LATEX_NODE_BIN=" "$FAKE_CLI_LOG"
-grep -F -q "PAPER_FETCH_BROWSER_HEADLESS=true" "$FAKE_CLI_LOG"
+[ ! -s "$FAKE_CLI_LOG" ] || die "CLI + Skill installation invoked a host registration command."
 if [ "$TARGET_PLATFORM" = "macos" ]; then
   grep -F -q 'USER_CONFIG_NOTE="keep"' "$USER_CONFIG_FILE"
   grep -F -q "# BEGIN paper-fetch offline managed" "$USER_CONFIG_FILE"
@@ -655,23 +647,9 @@ install_root = Path(sys.argv[2])
 data = json.loads(config_path.read_text(encoding="utf-8"))
 servers = data["mcpServers"]
 assert "keep-server" in servers, servers
-entry = servers["paper-fetch"]
-assert entry["command"] == str(install_root / "runtime" / "paper-fetch-python"), entry
-assert entry["args"] == ["-X", "utf8", "-m", "paper_fetch.mcp.server"], entry
-env = entry["env"]
-expected = {
-    "PYTHONUTF8": "1",
-    "PYTHONIOENCODING": "utf-8",
-    "PAPER_FETCH_ENV_FILE": str(install_root / "offline.env"),
-    "PAPER_FETCH_DOWNLOAD_DIR": str(install_root / "downloads"),
-    "PAPER_FETCH_FORMULA_TOOLS_DIR": str(install_root / "formula-tools"),
-    "PAPER_FETCH_IMAGE_TOOLS_DIR": str(install_root / "image-tools"),
-    "MATHML_TO_LATEX_NODE_BIN": str(install_root / "runtime" / "node" / "bin" / "node"),
-    "PLAYWRIGHT_NODEJS_PATH": str(install_root / "runtime" / "node" / "bin" / "node"),
-    "PAPER_FETCH_BROWSER_HEADLESS": "true",
-}
-for key, value in expected.items():
-    assert env.get(key) == value, (key, env)
+assert "paper-fetch" not in servers, servers
+assert "custom-legacy" not in servers, servers
+
 PY
 
 if [ "$TARGET_PLATFORM" = "macos" ]; then
@@ -750,7 +728,7 @@ PY
 
 log "Verifying provider_status payload entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
-from paper_fetch.mcp.fetch_tool import provider_status_payload
+from paper_fetch.diagnostics import provider_status_payload
 
 payload = provider_status_payload()
 assert "providers" in payload, payload
@@ -792,8 +770,6 @@ fi
 [ -e "$FAKE_HOME/.codex/skills/paper-fetch-skill" ] || die "Uninstall touched an unrelated legacy skill path."
 [ ! -d "$FAKE_HOME/.claude/skills/paper-fetch-skill" ] || die "Claude skill was not removed."
 [ ! -d "$FAKE_HOME/.gemini/antigravity-cli/skills/paper-fetch-skill" ] || die "Antigravity skill was not removed."
-grep -F -q "codex mcp remove paper-fetch" "$FAKE_CLI_LOG"
-grep -F -q "claude mcp remove -s user paper-fetch" "$FAKE_CLI_LOG"
 "$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" <<'PY'
 import json
 import sys

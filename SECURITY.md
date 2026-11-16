@@ -36,7 +36,7 @@ standard domain, path, secure, and expiry scope when converted for a controlled
 direct request.
 
 Structured and human-readable logging centrally removes URL query data and
-standard or provider-specific credentials. MCP requests share one routing
+standard or provider-specific credentials. CLI requests share one routing
 handler whose request target is isolated with context-local state.
 Live-test environment mappings render names only. CI scans every artifact and
 release upload candidate for raw and URL-encoded configured secret values; a

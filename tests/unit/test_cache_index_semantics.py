@@ -8,16 +8,19 @@ import unittest
 from pathlib import Path
 from unittest import mock
 import yaml
-from paper_fetch.mcp.cache_index import (
+from paper_fetch.delivery.cache_index import (
     IDENTITY_PROOF_MARKDOWN_REGISTRATION,
     cache_index_path,
     read_scoped_file,
     register_markdown_entry,
 )
-from paper_fetch.mcp.cache_payloads import get_cached_payload, list_cached_payload
+from paper_fetch.delivery.cache_inspection import (
+    get_cached_payload,
+    list_cached_payload,
+)
 from paper_fetch.models import AcquisitionProvenance
 from paper_fetch.utils import sanitize_filename
-from tests.support._mcp_support import create_cached_downloads
+from tests.support.fetch_fixtures import create_cached_downloads
 
 
 TEST_ACQUISITION = AcquisitionProvenance(
@@ -330,3 +333,16 @@ class CacheIndexSemanticsTests(unittest.TestCase):
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_legacy_index_is_read_only_source_and_new_writes_use_generic_name(tmp_path):
+    from paper_fetch.delivery.cache_index import read_cache_index
+
+    create_cached_downloads(tmp_path, "10.1000/legacy")
+    current = cache_index_path(tmp_path)
+    legacy = tmp_path / ".paper-fetch-mcp-cache.json"
+    current.rename(legacy)
+    before = legacy.read_bytes()
+    assert read_cache_index(tmp_path).entries
+    create_cached_downloads(tmp_path, "10.1000/legacy")
+    assert current.is_file() and legacy.read_bytes() == before

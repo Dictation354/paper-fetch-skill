@@ -8,7 +8,7 @@
 | 任务 | 入口 |
 | --- | --- |
 | 获取已知论文、设置输出和资产预设 | [CLI](cli.md) → [provider 能力与行为](providers.md) |
-| 安装、配置、MCP 注册、升级或发布 | [部署指南](deployment.md) |
+| 安装、配置、CLI 注册、升级或发布 | [部署指南](deployment.md) |
 | 准备浏览器、人工认证、排障 | [browser backends](browser-backends.md) → [runtime 边界](browser-runtime.md) |
 | 修改提取、组装、渲染 | [架构](architecture/overview.md) → [提取规则](extraction-rules.md) |
 | 新增 provider | [开发流程与契约](adding-a-provider.md) |
@@ -27,7 +27,7 @@
 - 发布构建、安装验收与平台证据统一见 [发布前检查](deployment.md#release-checklist)。
   协作要求见 [AGENTS.md](../AGENTS.md)。
 - CLI 参数以 `paper-fetch <command> --help` 与 [cli.py](../src/paper_fetch/cli.py) 为准，
-  MCP 入参与返回值以 [schemas.py](../src/paper_fetch/mcp/schemas.py)、tool adapter 和契约测试为准。
+  CLI 入参与返回值以 [schemas.py](../src/paper_fetch/delivery/schemas.py)、tool adapter 和契约测试为准。
 - 安装后的 [skill bundle](../skills/paper-fetch-skill/SKILL.md) 必须自包含，因此其
   预设、环境与验收摘要保留必要重复；不能改成依赖未随包安装的 `docs/` 链接。
 - 字段含义、默认值、cache 与资产语义在 [providers.md](providers.md) 维护，

@@ -1,10 +1,28 @@
 # Changelog
 
+> Historical record: MCP interfaces and registration instructions in versions 7.6.3 and earlier describe those versions. Version 7.7.0 uses CLI + Skill and cleans up owned legacy registrations.
+
 All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## Unreleased
 
 <!-- SCAFFOLD: changelog-unreleased -->
+
+## 7.7.0 - 2026-11-16
+
+### CLI and Skill delivery
+
+- Remove the MCP server, protocol dependencies, console entrypoint, content handles, pagination/navigation and inline media forwarding. Move reusable cache, file verification and acceptance projections into protocol-independent modules.
+- Make `fetch` default to `temporary_read`: retain complete Markdown, a per-paper manifest, diagnostics and an image index in an independent temporary directory, and return a compact versioned JSON receipt with identity, acceptance, provenance and absolute paths. Do not download body images or use persistent cache by default; explicit output, format and asset options take precedence. Use `--output -` for explicit body stdout export.
+- Persist each batch item's manifest atomically and emit its receipt immediately; retain input-order final JSONL, DOI deduplication and readable completed results after cancellation. Return exit code 0 for acquired full text, including degraded full text, 1 for abstract-only, metadata-only or failed acquisition, and 2 for invalid arguments.
+- Add single/batch `resolve` and `check` commands; `check` only probes availability. Support `fetch-assets --manifest` for selected image downloads using existing paper identity and indexes without fetching the article again. Integrate compatible cache reuse into fetch, read legacy indexes without modifying them and use a generic index name for new writes.
+
+### Browser coordination and installation migration
+
+- Queue browser work by the normalized actual profile directory across threads and CLI processes. Make waiting cancellable without a queue timeout, let waiters yield batch execution capacity and keep HTTP/API routes and publisher rate limits independent.
+- Start the browser budget after profile admission and share the remaining budget across context reuse, retries and browser fallbacks. Exclude profile-switch queue time, record queue/execution stages and timings, and retain owner-thread context cleanup for fetching, images, authentication and preflight.
+- Remove MCP registration and wrapper generation from Unix/macOS/Windows installers, offline builds and distribution checks. On install, upgrade and uninstall, clean up registrations and wrappers positively identified as belonging to this tool, including custom service names; preserve unrelated services, native login state, papers and caches. Keep Skill `--check` read-only.
+- Rewrite the Skill around existing user files/results, CLI receipts, local search and segmented reading, then selected image retrieval when needed. Base continuation and reporting on the evidence actually delivered and read. Migrate reusable cache, identity, acceptance and batch tests out of protocol-only coverage; update platform contracts and verification workflows.
 
 ## 7.6.3 - 2026-11-15
 

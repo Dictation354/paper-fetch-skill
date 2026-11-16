@@ -18,6 +18,7 @@ import signal
 import sys
 import threading
 import time
+import tempfile
 from pathlib import Path
 from typing import Any
 from uuid import UUID
@@ -56,7 +57,7 @@ from .manifest_writer import (
 )
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .providers.base import ProviderFailure
-from .reason_codes import ERROR, NO_ACCESS, RATE_LIMITED
+from .reason_codes import ERROR, RATE_LIMITED
 from .runtime import (
     RuntimeContext,
 )
@@ -324,7 +325,10 @@ def _cooperative_batch_cancel(
         yield
         return
 
-    previous_handler = signal.getsignal(signal.SIGINT)
+    signals = [signal.SIGINT]
+    if hasattr(signal, "SIGTERM"):
+        signals.append(signal.SIGTERM)
+    previous_handlers = {number: signal.getsignal(number) for number in signals}
 
     def handle_interrupt(_signum, _frame) -> None:
         if cancel_event.is_set():
@@ -337,11 +341,13 @@ def _cooperative_batch_cancel(
             file=sys.stderr,
         )
 
-    signal.signal(signal.SIGINT, handle_interrupt)
+    for number in signals:
+        signal.signal(number, handle_interrupt)
     try:
         yield
     finally:
-        signal.signal(signal.SIGINT, previous_handler)
+        for number, handler in previous_handlers.items():
+            signal.signal(number, handler)
 
 
 def save_markdown_to_disk(
@@ -641,19 +647,6 @@ def _effective_artifact_mode(args: argparse.Namespace) -> ArtifactMode:
 
 
 def exit_code_for_error(error: Exception) -> int:
-    if isinstance(error, PaperFetchFailure):
-        status = error.status
-    elif isinstance(error, ProviderFailure):
-        status = error.code
-    else:
-        status = ERROR
-
-    if status == "ambiguous":
-        return 2
-    if status == NO_ACCESS:
-        return 3
-    if status == RATE_LIMITED:
-        return 4
     return 1
 
 
@@ -754,10 +747,44 @@ def _run_single_fetch_with_context(
     context: RuntimeContext,
 ) -> SingleFetchResult:
     modes = _compute_modes(args)
+    if getattr(args, "_deliver_files", False):
+        modes.update({"article", "markdown"})
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
     try:
-        envelope = FetchPipeline(fetch_paper).run(
+        from .capability_scope import (
+            capability_scopes_for_query,
+            capability_scope_from_runtime_context,
+        )
+        from .delivery.fetch_cache import FetchCache
+        from .delivery.requests import FetchPaperRequest
+
+        cache_request = FetchPaperRequest(
+            query=query,
+            target=getattr(args, "target", "paper"),
+            modes=sorted(modes),
+            strategy={
+                "asset_profile": args.asset_profile,
+                "require_local_body_assets": bool(
+                    getattr(args, "require_local_body_assets", False)
+                ),
+                "require_full_size_body_assets": bool(
+                    getattr(args, "require_full_size_body_assets", False)
+                ),
+            },
+            include_refs=args.include_refs,
+            max_tokens=args.max_tokens,
+            prefer_cache=bool(getattr(args, "prefer_cache", False)),
+        )
+        scopes = capability_scopes_for_query(context.env, query)
+        cache = FetchCache(
+            output_dir, credential_scope=scopes[0], read_credential_scopes=scopes
+        )
+        envelope = cache.load_fetch_envelope(
+            cache_request, resolve_paper_fn=resolve_paper, context=context
+        )
+        cache_hit = envelope is not None
+        envelope = envelope or FetchPipeline(fetch_paper).run(
             FetchPipelineRequest(
                 query=query,
                 target=getattr(args, "target", "paper"),
@@ -777,6 +804,13 @@ def _run_single_fetch_with_context(
             context=context,
         )
         context.raise_if_cancelled()
+        if getattr(args, "prefer_cache", False) and not cache_hit:
+            FetchCache(
+                output_dir,
+                credential_scope=capability_scope_from_runtime_context(context),
+            ).write_fetch_envelope(
+                envelope, cache_request, commit_guard=context.commit_guard
+            )
         context.report_progress("stage", stage="writing")
         saved_markdown_path = None
         if args.save_markdown_to_disk:
@@ -1063,7 +1097,23 @@ def _build_cli_manifest_record(
             if str(item.get("path") or "").strip()
         )
 
-    return build_manifest_record(
+    if getattr(args, "_deliver_files", False):
+        from .delivery.receipts import save_reading_artifacts
+
+        delivery_dir = (
+            context.output_dir
+            / ".paper-fetch-results"
+            / str(context.run_id)
+            / str(attempt.index)
+        )
+        artifacts = (
+            *artifacts,
+            *save_reading_artifacts(
+                delivery_dir, envelope=envelope, error=manifest_error
+            ),
+        )
+
+    record = build_manifest_record(
         tool_version=context.tool_version,
         run_id=context.run_id,
         record_id=attempt.record_id,
@@ -1089,6 +1139,17 @@ def _build_cli_manifest_record(
         completed_at=attempt.completed_at,
         deps=context.deps,
     )
+    if getattr(args, "_deliver_files", False):
+        from .delivery.receipts import receipt_from_record
+
+        path = delivery_dir / "manifest.json"
+        write_manifest_record(path, record, overwrite=True)
+        if not (getattr(args, "output_is_explicit", False) and args.output == "-"):
+            sys.stdout.write(
+                json.dumps(receipt_from_record(record, path), ensure_ascii=False) + "\n"
+            )
+            sys.stdout.flush()
+    return record
 
 
 def _run_batch_item(
@@ -1243,29 +1304,16 @@ def _record_from_batch_result(
 def exit_code_for_batch_results(
     results: Sequence[ManifestRecord | Mapping[str, Any]],
 ) -> int:
-    statuses = [
-        (
-            (
-                item.acceptance.fetch.code or "ok"
-                if item.acceptance.target == "supplementary"
-                else ("ok" if item.error is None else item.error.status)
-            )
+    from .delivery.receipts import target_satisfied
+
+    return int(
+        any(
+            not target_satisfied(item)
             if isinstance(item, ManifestRecord)
-            else str(item.get("status"))
+            else item.get("status") != "ok"
+            for item in results
         )
-        for item in results
-    ]
-    failure_statuses = {status for status in statuses if status != "ok"}
-    if not failure_statuses:
-        return 0
-    for status, exit_code in (
-        (NO_ACCESS, 3),
-        (RATE_LIMITED, 4),
-        ("ambiguous", 2),
-    ):
-        if status in failure_statuses:
-            return exit_code
-    return 1
+    )
 
 
 def run_batch_fetch(
@@ -1508,9 +1556,15 @@ def _add_fetch_arguments(
     )
     parser.add_argument(
         "--preset",
-        choices=("temporary_read", "archive"),
-        default=_default(None, suppress_defaults=suppress_defaults),
+        choices=("temporary_read", "cacheable_read", "archive"),
+        default=_default("temporary_read", suppress_defaults=suppress_defaults),
         help="Fill omitted options for temporary reading or text archiving.",
+    )
+    parser.add_argument(
+        "--prefer-cache",
+        action="store_true",
+        default=_default(False, suppress_defaults=suppress_defaults),
+        help="Reuse compatible cached results in the selected output directory.",
     )
     query_group = parser.add_mutually_exclusive_group()
     query_group.add_argument(
@@ -1538,8 +1592,7 @@ def _add_fetch_arguments(
         "--manifest",
         default=_default(None, suppress_defaults=suppress_defaults),
         help=(
-            "Single-paper schema-v2 manifest path. No manifest is written by "
-            "default; batch mode uses --batch-results."
+            "Additional single-paper schema-v2 manifest path. Every result also has an independent manifest; batch mode uses --batch-results."
         ),
     )
     parser.add_argument(
@@ -1561,8 +1614,7 @@ def _add_fetch_arguments(
         "--output",
         default=_default("-", suppress_defaults=suppress_defaults),
         help=(
-            "Output destination (default: - for stdout). Omit with --output-dir "
-            "to write a default file there."
+            "Explicit body destination; use - for body stdout. Otherwise stdout contains JSON receipts."
         ),
     )
     parser.add_argument(
@@ -1570,8 +1622,7 @@ def _add_fetch_arguments(
         default=_default(None, suppress_defaults=suppress_defaults),
         help=(
             "Directory for the default formatted output when --output is omitted, plus Markdown, "
-            "PDF fallback sources, and assets. Defaults to PAPER_FETCH_DOWNLOAD_DIR or the user "
-            "data downloads directory."
+            "PDF fallback sources, and assets. Defaults to a retained system temporary directory."
         ),
     )
     parser.add_argument(
@@ -1581,7 +1632,7 @@ def _add_fetch_arguments(
         help=(
             "Controls local artifact retention. markdown-assets saves Markdown plus assets from "
             "--asset-profile and keeps PDF fallback sources; all preserves raw provider/cache "
-            "artifacts; none disables provider artifacts and assets (default: markdown-assets)."
+            "artifacts; none disables provider artifacts and assets (preset default: none)."
         ),
     )
     parser.add_argument(
@@ -1618,7 +1669,7 @@ def _add_fetch_arguments(
         help=(
             "Local content asset scope: none skips asset downloads, body saves body "
             "figures/tables/formula images, all also saves supplementary assets "
-            "(default: body)."
+            "(preset default: none)."
         ),
     )
     parser.add_argument(
@@ -1899,12 +1950,32 @@ def build_parser(
         _command_parser=fetch_parser,
     )
 
+    for name in ("resolve", "check"):
+        lookup = subparsers.add_parser(
+            name,
+            help="Resolve paper identity."
+            if name == "resolve"
+            else "Probe full-text availability without fetching the body.",
+        )
+        queries = lookup.add_mutually_exclusive_group(required=True)
+        queries.add_argument("--query")
+        queries.add_argument("--query-file")
+        lookup.add_argument(
+            "--batch-concurrency", type=parse_batch_concurrency, default=4
+        )
+        lookup.set_defaults(
+            _command_handler=_run_lookup_namespace, _command_parser=lookup
+        )
+
     assets_parser = subparsers.add_parser(
         "fetch-assets",
         help="Fetch selected paper images without fetching the full text.",
     )
-    assets_parser.add_argument(
-        "--query", required=True, help="Known paper DOI, URL, or title."
+    asset_source = assets_parser.add_mutually_exclusive_group(required=True)
+    asset_source.add_argument("--query", help="Known paper DOI, URL, or title.")
+    asset_source.add_argument(
+        "--manifest",
+        help="Existing per-paper manifest; use its identity and image index.",
     )
     selectors = assets_parser.add_mutually_exclusive_group(required=True)
     selectors.add_argument("--asset-id", action="append", dest="asset_ids")
@@ -1960,12 +2031,80 @@ def build_parser(
     return parser
 
 
+def _run_lookup_namespace(args: argparse.Namespace) -> int:
+    from .service import probe_has_fulltext
+    from .delivery.receipts import public_diagnostics
+
+    try:
+        queries = (
+            read_query_file(Path(args.query_file)) if args.query_file else [args.query]
+        )
+    except ValueError as exc:
+        args._command_parser.error(str(exc))
+
+    def lookup(item):
+        index, query = item
+        with RuntimeContext(artifact_mode="none") as context:
+            try:
+                if args._command == "resolve":
+                    resolved = resolve_paper(query, context=context)
+                    payload = resolved.to_dict()
+                    payload["status"] = (
+                        "ambiguous"
+                        if resolved.candidates and not resolved.doi
+                        else "ok"
+                    )
+                    if (
+                        not resolved.doi
+                        and not resolved.landing_url
+                        and not resolved.candidates
+                    ):
+                        payload["status"] = "unresolved"
+                else:
+                    payload = probe_has_fulltext(query, context=context).to_dict()
+                    payload["status"] = "ok"
+                return {
+                    "schema_version": 1,
+                    "contract": "paper-fetch/" + args._command,
+                    **public_diagnostics(payload),
+                    "index": index,
+                    "query": query,
+                }
+            except Exception as error:
+                return {
+                    "schema_version": 1,
+                    "contract": "paper-fetch/" + args._command,
+                    "index": index,
+                    "query": query,
+                    "status": "failed",
+                    "error": public_diagnostics(_error_payload(error)),
+                }
+
+    result = run_batch(
+        list(enumerate(queries, 1)), lookup, max_workers=args.batch_concurrency
+    )
+    payloads = [item.value for item in result.results]
+    for payload in payloads:
+        sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+    return int(
+        any(payload is None or payload.get("status") != "ok" for payload in payloads)
+    )
+
+
 def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
-    from .targeted_assets import context_from_query, fetch_selected_assets
+    from .targeted_assets import (
+        context_from_query,
+        context_from_manifest,
+        fetch_selected_assets,
+    )
 
     try:
         with RuntimeContext(artifact_mode="none") as runtime:
-            state = context_from_query(args.query, runtime)
+            state = (
+                context_from_manifest(Path(args.manifest))
+                if args.manifest
+                else context_from_query(args.query, runtime)
+            )
             state.cleanup_temporary = args.output_dir is not None
             payload = fetch_selected_assets(
                 state,
@@ -2150,6 +2289,8 @@ def _write_single_failure_manifest(
     started_at: datetime,
     deps: ManifestBuilderDependencies,
 ) -> None:
+    if not output_dir.is_dir():
+        output_dir = Path(tempfile.mkdtemp(prefix="paper-fetch-failure-"))
     progress = getattr(args, "_progress", None)
     with progress.lock if progress is not None else contextlib.nullcontext():
         if progress is not None and progress.is_cancelled(1):
@@ -2183,9 +2324,7 @@ def _write_single_failure_manifest(
 
 
 def _apply_cli_preset(args: argparse.Namespace, raw_args: list[str]) -> None:
-    preset = getattr(args, "preset", None)
-    if preset is None:
-        return
+    preset = getattr(args, "preset", None) or "temporary_read"
     defaults = {
         "format": "markdown",
         "include_refs": "all",
@@ -2193,6 +2332,10 @@ def _apply_cli_preset(args: argparse.Namespace, raw_args: list[str]) -> None:
         "asset_profile": "none",
         "artifact_mode": "none",
     }
+    if preset in {"cacheable_read", "archive"} and not _has_explicit_option(
+        raw_args, "--prefer-cache"
+    ):
+        args.prefer_cache = True
     materials_archive = args.target == "supplementary" and preset == "archive"
     if materials_archive:
         defaults.update(asset_profile="all", artifact_mode="markdown-assets")
@@ -2209,6 +2352,7 @@ def _apply_cli_preset(args: argparse.Namespace, raw_args: list[str]) -> None:
 def _run_fetch_namespace(args: argparse.Namespace) -> int:
     parser = args._command_parser
     raw_args = args._raw_args
+    args._deliver_files = True
     if args.query is None and args.query_file is None:
         parser.error("one of the arguments --query --query-file is required")
     if args.query is not None and args.query_file is not None:
@@ -2232,6 +2376,7 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
         parser.error("--batch-results requires --query-file.")
     args.primary_output_to_output_dir = (
         batch_mode
+        or not args.output_is_explicit
         or _should_write_primary_output_to_output_dir(args)
         or (args.preset == "archive" and not args.output_is_explicit)
     )
@@ -2270,9 +2415,17 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
     try:
         runtime_env = build_runtime_env()
         output_dir = (
-            Path(args.output_dir)
-            if args.output_dir
-            else resolve_cli_download_dir(runtime_env)
+            (
+                Path(args.output_dir)
+                if args.output_dir
+                else (
+                    resolve_cli_download_dir(runtime_env)
+                    if args.prefer_cache
+                    else Path(tempfile.mkdtemp(prefix="paper-fetch-read-"))
+                )
+            )
+            .expanduser()
+            .resolve()
         )
         prepare_output_dir(output_dir)
         if batch_mode:
@@ -2295,14 +2448,15 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
             cancel_check=lambda: progress.is_cancelled(1),
             progress_callback=lambda event, data: progress.emit(event, 1, **data),
         ) as context:
-            result = run_single_fetch(
-                args,
-                query=args.query,
-                output_dir=output_dir,
-                runtime_env=runtime_env,
-                artifact_mode=artifact_mode,
-                context=context,
-            )
+            with _cooperative_batch_cancel(progress.cancel_all, context.close):
+                result = run_single_fetch(
+                    args,
+                    query=args.query,
+                    output_dir=output_dir,
+                    runtime_env=runtime_env,
+                    artifact_mode=artifact_mode,
+                    context=context,
+                )
         with progress.lock:
             if progress.is_cancelled(1):
                 raise RequestCancelledError("Request cancelled.")
@@ -2346,7 +2500,9 @@ def _run_fetch_namespace(args: argparse.Namespace) -> int:
                     "Supplementary acquisition did not complete.",
                 )
             )
-        return 0
+        from .delivery.receipts import target_satisfied
+
+        return int(not target_satisfied(record))
     except OutputDirectoryError as exc:
         if not batch_mode and output_dir is not None:
             assert manifest_run_id is not None
@@ -2427,11 +2583,28 @@ def main(argv: list[str] | None = None) -> int:
     if handler is None:
         parser.error(f"command {args._command!r} does not have a registered handler")
 
+    previous_termination_handler = None
+    install_termination_handler = (
+        threading.current_thread() is threading.main_thread()
+        and hasattr(signal, "SIGTERM")
+    )
+    if install_termination_handler:
+        previous_termination_handler = signal.getsignal(signal.SIGTERM)
+
+        def terminate(_signum, _frame):
+            raise KeyboardInterrupt
+
+        signal.signal(signal.SIGTERM, terminate)
     try:
         return handler(args)
     except ProviderFailure as exc:
         sys.stderr.write(json.dumps(_error_payload(exc), ensure_ascii=False) + "\n")
         return exit_code_for_error(exc)
+    except KeyboardInterrupt:
+        return 1
+    finally:
+        if install_termination_handler:
+            signal.signal(signal.SIGTERM, previous_termination_handler)
 
 
 if __name__ == "__main__":

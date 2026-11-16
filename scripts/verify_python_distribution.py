@@ -26,7 +26,6 @@ from packaging.version import Version
 _DISTRIBUTION = "paper-fetch-skill"
 _REQUIRED_CONSOLE_SCRIPTS = {
     "paper-fetch": "paper_fetch.cli:main",
-    "paper-fetch-mcp": "paper_fetch.mcp.server:main",
     "paper-fetch-install-formula-tools": "paper_fetch.formula.install:main",
     "paper-fetch-install-image-tools": "paper_fetch.image_tools.install:main",
 }
@@ -57,6 +56,7 @@ _FORBIDDEN_PARTS = {
     "node_modules",
     "onboarding",
     "paper_fetch_devtools",
+    "mcp",
     "tests",
 }
 
@@ -82,6 +82,8 @@ def _parse_console_scripts(payload: str) -> dict[str, str]:
 
 def _assert_console_scripts(payload: bytes, label: str) -> None:
     actual = _parse_console_scripts(payload.decode("utf-8"))
+    if "paper-fetch-mcp" in actual:
+        raise ValueError(f"{label} contains removed MCP entrypoint")
     missing = {
         name: target
         for name, target in _REQUIRED_CONSOLE_SCRIPTS.items()
@@ -98,6 +100,13 @@ def _assert_distribution_metadata(
     label: str,
 ) -> None:
     metadata = BytesParser().parsebytes(payload, headersonly=True)
+    from packaging.requirements import Requirement
+
+    if any(
+        canonicalize_name(Requirement(item).name) == "mcp"
+        for item in metadata.get_all("Requires-Dist", [])
+    ):
+        raise ValueError(f"{label} depends on removed MCP protocol")
     name = str(metadata.get("Name") or "").strip()
     version = str(metadata.get("Version") or "").strip()
     if canonicalize_name(name) != canonicalize_name(_DISTRIBUTION):

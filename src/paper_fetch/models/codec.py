@@ -1,4 +1,4 @@
-"""Core structural codecs, independent of MCP requests and cache storage."""
+"""Core structural codecs, independent of CLI requests and cache storage."""
 
 from __future__ import annotations
 

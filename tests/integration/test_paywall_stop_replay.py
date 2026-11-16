@@ -1,13 +1,8 @@
-"""Real subscription HTML stops fetching and still lands CLI/MCP reports."""
-
-from dataclasses import replace
-
+"""Real subscription HTML stops fetching and still lands CLI reports."""
 
 import json
 from unittest import mock
 from paper_fetch import cli, service
-from paper_fetch.mcp._deps import default_mcp_deps
-from paper_fetch.mcp.fetch_tool import fetch_paper_payload
 from paper_fetch.providers.browser_runtime import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
@@ -18,10 +13,9 @@ from paper_fetch.runtime import RuntimeContext
 from tests.block_fixtures import iter_block_samples
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport
-from tests.support._mcp_support import retained_view
 
 
-def test_confirmed_subscription_stops_and_saves_cli_mcp(monkeypatch, tmp_path, capsys):
+def test_confirmed_subscription_stops_and_saves_cli_core(monkeypatch, tmp_path, capsys):
     fixture = next(
         f for f in iter_block_samples() if f.doi == "10.1080/01431161.2025.2516689"
     )
@@ -106,7 +100,7 @@ def test_confirmed_subscription_stops_and_saves_cli_mcp(monkeypatch, tmp_path, c
                 str(manifest),
             ]
         )
-        == 0
+        == 1
     )
     capsys.readouterr()
     assert requests == ["browser_html"]
@@ -114,34 +108,5 @@ def test_confirmed_subscription_stops_and_saves_cli_mcp(monkeypatch, tmp_path, c
     record = json.loads(manifest.read_text())
     assert record["acceptance"]["overall"] == "limited"
 
-    mcpdir = tmp_path / "mcp"
-    result = fetch_paper_payload(
-        query=fixture.doi,
-        modes=["article", "markdown"],
-        strategy={"asset_profile": "all"},
-        artifact_mode="all",
-        download_dir=mcpdir,
-        save_markdown=True,
-        markdown_output_dir=str(mcpdir),
-        markdown_filename="paper.md",
-        prefer_cache=False,
-        deps=replace(
-            default_mcp_deps(),
-            build_runtime_env=lambda *a, **k: {},
-            service_fetch_paper=service.fetch_paper,
-        ),
-    )
-    assert requests == ["browser_html", "browser_html"]
-    assert result["acceptance"]["overall"] == "limited"
-    assert result["acceptance"]["content"] == "abstract_only"
-    # Existing save_markdown semantics require full text; limited results keep
-    # their structured report and received metadata instead.
-    assert not (mcpdir / "paper.md").exists()
-    assert any(
-        event["component"] == "markdown_skipped_no_fulltext"
-        for event in retained_view(result, "diagnostics")["trace"]
-    )
-    assert "Complete remote-sensing time series" in json.dumps(
-        result, ensure_ascii=False
-    )
+    assert record["acceptance"]["content"]["status"] == "abstract_only"
     forbidden.assert_not_called()

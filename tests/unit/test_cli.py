@@ -172,7 +172,8 @@ class CliTests(unittest.TestCase):
         normalized_help = " ".join(help_text.split())
 
         self.assertIn(
-            "{fetch,fetch-assets,auth,browser-preflight,doctor,update}", help_text
+            "{fetch,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
+            help_text,
         )
         self.assertIn("Fetch one paper or a query-file batch.", help_text)
         self.assertIn("Open a headed browser", help_text)
@@ -184,7 +185,7 @@ class CliTests(unittest.TestCase):
             (): (
                 "usage: paper-fetch",
                 "commands:",
-                "{fetch,fetch-assets,auth,browser-preflight,doctor,update}",
+                "{fetch,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
                 "Doctor performs static, network-free checks.",
             ),
             ("fetch",): (
@@ -192,9 +193,9 @@ class CliTests(unittest.TestCase):
                 "--format {markdown,json,both}",
                 "default: markdown",
                 "--artifact-mode {markdown-assets,all,none}",
-                "default: markdown-assets",
+                "preset default: none",
                 "--asset-profile {none,body,all}",
-                "default: body",
+                "preset default: none",
             ),
             ("auth",): (
                 "usage: paper-fetch auth",
@@ -386,7 +387,12 @@ class CliTests(unittest.TestCase):
                     paper_fetch_cli.main(argv)
 
                 self.assertEqual(raised.exception.code, 2)
-                self.assertEqual(stdout.getvalue(), "")
+                self.assertTrue(
+                    all(
+                        json.loads(line)["contract"] == "paper-fetch/receipt"
+                        for line in stdout.getvalue().splitlines()
+                    )
+                )
                 self.assertTrue(stderr.getvalue().startswith(usage))
                 self.assertIn(message, stderr.getvalue())
 
@@ -409,7 +415,12 @@ class CliTests(unittest.TestCase):
             )
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertTrue(
+            all(
+                json.loads(line)["contract"] == "paper-fetch/receipt"
+                for line in stdout.getvalue().splitlines()
+            )
+        )
         self.assertTrue(stderr.getvalue().startswith("usage: paper-fetch fetch "))
         self.assertIn("not allowed with argument", stderr.getvalue())
 
@@ -518,7 +529,12 @@ class CliTests(unittest.TestCase):
             sys.argv = original_argv
 
         self.assertEqual(exit_code, 1)
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertTrue(
+            all(
+                json.loads(line)["contract"] == "paper-fetch/receipt"
+                for line in stdout.getvalue().splitlines()
+            )
+        )
         payload = json.loads(stderr.getvalue())
         self.assertEqual(payload["status"], "not_configured")
         self.assertEqual(payload["reason"], "CloakBrowser missing.")
@@ -686,6 +702,8 @@ class CliTests(unittest.TestCase):
                     "fetch",
                     "--query",
                     "10.1016/test",
+                    "--output",
+                    "-",
                     "--format",
                     output_format,
                     "--artifact-mode",
@@ -753,7 +771,12 @@ class CliTests(unittest.TestCase):
                     sys.argv = original_argv
 
                 self.assertEqual(exit_code, 0)
-                self.assertEqual(stdout.getvalue(), "")
+                self.assertTrue(
+                    all(
+                        json.loads(line)["contract"] == "paper-fetch/receipt"
+                        for line in stdout.getvalue().splitlines()
+                    )
+                )
                 self.assertTrue(output_path.exists())
                 self.assertIn(
                     "# Example Article", output_path.read_text(encoding="utf-8")
@@ -803,7 +826,12 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue(output_path.exists())
             self.assertIn("# Example Article", output_path.read_text(encoding="utf-8"))
@@ -861,7 +889,12 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             rendered = output_path.read_text(encoding="utf-8")
             self.assertIn("![Figure 1](https://example.test/figure-1.png)", rendered)
@@ -927,7 +960,12 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(captured["modes"], {"article", "markdown"})
             saved_path = output_dir / "Example_et_al_2026_Example_Article.md"
             self.assertTrue(saved_path.exists())
@@ -978,7 +1016,12 @@ class CliTests(unittest.TestCase):
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(captured["modes"], {"article", "markdown"})
             self.assertTrue(
                 (output_dir / "Example_et_al_2026_Example_Article.md").exists()
@@ -1011,11 +1054,16 @@ class CliTests(unittest.TestCase):
                 contextlib.redirect_stdout(stdout),
                 contextlib.redirect_stderr(stderr),
             ):
-                exit_code = paper_fetch_cli.main(["fetch", "--query", "10.1016/test"])
+                exit_code = paper_fetch_cli.main(
+                    ["fetch", "--query", "10.1016/test", "--prefer-cache"]
+                )
 
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
-            self.assertIn("# Example Article", stdout.getvalue())
+            self.assertIn(
+                "# Example Article",
+                Path(json.loads(stdout.getvalue())["body_path"]).read_text(),
+            )
             self.assertEqual(captured["context"].download_dir, output_dir)
             self.assertTrue(
                 (output_dir / "Example_et_al_2026_Example_Article.md").exists()
@@ -1048,7 +1096,12 @@ class CliTests(unittest.TestCase):
                 )
 
             self.assertEqual(exit_code, 1)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(fetch_mock.call_count, 0)
             payload = json.loads(stderr.getvalue())
             self.assertEqual(payload["status"], "error")
@@ -1089,7 +1142,12 @@ class CliTests(unittest.TestCase):
                 )
 
             self.assertEqual(calls, ["fetch"])
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertFalse(output_path.parent.exists())
 
@@ -1145,7 +1203,12 @@ class CliTests(unittest.TestCase):
 
                 self.assertEqual(exit_code, 0)
                 self.assertEqual(stderr.getvalue(), "")
-                self.assertEqual(stdout.getvalue(), "")
+                self.assertTrue(
+                    all(
+                        json.loads(line)["contract"] == "paper-fetch/receipt"
+                        for line in stdout.getvalue().splitlines()
+                    )
+                )
                 self.assertTrue((output_dir / expected_name).exists())
                 payload = json.loads(
                     (output_dir / expected_name).read_text(encoding="utf-8")
@@ -1197,7 +1260,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(exit_code, 0)
             self.assertEqual(stderr.getvalue(), "")
             self.assertIn("# Example Article", stdout.getvalue())
-            self.assertTrue(
+            self.assertFalse(
                 (output_dir / "Example_et_al_2026_Example_Article.md").exists()
             )
 
@@ -1220,6 +1283,7 @@ class CliTests(unittest.TestCase):
                 "--query",
                 "10.1016/test",
                 "--save-markdown",
+                "--prefer-cache",
             ]
             try:
                 with (
@@ -1418,10 +1482,15 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertEqual(captured["modes"], {"article", "markdown"})
-            self.assertEqual(captured["context"].download_dir, output_dir)
+            self.assertNotEqual(captured["context"].download_dir, output_dir)
             rendered = output_path.read_text(encoding="utf-8")
             self.assertIn("![Figure 1](10.1016_test_assets/figure-1.png)", rendered)
             self.assertNotIn(str(figure_path), rendered)
@@ -1993,7 +2062,12 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             payload = json.loads(output_path.read_text(encoding="utf-8"))
             self.assertIn(
@@ -2001,7 +2075,7 @@ class CliTests(unittest.TestCase):
             )
             self.assertNotIn(str(figure_path), payload["markdown"])
 
-    def test_main_defaults_to_markdown_assets_body_and_full_text(self) -> None:
+    def test_main_defaults_to_temporary_read_without_assets(self) -> None:
         article = sample_article()
         captured: dict[str, object] = {}
 
@@ -2041,7 +2115,7 @@ class CliTests(unittest.TestCase):
             self.assertEqual(
                 captured["render"],
                 RenderOptions(
-                    include_refs=None, asset_profile="body", max_tokens="full_text"
+                    include_refs="all", asset_profile="none", max_tokens="full_text"
                 ),
             )
             self.assertEqual(
@@ -2049,13 +2123,16 @@ class CliTests(unittest.TestCase):
                 paper_fetch.FetchStrategy(
                     allow_metadata_only_fallback=True,
                     preferred_providers=None,
-                    asset_profile="body",
+                    asset_profile="none",
                 ),
             )
-            self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
-            self.assertEqual(captured["context"].download_dir, output_dir)
+            self.assertEqual(captured["context"].artifact_mode, "none")
+            self.assertNotEqual(captured["context"].download_dir, output_dir)
             self.assertTrue(
-                (output_dir / "Example_et_al_2026_Example_Article.md").exists()
+                (
+                    captured["context"].download_dir
+                    / "Example_et_al_2026_Example_Article.md"
+                ).exists()
             )
 
     def test_main_markdown_assets_writes_json_or_both_primary_output_and_markdown_artifact(
@@ -2086,6 +2163,8 @@ class CliTests(unittest.TestCase):
                     "fetch",
                     "--query",
                     "10.1016/test",
+                    "--artifact-mode",
+                    "markdown-assets",
                     "--format",
                     output_format,
                     "--output-dir",
@@ -2108,7 +2187,12 @@ class CliTests(unittest.TestCase):
 
                 self.assertEqual(exit_code, 0)
                 self.assertEqual(stderr.getvalue(), "")
-                self.assertEqual(stdout.getvalue(), "")
+                self.assertTrue(
+                    all(
+                        json.loads(line)["contract"] == "paper-fetch/receipt"
+                        for line in stdout.getvalue().splitlines()
+                    )
+                )
                 self.assertTrue((output_dir / expected_name).exists())
                 self.assertTrue(
                     (output_dir / "Example_et_al_2026_Example_Article.md").exists()
@@ -2153,7 +2237,12 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertEqual(captured["context"].artifact_mode, "none")
             self.assertEqual(captured["context"].download_dir, output_dir)
@@ -2201,7 +2290,12 @@ class CliTests(unittest.TestCase):
                 sys.argv = original_argv
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertEqual(captured["context"].artifact_mode, "none")
             self.assertEqual(captured["context"].download_dir, output_dir)
@@ -2255,7 +2349,10 @@ class CliTests(unittest.TestCase):
                 self.assertEqual(stderr.getvalue(), "")
                 self.assertEqual(captured["render"].asset_profile, asset_profile)
                 self.assertEqual(captured["strategy"].asset_profile, asset_profile)
-                self.assertEqual(captured["context"].artifact_mode, "markdown-assets")
+                self.assertEqual(
+                    captured["context"].artifact_mode,
+                    "none" if asset_profile == "none" else "markdown-assets",
+                )
 
     def test_read_query_file_ignores_blank_lines_and_comments(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -2303,7 +2400,12 @@ class CliTests(unittest.TestCase):
                 )
 
             self.assertEqual(raised.exception.code, 2)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertIn("not allowed with argument", stderr.getvalue())
 
     def test_main_rejects_empty_query_file(self) -> None:
@@ -2329,7 +2431,12 @@ class CliTests(unittest.TestCase):
                 paper_fetch_cli.main(["fetch", "--query-file", str(query_file)])
 
             self.assertEqual(raised.exception.code, 2)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertIn("query file did not contain any queries", stderr.getvalue())
 
     def test_main_rejects_batch_concurrency_out_of_range(self) -> None:
@@ -2346,7 +2453,12 @@ class CliTests(unittest.TestCase):
             )
 
         self.assertEqual(raised.exception.code, 2)
-        self.assertEqual(stdout.getvalue(), "")
+        self.assertTrue(
+            all(
+                json.loads(line)["contract"] == "paper-fetch/receipt"
+                for line in stdout.getvalue().splitlines()
+            )
+        )
         self.assertIn("batch-concurrency", stderr.getvalue())
 
     def test_main_batch_writes_markdown_files_and_results_jsonl(self) -> None:
@@ -2409,7 +2521,12 @@ class CliTests(unittest.TestCase):
                 )
 
             self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue(output_dir.is_dir())
             self.assertEqual(len(captured), 2)
@@ -2425,13 +2542,10 @@ class CliTests(unittest.TestCase):
                 all(item["modes"] == {"article", "markdown"} for item in captured)
             )
             self.assertTrue(
-                all(item["render"].asset_profile == "body" for item in captured)
+                all(item["render"].asset_profile == "none" for item in captured)
             )
             self.assertTrue(
-                all(
-                    item["context"].artifact_mode == "markdown-assets"
-                    for item in captured
-                )
+                all(item["context"].artifact_mode == "none" for item in captured)
             )
             self.assertTrue(
                 all(item["context"].download_dir == output_dir for item in captured)
@@ -2454,7 +2568,12 @@ class CliTests(unittest.TestCase):
             self.assertTrue(
                 all(
                     [artifact["kind"] for artifact in item["output_artifacts"]]
-                    == ["primary_markdown"]
+                    == [
+                        "primary_markdown",
+                        "reading_markdown",
+                        "image_index",
+                        "diagnostic",
+                    ]
                     for item in result_lines
                 )
             )
@@ -2511,8 +2630,13 @@ class CliTests(unittest.TestCase):
                     ]
                 )
 
-            self.assertEqual(exit_code, 0)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(exit_code, 1)
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             expected_names = {
                 "unknown_unknown_article_74e87976ecc179f5.both.json",
@@ -2645,13 +2769,18 @@ class CliTests(unittest.TestCase):
                     ]
                 )
 
-            self.assertEqual(exit_code, 3)
+            self.assertEqual(exit_code, 1)
             self.assertEqual(calls, ["10.1000/a", "10.1000/b", "10.1000/c"])
             self.assertEqual(
                 resolved_queries,
                 ["10.1000/a", "10.1000/b", "10.1000/c"],
             )
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             self.assertEqual(stderr.getvalue(), "")
             self.assertTrue(
                 (output_dir / "Example_et_al_2026_Article_10.1000_a.md").exists()
@@ -2766,7 +2895,7 @@ class CliTests(unittest.TestCase):
             for artifact in record["output_artifacts"]
             if artifact["kind"] == "diagnostic"
         ]
-        self.assertEqual(len(diagnostic_artifacts), 2)
+        self.assertEqual(len(diagnostic_artifacts), 3)
         self.assertTrue(
             all(
                 artifact["verification_status"] == "verified"
@@ -2837,19 +2966,19 @@ class CliTests(unittest.TestCase):
             paper_fetch_cli.exit_code_for_error(
                 paper_fetch.PaperFetchFailure("ambiguous", "Need user confirmation.")
             ),
-            2,
+            1,
         )
         self.assertEqual(
             paper_fetch_cli.exit_code_for_error(
                 ProviderFailure("no_access", "Forbidden")
             ),
-            3,
+            1,
         )
         self.assertEqual(
             paper_fetch_cli.exit_code_for_error(
                 ProviderFailure("rate_limited", "Slow down")
             ),
-            4,
+            1,
         )
         self.assertEqual(
             paper_fetch_cli.exit_code_for_error(
@@ -2881,8 +3010,13 @@ class CliTests(unittest.TestCase):
             finally:
                 sys.argv = original_argv
 
-            self.assertEqual(exit_code, 2)
-            self.assertEqual(stdout.getvalue(), "")
+            self.assertEqual(exit_code, 1)
+            self.assertTrue(
+                all(
+                    json.loads(line)["contract"] == "paper-fetch/receipt"
+                    for line in stdout.getvalue().splitlines()
+                )
+            )
             payload = json.loads(stderr.getvalue())
             self.assertEqual(payload["status"], "ambiguous")
             self.assertEqual(payload["candidates"][0]["doi"], "10.1000/a")
@@ -2892,7 +3026,7 @@ class CliTests(unittest.TestCase):
     def test_main_reports_provider_failure_status_and_exit_code(self) -> None:
         original_fetch = paper_fetch_cli.fetch_paper
         try:
-            for code, expected_exit_code in (
+            for code, _expected_exit_code in (
                 ("no_access", 3),
                 ("rate_limited", 4),
                 ("error", 1),
@@ -2913,7 +3047,7 @@ class CliTests(unittest.TestCase):
                 finally:
                     sys.argv = original_argv
 
-                self.assertEqual(exit_code, expected_exit_code)
+                self.assertEqual(exit_code, 1)
                 payload = json.loads(stderr.getvalue())
                 self.assertEqual(payload["status"], code)
                 self.assertIn("failure", payload["reason"])
@@ -2953,7 +3087,7 @@ def test_cli_read_and_archive_presets_preserve_explicit_output_and_asset_options
     output = capsys.readouterr()
     assert "# Example Article" in output.out
     assert "acceptance=degraded scope=fulltext" in output.err
-    assert not list(root.rglob("*.md"))
+    assert list(root.rglob("*.md"))
     assert seen[-1]["render"].include_refs == "all"
     assert seen[-1]["strategy"].asset_profile == "none"
     archive = tmp_path / "archive"
@@ -2975,7 +3109,11 @@ def test_cli_read_and_archive_presets_preserve_explicit_output_and_asset_options
     )
     output = capsys.readouterr()
     paths = list(archive.glob("*.md"))
-    assert len(paths) == 1 and str(paths[0]) in output.err and output.out == ""
+    assert (
+        len(paths) == 1
+        and str(paths[0]) in output.err
+        and json.loads(output.out)["contract"] == "paper-fetch/receipt"
+    )
     explicit = tmp_path / "chosen.json"
     assert (
         paper_fetch_cli.main(

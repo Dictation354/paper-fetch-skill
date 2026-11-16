@@ -1,8 +1,8 @@
 # Paper Fetch Skill
 
-> Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · MCP · Skill.
+> Fetch papers as agent-ready markdown — DOI/URL/title in, structured full text out. CLI · Skill.
 
-**Paper Fetch Skill** 是已知论文的 AI 阅读层：输入 DOI、URL 或标题，在你已有合法访问权限的范围内，返回结构化元数据、Markdown 全文和可选图表资源，让 Codex、Claude Code 或任意 MCP host 从“只能读摘要”升级到“可以读全文”。
+**Paper Fetch Skill** 是已知论文的 AI 阅读层：输入 DOI、URL 或标题，在你已有合法访问权限的范围内，返回结构化元数据、Markdown 全文和可选图表资源，让 Codex、Claude Code 或其他 agent 从“只能读摘要”升级到“可以读全文”。
 
 ```text
 DOI / URL / title
@@ -40,7 +40,7 @@ paper-fetch fetch \
   --output-dir ./papers
 ```
 
-`--query` 可以是 DOI、论文 landing URL 或标题。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会在目录中生成安全命名的主输出；默认 Markdown 模式会保留全文 references，并按 `body` 资产范围尝试归档正文图表资源。全文不可用时，结果会标明仅摘要、仅元数据或具体失败原因。
+`--query` 可以是 DOI、论文 landing URL 或标题。默认采用 temporary_read：完整正文、逐篇 manifest、图片索引和诊断保存到独立临时目录，stdout 返回简短 JSON 回执；命令退出后文件保留。显式 `--output-dir` 优先，默认不下载正文图片、不使用持久缓存。全文不可用时，结果会标明仅摘要、仅元数据或具体失败原因。
 
 只需要临时把 Markdown 输出到终端、不归档论文资产时：
 
@@ -58,7 +58,7 @@ paper-fetch fetch \
 
 CLI 默认在终端 stderr 显示逐篇阶段和资产进度；`--progress text|jsonl|none` 可显式选择输出，`--progress jsonl --control-stdin` 提供机器单篇/整批取消接口，见 [`docs/cli.md`](docs/cli.md#实时进度与机器取消)。
 
-CLI 会准备工作目录；MCP 临时阅读预设不保存独立 Markdown 或下载论文资产，但运行时仍可能写入缓存和浏览器状态。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
+默认回执包含绝对文件路径、论文身份、验收、来源、截断标记及原因码。完整输出和落盘矩阵见 [`docs/cli.md`](docs/cli.md) 与 [`presets.md`](skills/paper-fetch-skill/references/presets.md)。
 
 ### 独立获取补充材料
 
@@ -66,22 +66,21 @@ CLI 会准备工作目录；MCP 临时阅读预设不保存独立 Markdown 或�
 paper-fetch fetch --target supplementary --query "10.1038/s41561-022-00912-7" --output-dir ./papers
 ```
 
-只需要补充附件、Source Data、Extended Data 或多媒体时，使用 `--target supplementary`，无需先取得正文，也不下载正文 PDF。随正文获取补充材料则使用默认的 `--target paper` 和 `--asset-profile all`。Python API 与 MCP 单篇、批量入口也支持 `target="supplementary"`；材料范围、输出及失败语义见 [CLI 说明](docs/cli.md#独立补充材料任务)。
+只需要补充附件、Source Data、Extended Data 或多媒体时，使用 `--target supplementary`，无需先取得正文，也不下载正文 PDF。随正文获取补充材料则使用默认的 `--target paper` 和 `--asset-profile all`。Python API 与 CLI 单篇、批量入口也支持 `target="supplementary"`；材料范围、输出及失败语义见 [CLI 说明](docs/cli.md#独立补充材料任务)。
 
 ## 你会得到什么
 
 - 带 YAML front matter 的论文 Markdown，包含题名、作者、期刊、DOI、来源和正文状态。
 - 按源文档恢复的摘要、正文 section、表格、公式、figure caption 和 references。
 - `asset_profile=body|all` 时可下载的正文或补充资源，以及改写后的本地 Markdown 链接。
-- JSON、MCP 和 manifest 中统一的 acquisition、content、asset 和 semantic-loss 诊断。
+- JSON 回执和 manifest 中统一的 acquisition、content、asset 和 semantic-loss 诊断。
 - 当全文、公式、表格或资产不完整时，明确的 warning、质量状态和稳定 reason code。
 
-项目提供三个入口：
+项目提供两个入口：
 
 | 入口 | 适用场景 |
 | --- | --- |
 | `paper-fetch` | 单篇或批量本地抓取与归档 |
-| `paper-fetch-mcp` | Codex、Claude Code 等 MCP host 内的结构化调用、缓存和批处理 |
 | `skills/paper-fetch-skill/` | 告诉 agent 何时调用、如何选择预设以及如何验收结果 |
 
 ## 效果展示
@@ -145,11 +144,11 @@ paper-fetch fetch \
 
 | Host | 命令 |
 | --- | --- |
-| Codex | `./scripts/install-codex-skill.sh --register-mcp` |
-| Claude Code | `./scripts/install-claude-skill.sh --register-mcp` |
-| Antigravity CLI | `./scripts/install-antigravity-skill.sh --register-mcp` |
+| Codex | `./scripts/install-codex-skill.sh` |
+| Claude Code | `./scripts/install-claude-skill.sh` |
+| Antigravity CLI | `./scripts/install-antigravity-skill.sh` |
 
-需要自定义环境文件、project/user scope 或手动 MCP 注册时，见 [`docs/deployment.md`](docs/deployment.md)。
+需要自定义环境文件或 project/user scope 时，见 [`docs/deployment.md`](docs/deployment.md)。
 
 ## 访问权限与运行时
 
@@ -176,7 +175,7 @@ paper-fetch auth wiley
 ## 文档
 
 - [`docs/cli.md`](docs/cli.md)：CLI 输出、artifact、批量抓取和错误码。
-- [`docs/deployment.md`](docs/deployment.md)：安装、配置、MCP 注册和更新。
+- [`docs/deployment.md`](docs/deployment.md)：安装、配置、Skill 接入和更新。
 - [`docs/providers.md`](docs/providers.md)：provider 路由、能力和环境变量。
 - [`docs/browser-runtime.md`](docs/browser-runtime.md)：浏览器运行时、认证和预检。
 - [`docs/README.md`](docs/README.md)：完整文档导航。

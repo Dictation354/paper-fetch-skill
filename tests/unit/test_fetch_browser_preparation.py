@@ -1,10 +1,8 @@
 """Fetch entrypoint contracts with runtime/download/browser boundaries mocked."""
 
 from __future__ import annotations
-from dataclasses import replace
 
 
-import asyncio
 from types import SimpleNamespace
 from unittest.mock import Mock
 
@@ -12,19 +10,12 @@ import pytest
 
 from paper_fetch import cli, service
 from paper_fetch.http import RequestCancelledError
-from paper_fetch.mcp import fetch_tool
-from paper_fetch.mcp._deps import default_mcp_deps
-from paper_fetch.mcp.batch_fetch import batch_fetch_tool_async
 from paper_fetch.providers.browser_runtime import preparation
 from paper_fetch.providers.browser_runtime.camoufox_manager import (
     _launch_executable_path,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests.support._mcp_support import (
-    sample_article,
-    sample_envelope,
-    sample_resolved_query,
-)
+from tests.support.fetch_fixtures import sample_article
 
 _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 
@@ -55,123 +46,6 @@ def _http_article(prepare):
         return sample_article()
 
     return fetch
-
-
-@pytest.mark.parametrize("entrypoint", ["api", "cli", "mcp", "mcp_async"])
-def test_http_entrypoints_do_not_prepare(prepare, monkeypatch, tmp_path, entrypoint):
-    monkeypatch.setattr(service, "fetch_article", _http_article(prepare))
-
-    # The pipeline is the CLI's fetch/output boundary; exercise its nested API call.
-    def cli_fetch(_args, *, context, query, **_kwargs):
-        result = service.fetch_paper(query, context=context)
-        return cli.SingleFetchResult(result)
-
-    monkeypatch.setattr(cli, "_run_single_fetch_with_context", cli_fetch)
-    deps = replace(default_mcp_deps(), service_fetch_paper=service.fetch_paper)
-    with RuntimeContext(env={}, download_dir=None, artifact_mode="none") as context:
-        for _expected in (1, 2):
-            if entrypoint == "api":
-                service.fetch_paper("10.1000/example", context=context)
-            elif entrypoint == "cli":
-                cli.run_single_fetch(
-                    SimpleNamespace(asset_profile="none"),
-                    query="10.1000/example",
-                    output_dir=tmp_path,
-                    runtime_env={},
-                    artifact_mode="none",
-                    context=context,
-                )
-            elif entrypoint == "mcp":
-                fetch_tool.fetch_paper_payload(
-                    query="10.1000/example",
-                    no_download=True,
-                    env={},
-                    download_dir=None,
-                    context=context,
-                    deps=deps,
-                )
-            else:
-                result = asyncio.run(
-                    fetch_tool.fetch_paper_tool_async(
-                        query="10.1000/example",
-                        no_download=True,
-                        env={},
-                        download_dir=None,
-                        deps=deps,
-                    )
-                )
-                assert result.is_error is False
-            prepare.assert_not_called()
-    assert preparation.fetch_browser_preparation.get() is None
-
-
-@pytest.mark.parametrize("failure", [False, True])
-def test_mcp_cache_hit_does_not_prepare(
-    prepare, monkeypatch, failure, capsys, tmp_path
-):
-    if failure:
-        prepare.side_effect = RuntimeError("runtime unavailable")
-    cached = sample_envelope(modes={"markdown"})
-
-    def load(*_args, **_kwargs):
-        prepare.assert_not_called()
-        return cached
-
-    monkeypatch.setattr(fetch_tool, "_load_cached_fetch_envelope", load)
-    service_fetch = Mock(side_effect=AssertionError("cache must satisfy fetch"))
-    deps = replace(default_mcp_deps(), service_fetch_paper=service_fetch)
-    payload = fetch_tool.fetch_paper_payload(
-        query="10.1000/example",
-        prefer_cache=True,
-        no_download=True,
-        env={},
-        download_dir=tmp_path,
-        deps=deps,
-    )
-    assert payload["source"] == cached.source
-    prepare.assert_not_called()
-    service_fetch.assert_not_called()
-    assert "runtime unavailable" not in capsys.readouterr().err
-
-
-@pytest.mark.parametrize("failure", [False, True])
-def test_batch_prepares_once_and_children_and_launches_reuse_result(
-    prepare, monkeypatch, tmp_path, failure
-):
-    if failure:
-        prepare.side_effect = RuntimeError("runtime unavailable")
-    monkeypatch.setattr(service, "fetch_article", lambda *_a, **_kw: sample_article())
-
-    def resolve(query, **_kwargs):
-        return sample_resolved_query(query)
-
-    def fetch(query, *, context, **_kwargs):
-        result = service.fetch_paper(query, context=context)
-        if failure:
-            with pytest.raises(RuntimeError, match="runtime unavailable"):
-                _launch_executable_path(None)
-        else:
-            assert _launch_executable_path(None) is None
-        return result
-
-    deps = replace(
-        default_mcp_deps(),
-        service_fetch_paper=fetch,
-        service_resolve_paper=resolve,
-    )
-    result = asyncio.run(
-        batch_fetch_tool_async(
-            queries=["10.1000/one", "10.1000/two"],
-            concurrency=2,
-            no_download=True,
-            artifact_mode="none",
-            env={},
-            deps=deps,
-        )
-    )
-    assert result.is_error is False
-    assert result.structured_content["execution_count"] == 2
-    assert prepare.call_count == (2 if failure else 1)
 
 
 def test_cli_batch_prepares_before_scheduling_and_children_inherit(

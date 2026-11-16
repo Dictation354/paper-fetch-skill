@@ -1,19 +1,15 @@
-# `batch_check` Probe 语义说明
+# check 探测语义
 
-`batch_check(queries=[query])` 是单篇和批量的低成本全文可用性预判。
-它复用 Python `probe_has_fulltext()`，`mode` 默认且仅允许 `"metadata"`，
-不触发正文 waterfall，也不写下载目录。它仍会进行 metadata/landing 网络请求，
-不是本地静态诊断；本地诊断使用 `provider_status` / CLI `doctor`。
+`paper-fetch check` 是单篇和 query-file 批量的低成本全文可用性预判，复用 Python `probe_has_fulltext()`。它只做 metadata/landing 请求，不触发正文 waterfall，也不写正文目录；静态诊断用 `paper-fetch doctor`。
 
 ## 与真实抓取的区别
 
 | 入口 | 证据 | 结论 |
 | --- | --- | --- |
-| `batch_check` | metadata、路由及 landing meta | 可能可用或证据不足 |
-| `fetch_paper` / `batch_fetch` | 完整 provider 抓取和统一验收 | 最终 `has_fulltext` 与 acceptance |
+| check | metadata、路由及 landing meta | 可能可用或证据不足 |
+| fetch | 完整 provider 抓取和统一验收 | 最终 has_fulltext 与 acceptance |
 
-有 license、全文链接或 `citation_pdf_url` 不证明当前可成功获取；probe 没有正信号时，
-后续 provider HTML/PDF 路径仍可能成功。两者不要求逐案一致。Python 调用使用 `probe_has_fulltext()`。
+license、全文链接或 citation_pdf_url 不证明当前可成功获取；probe 没有正信号时，后续 HTML/PDF 路径仍可能成功。两者不要求逐案一致。
 
 ## 证据与状态
 
@@ -33,43 +29,17 @@ metadata/probe 请求失败的 warnings 表达证据不足或环境受限，不�
 
 ## 调用和返回
 
-```python
-batch_check(queries=["10.1186/1471-2105-11-421"], mode="metadata", concurrency=1)
+```bash
+paper-fetch check --query "10.1186/1471-2105-11-421"
+paper-fetch check --query-file queries.txt --batch-concurrency 4
 ```
 
-- 顶层包含 `schema_version=4`、`mode="metadata"`、按输入顺序的 `results`、
-  `aborted`、`abort_reason` 和 `progress`。
-- 每项保留稳定 1-based `index`、`query`、`status`、`error`、`provider_lane`，
-  从 `probe_state`、`evidence`、`warnings` 读取预判；歧义候选在 `error.candidates`。
-- 成功项的 `has_fulltext/content_kind/has_abstract/source/acquisition/token_estimate/`
-  `token_estimate_breakdown` 保持 null，`trace` 为空数组。
-  `likely_has_fulltext` 仅在 `likely_yes` 时为 true，否则为 null。
-- progress 区分 `terminal/completed/not_scheduled`；不能把没有调度或失败项算成
-  已确认可读，也不能把 `likely_has_fulltext` 当作最终 `has_fulltext`。
+每项返回一行 JSON：schema_version=1、contract=paper-fetch/check，包含输入 index/query、解析 doi/title、status、state、evidence 与 warnings。按输入顺序输出；歧义或失败保留逐项错误及候选。state 为探测结论，不能当作已经取得全文。
 
-真实批量获取使用 `batch_fetch` 并读取每项 `acceptance`。无需落盘的正文检查可用：
-
-```python
-batch_fetch(
-    queries=["10.1186/1471-2105-11-421"],
-    modes=["article"],
-    detail="compact",
-    save_markdown=False,
-    no_download=True,
-    prefer_cache=False,
-    artifact_mode="none",
-    strategy={"asset_profile": "none"},
-)
-```
-
-不传 `batch_results`；这是显式参数组合，不改变默认行为。compact 仅返回验收摘要，
-后续阅读任务仍须取得实际正文，见 [预设](../../skills/paper-fetch-skill/references/presets.md)。
+真正获取和阅读使用 `paper-fetch fetch`，读取回执的 acceptance 与 body_path。获取成功与已实际阅读仍需区分。
 
 ## 扩展边界
 
-probe 不承担正文下载、CLI 独立 `has_fulltext` 命令或 provider HEAD/OPTIONS 深度探测。
-新增证据应保持 metadata 级成本；只有稳定证据才能支持未来的 `confirmed_yes` 或 `no`，
-不能为追求与 fetch 一致而在 probe 中复制完整 waterfall。
+probe 不承担正文下载或 provider HEAD/OPTIONS 深度探测。新增证据保持 metadata 级成本，不为追求与 fetch 一致而复制完整 waterfall。
 
-完整流程见 [架构](overview.md)，配置与回退见 [provider 说明](../providers.md)，
-Agent 的探测核对与报告见 [acceptance](../../skills/paper-fetch-skill/references/acceptance.md#探测核对与报告)。
+完整流程见 [架构](overview.md)，配置与回退见 [provider 说明](../providers.md)，探测核对与报告见 [acceptance](../../skills/paper-fetch-skill/references/acceptance.md#探测核对与报告)。

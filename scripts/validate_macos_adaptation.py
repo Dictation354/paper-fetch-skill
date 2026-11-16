@@ -143,10 +143,12 @@ def validate_contract(
     ):
         errors.append("node_runtime must reference the official macOS arm64 Node pin")
     if any(
-        key not in installer.get("mcp", {}).get("env_keys", [])
+        key not in installer.get("runtime", {}).get("env_keys", [])
         for key in node.get("environment", [])
     ):
-        errors.append("node_runtime.environment must be in installer MCP environment")
+        errors.append(
+            "node_runtime.environment must be in installer runtime environment"
+        )
     prefix = installer.get("packages", {}).get("macos_offline_name_prefix")
     if not isinstance(prefix, str) or any(
         not name.startswith(f"{prefix}-") for name in owner_installers
@@ -203,7 +205,7 @@ def validate_contract(
     for key, expected in {
         "home_override": "CODEX_HOME",
         "default_directory": "~/.codex",
-        "register_unregister_same_path": True,
+        "legacy_cleanup_active_home": True,
         "print_destination": True,
     }.items():
         if codex_config.get(key) != expected:

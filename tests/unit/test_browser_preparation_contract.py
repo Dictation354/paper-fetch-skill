@@ -14,7 +14,7 @@ from paper_fetch.providers.browser_runtime import preparation as prep
 from paper_fetch.providers.browser_runtime import byparr_preparation as flare
 from paper_fetch.models.codec import envelope_from_payload, model_to_payload
 from paper_fetch.runtime import RuntimeContext
-from tests.support._mcp_support import sample_envelope
+from tests.support.fetch_fixtures import sample_envelope
 
 
 def test_latest_failure_overrides_earlier_success(tmp_path):

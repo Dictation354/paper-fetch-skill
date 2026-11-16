@@ -287,14 +287,14 @@ class ConfigTests(unittest.TestCase):
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
 
             self.assertEqual(config.resolve_cli_download_dir(env), expected)
-            self.assertEqual(config.resolve_mcp_download_dir(env), expected)
+            self.assertEqual(config.resolve_cache_download_dir(env), expected)
 
     def test_download_dir_env_var_overrides_both_adapter_defaults(self) -> None:
         env = {config.DOWNLOAD_DIR_ENV_VAR: "~/paper-fetch-downloads"}
         expected = Path("~/paper-fetch-downloads").expanduser()
 
         self.assertEqual(config.resolve_cli_download_dir(env), expected)
-        self.assertEqual(config.resolve_mcp_download_dir(env), expected)
+        self.assertEqual(config.resolve_cache_download_dir(env), expected)
 
     def test_camoufox_runtime_config_defaults_to_user_data_artifacts_without_browser_user_agent(
         self,

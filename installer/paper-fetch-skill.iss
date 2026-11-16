@@ -7,7 +7,7 @@
 #endif
 
 #ifndef AppVersion
-#define AppVersion "7.6.3"
+#define AppVersion "7.7.0"
 #endif
 
 #ifndef OutputDir
@@ -97,7 +97,7 @@ begin
   OptionalPage := CreateInputQueryPage(wpInstalling,
     'Optional configuration', 'Core installation is complete. Optional image tool installs default to off.',
     'Blank credentials preserve existing values in {app}\offline.env. Inputs are hidden.' + #13#10 +
-    'Restart running hosts/MCP afterwards. Browser preparation runs automatically and may download components.');
+    'Restart running hosts afterwards. Browser preparation runs automatically and may download components.');
   OptionalPage.Add('Elsevier API Key (https://dev.elsevier.com/):', True);
   OptionalPage.Add('Wiley TDM Token:', True);
   OptionalToolsPage := CreateCustomPage(OptionalPage.ID, 'Optional tools',
@@ -505,6 +505,6 @@ begin
     if OptionalResult <> '' then
       WizardForm.FinishedLabel.Caption := WizardForm.FinishedLabel.Caption + #13#10#13#10 +
         'Optional configuration results: ' + ExpandConstant('{app}\optional-setup-results.txt') + #13#10 +
-        'Restart running hosts/MCP to reload configuration.';
+        'Restart running hosts to reload configuration.';
   end;
 end;

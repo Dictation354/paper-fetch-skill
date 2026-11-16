@@ -1,89 +1,9 @@
-# Environment
+# 环境说明
 
-仅在配置、凭证、runtime 或工具链影响任务时读取。普通抓取自动准备 runtime，无需 agent 先做更新检查。provider/source/capability 以[运行时 catalog](tool-contract.md#static-provider-catalog)为准。
+优先使用已有 CLI 和用户指定配置。入口发现见 [CLI 工作流](cli-workflow.md#入口发现)。配置位置通常为 `~/.config/paper-fetch/.env`；`PAPER_FETCH_ENV_FILE` 可指定现有环境文件。
 
-`browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
-安装 InvisiblePlaywright 0.49.1、invisible-core 61.62.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
-不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
-`>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
-x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
+普通抓取按需准备浏览器 runtime，同批共享准备结果。浏览器任务按展开用户目录、解析符号链接及平台大小写规范化后的实际 profile 路径协调；纯 HTTP/API 请求不申请该资源。队列可取消且无超时，页面预算在取得使用权后建立，重试和 fallback 共用剩余预算。
 
-## 配置来源与离线 wrapper
+遇到 challenge 或 auth_required，按 provider 使用 `paper-fetch auth PROVIDER` 打开人工认证；不代填密码、验证码或绕过访问控制。认证、browser-preflight、抓取和补图共享同一资源机制。外部浏览器占用与 provider 归属冲突分别报错。
 
-优先级：**进程环境 > 调用方显式 env_file > PAPER_FETCH_ENV_FILE > platformdirs 用户配置 > 内置默认值**。CLI diagnostics 的显式层为 `doctor --env-file <path>`；同一路径只读取一次并归因显式层。仓库 `.env` 不隐式加载。
-
-离线 wrapper 仅在调用方未设置 PAPER_FETCH_ENV_FILE 时指向 `<install-root>/offline.env`；activate-offline.sh 默认安全解析该文件，installer `--reuse-env-file <path>` 则复用外部文件。dotenv 不作为 shell 执行。最终进程环境始终优先，诊断和报告不复制 secret。
-
-## 基础配置与凭证名称
-
-| 环境变量 | 作用 |
-| --- | --- |
-| PAPER_FETCH_ENV_FILE | 显式 dotenv 路径。 |
-| PAPER_FETCH_DOWNLOAD_DIR | 默认下载/cache scope；未设时为 platformdirs 用户数据目录。 |
-| PAPER_FETCH_SKILL_USER_AGENT | 非 browser metadata/API 请求 UA。 |
-| CROSSREF_MAILTO | Crossref polite pool 联系邮箱。 |
-| ELSEVIER_API_KEY | Elsevier 官方 API key，ScienceDirect browser 路线不要求它。 |
-| WILEY_TDM_CLIENT_TOKEN | Wiley 官方 TDM PDF lane 的可选 token。 |
-| XDG_DATA_HOME | platformdirs 用户数据基目录。 |
-| PAPER_FETCH_RUN_LIVE | 仅显式 opt-in live 测试使用，普通任务不设置。 |
-
-## Browser backend 与 storage-state
-
-所有 browser provider 固定使用 Byparr 和所选平台引擎，平台事实见 catalog；统一使用原生 profile。
-
-| 环境变量 | 作用 |
-| --- | --- |
-| PAPER_FETCH_BROWSER_HEADLESS / PAPER_FETCH_BROWSER_TIMEOUT_MS | 默认 true / 120000；fetch/preflight 默认 headless，auth 使用窗口。 |
-| PAPER_FETCH_BROWSER_BINARY_PATH | 当前平台引擎 executable 覆盖，须匹配 Invisible seal 或 Camoufox metadata。 |
-| PAPER_FETCH_BROWSER_PROFILE_DIR / PAPER_FETCH_BROWSER_USER_DATA_DIR | provider-scoped 原生状态目录覆盖。 |
-| PAPER_FETCH_BROWSER_USER_AGENT | publisher direct UA，独立于 API UA；Camoufox 忽略以保持指纹一致。 |
-
-默认目录为 `publisher-browser-profiles/<provider>/`；显式 profile / user data 目录覆盖默认目录。所有平台只使用原生 profile。
-
-同出版社一次抓取的各 browser 阶段复用 context，HTTP 仍可并行。认证、预检和抓取共用原生 profile 目录；默认路径为 `publisher-browser-profiles/<provider>/`，可显式配置目录。凭证 scope 绑定实际使用目录及可信摘要。同目录进程间排队遵守取消和期限；归属冲突、外部占用和超时如实报告，不删除 Firefox 锁或静默回退临时会话。
-
-Byparr 自动处理支持的 Cloudflare interstitial。实际 fetch/preflight 仍返回 challenge/auth_required，或用户要求认证时，用 `paper-fetch auth <provider>` 进入用户交互验证。auth 后按正式抓取窗口配置重开同目录核验；登录、付费和其他访问控制不因 runtime 准备而获得授权。预检参数见[工具契约](tool-contract.md#browser-preflight-contract)。
-
-## 运行时准备与授权
-
-MCP/CLI/library 进入所选 browser 时按需准备 runtime；纯 HTTP 和 cache 命中不触发。单次及批量请求共享准备状态，doctor、状态查询、解析及帮助保持只读。
-
-- 安装器准备锁定 Byparr 和平台引擎依赖；源码/pip 安装自动下载固定组件。Byparr 损坏需重新准备，缺 Python browser extra 不自动安装依赖；自定义 executable 不自动删除或更新。
-- Camoufox 的抓取/auth/preflight/安装准备共享持久检查记录。成功且组件有效时 24 小时内复用，失败或取消不延长成功窗口；组件缺失、损坏、不兼容或 pin/渠道变化时重新判断。
-- Camoufox 使用锁定 Python 包，默认 official/prerelease 选择当前平台最新兼容 browser；official/stable 仅正式版。显式渠道、版本 pin、SHA 和 executable 优先，不自动升级 Python 包。
-- 更新失败但本地仍有效时继续使用；无可用引擎则报告准备失败。进度和错误写 stderr，取消继续传播。读取 backend/code/stage/runtime_state/version/diagnostic_path 定位，不把组件故障报成 publisher 拒绝。
-
-离线环境重新准备命令：安装环境 Python 执行 `-m paper_fetch.offline_setup --install-root <install-dir> --env-file <config.env> --prepare-browsers`，准备所选平台引擎及 Byparr。
-
-## 图片与资产工具
-
-- PAPER_FETCH_IMAGE_TOOLS_DIR：工具目录覆盖；也检查 repo-local 和用户工具目录。
-- PAPER_FETCH_GHOSTSCRIPT_BIN / PAPER_FETCH_VIPS_BIN：EPS→PNG / TIFF→PNG executable 覆盖。
-- PAPER_FETCH_EPS_DPI / PAPER_FETCH_IMAGE_TOOL_TIMEOUT_SECONDS：默认 600 DPI / 120 秒。
-- PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY：HTTP/HTML 资产 worker 上限，仍受 provider/runtime 限制。
-
-安装入口 `paper-fetch-install-image-tools` 或仓库 `./install-image-tools.sh`。doctor / provider_status(detail="full") 只诊断 ready/missing/timeout/error，不自动安装。image_conversion_backend_missing/timeout/error 是本地转换工具问题，不能归为远端资产失败。
-
-## 公式工具
-
-- PAPER_FETCH_FORMULA_TOOLS_DIR：工具目录覆盖。
-- MATHML_CONVERTER_BACKEND：texmath（默认优先）、mathml-to-latex 或显式高级 mml2tex。
-- TEXMATH_BIN：texmath executable；MATHML_TO_LATEX_NODE_BIN / MATHML_TO_LATEX_SCRIPT：Node fallback executable/script，离线默认使用 Playwright driver Node。
-- MATHML_TO_LATEX_WORKER / MATHML_TO_LATEX_WORKER_SCRIPT：复用 worker 开关/路径；MATHML_CONVERSION_CACHE_SIZE：进程内 cache 上限。
-- MML2TEX_JAVA_BIN / MML2TEX_CLASSPATH / MML2TEX_SAXON_JAR / MML2TEX_XMLRESOLVER_JAR / MML2TEX_XMLRESOLVER_DATA_JAR / MML2TEX_STYLESHEET / MML2TEX_CATALOG：仅显式 mml2tex 使用，默认 installer 不准备 Java/XSLT 链。
-
-安装入口 `paper-fetch-install-formula-tools` 或仓库 `./install-formula-tools.sh`。缺工具只影响相应 HTML/XML 转换/fallback，保留原表达及诊断；PDF 正文不进入该流程。
-
-## 诊断顺序
-
-按实际问题选择：配置/依赖用筛选后的 doctor/provider_status；需要真实页面证据用目标 provider 的 browser-preflight；认证需求进入人工 auth。普通 fetch 不要求先预检，静态 ready 不证明远端页面健康或授权。修复后按[失败处理](failure-handling.md)决定是否重试。
-
-## 离线安装后的可选配置
-
-离线安装器在核心 smoke 后提供可选配置；非交互/静默安装跳过，reuse-env-file 保持外部配置只读。凭据隐藏输入、留空保留原值，下载/安装默认关闭。可选失败或取消不影响核心安装，跳过 browser 准备不关闭后续自动准备。升级保留凭据和可选工具，卸载默认保留可选工具及共享 browser cache；配置或升级后重启已运行宿主/MCP。
-
-## 入口和会话接口诊断
-
-按[CLI 入口发现](cli-workflow.md#窄-fallback)使用 PATH、已有注册或受管 wrapper，最后才尝试已知可导入包的解释器。doctor --catalog --json 返回运行版本、解释器、模块和安装来源；它不能证明宿主工具目录已刷新。
-
-Codex 直接注册及卸载使用非空 CODEX_HOME/config.toml，否则使用宿主默认 ~/.codex/config.toml（Windows 为 USERPROFILE/.codex/config.toml），安装器打印实际目的地。Codex CLI 可用时仍优先注册。skill 用户位置保持 ~/.agents/skills/paper-fetch-skill。
+`paper-fetch doctor` 是静态诊断；`paper-fetch browser-preflight` 是实际浏览器检查。只有环境问题影响当前任务时使用。更新和安装按用户请求执行，不为普通阅读自动改配置。

@@ -8,7 +8,7 @@ from paper_fetch.acquisition import (
     AcquisitionProvenance,
     coerce_acquisition_provenance,
 )
-from paper_fetch.mcp.markdown_frontmatter import parse_markdown_front_matter
+from paper_fetch.delivery.markdown_frontmatter import parse_markdown_front_matter
 from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, Section
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,

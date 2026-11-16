@@ -2,7 +2,7 @@
 
 本文说明 provider 能力、路由与回退、输出与下载策略，以及配置、限速和缓存。浏览器运行时配置见 [browser-backends.md](browser-backends.md)。
 
-部署入口见 [`deployment.md`](deployment.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。agent 需要 provider/source/capability 名单时读取静态 `resource://paper-fetch/provider-catalog`。安装后的独立环境摘要见 skill 的 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)。
+部署入口见 [`deployment.md`](deployment.md)，架构说明见 [`architecture/overview.md`](architecture/overview.md)。agent 需要 provider/source/capability 名单时运行 `paper-fetch doctor --catalog --json`。安装后的独立环境摘要见 skill 的 [`environment.md`](../skills/paper-fetch-skill/references/environment.md)。
 
 <a id="provider-canonical-sources"></a>
 provider 能力、API 约束、路由和 waterfall 的文档说明集中在本文；运行时身份与能力由 `paper_fetch.provider_catalog.PROVIDER_CATALOG` 及各 provider 的 `ProviderBundle` 管理。
@@ -45,7 +45,7 @@ provider 能力、API 约束、路由和 waterfall 的文档说明集中在本�
 - 这张矩阵描述的是“当前代码里已经实现的 provider-owned waterfall”，不是“任意 DOI、任意运行环境都必然能拿到 publisher 全文”的承诺。
 - 尤其 `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - Provider/source/domain/API/fallback marker、候选 URL 模板、HTML artifact 持久化、XML provider 推断与正文阈值的事实来源是 `paper_fetch.provider_catalog.ProviderSpec`。`SOURCE_PROVIDER_MAP` 登记实际 envelope / `ArticleModel.source` 值；例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
-- MCP 宿主不应从工具 description 或本文抽取名单；请通过 `resources/list` 发现并用 `resources/read` 读取静态 `resource://paper-fetch/provider-catalog`。该 JSON 直接从启动时构造的不可变 runtime `ProviderBundle`/catalog 投影，包含 provider/source、逐 route transport/timeout/concurrency/QPS/retry/acceptance/assets、status/preflight 能力和资产默认值；它不是本地就绪或远端可访证明。
+- CLI 宿主不应从工具 description 或本文抽取名单；使用 `paper-fetch doctor --catalog --json`。该 JSON 直接从启动时构造的不可变 runtime `ProviderBundle`/catalog 投影，包含 provider/source、逐 route transport/timeout/concurrency/QPS/retry/acceptance/assets、status/preflight 能力和资产默认值；它不是本地就绪或远端可访证明。
 - 浏览器 provider 共用受管 Byparr（Windows/Linux x64 为 Invisible，macOS/ARM 为 Camoufox），并在同次抓取的同一出版社各阶段复用 context；状态模式、配置和线程所有权分别见 [浏览器后端](browser-backends.md)与 [runtime](browser-runtime.md)。
 - Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP、Taylor & Francis 的浏览器补充文件统一使用 `page_click`，从所在文章页或附件目录的已有链接/按钮串行下载。点击失败报告逐项诊断，不回退 HTTP 直链或 `BrowserContext.request.get()`；AMS 等纯 HTTP 分支及正文图片下载策略保持原行为。IOP 目录 HTML 与 IEEE multimedia JSON 是发现请求，继续使用 `context_request`。
 - PNAS 材料附件统一使用原生 profile 的 `page_click` 下载。
@@ -247,7 +247,7 @@ domain > publisher > DOI fallback
 - `DOI fallback`
   - 在前两类信号都不够时，才使用 DOI 前缀兜底。
 
-这些 provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。Catalog 固定记录 provider 名称、展示名、official 标记、domain / DOI prefix / publisher alias、默认 asset 策略、probe 能力、abstract-only 策略和 MCP status 顺序；`publisher_identity`、workflow routing、默认 asset profile 与 provider status 列表都从这里派生。client factory 和 metadata probe short-circuit 是对应 `ProviderBundle` 持有的 typed callable，仅供 runtime registry 使用，不属于 catalog 的可序列化事实。
+这些 provider 身份与能力配置统一来自 `paper_fetch.provider_catalog.PROVIDER_CATALOG`。Catalog 固定记录 provider 名称、展示名、official 标记、domain / DOI prefix / publisher alias、默认 asset 策略、probe 能力、abstract-only 策略和 CLI status 顺序；`publisher_identity`、workflow routing、默认 asset profile 与 provider status 列表都从这里派生。client factory 和 metadata probe short-circuit 是对应 `ProviderBundle` 持有的 typed callable，仅供 runtime registry 使用，不属于 catalog 的可序列化事实。
 
 只有在 catalog、派生路由、registry、status 和测试中完成接入的 provider 才属于全文支持范围。
 未选中支持的官方 provider 时保持 Crossref metadata-only；选中后按该 provider 自有
@@ -258,7 +258,7 @@ waterfall 获取或降级，不转入通用全文下载器。
 - `resolve_paper().provider_hint` 表示“当前最可信的 provider 提示”。
 - 它来自 domain、publisher、DOI 信号综合判断。
 - 它不是“保证最终一定由该 provider 成功返回”的承诺。
-- 当 MCP 使用 structured `title` / `authors` / `year` resolve 时，Crossref title query 只包含 title；authors/year 分别作为候选消歧信号，不拼入标题字符串。
+- 当 CLI 使用 structured `title` / `authors` / `year` resolve 时，Crossref title query 只包含 title；authors/year 分别作为候选消歧信号，不拼入标题字符串。
 
 ### `crossref` 作为 signal 与 source 的区别
 
@@ -278,7 +278,7 @@ waterfall 获取或降级，不转入通用全文下载器。
 - 它限制最终允许进入的 provider fulltext 主链候选。
 - 它不阻止系统内部调用 `crossref` 做路由判断或 metadata-only fallback。
 - 如果显式设为 `["crossref"]`，行为会收敛成 Crossref-only。
-- 当前可显式指定的名称由 runtime catalog 校验；MCP 客户端从 `resource://paper-fetch/provider-catalog` 读取，不在本文维护第二份枚举镜像。
+- 当前可显式指定的名称由 runtime catalog 校验；CLI 依据 runtime catalog 校验，不在本文维护第二份枚举镜像。
 
 ## 抓取瀑布与回退语义
 
@@ -475,16 +475,12 @@ URL query 解析 DOI 时会优先使用 URL 专用抽取：先读取 query param
 
 ## 默认输出策略
 
-CLI、Python API、MCP 当前默认值如下：
+CLI、Python API 当前默认值如下：
 
-- CLI `--asset-profile=body`
-- Python API / MCP `strategy.asset_profile=null (provider default)`
+- CLI `--asset-profile=none`
+- Python API `strategy.asset_profile=null (provider default)`
 - `max_tokens="full_text"`
-- `include_refs=null`
-- MCP `modes=["article", "markdown"]`
-- MCP `prefer_cache=false`
-- MCP `no_download=false`
-- MCP `save_markdown=false`
+- CLI `include_refs="all"`；Python API `include_refs=null`
 
 ### `asset_profile`
 
@@ -512,13 +508,13 @@ CLI、Python API、MCP 当前默认值如下：
 - 共享 `pymupdf4llm` 输出作为原样正文 section 传递；所有层均不做格式清洗或内容修复。`include_refs` 只控制独立结构化引用，PDF 内的参考文献随正文保留；显式长度预算只截取原文前缀。完整约束见 [PDF 转换边界](extraction-rules.md#rule-pdf-conversion-boundary)。
 - `asset_profile=body|all` 且 artifact mode 允许资产落盘时，PDF/ePDF fallback 将转换器导出的图片保存到 `<doi>_assets/` 并作为正文 inline asset；只改写实际导出路径，保留图片 alt 与顺序。`asset_profile=none` 或 `artifact_mode=none` 不保存本地图片。
 - PDF fallback 不区分 supplementary，导出的图片统一按正文资产处理。明显过短或主要为 IEEE 授权页脚的转换结果会被拒绝；透明文本层可进入现有二次转换，不足时继续候选或 provider 降级。
-- PDF 渲染与 MCP 缓存使用独立修订标识，拒绝复用旧清洗结果；HTML 缓存策略不受影响。依赖版本由 `pyproject.toml` 与 `uv.lock` 管理。
+- PDF 渲染与 CLI 缓存使用独立修订标识，拒绝复用旧清洗结果；HTML 缓存策略不受影响。依赖版本由 `pyproject.toml` 与 `uv.lock` 管理。
 
 #### Provider HTML/XML 资产语义
 
 - `wiley` / `science` / `pnas` / `annualreviews` / `royalsocietypublishing` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的 selected-browser HTML 成功路径支持正文图、表和公式图片资产；Royal Society Publishing HTML 路线保留 Silverchair `div.fig-section` figure caption；IOP 从 `_online`/`_lr` 标准图链接派生 `_hr` 高分辨率候选，资产下载合约按 best-effort 记录。T&F 的动态表格只使用当前页面提供的同源 CSV action 或已加载的同页 payload。
 - 这些 browser-backed provider 以 selected-browser context 为 HTML 主链路；普通 HTTP 直连不是 HTML 主路径。
-- PNAS 正文图片不降级下载 preview；其余支持 preview 的 provider 优先 full-size/original，全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载。已发现原图但访问失败时写入 `official_full_size_access_restricted`；官方页面/清单没有暴露原图时写入 `official_full_size_not_exposed`，两者都随 asset provenance 进入 cache/MCP/live JSON，preview 不会被误标为 full-size。
+- PNAS 正文图片不降级下载 preview；其余支持 preview 的 provider 优先 full-size/original，全部失败后才尝试 preview，preview 也通过同一个 seeded browser context 下载。已发现原图但访问失败时写入 `official_full_size_access_restricted`；官方页面/清单没有暴露原图时写入 `official_full_size_not_exposed`，两者都随 asset provenance 进入 cache/CLI/live JSON，preview 不会被误标为 full-size。
 - AMS 走 selected-browser HTML；正文资产复用已加载正文页的浏览器上下文，失败时再按共享 browser asset recovery 顺序回退。
 - T&F 的图片导航回退在响应 `commit` 后读取并验证原始图片字节，避免 Firefox 图片文档未发出 `DOMContentLoaded` 时每图等待 10 秒并转为 canvas 导出；其它 provider 的导航策略、资产候选和访问约束不变。
 - `ams` 的正文 figure 和 image-only table 会在原 DOM 位置渲染图片块；正文已消费的 figure / table 资产不会再追加到尾部附录。
@@ -527,8 +523,8 @@ CLI、Python API、MCP 当前默认值如下：
 - `ams` MathJax 渲染层只作为公式转换输入或 fallback 来源，不应和 LaTeX / MathML 结果重复出现在正文里；display equation label 只来自源站明确编号，不为无编号公式合成。
 - arXiv 源图、caption 原位展示与 official HTML 回退见[全文主路径](#3-provider-全文主路径)；direct 图片请求使用图片友好的 `Accept`，并发上限为 `min(PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY, 2)`，网络异常只重试一次，不重试 404 或非图片 payload。
 - preview 是否接受以结构化 `preview_accepted` 为准，既可来自尺寸门槛，也可来自 provider 明确的质量策略；不能只看 tier 或尺寸自行推断。
-- `preview_accepted` 作为公开 asset 字段保留到 cache/MCP；资产摘要把 preview 拆为 `accepted_preview` 与 `fallback_preview`，并强制二者之和等于兼容字段 `preview`。只有 accepted preview 且没有其它 issue 时，asset acceptance 仍为 complete。
-- `issue_codes` 是 golden review、acceptance、manifest 与 MCP 的唯一稳定资产分类来源：真实下载失败使用 `asset_download_failure`，fallback/conversion 保真损失使用 `asset_fidelity_degraded`，占位证据使用 `asset_placeholder_suspected`，明确请求归档但终态只有远端链接使用 `asset_remote_only`。普通 warning 文案和 preview 总数不参与机器分类。
+- `preview_accepted` 作为公开 asset 字段保留到 cache/CLI；资产摘要把 preview 拆为 `accepted_preview` 与 `fallback_preview`，并强制二者之和等于兼容字段 `preview`。只有 accepted preview 且没有其它 issue 时，asset acceptance 仍为 complete。
+- `issue_codes` 是 golden review、acceptance、manifest 与 CLI 的唯一稳定资产分类来源：真实下载失败使用 `asset_download_failure`，fallback/conversion 保真损失使用 `asset_fidelity_degraded`，占位证据使用 `asset_placeholder_suspected`，明确请求归档但终态只有远端链接使用 `asset_remote_only`。普通 warning 文案和 preview 总数不参与机器分类。
 - 小图标和占位图仍会作为 preview fallback 失败或降级信号。
 - IEEE dynamic HTML 成功路径从 cleaned `#article` fragment 抽取正文图、表和公式资产。
 - IEEE 正文资产按去 query/fragment 且归一 `-small/-large/-full/-thumb/-thumbnail/-preview` 后缀的 mediastore path 建立首选 identity，再回退 anchor 与 kind+label。direct 与 browser recovery 共用该 identity，恢复结果覆盖原逻辑记录的本地路径/尺寸/tier/provenance，保留原 caption/anchor/顺序，最终 body identity 必须唯一。探测批次、后续下载及重试结果的合并也使用该 identity；相同占位标题或 caption 不会合并不同图片，也不会清除另一图片的失败记录。
@@ -611,50 +607,16 @@ CLI、Python API、MCP 当前默认值如下：
 提取修订号由 `paper_fetch.models.schema.EXTRACTION_REVISION` 管理；旧修订 sidecar
 不能作为当前请求复用，既有文件不会被主动删除。
 
-<a id="mcp-download-and-markdown-save"></a>
-### 下载行为
+## 文件交付与缓存
 
-CLI 主输出、artifact 与命令组合的用户语义见 [`cli.md`](cli.md)；本节只记录 provider/runtime 侧的下载和 artifact 保留规则。
+普通 CLI 抓取默认 temporary_read，独立临时目录交付全文与逐篇 manifest，stdout 返回简短回执，无正文图片下载和持久缓存。显式格式、目录及资产参数优先；细节见 [CLI](cli.md)。缓存沿用身份、文件与 credential scope 核验，新索引使用通用名称，旧索引仅兼容读取。
 
-- CLI `--artifact-mode` 和 MCP `artifact_mode` 控制 provider artifact 保留范围，`--asset-profile` / `strategy.asset_profile` 只控制本地内容资产下载范围；`asset_profile=none` 不会主动移除 Markdown 中可解析的远程图片链接。
-- `--require-local-body-assets` / `strategy.require_local_body_assets=true` 要求 `body|all` 中全部需要独立 binary 文件的正文逻辑资产落盘且无 failure/not-archived/remote-only；没有 remote/failure 且已以内联语义完成的 table/formula/figure 不进入文件分母。`--require-full-size-body-assets` / `strategy.require_full_size_body_assets=true` 还拒绝 accepted/fallback preview，并自动隐含 local。两项默认关闭，只改变 asset/overall acceptance；不把已经取得的全文改成 fetch failure。
-- `markdown-assets` 是 CLI 和 MCP `fetch_paper` 默认值：保存 Markdown 和资产策略允许的本地资产，不保存 provider 原始 HTML/XML 或额外格式副本；HTTP transport 缓存只存在于当前进程内。未显式传 `--output` 且指定 `--output-dir` 时写入的 CLI 主输出文件不属于额外副本。
-- 当正文来自 `pdf_fallback` 时，`markdown-assets` 仍会保存 PDF 源文件；文件名优先使用 provider 抓取后合并的标题、作者和年份元数据，缺失时再回退到进入 provider 前的 metadata/DOI。PDF fallback 的 Markdown 转换质量通常低于 XML/provider HTML，需要保留来源便于溯源和排查。
-- Browser-backed 正文图片下载对单图有总预算；seed warm、browser page fetch、request-context fetch、直接导航和 image wait 不简单累加长 timeout。Seeded browser PDF fallback 在进入 PDF 下载前只做 lightweight warm 采集 cookies/user-agent/final URL；当 warm 已经拿到 cookie seed 时，后续 PDF 抓取只传 cookies/referer，不重复导航同一个 seed URL。
-- `all` 保留完整调试 artifact：provider HTML/PDF、辅助 artifact和 provider structured sidecar 都可落盘；MCP fetch-envelope sidecar/cache-index 仍按 MCP adapter cache 语义单独管理。
-- `none` 不保存 provider artifact 或资产；显式 `--output <path>`、`--save-markdown`，以及未显式 `--output` 时由 `--output-dir` 承接的 CLI 主输出仍可写文件。MCP 中 `artifact_mode="none"` 仍可写 fetch-envelope sidecar/cache-index 以支持 `prefer_cache`、`list_cached` 和 `get_cached`。
-- MCP cache index 读取会校验 index version；旧版、未知版或坏 schema 不会被默认信任或自动迁移。`list_cached()` 与 `get_cached(doi)` 只读当前显式 `download_dir` 内的当前索引；sidecar、Markdown 和资产在成功写入后按 DOI 显式增量注册。
-- 本地 Markdown 的 DOI 归属只能由两种证据建立：`save_markdown=true` 成功后以 fetch envelope 的已知 DOI 和实际写入路径显式注册，或文件开头的 YAML front matter 经 PyYAML 解析后提供当前完整身份与 acquisition 字段。文件名、正文中的 DOI 字符串和同目录关系都不是归属证据；坏 YAML、错误 DOI、缺字段、旧版本或目录外路径不会进入该 DOI 的结果。
-- DOI 证明和查询比较统一使用 `normalize_doi()`，因此 DOI URL、大小写和 DOI 合法特殊字符使用同一身份。缓存读取局限在调用方传入的 `download_dir`，不会跨 scope 搜索或触发网络。scope 检查接受同一根目录的系统等价路径别名（例如 macOS 的 `/var/...` 与 `/private/var/...`），index 中仍记录 canonical 路径；scope 根以下的 symlink 与目录外路径继续拒绝。
-- `get_cached(doi)` 的 `preferred.markdown` 只从上述可证明条目选择：当前仍有效且 `has_fulltext=true`、`content_kind="fulltext"` 的版本优先，其次按 front matter 的 `completed_at`（缺失时使用文件 mtime）选择最新版本。Cache entry 会附带 `identity_proof`；Markdown entry 还会附带 `source`、`has_fulltext`、`content_kind`、`completed_at` 和 `content_sha256`。
-- `get_cached` 默认 `detail="full"`、`preferred_only=false`，原有 `entries` / `preferred` / index 字段不变。`preferred_only=true` 只返回优选 Markdown/primary entry 数组；`detail="compact"` 完全省略 `entries`、正文、sidecar payload 和资产数组，改为返回优选 entry、`entry_summary`、内容/置信度、acceptance/asset/warning 摘要以及 request fingerprint。
-- fetch-envelope 以 DOI + request fingerprint 保存多版本 sidecar；`target/modes/strategy/include_refs/max_tokens` 与单向 credential capability scope 共同参与 fingerprint，不同请求以及 public/token/profile scope 可以并存且不互相覆盖。cache entry 与请求命中仍是两个状态：`status=hit` 只证明当前 `download_dir` 中存在 DOI 归属可证明的条目；`request_satisfied=true` 还要求 sidecar version、extraction revision、credential scope 和 payload DOI 有效，且 `cached_request_matches()` 与 payload modes 满足本次请求。compact 调用必须传与后续 fetch 相同的四组请求参数；它只总结当前快照，不证明任意未来请求。
-- sidecar 的 `missing/corrupt/unreadable/version_mismatch/extraction_revision_mismatch/doi_mismatch/invalid_scope` 都结构化报告并禁止请求复用。错误 scope 或无身份可证明条目返回正常 miss，不跨目录搜索、不触发网络，也不伪装成工具失败。
-- CLI 的 `--output-dir` 是默认主输出、Markdown、PDF fallback 来源文件和本地资产目录；在 `--artifact-mode all` 下也会接收 provider HTML/PDF/图片等调试 artifact。未显式传 `--output` 且指定 `--output-dir` 时，CLI 会把主输出写入该目录，文件名使用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀，不向 stdout 打印正文；显式 `--output -` 会强制保留 stdout，显式 `--output <path>` 则使用该路径作为主输出。
-- MCP `download_dir` 是 cache/artifact scope，不是 CLI `--output-dir` 那样的主输出目录；MCP 只有 `save_markdown=true` 才会单独写 Markdown 主体文件。
-- MCP fetch-envelope sidecar/cache-index 是 adapter cache，不按 provider artifact 处理；JSON 写入复用 `ArtifactStore` 的原子 writer，但不受 `artifact_mode=markdown-assets|none` 禁止。
-- 当 artifact mode 或 MCP `no_download=true` 禁止资产落盘时，即使 `asset_profile` 是 `body` / `all`，资产也不会落盘。
-- 没有本地文件时，Markdown 可保留 provider 已解析出的远程图片链接；只有无法解析远程图片时才退回 captions-only 或不展示资源链接。
-- MCP `no_download=true` 会让 service/provider 阶段使用 `RuntimeContext(download_dir=None)`，因此不会写 provider payload、PDF、HTML、资产或 fetch-envelope sidecar；`prefer_cache=true` 仍可显式读取已存在的 fetch-envelope sidecar。
-- MCP `save_markdown=true` 是独立的 Markdown 保存步骤：成功时写 `.md`、用 envelope DOI 与实际路径显式注册 cache entry，并追加 `download:markdown_saved`；没有 fulltext Markdown 时不写文件，追加 `download:markdown_skipped_no_fulltext`。显式注册记录内容 SHA-256；文件之后发生变化时必须由匹配的当前结构化 front matter 重新证明身份，否则条目失效。
-- MCP 正文始终通过 `content_ref` / `read_content` 分页读取，完整质量与 trace 在 diagnostics 视图中。单篇和批量归档都返回 `output_artifacts`，含实际 Markdown 路径、大小、摘要和验证状态。
-- MCP `save_markdown=true` 时，即使 `strategy.asset_profile=body|all`，工具结果也不会额外附带 inline `ImageContent`；图片资源仍可按资产策略下载到本地，并由保存的 Markdown 引用。
-- `no_download=true` 与 `save_markdown=true` 同时使用时，只允许 Markdown 保存步骤落盘；provider payload、资产和 fetch-envelope sidecar 仍保持关闭。
-
-<a id="provider-原始-html-artifact"></a>
-### Provider 原始 HTML artifact
-
-- 当 `artifact_mode=all` 且允许落盘，声明了 `ProviderSpec.persist_provider_html=True` 的 provider 抓取链拿到 publisher article HTML 时，`ArtifactStore` 会把可信的原始正文 HTML 单独落盘；当前由 Springer 和 arXiv 声明。
-- 如果 `download_dir` 本身就是 DOI slug 文章目录，文件名是 `original.html`；否则文件名是 `<doi_slug>_original.html`。
-- `*_assets/` 目录仍可以包含 figure page、table page、redirect page 或辅助 HTML；这些文件不能被当成可信的正文原文源文件。
-
-<a id="public-output-fields"></a>
 ## 公开输出里最重要的字段
 
 这些字段最适合拿来判断结果质量和来源：
 
 - `source`
-  - 粗粒度公开来源，完整当前枚举与 provider 映射从 `resource://paper-fetch/provider-catalog` 的 `source_provider_map` 读取；`metadata_only` 只在 `FetchEnvelope.source` 的 metadata fallback 中出现。
+  - 粗粒度公开来源，完整当前枚举与 provider 映射从 `paper-fetch doctor --catalog --json` 的 `source_provider_map` 读取；`metadata_only` 只在 `FetchEnvelope.source` 的 metadata fallback 中出现。
   - 这是粗粒度字段，不区分同一 provider 下的 API、direct HTTP、browser、HTML/XML/PDF 等精确抓取路线；既有值保持不变。
 - `acquisition`
   - 最终正文或元数据的结构化抓取事实：`provider`、catalog `route`、`representation=metadata|html|xml|pdf`、`transport=api|browser|http`、`fallback_used`。
@@ -723,13 +685,13 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 #### `PAPER_FETCH_DOWNLOAD_DIR`
 
 - 覆盖默认下载目录。
-- CLI 与 MCP 都会优先使用它。
-- CLI 会在开始抓取前创建该目录；MCP `download_dir` 仍按 cache/artifact scope 使用。
+- cacheable_read/archive 或 --prefer-cache 使用它作为默认输出与缓存目录；temporary_read 仍使用独立系统临时目录。
+- 显式 --output-dir 优先，目录同时承接主输出与所选资产。
 
 #### `XDG_DATA_HOME`
 
 - 在未配置 `PAPER_FETCH_DOWNLOAD_DIR` 时，用来推导用户数据目录。
-- CLI 和 MCP 缓存查询的默认下载目录会落在 `<XDG_DATA_HOME>/paper-fetch/downloads`；fetch 预设只使用请求路径或显式 `PAPER_FETCH_DOWNLOAD_DIR`，归档也可指定 Markdown 目录作为 scope。
+- CLI 缓存/归档流程的默认目录为 `<XDG_DATA_HOME>/paper-fetch/downloads`；temporary_read 默认使用独立系统临时目录。
 - 未设置时使用 `platformdirs` 提供的平台默认用户数据目录。
 - CLI 只有在用户数据下载目录创建失败时才回退仓库相对的 `live-downloads`。
 
@@ -790,7 +752,7 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 - 覆盖运行时查找 Ghostscript/libvips 的目录。
 - 未配置时，运行时会依次考虑 repo-local `.image-tools`、用户数据目录下的 `image-tools`，再查找系统 `PATH`。
-- 离线安装器会把它写入 `offline.env` 和 MCP 环境，默认指向安装目录下的 `image-tools`；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。
+- 离线安装器会把它写入 `offline.env` 和 CLI 环境，默认指向安装目录下的 `image-tools`；离线构建不会把构建机 PATH 上的 Ghostscript/libvips 符号链接固化进包内。
 - 运行时会按相关 env、搜索目录和候选文件指纹缓存候选列表与可用性探测；同一进程内多张 EPS/TIFF 图不会重复执行 Ghostscript/libvips `--version` 探测。
 
 #### `PAPER_FETCH_GHOSTSCRIPT_BIN`
@@ -997,11 +959,7 @@ CLI 同一汇总入口为 `paper-fetch doctor`。真实页面预检与人工认�
 及落盘语义见 [CLI 诊断与登录态](cli.md#静态诊断真实预检与人工认证)。静态 `ready`
 只表示本地路线具备条件，不证明远端可访问或已授权。
 
-MCP 入参为 `provider_status(provider=None, group=None, detail="full")`，无参数时按
-runtime catalog 顺序返回全部 provider。`group` 支持 `all`、`official`、`browser`、
-`direct`、`metadata`；与 `provider` 同传时必须相容。`compact` 每项只包含
-`provider/status/reason_code/reason/suggested_action`，`full` 另含 checks、missing_env、
-notes、配置来源与本地能力。
+静态状态使用 `paper-fetch doctor`。
 
 结果显式带有 `diagnostic_scope="static_configuration_and_local_dependencies"`、
 `live_network_checked=false`、`remote_publisher_health="not_checked"`：
@@ -1030,4 +988,4 @@ notes、配置来源与本地能力。
   - 这些 provider 以 `capabilities.browser_available=true`（由 provider routes 派生） 为准，统一检查 selected backend 的 `runtime_env`、Playwright 与对应 Python 包。
   - 本地 runtime 未就绪时，HTML 主路径、图片资产恢复和 seeded-browser PDF/ePDF fallback 会表现为 `not_configured` 或 `error`；远端 access gate、paywall 或 challenge 仍由实际抓取路线判定，不属于 `provider_status()` 的本地探测范围。
 
-PDF 成功取得字节时 diagnostics 记录 bytes_transport=http|browser_response|browser_download 和实际 final_url，未知为空。它表达实际字节来源；route 和 acquisition.transport 继续表达 catalog 路线。原始 provider diagnostics 贯通 envelope/cache 并由 MCP diagnostics 视图按需交付。
+PDF 成功取得字节时 diagnostics 记录 bytes_transport=http|browser_response|browser_download 和实际 final_url，未知为空。它表达实际字节来源；route 和 acquisition.transport 继续表达 catalog 路线。原始 provider diagnostics 贯通 envelope/cache 并由 CLI diagnostics 视图按需交付。
