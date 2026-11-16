@@ -37,17 +37,17 @@ def main():
     from playwright._impl._driver import compute_driver_executable
     from camoufox_options import macos_proxy_preferences
 
-    with macos_proxy_preferences() as proxy_prefs:
-        options = launch_options(
-            executable_path=settings.get("binary_path"),
-            headless=settings["headless"],
-            main_world_eval=True,
-            locale="en-US",
-            humanize=True,
-            i_know_what_im_doing=True,
-            disable_coop=True,
-            firefox_user_prefs={"pdfjs.disabled": True, **proxy_prefs},
-        )
+    proxy_prefs = macos_proxy_preferences()
+    options = launch_options(
+        executable_path=settings.get("binary_path"),
+        headless=settings["headless"],
+        main_world_eval=True,
+        locale="en-US",
+        humanize=True,
+        i_know_what_im_doing=True,
+        disable_coop=True,
+        firefox_user_prefs={"pdfjs.disabled": True, **proxy_prefs},
+    )
     if settings.get("user_data_dir"):
         # Preserve Camoufox NewBrowser's native-context defaults. The private
         # launchServer persistent entry accepts protocol keys (not JS API keys).

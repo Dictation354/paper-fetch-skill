@@ -235,6 +235,7 @@ def validate_contract(
         "batch_prepares_once",
         "prerelease_includes_stable",
         "native_bundle_gate",
+        "empty_system_proxy_direct_launch",
         "cooperative_cancel_owner_thread_cleanup",
         "request_local_browser_session_owner",
         "html_snapshot_owner_thread",

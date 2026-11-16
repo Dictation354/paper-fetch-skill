@@ -1,17 +1,21 @@
-name: macOS beta.42 diagnosis
+name: macOS beta.42 verification
 on:
   workflow_dispatch:
 permissions:
   contents: read
 jobs:
   diagnose:
+    strategy:
+      fail-fast: false
+      matrix:
+        python-version: ["3.11", "3.12", "3.13", "3.14"]
     runs-on: macos-15
     timeout-minutes: 18
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-python-deps
         with:
-          python-version: "3.14"
+          python-version: ${{ matrix.python-version }}
           full: "true"
       - name: Diagnose latest native browser startup
         env:
@@ -56,3 +60,5 @@ jobs:
           PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr
           PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
         run: PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
+      - name: Verify proxy preferences and browser unit contracts
+        run: PYTHONPATH=src uv run python -m pytest tests/unit/test_camoufox_backend.py tests/unit/test_pnas_byparr.py -q

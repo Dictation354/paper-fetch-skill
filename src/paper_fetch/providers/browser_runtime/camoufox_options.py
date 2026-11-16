@@ -2,15 +2,13 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
 import importlib
 import re
 import subprocess
 import sys
 
 
-@contextmanager
-def macos_proxy_preferences():
+def macos_proxy_preferences() -> dict[str, int]:
     """Use a direct connection only when macOS has no enabled system proxy.
 
     Camoufox beta.42 reads nsISystemProxySettings.PACURI outside its exception
@@ -19,8 +17,7 @@ def macos_proxy_preferences():
     The preliminary GPU browser needs the same preference as the owned browser.
     """
     if sys.platform != "darwin":
-        yield {}
-        return
+        return {}
     try:
         settings = subprocess.run(
             ["/usr/sbin/scutil", "--proxy"],
@@ -30,19 +27,15 @@ def macos_proxy_preferences():
             timeout=5,
         ).stdout
     except (OSError, subprocess.SubprocessError):
-        yield {}
-        return
+        return {}
     if not settings.lstrip().startswith("<dictionary>") or re.search(
         r"^\s*\w*Enable\s*:\s*[1-9]\d*\s*$", settings, re.MULTILINE
     ):
-        yield {}
-        return
+        return {}
     rendering = importlib.import_module("camoufox.host_rendering")
-    original = rendering.GPU_PREFS
     # Camoufox 0.5.9 filters the probe's preferences through GPU_PREFS. Extend
-    # that filter in memory for this launch; leave its package and cache intact.
-    rendering.GPU_PREFS = {**original, "network.proxy.type": 0}
-    try:
-        yield {"network.proxy.type": 0}
-    finally:
-        rendering.GPU_PREFS = original
+    # that module's filter so the probe follows an explicitly supplied proxy
+    # preference. Other callers keep their own preferences and proxy settings.
+    # Its package and browser cache remain intact.
+    rendering.GPU_PREFS = {**rendering.GPU_PREFS, "network.proxy.type": 0}
+    return {"network.proxy.type": 0}

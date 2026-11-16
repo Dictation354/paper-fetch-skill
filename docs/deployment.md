@@ -150,6 +150,8 @@ Camoufox 路线当前锁定为 Camoufox 0.5.9 / Playwright 1.62.0。项目允许
 浏览器渠道、pin、24 小时检查记录及 fpgen 预置统一见
 [浏览器安装与准备](#浏览器安装与准备)。原生 macOS gate 预置浏览器、fpgen 和锁定的 Byparr 组件，
 再验证同一版本的临时与持久 context；安装向导验收复用这些组件，并检查统一的 Byparr 就绪结果。
+macOS 未启用系统代理时，GPU 探测与正式浏览器均显式使用直连，避免 beta.42
+读取空 PAC 配置时抛出异常并阻塞 Juggler 启动；已有系统代理配置继续沿用。
 
 版本以 `pyproject.toml` 的 `[project].version` 为准，CLI 和 User-Agent 从元数据派生。
 `scripts/sync_version.py --write` 同步 Inno `AppVersion`；`--check` 验证安装器及人工维护的
