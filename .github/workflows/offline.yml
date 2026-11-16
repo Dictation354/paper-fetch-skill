@@ -1,260 +1,53 @@
-name: Offline packages
-
+name: macOS beta.42 diagnosis
 on:
-  workflow_call:
-    inputs:
-      ref:
-        description: Git ref to package; defaults to the caller commit
-        required: false
-        type: string
-      frozen_dependencies:
-        description: Build from dependency-snapshot-* artifacts produced by the stable release resolver
-        required: false
-        default: false
-        type: boolean
   workflow_dispatch:
-    inputs:
-      ref:
-        description: Git ref to package; defaults to the selected branch
-        required: false
-        type: string
-
 permissions:
   contents: read
-
 jobs:
-  posix:
-    strategy:
-      fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: "3.11"
-            target: linux-x86_64-cp311
-          - os: ubuntu-latest
-            python-version: "3.12"
-            target: linux-x86_64-cp312
-          - os: ubuntu-latest
-            python-version: "3.13"
-            target: linux-x86_64-cp313
-          - os: ubuntu-latest
-            python-version: "3.14"
-            target: linux-x86_64-cp314
-          - os: macos-15
-            python-version: "3.11"
-            target: macos-arm64-cp311
-          - os: macos-15
-            python-version: "3.12"
-            target: macos-arm64-cp312
-          - os: macos-15
-            python-version: "3.13"
-            target: macos-arm64-cp313
-          - os: macos-15
-            python-version: "3.14"
-            target: macos-arm64-cp314
-    runs-on: ${{ matrix.os }}
+  diagnose:
+    runs-on: macos-15
+    timeout-minutes: 10
     steps:
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          persist-credentials: false
-      - uses: ./.github/actions/setup-python-deps
-        with:
-          python-version: ${{ matrix.python-version }}
-          full: "true"
-      - name: Validate immutable source macOS adaptation contract
-        run: uv run python scripts/validate_macos_adaptation.py
-      - name: Set up pinned Haskell toolchain
-        id: formula-haskell
-        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
-        with:
-          ghc-version: "9.14.1"
-          cabal-version: "3.18.1.0"
-      - name: Cache Cabal formula dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.formula-haskell.outputs.cabal-store }}
-          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.14.1-texmath-0.13.3
-      - name: Download frozen dependency snapshot
-        if: ${{ inputs.frozen_dependencies }}
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: dependency-snapshot-${{ matrix.target }}
-          path: ${{ runner.temp }}/dependency-snapshot
-      - name: Download merged dependency manifest
-        if: ${{ inputs.frozen_dependencies }}
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: merged-dependency-manifest
-          path: ${{ runner.temp }}/dependency-manifest
-      - name: Verify shared browser runtime on native macOS Python matrix
-        if: runner.os == 'macOS'
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-          PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
-          # Each launch also probes the host GPU with an owned browser.
-          PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
-        run: |
-          PYTHONPATH=src uv run python - <<'PY'
-          from pathlib import Path
-          import os
-          from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
-          from paper_fetch.providers.browser_runtime.byparr_preparation import prepare_source, PreparationBudget
-          from camoufox.fpgen_model import ensure_fpgen_model
-          assert prepare_camoufox_managed_runtime().valid
-          ensure_fpgen_model()
-          prepare_source(Path(os.environ["PAPER_FETCH_TEST_BYPARR_CACHE"]), PreparationBudget(600))
-          PY
-          PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
-      - name: Build full offline package
-        env:
-          PYTHON_BIN: .venv/bin/python
-          MACOSX_DEPLOYMENT_TARGET: "15.0"
-        run: |
-          set -euo pipefail
-          if [ "${{ inputs.frozen_dependencies }}" = "true" ]; then
-            snapshot_root="$RUNNER_TEMP/dependency-snapshot"
-            python scripts/resolve_offline_dependencies.py verify \
-              --manifest "$RUNNER_TEMP/dependency-manifest/dependency-manifest.json" \
-              --target "${{ matrix.target }}" \
-              --snapshot-root "$snapshot_root"
-            export PIP_NO_INDEX=1
-            export PIP_DISABLE_PIP_VERSION_CHECK=1
-            export PIP_FIND_LINKS="$snapshot_root/runtime-wheels $snapshot_root/support-wheels"
-            export PAPER_FETCH_DEPENDENCY_SNAPSHOT="$snapshot_root"
-          fi
-          scripts/build-offline-package.sh --output-dir dist
-      - name: Verify offline package
-        env:
-          PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"
-          PAPER_FETCH_OFFLINE_PYTHON_BIN: ${{ github.workspace }}/.venv/bin/python
-        run: |
-          shopt -s nullglob
-          if [ "${{ runner.os }}" = "macOS" ]; then
-            packages=(dist/*.tar.gz)
-          else
-            packages=(dist/*.sh)
-          fi
-          if [ "${#packages[@]}" -ne 1 ]; then
-            echo "Expected exactly one offline package, found ${#packages[@]}." >&2
-            exit 1
-          fi
-          scripts/verify-offline-package.sh "${packages[0]}"
-          test -f "dist/paper-fetch-evidence-${{ matrix.target }}.dependency-manifest.json"
-          test -f "dist/paper-fetch-evidence-${{ matrix.target }}.sbom.cdx.json"
-      - name: Scan offline artifacts for secret values
-        id: secret_scan_offline_posix
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          python scripts/scan_artifacts_for_secrets.py
-          --env-var GITHUB_TOKEN
-          --root dist
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ steps.secret_scan_offline_posix.outcome == 'success' }}
-        with:
-          name: offline-${{ runner.os }}-${{ matrix.python-version }}
-          path: dist/*
-          if-no-files-found: error
-
-  windows:
-    runs-on: windows-latest
-    steps:
-      - name: Enable long source paths on Windows
-        run: git config --global core.longpaths true
-      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
-        with:
-          ref: ${{ inputs.ref || github.sha }}
-          persist-credentials: false
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1
       - uses: ./.github/actions/setup-python-deps
         with:
           python-version: "3.14"
           full: "true"
-      - name: Validate immutable source macOS adaptation contract
-        run: uv run python scripts/validate_macos_adaptation.py
-      - name: Set up pinned Haskell toolchain
-        id: formula-haskell
-        uses: haskell-actions/setup@0f8e8c99d88aeb3fbfd523f1ef2c6f762d10d64d # v2.12.1
-        with:
-          ghc-version: "9.14.1"
-          cabal-version: "3.18.1.0"
-      - name: Cache Cabal formula dependencies
-        uses: actions/cache@55cc8345863c7cc4c66a329aec7e433d2d1c52a9 # v6.1.0
-        with:
-          path: ${{ steps.formula-haskell.outputs.cabal-store }}
-          key: cabal-${{ runner.os }}-${{ runner.arch }}-ghc-9.14.1-texmath-0.13.3
-      - name: Download frozen dependency snapshot
-        if: ${{ inputs.frozen_dependencies }}
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: dependency-snapshot-windows-x86_64-cp314
-          path: ${{ runner.temp }}/dependency-snapshot
-      - name: Download merged dependency manifest
-        if: ${{ inputs.frozen_dependencies }}
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: merged-dependency-manifest
-          path: ${{ runner.temp }}/dependency-manifest
-      - name: Build Windows full offline installer
-        shell: pwsh
-        run: |
-          if ("${{ inputs.frozen_dependencies }}" -eq "true") {
-            $snapshotRoot = Join-Path $env:RUNNER_TEMP "dependency-snapshot"
-            python scripts/resolve_offline_dependencies.py verify `
-              --manifest (Join-Path $env:RUNNER_TEMP "dependency-manifest/dependency-manifest.json") `
-              --target "windows-x86_64-cp314" `
-              --snapshot-root $snapshotRoot
-            if ($LASTEXITCODE -ne 0) {
-              throw "Frozen Windows dependency snapshot verification failed."
-            }
-            $env:PIP_NO_INDEX = "1"
-            $env:PIP_DISABLE_PIP_VERSION_CHECK = "1"
-            $env:PIP_FIND_LINKS = "$(Join-Path $snapshotRoot 'runtime-wheels') $(Join-Path $snapshotRoot 'support-wheels')"
-            $env:PAPER_FETCH_DEPENDENCY_SNAPSHOT = $snapshotRoot
-          }
-          scripts/build-offline-package-windows.ps1 `
-            -OutputDir dist `
-            -PythonBin .venv/Scripts/python.exe
-      - name: Download pinned cp313 upgrade baseline
-        shell: pwsh
-        run: |
-          $baseline = Join-Path $env:RUNNER_TEMP "paper-fetch-cp313-setup.exe"
-          Invoke-WebRequest -Uri "https://github.com/Dictation354/paper-fetch-skill/releases/download/v7.4.2/paper-fetch-skill-windows-x86_64-setup.exe" -OutFile $baseline
-          $actual = (Get-FileHash -LiteralPath $baseline -Algorithm SHA256).Hash.ToLowerInvariant()
-          if ($actual -ne "b6beb914be1b5b3303ce5f89fcc20d4b4aaf5795a4beee3524c714c83dcb740a") {
-            throw "Legacy cp313 installer SHA-256 mismatch."
-          }
-      - name: Verify final EXE install, overwrite upgrade, and uninstall serially
-        shell: pwsh
-        run: |
-          # This gate intentionally has no matrix/xdist parallelism (-n 0 equivalent):
-          # installation state, HKCU PATH, and Inno uninstall registration are shared.
-          $setup = Get-Item "dist/paper-fetch-skill-windows-x86_64-setup.exe"
-          $version = python -c "import pathlib,tomllib; print(tomllib.loads(pathlib.Path('pyproject.toml').read_text(encoding='utf-8'))['project']['version'])"
-          & scripts/verify-windows-installer-lifecycle.ps1 `
-            -SetupPath $setup.FullName `
-            -ExpectedVersion $version.Trim() `
-            -PreviousSetupPath (Join-Path $env:RUNNER_TEMP "paper-fetch-cp313-setup.exe")
-          foreach ($evidence in @(
-            "dist/paper-fetch-evidence-windows-x86_64-cp314.dependency-manifest.json",
-            "dist/paper-fetch-evidence-windows-x86_64-cp314.sbom.cdx.json"
-          )) {
-            if (-not (Test-Path -LiteralPath $evidence -PathType Leaf)) {
-              throw "Windows offline build is missing staged evidence: $evidence"
-            }
-          }
-      - name: Scan Windows offline artifacts for secret values
-        id: secret_scan_offline_windows
-        shell: bash
+      - name: Diagnose latest native browser startup
         env:
           GITHUB_TOKEN: ${{ github.token }}
-        run: >-
-          python scripts/scan_artifacts_for_secrets.py
-          --env-var GITHUB_TOKEN
-          --root dist
-      - uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
-        if: ${{ steps.secret_scan_offline_windows.outcome == 'success' }}
-        with:
-          name: offline-Windows-3.14
-          path: dist/*
-          if-no-files-found: error
+          DEBUG: pw:browser
+        run: |
+          PYTHONPATH=src uv run python -u - <<'DIAG'
+          import json, os, signal, subprocess, sys, tempfile, time
+          from pathlib import Path
+          from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
+          from paper_fetch.providers.browser_runtime.byparr_preparation import prepare_source, PreparationBudget
+          probe = prepare_camoufox_managed_runtime()
+          print(probe, flush=True)
+          runtime = prepare_source(Path(os.environ["RUNNER_TEMP"]) / "byparr", PreparationBudget(120))
+          root = Path(tempfile.mkdtemp(prefix="paper-fetch-debug-"))
+          launcher = Path("src/paper_fetch/providers/browser_runtime/byparr_launcher.py").resolve()
+          settings = {"work_dir": str(root), "runtime": str(runtime), "binary_path": None, "headless": True, "local_check": True, "token": "local-debug", "site_paths": [str(Path(p).resolve()) for p in sys.path if p], "server_script": str(launcher.with_name("byparr_server.cjs"))}
+          (root / "config.json").write_text(json.dumps(settings))
+          (root / "start").touch()
+          command = "import faulthandler,runpy,sys; faulthandler.enable(); faulthandler.dump_traceback_later(20,repeat=True); launcher=sys.argv.pop(1); runpy.run_path(launcher,run_name='__main__')"
+          with (root / "service.log").open("wb") as output:
+              process = subprocess.Popen([sys.executable, "-I", "-S", "-u", "-c", command, str(launcher), str(root / "config.json")], stdout=output, stderr=output, start_new_session=True)
+          try:
+              for attempt in range(90):
+                  if process.poll() is not None or (root / "ready.json").exists():
+                      break
+                  time.sleep(1)
+              print("exit", process.poll(), "files", sorted(p.name for p in root.iterdir()), flush=True)
+              print((root / "service.log").read_text(errors="replace"), flush=True)
+              assert (root / "ready.json").exists(), "Latest native browser did not become ready"
+          finally:
+              if process.poll() is None:
+                  os.killpg(process.pid, signal.SIGTERM)
+              try:
+                  process.wait(timeout=5)
+              except subprocess.TimeoutExpired:
+                  os.killpg(process.pid, signal.SIGKILL)
+                  process.wait()
+          DIAG
