@@ -41,6 +41,7 @@ def main():
 
     proxy_prefs = macos_proxy_preferences()
     options = launch_options(
+        os="macos",
         executable_path=settings.get("binary_path"),
         headless=settings["headless"],
         main_world_eval=True,

@@ -61,16 +61,38 @@ def test_macos_empty_system_proxy_is_direct_in_browser_and_gpu_probe(monkeypatch
     )
     monkeypatch.setattr(camoufox_options.subprocess, "run", query)
     original = {"webgl.force-enabled": True}
-    rendering = SimpleNamespace(GPU_PREFS=original)
+    original_probe = mock.Mock(return_value=("Apple", "Apple GPU"))
+    rendering = SimpleNamespace(GPU_PREFS=original, _host_gpu=original_probe)
     monkeypatch.setitem(sys.modules, "camoufox.host_rendering", rendering)
+    startup_env = {"CAMOU_PREFS_1": '{"network.proxy.type":0}'}
+    monkeypatch.setitem(
+        sys.modules,
+        "camoufox.utils",
+        SimpleNamespace(get_pref_env_vars=mock.Mock(return_value=startup_env)),
+    )
 
     prefs = camoufox_options.macos_proxy_preferences()
 
     assert prefs == {"network.proxy.type": 0}
-    assert {key: value for key, value in prefs.items() if key in rendering.GPU_PREFS} == prefs
+    assert {
+        key: value for key, value in prefs.items() if key in rendering.GPU_PREFS
+    } == prefs
     assert rendering.GPU_PREFS["webgl.force-enabled"] is True
     assert original == {"webgl.force-enabled": True}
     assert query.call_args.args == (["/usr/sbin/scutil", "--proxy"],)
+    probe = rendering._host_gpu
+    assert probe("/browser", True, (("DISPLAY", ":1"),), tuple(prefs.items())) == (
+        "Apple",
+        "Apple GPU",
+    )
+    assert dict(original_probe.call_args.args[2]) == {
+        "DISPLAY": ":1",
+        **startup_env,
+    }
+    assert camoufox_options.macos_proxy_preferences() == prefs
+    assert rendering._host_gpu is probe
+    probe("/browser", True, (("DISPLAY", ":1"),), (("network.proxy.type", 1),))
+    assert dict(original_probe.call_args.args[2]) == {"DISPLAY": ":1"}
 
 
 @pytest.mark.parametrize(

@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import importlib
+from functools import wraps
 import re
 import subprocess
 import sys
@@ -38,4 +39,21 @@ def macos_proxy_preferences() -> dict[str, int]:
     # preference. Other callers keep their own preferences and proxy settings.
     # Its package and browser cache remain intact.
     rendering.GPU_PREFS = {**rendering.GPU_PREFS, "network.proxy.type": 0}
+    if not getattr(rendering._host_gpu, "_paper_fetch_proxy_startup", False):
+        original_probe = rendering._host_gpu
+        startup_env = importlib.import_module("camoufox.utils").get_pref_env_vars(
+            {"network.proxy.type": 0}
+        )
+
+        @wraps(original_probe)
+        def probe(executable_path, headless, env, prefs):
+            # The plain Playwright probe applies firefox_user_prefs only after
+            # Juggler starts. Reinsert the startup preference after Camoufox
+            # filters CAMOU_* out of the probe's inherited environment.
+            if dict(prefs).get("network.proxy.type") == 0:
+                env = tuple(sorted({**dict(env), **startup_env}.items()))
+            return original_probe(executable_path, headless, env, prefs)
+
+        probe._paper_fetch_proxy_startup = True
+        rendering._host_gpu = probe
     return {"network.proxy.type": 0}
