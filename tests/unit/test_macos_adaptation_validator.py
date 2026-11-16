@@ -75,6 +75,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         contract["browser"]["supplementary_index_without_body"] = False
         for key in (
             "fingerprint_model_github_api_fallback",
+            "empty_system_proxy_direct_launch",
             "fingerprint_model_before_playwright",
             "publisher_native_persistent_profiles",
             "request_local_browser_session_owner",
@@ -110,6 +111,7 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
         self.assertIn("supplementary_index_without_body must be true", diagnostic)
         for key in (
             "fingerprint_model_github_api_fallback",
+            "empty_system_proxy_direct_launch",
             "fingerprint_model_before_playwright",
             "publisher_native_persistent_profiles",
             "request_local_browser_session_owner",

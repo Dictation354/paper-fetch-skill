@@ -12,6 +12,12 @@ Windows/Linux x64 use Invisible's native Python protocol transport. macOS and
 ARM retain Camoufox 0.5.9 and the host Playwright shared-browser transport; no
 unsupported Invisible binary is downloaded. Host Playwright stays >=1.58,<1.63
 for Camoufox compatibility; it is not Invisible's browser protocol client.
+On macOS without an enabled system proxy, both the host-GPU probe and the owned
+browser explicitly use a direct connection. This avoids beta.42's unhandled
+empty PACURI read during Juggler startup while retaining configured system
+proxies. The in-memory probe adapter forwards the preference in its startup
+environment, before Juggler starts; installed packages and browser caches are
+unchanged.
 
 Both engines use the pinned upstream `src/challenge.py`: locator-based widget
 measurement and bounded polling replace the old ClickSolver/closed-shadow addon.

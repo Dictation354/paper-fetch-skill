@@ -3,6 +3,7 @@ from tests.support.camoufox_backend import _Context, _Page, _Response
 import json
 from types import SimpleNamespace
 import subprocess
+import sys
 import threading
 from unittest import mock
 import pytest
@@ -26,6 +27,7 @@ from paper_fetch.providers.browser_runtime.camoufox_manager import (
     _launch_firefox_major_version,
 )
 from paper_fetch.providers.browser_runtime import preparation
+from paper_fetch.providers.browser_runtime import camoufox_options
 from paper_fetch.providers.browser_runtime.preparation import CamoufoxRuntimeProbe
 from paper_fetch.providers.browser_runtime.context import context_options_for_config
 from paper_fetch.providers.browser_runtime import context as browser_runtime_context
@@ -38,12 +40,100 @@ from paper_fetch.runtime import RuntimeContext
 
 @pytest.fixture(autouse=True)
 def mock_custom_fingerprint_preparation(monkeypatch):
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.camoufox_manager.macos_proxy_preferences",
+        lambda: {},
+    )
     prepare = mock.Mock()
     monkeypatch.setattr(
         "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_fingerprint_model",
         prepare,
     )
     return prepare
+
+
+def test_macos_empty_system_proxy_is_direct_in_browser_and_gpu_probe(monkeypatch):
+    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
+    query = mock.Mock(
+        return_value=SimpleNamespace(
+            stdout="<dictionary> {\n  HTTPEnable : 0\n  ProxyAutoConfigEnable : 0\n}"
+        )
+    )
+    monkeypatch.setattr(camoufox_options.subprocess, "run", query)
+    original = {"webgl.force-enabled": True}
+    original_probe = mock.Mock(return_value=("Apple", "Apple GPU"))
+    original_probe._paper_fetch_proxy_startup = False
+    rendering = SimpleNamespace(GPU_PREFS=original, _host_gpu=original_probe)
+    monkeypatch.setitem(sys.modules, "camoufox.host_rendering", rendering)
+    startup_env = {"CAMOU_PREFS_1": '{"network.proxy.type":0}'}
+    monkeypatch.setitem(
+        sys.modules,
+        "camoufox.utils",
+        SimpleNamespace(get_pref_env_vars=mock.Mock(return_value=startup_env)),
+    )
+
+    prefs = camoufox_options.macos_proxy_preferences()
+
+    assert prefs == {"network.proxy.type": 0}
+    assert {
+        key: value for key, value in prefs.items() if key in rendering.GPU_PREFS
+    } == prefs
+    assert rendering.GPU_PREFS["webgl.force-enabled"] is True
+    assert original == {"webgl.force-enabled": True}
+    assert query.call_args.args == (["/usr/sbin/scutil", "--proxy"],)
+    probe = rendering._host_gpu
+    assert probe("/browser", True, (("DISPLAY", ":1"),), tuple(prefs.items())) == (
+        "Apple",
+        "Apple GPU",
+    )
+    assert dict(original_probe.call_args.args[2]) == {
+        "DISPLAY": ":1",
+        **startup_env,
+    }
+    assert camoufox_options.macos_proxy_preferences() == prefs
+    assert rendering._host_gpu is probe
+    probe("/browser", True, (("DISPLAY", ":1"),), (("network.proxy.type", 1),))
+    assert dict(original_probe.call_args.args[2]) == {"DISPLAY": ":1"}
+
+
+@pytest.mark.parametrize(
+    "settings",
+    [
+        "<dictionary> {\n  HTTPEnable : 1\n}",
+        "<dictionary> {\n  SOCKSEnable : 1\n}",
+        "<dictionary> {\n  ProxyAutoConfigEnable : 1\n}",
+        "<dictionary> {\n  ProxyAutoDiscoveryEnable : 1\n}",
+        "unexpected output",
+    ],
+)
+def test_macos_configured_or_unknown_system_proxy_is_preserved(monkeypatch, settings):
+    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
+    monkeypatch.setattr(
+        camoufox_options.subprocess,
+        "run",
+        mock.Mock(return_value=SimpleNamespace(stdout=settings)),
+    )
+    assert camoufox_options.macos_proxy_preferences() == {}
+
+
+@pytest.mark.parametrize(
+    "failure",
+    [OSError("unavailable"), subprocess.TimeoutExpired("scutil", 5)],
+)
+def test_macos_proxy_query_failure_preserves_system_proxy(monkeypatch, failure):
+    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
+    monkeypatch.setattr(
+        camoufox_options.subprocess, "run", mock.Mock(side_effect=failure)
+    )
+    assert camoufox_options.macos_proxy_preferences() == {}
+
+
+def test_other_platforms_do_not_query_macos_proxy(monkeypatch):
+    monkeypatch.setattr(camoufox_options.sys, "platform", "linux")
+    query = mock.Mock(side_effect=AssertionError("macOS system proxy queried"))
+    monkeypatch.setattr(camoufox_options.subprocess, "run", query)
+    assert camoufox_options.macos_proxy_preferences() == {}
+    query.assert_not_called()
 
 
 def test_camoufox_context_failure_closes_at_backend_boundary(

@@ -19,6 +19,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ### Browser coordination and installation migration
 
+- Support Camoufox 159.0-beta.42 on macOS: when no system proxy is enabled, pass an explicit direct connection to both the owned browser and GPU probe before Juggler starts, avoiding empty-PAC startup timeouts while retaining configured system proxies and browser updates.
 - Queue browser work by the normalized actual profile directory across threads and CLI processes. Make waiting cancellable without a queue timeout, let waiters yield batch execution capacity and keep HTTP/API routes and publisher rate limits independent.
 - Start the browser budget after profile admission and share the remaining budget across context reuse, retries and browser fallbacks. Exclude profile-switch queue time, record queue/execution stages and timings, and retain owner-thread context cleanup for fetching, images, authentication and preflight.
 - Remove MCP registration and wrapper generation from Unix/macOS/Windows installers, offline builds and distribution checks. On install, upgrade and uninstall, clean up registrations and wrappers positively identified as belonging to this tool, including custom service names; preserve unrelated services, native login state, papers and caches. Keep Skill `--check` read-only.

@@ -9,6 +9,7 @@ import sys
 import threading
 from typing import Any
 
+from .camoufox_options import macos_proxy_preferences
 from .preparation import (
     fetch_browser_preparation,
     prepare_camoufox_fingerprint_model,
@@ -98,7 +99,10 @@ class CamoufoxBrowserManager:
             # CLI reserves stdout for receipts or explicit body export. Camoufox may emit
             # first-run addon extraction progress while building launch options,
             # so route third-party startup output to stderr at this boundary.
+            proxy_prefs = macos_proxy_preferences()
             with redirect_stdout(sys.stderr):
+                if proxy_prefs:
+                    launch_kwargs["firefox_user_prefs"] = proxy_prefs
                 self._browser = sync_api.NewBrowser(
                     self._playwright,
                     persistent_context=False,
@@ -179,7 +183,10 @@ class CamoufoxPersistentContextManager:
             if firefox_major_version is not None:
                 launch_kwargs["ff_version"] = firefox_major_version
                 launch_kwargs["i_know_what_im_doing"] = True
+            proxy_prefs = macos_proxy_preferences()
             with redirect_stdout(sys.stderr):
+                if proxy_prefs:
+                    launch_kwargs["firefox_user_prefs"] = proxy_prefs
                 self._context = sync_api.NewBrowser(
                     self._playwright,
                     persistent_context=True,
