@@ -354,7 +354,7 @@ def _load_source(state: AssetContext, runtime: RuntimeContext) -> None:
         raise ProviderFailure(
             "asset_index_unavailable", "No recoverable article source URL is available."
         )
-    require_ams_auth(runtime.env, provider=state.provider)
+    require_ams_auth(runtime.env or {}, provider=state.provider)
     client: Any = runtime.get_clients().get(state.provider)
     from .config import build_publisher_user_agent
 
@@ -462,7 +462,7 @@ def _download_selected(
 ) -> dict[str, Any]:
     from .auth import require_ams_auth
 
-    require_ams_auth(runtime.env, provider=state.provider)
+    require_ams_auth(runtime.env or {}, provider=state.provider)
     client: Any = runtime.get_clients().get(state.provider)
     content = ProviderContent(
         route_kind=state.route_kind,

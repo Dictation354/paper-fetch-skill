@@ -741,7 +741,9 @@ def _confirm_auth_on_stderr(prompt: str, context: RuntimeContext) -> None:
     # Keep Ctrl-C cooperative while waiting for a human on the terminal. The
     # control-stdin protocol never reaches this prompt.
     if os.name == "nt":
-        import msvcrt
+        from importlib import import_module
+
+        msvcrt = import_module("msvcrt")
 
         while True:
             context.raise_if_cancelled()
@@ -767,13 +769,13 @@ def _ensure_cli_ams_auth(args, context: RuntimeContext) -> None:
     )
 
     context.raise_if_cancelled()
-    if has_verified_ams_profile(context.env):
+    if has_verified_ams_profile(context.env or {}):
         return
     if getattr(args, "control_stdin", False) or not sys.stdin.isatty():
-        require_ams_auth(context.env, provider="ams")
-    with ams_auth_coordination(context.env, cancel=context.raise_if_cancelled):
+        require_ams_auth(context.env or {}, provider="ams")
+    with ams_auth_coordination(context.env or {}, cancel=context.raise_if_cancelled):
         # Another CLI may have completed authentication while we waited.
-        if has_verified_ams_profile(context.env):
+        if has_verified_ams_profile(context.env or {}):
             return
         context.report_progress("stage", stage="authenticating")
         sys.stderr.write("AMS requires authentication before acquisition.\n")
@@ -792,7 +794,7 @@ def _ensure_cli_ams_auth(args, context: RuntimeContext) -> None:
                 stage="auth_manual_check",
             ) from exc
         context.raise_if_cancelled()
-        require_ams_auth(context.env, provider="ams")
+        require_ams_auth(context.env or {}, provider="ams")
 
 
 def _ensure_cli_query_auth(args, *, query, context):
@@ -1556,7 +1558,7 @@ def run_batch_fetch(
                         if cached is None:
                             from .auth import ams_profile_path
 
-                            path = ams_profile_path(active_context.env)
+                            path = ams_profile_path(active_context.env or {})
                             if path in auth_failures:
                                 raise auth_failures[path]
                             try:

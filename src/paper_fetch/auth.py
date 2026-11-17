@@ -24,11 +24,8 @@ from .provider_catalog import (
     provider_domain_matches,
     provider_domains,
 )
-from .providers.browser_runtime import (
-    BrowserRuntimeConfig,
-    ensure_runtime_ready,
-    load_runtime_config,
-)
+from .providers.browser_runtime.api import ensure_runtime_ready, load_runtime_config
+from .providers.browser_runtime.types import BrowserRuntimeConfig
 from .providers.browser_runtime.paths import (
     runtime_with_default_profile,
 )

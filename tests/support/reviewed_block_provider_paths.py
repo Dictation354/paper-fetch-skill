@@ -2,8 +2,12 @@
 
 from unittest import mock
 from contextlib import ExitStack
+from pathlib import Path
+from tempfile import TemporaryDirectory
 from paper_fetch import service
+from paper_fetch.config import BROWSER_PROFILE_DIR_ENV_VAR
 from tests.support._paper_fetch_support import FixtureProvider
+from tests.support.publisher_profiles import write_verified_ams_profile
 
 
 def _fetch_through_service(
@@ -27,6 +31,13 @@ def _fetch_through_service(
         side_effect=AssertionError("Cross-provider assets")
     )
     with ExitStack() as stack:
+        runtime_env = {}
+        if fixture.provider == "ams":
+            # Captured responses exercise provider behavior after authentication.
+            profile = Path(stack.enter_context(TemporaryDirectory()))
+            write_verified_ams_profile(profile)
+            runtime_env[BROWSER_PROFILE_DIR_ENV_VAR] = str(profile)
+            stack.enter_context(mock.patch.object(client, "env", runtime_env))
         stack.enter_context(
             mock.patch.object(service, "resolve_paper", return_value=resolved)
         )
@@ -35,7 +46,7 @@ def _fetch_through_service(
         )
         context = stack.enter_context(
             service.RuntimeContext(
-                env={},
+                env=runtime_env,
                 download_dir=output_dir,
                 clients={fixture.provider: client, "crossref": crossref},
             )

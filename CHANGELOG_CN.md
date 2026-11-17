@@ -8,10 +8,11 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.7.1 - 2026-11-17
+
 - AMS 正文、补充材料及定向补图联网前必须有经人工认证和原生 profile 重开验证的保存状态。交互 CLI 先认证再继续，批量与跨进程按实际 profile 协调，提示写 stderr；非交互及 Python 返回 `auth_required`。兼容缓存与已有本地文件可直接复用。
 - 三个抓取预设默认下载补充材料，显式禁止下载设置优先。schema-v1 回执新增 `target_satisfied`、脱敏 `error` 与资产验收原因码，保留生命周期状态及现有退出规则。
 - 补充基于回执／manifest 的建库、内部阅读快照排除、公式定向补图及已安装 Python 的 PDF 阅读交接说明。
-
 
 ## 7.7.0 - 2026-11-16
 

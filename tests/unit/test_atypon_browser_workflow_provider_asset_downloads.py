@@ -35,6 +35,7 @@ class _ProviderFakeBrowserContext:
 class AtyponBrowserWorkflowProviderAssetDownloadTests(
     AtyponBrowserWorkflowProviderTestCase
 ):
+    @mock.patch("paper_fetch.auth.has_verified_ams_profile", lambda _env: True)
     def test_ams_provider_download_related_assets_downloads_full_size_figure(
         self,
     ) -> None:
