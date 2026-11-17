@@ -49,6 +49,12 @@ _ARXIV_ID_PATTERN = re.compile(
     r"(?:arxiv[.:/])?(?P<id>\d{4}\.\d{4,5})(?P<version>v\d+)?",
     flags=re.IGNORECASE,
 )
+_AMS_ARTICLE_PATH_PATTERN = re.compile(
+    r"/(?:view|downloadpdf(?:/view)?)/journals/[a-z0-9]+/"
+    r"(?:[0-9]+/[0-9]+|aop/(?P<aop_id>[a-z][a-z0-9]*-d-[0-9]{2}-[0-9]+\.[0-9]+))/"
+    r"(?P<article_id>[a-z][a-z0-9]*-d-[0-9]{2}-[0-9]+\.[0-9]+)\.(?:xml|pdf)",
+    flags=re.IGNORECASE,
+)
 
 
 @functools.lru_cache(maxsize=1)
@@ -232,6 +238,14 @@ def extract_doi_from_url(url: str | None) -> str | None:
     path_doi = extract_doi(_path_text_from_parsed_url(parsed))
     if path_doi:
         return _strip_url_doi_route_suffixes(path_doi, provider) or path_doi
+    hostname = (parsed.hostname or "").lower()
+    if hostname == "journals.ametsoc.org" or hostname.endswith(".journals.ametsoc.org"):
+        match = _AMS_ARTICLE_PATH_PATTERN.fullmatch(_path_text_from_parsed_url(parsed))
+        if match:
+            article_id = match.group("article_id").lower()
+            aop_id = match.group("aop_id")
+            if aop_id is None or aop_id.lower() == article_id:
+                return normalize_doi(f"10.1175/{article_id}")
     return None
 
 

@@ -1,6 +1,13 @@
 {
   "version": 2,
   "modules": {
+    "tests/unit/test_ams_url_identity.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Modern AMS URL identity, resolver fast path, auth handoff, batch deduplication and compatible cache lookup.",
+        "reason": "Exercises URL contracts and boundary mocks without full-paper source inputs."
+      }
+    },
     "tests/unit/test_update.py": {
       "default": {
         "kind": "infrastructure",

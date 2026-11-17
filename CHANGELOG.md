@@ -10,6 +10,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## 7.7.1 - 2026-11-17
 
+- Resolve modern AMS article URLs directly to their `10.1175/` DOI without requesting the landing page, including volume/issue and AOP HTML/PDF paths. Reuse the same identity for batch deduplication and cache lookup before the existing authentication and acquisition flow.
 - Require a saved, native-reopen-verified AMS authentication profile before body, supplementary or selected-image network acquisition. Interactive CLI fetches authenticate before continuing, coordinate by actual profile across batches/processes and keep prompts on stderr; noninteractive/Python calls report `auth_required`. Reuse compatible caches and local files.
 - Download supplementary files by default in all three fetch presets, honoring explicit download restrictions. Extend schema-v1 receipts with `target_satisfied`, a redacted `error` projection and asset acceptance reason codes; retain lifecycle status and existing exit rules.
 - Document receipt/manifest-based library indexing, internal reading snapshots, targeted formula-image reading and installed-runtime PDF readers.

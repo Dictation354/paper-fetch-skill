@@ -356,6 +356,8 @@ resolve
   - Atypon 默认 PDF/ePDF 路径模板只在 `provider_catalog.ATYPON_DEFAULT_PDF_PATH_TEMPLATES` 维护；PNAS 仅追加自己的 download query 模板。
   - 成功时公开 `source="pnas"`。
 - `ams`
+  - 直接输入现代文章 URL 时，共享身份解析从文件名派生 `10.1175/` DOI，不请求 AMS 落地页。例如 `https://journals.ametsoc.org/view/journals/clim/35/18/JCLI-D-21-0790.1.xml` 解析为 `10.1175/jcli-d-21-0790.1`。仅接受 `journals.ametsoc.org` 及其子域的 `/view/journals/`、`/downloadpdf/journals/`、`/downloadpdf/view/journals/` 文章路径，支持卷期和 `aop/<文章编号>/<文章编号>`；AOP 目录编号须与文件名一致。文件名须为 `期刊代码-D-两位年份-数字稿号.数字版本.xml|pdf`，支持大小写和路径百分号编码。保留原始 query 与 landing URL（含查询参数和片段），显式完整 DOI 保持优先，旧 SICI URL 仍兼容。
+  - 身份解析后复用现有快速解析、缓存和认证门禁：未认证的非交互 fetch 返回 `auth_required`，交互认证成功后继续获取；兼容缓存不要求认证，`resolve` / `check` 不自动认证。
   - 固定顺序是 `Crossref/DOI landing -> selected-browser HTML -> browser-seeded AMS PDF fallback -> abstract-only / metadata-only`。
   - HTML 主路径直接启动受管浏览器请求 Crossref / DOI landing 的 `journals.ametsoc.org/view/journals/.../*.xml` 页面，让站点正常执行 JavaScript 并静默完成 AWS WAF 验证；不先发 direct HTTP article 请求。
   - 联网获取前必须有 `paper-fetch auth ams [--url ...]` 成功且同一原生 profile 重开验证通过的状态；缺少时交互 CLI 先认证再继续，非交互与 Python 返回 `auth_required`。普通抓取或 browser-preflight 保存的状态不能替代认证标记。兼容缓存与已有本地文件可直接复用。
