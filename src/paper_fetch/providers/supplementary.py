@@ -496,6 +496,10 @@ def fetch_provider_supplementary(
 ):
     """Return materials and index provenance; never construct an ArticleModel."""
     from .browser_workflow.client import BrowserWorkflowClient
+    from ..auth import require_ams_auth
+
+    if client.name == "ams":
+        require_ams_auth(client.env, provider=client.name)
 
     # Elsevier's independent material index keeps its API/XML contract.
     browser_index_client = (
@@ -592,7 +596,7 @@ def fetch_provider_supplementary(
             if browser_index_client or raw.content.browser_context_seed
             else "http",
         )
-    if output_dir is None:
+    if output_dir is None or context.asset_profile == "none":
         result.assets = [
             {
                 **asset,

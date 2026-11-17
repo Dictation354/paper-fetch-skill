@@ -30,6 +30,7 @@ from ..providers.base import ProviderFailure, ProviderFetchResult
 from ..providers.protocols import FulltextProvider
 from ..reason_codes import (
     ABSTRACT_ONLY,
+    AUTH_REQUIRED,
     ERROR,
     FULLTEXT,
     METADATA_ONLY,
@@ -389,6 +390,8 @@ def _try_official_provider(
             extend_trace(events, [fulltext_event(provider_name, "not_usable")])
         extend_unique(warnings, article.quality.warnings)
     except ProviderFailure as exc:
+        if provider_name == "ams" and exc.code == AUTH_REQUIRED:
+            raise PaperFetchFailure.from_provider_failure(exc) from exc
         if confirmed_paywall(exc):
             if not strategy.allow_metadata_only_fallback:
                 raise PaperFetchFailure.from_provider_failure(exc) from exc

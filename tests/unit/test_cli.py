@@ -2604,6 +2604,13 @@ class CliTests(unittest.TestCase):
 
             with (
                 mock.patch.object(
+                    paper_fetch_cli,
+                    "resolve_paper",
+                    return_value=paper_fetch.ResolvedQuery(
+                        query="url", query_kind="url"
+                    ),
+                ),
+                mock.patch.object(
                     paper_fetch_cli, "build_runtime_env", return_value={}
                 ),
                 mock.patch.object(
@@ -3003,6 +3010,11 @@ class CliTests(unittest.TestCase):
             sys.argv = ["paper_fetch.py", "fetch", "--query", "ambiguous title"]
             try:
                 with (
+                    mock.patch.object(
+                        paper_fetch_cli,
+                        "resolve_paper",
+                        side_effect=paper_fetch_cli.fetch_paper,
+                    ),
                     contextlib.redirect_stdout(stdout),
                     contextlib.redirect_stderr(stderr),
                 ):

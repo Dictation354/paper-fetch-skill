@@ -25,6 +25,7 @@ from ..provider_catalog import (
 )
 from ..reason_codes import (
     ABSTRACT_ONLY,
+    AUTH_REQUIRED,
     ERROR,
     METADATA_ONLY,
     NOT_CONFIGURED,
@@ -284,7 +285,7 @@ class FetchAcceptanceReport(_AcceptanceModel):
 
 
 _ACTION_REQUIRED_CODES = frozenset(
-    {"ambiguous", NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED}
+    {"ambiguous", AUTH_REQUIRED, NO_ACCESS, NOT_CONFIGURED, RATE_LIMITED}
 )
 _TRACE_FAILURE_OUTCOMES = frozenset(
     {"fail", "unavailable", "not_usable", RATE_LIMITED, NOT_CONFIGURED}
@@ -1353,7 +1354,9 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
         remote_only_count=unarchived,
         remote_links_preserved=bool(unarchived),
         failure_codes=codes,
-        issue_codes=codes or (("asset_not_archived",) if unarchived else ()),
+        issue_codes=_normalized_codes(
+            [*codes, "asset_not_archived" if unarchived else None]
+        ),
         status=asset_status,
     )
     requested = tuple(
@@ -1420,6 +1423,7 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
             source=envelope.source,
             acquisition=envelope.acquisition,
             trace_event_count=len(envelope.trace),
+            warning_codes=assets.issue_codes,
             failure_codes=codes,
             acceptance_policy="validated_asset",
             acceptance_policy_satisfied=status == "complete",

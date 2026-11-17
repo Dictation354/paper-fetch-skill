@@ -28,3 +28,26 @@ def test_presets_fill_only_omitted_cli_options():
         "all",
         42,
     )
+
+
+def test_supplementary_presets_default_to_downloads_and_preserve_explicit_options():
+    parser = cli.build_parser()
+    for preset in ("temporary_read", "cacheable_read", "archive"):
+        for flags, expected in [
+            ([], ("all", "markdown-assets")),
+            (["--asset-profile=none"], ("none", "markdown-assets")),
+            (["--artifact-mode=none"], ("all", "none")),
+            (["--asset-profile=body", "--artifact-mode=all"], ("body", "all")),
+        ]:
+            raw = [
+                "fetch",
+                "--query=x",
+                "--target=supplementary",
+                "--preset",
+                preset,
+                *flags,
+            ]
+            args = parser.parse_args(raw)
+            cli._apply_cli_preset(args, raw)
+            assert (args.asset_profile, args.artifact_mode) == expected
+            assert args.prefer_cache == (preset != "temporary_read")

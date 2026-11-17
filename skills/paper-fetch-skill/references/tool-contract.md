@@ -6,12 +6,17 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、resolve、check、fetch-asset
 
 默认及文件输出的 stdout 每篇一行 JSON，独立契约 `contract="paper-fetch/receipt"`、`schema_version=1`。包含：
 
-- 原始 `index/query`、规范 `identity/doi`。
+- 原始 `index/query`、规范 `identity/doi`、生命周期 `status` 和与退出码判断一致的 `target_satisfied`。
+- `error`：无异常为 null；有异常时含 status、reason、provider、route、stage、http_status、retryable，沿用脱敏。
 - `acceptance` 七分面摘要、`content_kind`、`source/acquisition`。
 - 绝对 `body_path`、`manifest_path`、`diagnostic_paths`、`image_index_path`、`output_paths`。
 - `truncated` 与 `fallback_codes/warning_codes/failure_codes`。
 
+原因码稳定去重并包含资产验收的 issue/failure codes，例如 `asset_not_archived`。
+
 回执不携带正文、完整 trace 或浏览器凭证。完整 trace 在逐篇 schema-v2 manifest 和诊断文件中。`--manifest` 额外写指定路径；默认 manifest 仍独立保留。批量最终汇总按输入顺序保存。
+
+建库以回执或最终 `batch-results.jsonl` 为入口，按 DOI、经验证且唯一的规范 URL、最后按 manifest 路径识别记录；保留实际获取状态。普通目录扫描排除 `.paper-fetch-results` 内部快照，不能把 `body.md` 计作另一篇论文。
 
 `body_path=null` 表示没有交付 Markdown 文件；以实际路径和验收判断结果，不依据请求推断交付。根据本地 reader 实际返回范围续读。
 

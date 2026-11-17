@@ -102,12 +102,30 @@ def receipt_from_record(record: ManifestRecord, manifest: Path) -> dict[str, Any
         "saved_markdown", "primary_markdown"
     )
     truncated = TRUNCATION_WARNING in record.warnings
+    error = record.error.model_dump(mode="json") if record.error is not None else None
     return {
         "schema_version": CLI_RECEIPT_SCHEMA_VERSION,
         "contract": "paper-fetch/receipt",
         "index": record.index,
         "query": record.query,
         "status": record.record_status.value,
+        "target_satisfied": target_satisfied(record),
+        "error": public_diagnostics(
+            {
+                name: error.get(name)
+                for name in (
+                    "status",
+                    "reason",
+                    "provider",
+                    "route",
+                    "stage",
+                    "http_status",
+                    "retryable",
+                )
+            }
+        )
+        if error is not None
+        else None,
         "identity": record.identity.model_dump(mode="json"),
         "doi": record.doi,
         "acceptance": compact_acceptance_payload(record.acceptance),

@@ -4,6 +4,7 @@ from contextlib import redirect_stderr, redirect_stdout
 from dataclasses import asdict
 from pathlib import Path
 from unittest import mock
+from tests.support.fetch_fixtures import sample_resolved_query
 from paper_fetch import cli
 from paper_fetch.manifest import ManifestRecord, build_manifest_record
 from paper_fetch.delivery.fetch_cache import (
@@ -123,6 +124,9 @@ def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
     cli_manifest = tmp_path / "cli-manifest.json"
     with (
         mock.patch.object(cli, "build_runtime_env", return_value={}),
+        mock.patch.object(
+            cli, "resolve_paper", return_value=sample_resolved_query(request.query)
+        ),
         mock.patch.object(cli, "fetch_paper", return_value=_contract_envelope()),
         redirect_stdout(io.StringIO()),
         redirect_stderr(io.StringIO()),

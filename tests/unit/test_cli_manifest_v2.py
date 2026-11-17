@@ -32,6 +32,13 @@ from paper_fetch.workflow.acceptance import (
 from tests.support.workflow_acceptance import _envelope
 
 
+@pytest.fixture(autouse=True)
+def resolved_cli_identity(monkeypatch):
+    from tests.support.fetch_fixtures import sample_resolved_query
+
+    monkeypatch.setattr(cli, "resolve_paper", lambda q, **kw: sample_resolved_query(q))
+
+
 RUN_ID = UUID("10000000-0000-4000-8000-000000000001")
 RECORD_ID = UUID("20000000-0000-4000-8000-000000000002")
 STARTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)

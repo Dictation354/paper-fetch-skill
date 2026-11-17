@@ -95,6 +95,8 @@ profile_queue_cancellable_without_timeout = true
 profile_budget_after_admission = true
 profile_wait_yields_execution_slot = true
 auth_native_profile_replay = true
+ams_verified_auth_required = true
+auth_coordination_cancellable = true
 native_profile_only = true
 
 [release]

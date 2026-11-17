@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import contextlib
+import time
 import urllib.parse
 from dataclasses import dataclass, replace
 from pathlib import Path
@@ -34,9 +35,12 @@ from .providers.browser_runtime.paths import (
 from .providers.browser_runtime.profile import PublisherProfileManager, profile_path
 from .providers.base import ProviderFailure
 from .failure import FailureDiagnostics
+from .http import RequestCancelledError
 from .reason_codes import (
     AUTH_FINAL_URL_INVALID,
     AUTH_REPLAY_FAILED,
+    AUTH_STATE_SAVE_FAILED,
+    AUTH_REQUIRED,
     ERROR,
 )
 from .utils import normalize_text, provider_display_name
@@ -111,6 +115,79 @@ class AuthResult:
     verified: bool
     final_url: str | None
     title: str | None
+
+
+class AuthCancelledError(ProviderFailure, RequestCancelledError):
+    def __init__(self, message: str, *, provider: str, stage: str):
+        super().__init__(
+            "request_cancelled",
+            message,
+            diagnostics=FailureDiagnostics(
+                provider=provider, stage=stage, retryable=False
+            ),
+        )
+
+
+def ams_profile_path(env: Mapping[str, str]) -> Path:
+    runtime = load_runtime_config(env, provider="ams", doi=AUTH_TARGETS["ams"].doi)
+    return profile_path(_runtime_with_auth_profile(runtime, env=env, provider="ams"))
+
+
+def has_verified_ams_profile(env: Mapping[str, str]) -> bool:
+    from .providers.browser_runtime.profile import _metadata
+    from .providers.browser_runtime.types import BrowserRuntimeFailure
+
+    try:
+        data = _metadata(ams_profile_path(env))
+    except (OSError, BrowserRuntimeFailure):
+        return False
+    auth = data.get("auth")
+    # Fetches refresh the current summary as cookies change. The auth digest is
+    # evidence of the successful reopen, not a pin on the current cookie values.
+    return bool(
+        data.get("provider") == "ams"
+        and data.get("native_initialized")
+        and data.get("state_sha256")
+        and isinstance(auth, dict)
+        and auth.get("native_profile_verified") is True
+        and auth.get("state_replay_verified") is True
+        and auth.get("state_sha256")
+    )
+
+
+def require_ams_auth(env: Mapping[str, str], *, provider: str) -> None:
+    """Python acquisition boundaries report requirements without opening a window."""
+    if provider == "ams" and not has_verified_ams_profile(env):
+        raise ProviderFailure(
+            AUTH_REQUIRED,
+            "AMS requires a verified native profile; run `paper-fetch auth ams`.",
+            diagnostics=FailureDiagnostics(
+                provider="ams", stage="auth_preflight", retryable=False
+            ),
+        )
+
+
+@contextlib.contextmanager
+def ams_auth_coordination(env: Mapping[str, str], *, cancel: Callable[[], None]):
+    """Coordinate CLI authentication separately from the browser profile lease."""
+    from filelock import FileLock, Timeout
+
+    path = ams_profile_path(env)
+    path.mkdir(parents=True, exist_ok=True)
+    lock = FileLock(str(path / ".paper-fetch-auth.lock"))
+    try:
+        while True:
+            cancel()
+            try:
+                lock.acquire(timeout=0)
+                break
+            except Timeout:
+                time.sleep(0.05)
+        cancel()
+        yield
+    finally:
+        if lock.is_locked:
+            lock.release()
 
 
 def browser_auth_provider_names() -> tuple[str, ...]:
@@ -350,6 +427,11 @@ def authenticate_provider_profile(
         profile_dir.mkdir(parents=True, exist_ok=True)
         manager = PublisherProfileManager(runtime)
         context = manager.new_context()
+        if provider_key == "ams":
+            # A failed explicit reauthentication must not leave its changed
+            # native state carrying the previous successful auth marker.
+            manager.metadata.pop("auth", None)
+            manager.refresh()
         page = context.new_page()
         from .providers.browser_runtime.navigation import navigate_page
 
@@ -371,6 +453,10 @@ def authenticate_provider_profile(
             provider_label=provider_label,
             fallback_url=active_url,
         )
+    except RequestCancelledError as exc:
+        raise AuthCancelledError(
+            str(exc), provider=provider_key, stage="auth_manual_check"
+        ) from exc
     except ProviderFailure as error:
         error.diagnostics = error.diagnostics.with_updates(
             provider=provider_key,
@@ -427,12 +513,21 @@ def authenticate_provider_profile(
             fallback_url=active_url,
         )
         digest = manager.refresh()
+        if not digest:
+            raise ProviderFailure(
+                AUTH_STATE_SAVE_FAILED,
+                f"{provider_label} native profile did not expose a saved state summary.",
+            )
         manager.metadata["auth"] = {
             "native_profile_verified": True,
             "state_replay_verified": True,
             "headless": fetch_headless,
             "state_sha256": digest,
         }
+    except RequestCancelledError as exc:
+        raise AuthCancelledError(
+            str(exc), provider=provider_key, stage="auth_profile_reopen"
+        ) from exc
     except ProviderFailure as error:
         error.diagnostics = error.diagnostics.with_updates(
             provider=provider_key,

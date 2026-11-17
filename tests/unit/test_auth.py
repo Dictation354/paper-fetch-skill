@@ -332,3 +332,27 @@ def test_auth_failures_preserve_raw_challenge_and_actual_window_mode(
     assert failure.diagnostics.http_status is None
     assert failure.diagnostics.details["headless"] is headless
     assert failure.diagnostics.details["challenge_reason"] == "cloudflare_challenge"
+
+
+@pytest.mark.parametrize("cancelled", [False, True])
+def test_failed_ams_reauthentication_invalidates_previous_marker(
+    monkeypatch, tmp_path, cancelled
+):
+    from paper_fetch.http import RequestCancelledError
+
+    _install_fake_browser_manager(monkeypatch)
+    _patch_auth_runtime(monkeypatch, tmp_path)
+    result = auth.authenticate_provider_profile(provider="ams", confirm=lambda _: None)
+    env = {XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg")}
+    assert auth.has_verified_ams_profile(env)
+
+    def stop(prompt):
+        if cancelled:
+            raise RequestCancelledError("Cancelled during manual authentication")
+        raise EOFError
+
+    with pytest.raises(ProviderFailure) as failure:
+        auth.authenticate_provider_profile(provider="ams", confirm=stop)
+    assert failure.value.diagnostics.stage == "auth_manual_check"
+    assert not auth.has_verified_ams_profile(env)
+    assert result.profile_dir.is_dir()

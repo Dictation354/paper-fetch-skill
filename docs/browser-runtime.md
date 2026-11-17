@@ -167,3 +167,9 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 `challenge_provider=aws_waf` 。
 
 离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供 Playwright 1.62.0 与 Byparr 使用；`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。浏览器依赖为 InvisiblePlaywright 0.49.1 / invisible-core 61.62.0，pyee 保持 13.0.1。
+
+### AMS 认证前置
+
+AMS 正文、附件发现／下载及定向补图联网前检查 provider 归属、原生状态摘要及人工认证重开验证标记。仅有目录、Cookie 或普通抓取状态不够；正常 Cookie 更新可刷新当前摘要，无需与初次认证摘要一致。已有认证标记无需迁移。CLI 在身份与缓存判断后，在交互终端先认证再继续；批量调度线程按实际 profile 集中认证，跨 CLI 用独立认证锁协调并在取得锁后复查，等待可取消。不预持后续抓取的 profile 租约。非交互及 control-stdin 返回 auth_required，提示写 stderr；Python 入口只报告要求。失败与取消不经 fallback 继续 AMS 获取，也不转换成元数据成功。兼容缓存及已存在的本地文件可复用；resolve/check 不自动认证。
+
+macOS 契约 `browser.ams_verified_auth_required` 与 `browser.auth_coordination_cancellable` 记录此原生认证边界；portable 检查不替代原生 macos-15 gate。

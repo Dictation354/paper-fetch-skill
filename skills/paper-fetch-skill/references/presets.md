@@ -24,7 +24,7 @@ paper-fetch fetch --preset cacheable_read --query DOI --output-dir ./papers
 paper-fetch fetch --preset archive --query DOI --output-dir ./papers
 ```
 
-需要图片时显式加 `--asset-profile body`；同时要补充材料用 all。只要附件时用 `--target supplementary --preset archive`。
+需要图片时显式加 `--asset-profile body`；同时要补充材料用 all。只要附件时用 `--target supplementary`：三个抓取预设均默认 `asset_profile=all`、`artifact_mode=markdown-assets`；显式参数优先，`--asset-profile none` 或 `--artifact-mode none` 禁止下载，保留索引与验收。缓存选择和输出目录仍按各预设规则。
 
 ## 4 批量可读性分诊
 

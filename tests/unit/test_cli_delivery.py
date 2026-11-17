@@ -15,6 +15,11 @@ from tests.support.workflow_acceptance import _envelope
 def isolated(monkeypatch):
     monkeypatch.setattr(cli, "build_runtime_env", lambda: {})
     monkeypatch.setattr(cli, "fetch_paper", lambda *a, **kw: _envelope())
+    monkeypatch.setattr(
+        cli,
+        "resolve_paper",
+        lambda q, **kw: ResolvedQuery(query=q, query_kind="doi", doi=q),
+    )
 
 
 def test_default_receipt_delivers_retained_full_body(isolated, capsys):
@@ -24,6 +29,7 @@ def test_default_receipt_delivers_retained_full_body(isolated, capsys):
         receipt["contract"] == "paper-fetch/receipt" and receipt["schema_version"] == 1
     )
     assert receipt["content_kind"] == "fulltext"
+    assert receipt["target_satisfied"] is True and receipt["error"] is None
     for key in ("body_path", "manifest_path", "image_index_path"):
         path = Path(receipt[key])
         assert path.is_absolute() and path.is_file()
@@ -90,6 +96,8 @@ def test_partial_and_failure_keep_manifest_and_return_one(
     receipt = json.loads(capsys.readouterr().out)
     assert Path(receipt["manifest_path"]).is_file()
     assert not receipt["acceptance"]["has_fulltext"]
+    assert receipt["target_satisfied"] is False
+    assert (receipt["error"] is not None) == (kind == "failed")
 
 
 def test_resolve_and_check_map_inputs_without_body_fetch(
@@ -174,6 +182,44 @@ def test_truncation_reports_actual_render_warning(isolated, monkeypatch, capsys)
     )
     receipt = json.loads(capsys.readouterr().out)
     assert receipt["truncated"] is True and receipt["truncation_reason"] == "max_tokens"
+
+
+def test_receipt_error_projects_diagnostics_and_redacts_secrets(
+    isolated, monkeypatch, capsys
+):
+    from paper_fetch.failure import FailureDiagnostics
+
+    def fetch(*args, **kwargs):
+        raise PaperFetchFailure(
+            "no_access",
+            "Denied https://example.test/article?token=secret-value",
+            diagnostics=FailureDiagnostics(
+                provider="ams",
+                route="browser_html",
+                stage="auth_profile_reopen",
+                http_status=403,
+                retryable=False,
+                details={"unbounded": "not part of receipt"},
+            ),
+        )
+
+    monkeypatch.setattr(cli, "fetch_paper", fetch)
+    assert cli.main(["fetch", "--query", "10.1000/acceptance"]) == 1
+    output = capsys.readouterr()
+    receipt = json.loads(output.out)
+    error = receipt["error"]
+    assert set(error) == {
+        "status",
+        "reason",
+        "provider",
+        "route",
+        "stage",
+        "http_status",
+        "retryable",
+    }
+    assert error["http_status"] == 403 and error["retryable"] is False
+    assert error["stage"] == "auth_profile_reopen"
+    assert "secret-value" not in output.out
 
 
 @pytest.mark.parametrize("command", ["resolve", "check"])

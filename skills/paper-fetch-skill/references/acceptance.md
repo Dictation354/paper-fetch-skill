@@ -2,7 +2,7 @@
 
 ## 七个分面
 
-回执 acceptance 包含 overall、identity、fetch、content、asset、output、provenance，以及 has_fulltext/has_abstract。按任务需要读取 manifest 中对应细节；不要仅凭退出码或文件名认定已取得全文。
+回执 acceptance 包含 overall、identity、fetch、content、asset、output、provenance，以及 has_fulltext/has_abstract。`target_satisfied` 与退出码共用目标满足判断；`status` 是生命周期。结合实际文件判断交付。按任务需要读取 manifest 中对应细节；不要仅凭退出码或文件名认定已取得全文。
 
 ## 响应验收
 
@@ -14,7 +14,7 @@ check 结果只说明探测时的可用性信号，不表示已获取或阅读�
 
 ## 补充材料验收
 
-只要材料时使用 target supplementary，核对实际材料清单、身份、状态与文件路径。随正文获取材料使用 asset-profile all。
+只要材料时使用 target supplementary，核对实际材料清单、身份、状态与文件路径：asset_summary.local 是已落盘项，not_archived 是只发现链接的项，failed 是下载失败项。完整与部分下载按实际验收报告区分；`asset_not_archived` 等问题会出现在顶层原因码。随正文获取材料使用 asset-profile all。
 
 ## 最终报告
 

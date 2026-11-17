@@ -8,6 +8,11 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+- Require a saved, native-reopen-verified AMS authentication profile before body, supplementary or selected-image network acquisition. Interactive CLI fetches authenticate before continuing, coordinate by actual profile across batches/processes and keep prompts on stderr; noninteractive/Python calls report `auth_required`. Reuse compatible caches and local files.
+- Download supplementary files by default in all three fetch presets, honoring explicit download restrictions. Extend schema-v1 receipts with `target_satisfied`, a redacted `error` projection and asset acceptance reason codes; retain lifecycle status and existing exit rules.
+- Document receipt/manifest-based library indexing, internal reading snapshots, targeted formula-image reading and installed-runtime PDF readers.
+
+
 ## 7.7.0 - 2026-11-16
 
 ### CLI and Skill delivery

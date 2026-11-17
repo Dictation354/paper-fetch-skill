@@ -141,7 +141,7 @@ def test_partial_download_preserves_failed_item_and_provider_diagnostics(
         }
 
     monkeypatch.setattr(client, "download_related_assets", download)
-    with RuntimeContext(env={}, transport=transport, asset_profile="none") as context:
+    with RuntimeContext(env={}, transport=transport, asset_profile="all") as context:
         result, _ = client.fetch_supplementary(DOI, META, tmp_path, context=context)
     assert len(result.assets) == 2
     assert result.assets[0]["path"] and not result.assets[1].get("path")

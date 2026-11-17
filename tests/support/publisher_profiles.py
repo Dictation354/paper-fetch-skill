@@ -7,6 +7,29 @@ from copy import deepcopy
 from pathlib import Path
 
 
+def write_verified_ams_profile(path: Path) -> None:
+    """Write the credential-free summary/marker produced by successful auth."""
+    import json
+    from paper_fetch.providers.browser_runtime.profile import METADATA_FILENAME
+
+    path.mkdir(parents=True, exist_ok=True)
+    (path / METADATA_FILENAME).write_text(
+        json.dumps(
+            {
+                "provider": "ams",
+                "native_initialized": True,
+                "state_sha256": "a" * 64,
+                "auth": {
+                    "native_profile_verified": True,
+                    "state_replay_verified": True,
+                    "state_sha256": "b" * 64,
+                },
+            }
+        ),
+        encoding="utf-8",
+    )
+
+
 class ProfilePage:
     def __init__(self, context):
         self.context = context

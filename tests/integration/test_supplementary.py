@@ -80,6 +80,7 @@ def supplementary_server(monkeypatch, request):
             query=query, query_kind="doi", doi=doi, provider_hint=provider
         ),
     )
+    monkeypatch.setattr(cli, "resolve_paper", service.resolve_paper)
     monkeypatch.setattr(
         supplementary,
         "fetch_metadata_for_resolved_query",
@@ -111,8 +112,9 @@ def supplementary_server(monkeypatch, request):
 @pytest.mark.parametrize(
     "supplementary_server", ["springer", "oxfordacademic"], indirect=True
 )
+@pytest.mark.parametrize("preset", ["temporary_read", "cacheable_read", "archive"])
 def test_cli_single_downloads_only_material_and_writes_index(
-    supplementary_server, tmp_path, capsys
+    supplementary_server, tmp_path, capsys, preset
 ):
     metadata, calls = supplementary_server
     assert (
@@ -124,7 +126,7 @@ def test_cli_single_downloads_only_material_and_writes_index(
                 "--target",
                 "supplementary",
                 "--preset",
-                "archive",
+                preset,
                 "--output-dir",
                 str(tmp_path),
                 "--format",
@@ -133,6 +135,9 @@ def test_cli_single_downloads_only_material_and_writes_index(
         )
         == 0
     )
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["target_satisfied"] and receipt["error"] is None
+    assert receipt["acceptance"]["asset"] == "complete"
     outputs = list(tmp_path.glob("*_supplementary.json"))
     assert len(outputs) == 1
     payload = json.loads(outputs[0].read_text())
@@ -262,3 +267,30 @@ def test_browser_index_accepts_paywalled_abstract_without_body(monkeypatch, tmp_
         assert result.final_url == abstract_url
         assert "support.csv" in result.html
         assert not hasattr(result, "staged_storage_state")
+
+
+@pytest.mark.parametrize(
+    "restriction", ["--artifact-mode=none", "--asset-profile=none"]
+)
+def test_cli_explicit_download_restrictions_preserve_links(
+    supplementary_server, tmp_path, capsys, restriction
+):
+    metadata, calls = supplementary_server
+    code = cli.main(
+        [
+            "fetch",
+            "--query",
+            metadata["doi"],
+            "--target",
+            "supplementary",
+            "--output-dir",
+            str(tmp_path),
+            restriction,
+        ]
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert code == int(not receipt["target_satisfied"])
+    assert receipt["error"] is None
+    assert receipt["acceptance"]["asset_summary"]["not_archived"] == 1
+    assert "asset_not_archived" in receipt["warning_codes"]
+    assert calls == ["/article"]

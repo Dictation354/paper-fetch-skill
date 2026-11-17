@@ -243,6 +243,8 @@ def validate_contract(
         "publisher_native_persistent_profiles",
         "profile_exclusive_lock_owner_thread",
         "auth_native_profile_replay",
+        "ams_verified_auth_required",
+        "auth_coordination_cancellable",
         "native_profile_only",
     ):
         if browser.get(key) is not True:

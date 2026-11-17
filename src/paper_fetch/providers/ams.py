@@ -96,6 +96,28 @@ class AmsClient(browser_workflow.BrowserWorkflowClient):
     name = AMS_BROWSER_PROFILE.name
     profile = AMS_BROWSER_PROFILE
 
+    def fetch_raw_fulltext(self, doi, metadata, *, context=None):
+        from ..auth import require_ams_auth
+
+        require_ams_auth(self.env, provider=self.name)
+        return super().fetch_raw_fulltext(doi, metadata, context=context)
+
+    def _download_browser_backed_related_assets(
+        self, doi, metadata, raw_payload, output_dir, *, asset_profile="all", **kwargs
+    ):
+        from ..auth import require_ams_auth
+
+        if output_dir is not None and asset_profile != "none":
+            require_ams_auth(self.env, provider=self.name)
+        return super()._download_browser_backed_related_assets(
+            doi,
+            metadata,
+            raw_payload,
+            output_dir,
+            asset_profile=asset_profile,
+            **kwargs,
+        )
+
     def html_candidates(self, doi: str, metadata: Mapping[str, Any]) -> list[str]:
         candidates: list[str] = []
         extend_unique(candidates, super().html_candidates(doi, metadata))

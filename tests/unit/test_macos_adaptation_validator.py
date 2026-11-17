@@ -81,6 +81,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "request_local_browser_session_owner",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",
+            "ams_verified_auth_required",
+            "auth_coordination_cancellable",
             "native_profile_only",
         ):
             contract["browser"][key] = False
@@ -117,6 +119,8 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "request_local_browser_session_owner",
             "profile_exclusive_lock_owner_thread",
             "auth_native_profile_replay",
+            "ams_verified_auth_required",
+            "auth_coordination_cancellable",
             "native_profile_only",
         ):
             self.assertIn(f"{key} must be true", diagnostic)

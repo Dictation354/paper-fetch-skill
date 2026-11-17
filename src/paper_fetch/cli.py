@@ -24,6 +24,7 @@ from typing import Any
 from uuid import UUID
 
 from .auth import (
+    AuthCancelledError,
     authenticate_provider_profile,
     browser_auth_provider_names,
 )
@@ -693,6 +694,123 @@ def _render_options_from_args(args: argparse.Namespace) -> RenderOptions:
     )
 
 
+def _load_cli_fetch_cache(args, *, query, output_dir, context):
+    from .capability_scope import capability_scopes_for_query
+    from .delivery.fetch_cache import FetchCache
+    from .delivery.requests import FetchPaperRequest
+
+    modes = _compute_modes(args)
+    if getattr(args, "_deliver_files", False):
+        modes.update({"article", "markdown"})
+    cache_request = FetchPaperRequest(
+        query=query,
+        target=getattr(args, "target", "paper"),
+        modes=sorted(modes),
+        strategy={
+            "asset_profile": args.asset_profile,
+            "require_local_body_assets": bool(
+                getattr(args, "require_local_body_assets", False)
+            ),
+            "require_full_size_body_assets": bool(
+                getattr(args, "require_full_size_body_assets", False)
+            ),
+        },
+        include_refs=args.include_refs,
+        max_tokens=args.max_tokens,
+        prefer_cache=bool(getattr(args, "prefer_cache", False)),
+    )
+    cache_key = ("cli", "fetch-cache", cache_request.model_dump_json())
+    prepared = context.get_session_cache(cache_key)
+    if prepared is not None:
+        return prepared
+    scopes = capability_scopes_for_query(context.env, query)
+    cache = FetchCache(
+        output_dir, credential_scope=scopes[0], read_credential_scopes=scopes
+    )
+    envelope = cache.load_fetch_envelope(
+        cache_request, resolve_paper_fn=resolve_paper, context=context
+    )
+    prepared = (cache_request, envelope)
+    context.set_session_cache(cache_key, prepared)
+    return prepared
+
+
+def _confirm_auth_on_stderr(prompt: str, context: RuntimeContext) -> None:
+    sys.stderr.write(prompt)
+    sys.stderr.flush()
+    # Keep Ctrl-C cooperative while waiting for a human on the terminal. The
+    # control-stdin protocol never reaches this prompt.
+    if os.name == "nt":
+        import msvcrt
+
+        while True:
+            context.raise_if_cancelled()
+            if msvcrt.kbhit() and msvcrt.getwch() in {"\r", "\n"}:
+                break
+            time.sleep(0.05)
+        return
+    import select
+
+    while True:
+        context.raise_if_cancelled()
+        if select.select([sys.stdin], [], [], 0.05)[0]:
+            break
+    if not sys.stdin.readline():
+        raise EOFError
+
+
+def _ensure_cli_ams_auth(args, context: RuntimeContext) -> None:
+    from .auth import (
+        ams_auth_coordination,
+        has_verified_ams_profile,
+        require_ams_auth,
+    )
+
+    context.raise_if_cancelled()
+    if has_verified_ams_profile(context.env):
+        return
+    if getattr(args, "control_stdin", False) or not sys.stdin.isatty():
+        require_ams_auth(context.env, provider="ams")
+    with ams_auth_coordination(context.env, cancel=context.raise_if_cancelled):
+        # Another CLI may have completed authentication while we waited.
+        if has_verified_ams_profile(context.env):
+            return
+        context.report_progress("stage", stage="authenticating")
+        sys.stderr.write("AMS requires authentication before acquisition.\n")
+        try:
+            authenticate_provider_profile(
+                provider="ams",
+                env=context.env,
+                confirm=lambda prompt: _confirm_auth_on_stderr(prompt, context),
+            )
+        except (KeyboardInterrupt, RequestCancelledError) as exc:
+            if isinstance(exc, AuthCancelledError):
+                raise
+            raise AuthCancelledError(
+                str(exc) or "AMS authentication cancelled.",
+                provider="ams",
+                stage="auth_manual_check",
+            ) from exc
+        context.raise_if_cancelled()
+        require_ams_auth(context.env, provider="ams")
+
+
+def _ensure_cli_query_auth(args, *, query, context):
+    if context.get_session_cache(("cli", "auth-checked", query)):
+        return
+    from .workflow.routing import resolve_query_with_session_cache
+    from .workflow.batch_routing import provider_lane_from_resolved
+
+    lane = _batch_lane_for_query(query)
+    if lane in {"ams", "generic"}:
+        resolved = resolve_query_with_session_cache(
+            query, resolver=resolve_paper, context=context
+        )
+        if provider_lane_from_resolved(resolved) == "ams":
+            _ensure_cli_ams_auth(args, context)
+    context.set_session_cache(("cli", "auth-checked", query), True)
+
+
 def run_single_fetch(
     args: argparse.Namespace,
     *,
@@ -752,37 +870,19 @@ def _run_single_fetch_with_context(
     render_options = _render_options_from_args(args)
     overwrite = bool(getattr(args, "overwrite", False))
     try:
-        from .capability_scope import (
-            capability_scopes_for_query,
-            capability_scope_from_runtime_context,
-        )
+        from .capability_scope import capability_scope_from_runtime_context
         from .delivery.fetch_cache import FetchCache
-        from .delivery.requests import FetchPaperRequest
 
-        cache_request = FetchPaperRequest(
-            query=query,
-            target=getattr(args, "target", "paper"),
-            modes=sorted(modes),
-            strategy={
-                "asset_profile": args.asset_profile,
-                "require_local_body_assets": bool(
-                    getattr(args, "require_local_body_assets", False)
-                ),
-                "require_full_size_body_assets": bool(
-                    getattr(args, "require_full_size_body_assets", False)
-                ),
-            },
-            include_refs=args.include_refs,
-            max_tokens=args.max_tokens,
-            prefer_cache=bool(getattr(args, "prefer_cache", False)),
+        preflight_error = context.get_session_cache(
+            ("cli", "auth-error", query), copy_value=False
         )
-        scopes = capability_scopes_for_query(context.env, query)
-        cache = FetchCache(
-            output_dir, credential_scope=scopes[0], read_credential_scopes=scopes
+        if preflight_error is not None:
+            raise preflight_error
+        cache_request, envelope = _load_cli_fetch_cache(
+            args, query=query, output_dir=output_dir, context=context
         )
-        envelope = cache.load_fetch_envelope(
-            cache_request, resolve_paper_fn=resolve_paper, context=context
-        )
+        if envelope is None:
+            _ensure_cli_query_auth(args, query=query, context=context)
         cache_hit = envelope is not None
         envelope = envelope or FetchPipeline(fetch_paper).run(
             FetchPipelineRequest(
@@ -1075,10 +1175,13 @@ def _build_cli_manifest_record(
                 if isinstance(error, RequestCancelledError)
                 else str(manifest_error.get("code") or manifest_error["status"])
             )
-            manifest_error = _aborted_error_payload(
-                reason=str(manifest_error["reason"]),
-                code=code,
-            )
+            manifest_error = {
+                **manifest_error,
+                **_aborted_error_payload(
+                    reason=str(manifest_error["reason"]),
+                    code=code,
+                ),
+            }
         warnings = tuple(str(item) for item in (getattr(error, "warnings", ()) or ()))
         trace = list(getattr(error, "trace", ()) or ())
         if not trace:
@@ -1221,7 +1324,11 @@ def _classify_batch_outcome(outcome: CliFetchOutcome) -> BatchFailure | None:
         and not isinstance(retry_after_value, bool)
         else None
     )
-    cancelled = isinstance(error, RequestCancelledError)
+    # Cancelling an auth attempt ends the AMS acquisition, while the batch
+    # scheduler's ordinary request cancellation keeps its existing semantics.
+    cancelled = isinstance(error, RequestCancelledError) and not isinstance(
+        error, AuthCancelledError
+    )
     return BatchFailure(
         reason_code="request_cancelled" if cancelled else status,
         message=str(payload.get("reason") or error),
@@ -1268,7 +1375,8 @@ def _record_from_batch_result(
             result=outcome.result,
             error=outcome.error,
             diagnostic_artifacts=outcome.diagnostic_artifacts,
-            aborted=batch_result.status is BatchItemStatus.CANCELLED,
+            aborted=batch_result.status is BatchItemStatus.CANCELLED
+            or isinstance(outcome.error, AuthCancelledError),
         )
 
     completed_at = deps.clock()
@@ -1432,6 +1540,41 @@ def run_batch_fetch(
                     if result.item.index not in records
                 ]
                 scheduled_items, duplicates_by_owner = session.group(logical_items)
+
+                auth_failures: dict[Path, Exception] = {}
+                for owner in scheduled_items:
+                    if owner.lane_key != "ams":
+                        continue
+                    active_context = item_contexts[owner.index]
+                    try:
+                        _, cached = _load_cli_fetch_cache(
+                            args,
+                            query=owner.query,
+                            output_dir=output_dir,
+                            context=active_context,
+                        )
+                        if cached is None:
+                            from .auth import ams_profile_path
+
+                            path = ams_profile_path(active_context.env)
+                            if path in auth_failures:
+                                raise auth_failures[path]
+                            try:
+                                _ensure_cli_ams_auth(args, active_context)
+                            except RequestCancelledError as exc:
+                                if isinstance(exc, AuthCancelledError):
+                                    auth_failures[path] = exc
+                                raise
+                            except Exception as exc:
+                                auth_failures[path] = exc
+                                raise
+                        active_context.set_session_cache(
+                            ("cli", "auth-checked", owner.query), True
+                        )
+                    except Exception as exc:
+                        active_context.set_session_cache(
+                            ("cli", "auth-error", owner.query), exc, copy_value=False
+                        )
 
                 for owner in scheduled_items:
                     group = fanout_batch_items(owner, duplicates_by_owner)
@@ -2106,6 +2249,12 @@ def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
                 else context_from_query(args.query, runtime)
             )
             state.cleanup_temporary = args.output_dir is not None
+            from .targeted_assets import selected_assets_need_network
+
+            if state.provider == "ams" and selected_assets_need_network(
+                state, asset_ids=args.asset_ids, urls=args.urls, kind=args.kind
+            ):
+                _ensure_cli_ams_auth(args, runtime)
             payload = fetch_selected_assets(
                 state,
                 asset_ids=args.asset_ids,
@@ -2219,13 +2368,23 @@ def _write_browser_preflight_failure_hints(
 
 def _run_auth_namespace(args: argparse.Namespace) -> int:
     runtime_env = build_runtime_env()
-    result = authenticate_provider_profile(
-        provider=args.provider,
-        target_url=args.url,
-        timeout_ms=args.timeout_ms,
-        browser_user_agent=args.browser_user_agent,
-        env=runtime_env,
-    )
+    from .auth import ams_auth_coordination
+
+    with RuntimeContext(env=runtime_env) as context:
+        coordination = (
+            ams_auth_coordination(runtime_env, cancel=context.raise_if_cancelled)
+            if args.provider == "ams"
+            else contextlib.nullcontext()
+        )
+        with coordination:
+            result = authenticate_provider_profile(
+                provider=args.provider,
+                target_url=args.url,
+                timeout_ms=args.timeout_ms,
+                browser_user_agent=args.browser_user_agent,
+                env=runtime_env,
+                confirm=lambda prompt: _confirm_auth_on_stderr(prompt, context),
+            )
     _write_auth_result(args.provider, provider_display_name(args.provider), result)
     return 0
 
@@ -2336,8 +2495,7 @@ def _apply_cli_preset(args: argparse.Namespace, raw_args: list[str]) -> None:
         raw_args, "--prefer-cache"
     ):
         args.prefer_cache = True
-    materials_archive = args.target == "supplementary" and preset == "archive"
-    if materials_archive:
+    if args.target == "supplementary":
         defaults.update(asset_profile="all", artifact_mode="markdown-assets")
     elif (
         _has_explicit_option(raw_args, "--asset-profile")

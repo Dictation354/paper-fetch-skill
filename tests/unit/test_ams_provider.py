@@ -78,6 +78,15 @@ def _extract_fixture_markdown(doi: str) -> tuple[str, dict[str, object]]:
 
 
 class AmsProviderTests(AtyponBrowserWorkflowProviderTestCase):
+    def setUp(self):
+        super().setUp()
+        # These tests exercise acquisition after the separately tested auth gate.
+        patcher = mock.patch(
+            "paper_fetch.auth.has_verified_ams_profile", return_value=True
+        )
+        patcher.start()
+        self.addCleanup(patcher.stop)
+
     def _metadata(self) -> dict[str, object]:
         return {
             "doi": AMS_DOI,

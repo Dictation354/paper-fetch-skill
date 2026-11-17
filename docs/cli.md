@@ -29,13 +29,17 @@ fetch 默认为 temporary_read：完整 Markdown、逐篇 schema-v2 manifest、�
 
 单篇 `--output -` 按 --format 输出正文；显式文件 --output 则保存正文并返回 JSON 回执。--format 为 markdown、json 或 both；文件输出同时保存可供阅读的 Markdown。--include-refs 默认为 all；--max-tokens 默认为 full_text，可显式指定数值。未显式 --output 时，在输出目录生成安全命名的主文件。
 
-回执独立契约为 `paper-fetch/receipt`、schema_version=1，含 index/query、identity/doi、acceptance、content_kind、source/acquisition、body_path、manifest_path、diagnostic_paths、image_index_path、output_paths、truncated 及 fallback_codes/warning_codes/failure_codes。路径均为绝对路径；回执不含正文、完整 trace 或浏览器凭证。
+回执独立契约为 `paper-fetch/receipt`、schema_version=1，含 index/query、identity/doi、status、target_satisfied、error、acceptance、content_kind、source/acquisition、body_path、manifest_path、diagnostic_paths、image_index_path、output_paths、truncated 及 fallback_codes/warning_codes/failure_codes。路径均为绝对路径；回执不含正文、完整 trace 或浏览器凭证。
+
+`status` 保持任务生命周期含义；`target_satisfied` 直接复用退出码使用的目标满足判断。`error` 无异常为 null，有异常时投影 status、reason、provider、route、stage、http_status、retryable 并脱敏。顶层原因码稳定去重并包含资产验收 issue/failure codes，例如 `asset_not_archived`。
 
 完整 trace 和验收细节保存在 manifest 与诊断文件。取得全文（包括降级全文）退出 0；仅摘要、元数据或失败退出 1，保留结果；参数错误退出 2。正文截断标记不表示本地 reader 已读取的范围。
 
 ## 单篇 manifest
 
-每篇完成后立即原子保存独立 manifest，回执给出实际路径；`--manifest PATH` 可额外写指定文件。无需整批完成即可恢复身份、正文、图片索引和诊断路径。manifest schema v2 由 `paper_fetch.manifest` 统一生成，含 run_id、record_id、index、attempt、query、identity、acceptance、acquisition、原因码、trace、output_artifacts 和文件快照。
+每篇完成后立即原子保存独立 manifest，回执给出实际路径；`--manifest PATH` 可额外写指定文件。建库以 stdout 回执或最终 `batch-results.jsonl` 为入口，依次按 DOI、已验证且唯一的规范 URL、manifest 路径识别记录，并保留实际获取状态。普通目录扫描排除 `.paper-fetch-results` 内部快照，不能把 `body.md` 计作另一篇论文。
+
+无需整批完成即可恢复身份、正文、图片索引和诊断路径。manifest schema v2 由 `paper_fetch.manifest` 统一生成，含 run_id、record_id、index、attempt、query、identity、acceptance、acquisition、原因码、trace、output_artifacts 和文件快照。
 
 ## 批量抓取
 
@@ -69,7 +73,7 @@ paper-fetch fetch-assets --query DOI --asset-url https://example.org/figure.png
 paper-fetch fetch --target supplementary --preset archive --query DOI --output-dir ./papers
 ```
 
-独立获取附件、Source Data、Extended Data 或媒体，不以正文成功为前置条件。随正文取材料用 --asset-profile all。附件任务根据其统一验收结果判断退出状态。
+独立获取附件、Source Data、Extended Data 或媒体，不以正文成功为前置条件。三个抓取预设均默认 `asset_profile=all`、`artifact_mode=markdown-assets`，显式参数优先；`--asset-profile none` 或 `--artifact-mode none` 禁止下载，仅保留发现结果。缓存选择和输出目录沿用各预设规则。通过 acceptance.asset_summary 的 local、not_archived、failed 及实际文件，区分仅发现链接、部分下载、完整下载。随正文取材料用 --asset-profile all。附件任务根据其统一验收结果判断退出状态。
 
 ## 主输出与 Artifact
 
@@ -91,6 +95,10 @@ paper-fetch fetch --target supplementary --preset archive --query DOI --output-d
 所有浏览器路线使用配置解析后的实际 profile 路径作为资源键，展开用户目录、解析符号链接并按平台规范化大小写。不同 profile 可并行，同 profile 在批内与跨进程排队。等待者让出执行名额，不阻塞其他空闲 profile；HTTP/API 不申请 profile 资源，出版社限流独立保留。页面预算在取得锁后建立，同一请求内重用、页面重试及 fallback 共用剩余预算；HTTP 时限独立。
 
 外部浏览器占用报 browser_profile_external_occupancy；provider 归属冲突报 browser_profile_provider_conflict。抓取、补图、auth 和 browser-preflight 使用同一协调机制。
+
+AMS 正文、补充材料发现／下载和定向补图的联网入口必须有 `paper-fetch auth ams` 成功且同一原生 profile 重开验证通过的已保存状态。只有目录、Cookie 或普通抓取状态不能通过；正常 Cookie 更新不要求当前摘要与最初认证摘要相同。已有认证标记无需迁移。
+
+CLI 在确认身份及缓存未命中后检查；交互终端先认证再继续，无交互终端及 `--control-stdin` 返回 `auth_required`（统一验收 action_required）。认证提示只写 stderr；批量由调度线程按实际 profile 集中认证，多个 CLI 按同一路径协调，等待可取消，取得协调权后重新检查。认证复用原有浏览器生命周期，不预持后续抓取租约。失败或取消停止对应 AMS 获取并保留原始阶段和原因，其他批量项继续；Python 接口只报告认证要求。兼容缓存及已有本地图片可直接复用；resolve/check 不自动打开认证窗口。
 
 ## 静态诊断、真实预检与人工认证
 

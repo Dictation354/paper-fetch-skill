@@ -114,7 +114,7 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             retry_after_seconds=getattr(exc, "retry_after_seconds", None),
             diagnostics=diagnostics.with_updates(
                 provider=diagnostics.provider or provider,
-                stage="supplementary",
+                stage=diagnostics.stage or "supplementary",
                 retryable=False
                 if exc is None or exc.code == NOT_SUPPORTED
                 else diagnostics.retryable,
@@ -136,7 +136,9 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             result, acquisition = client.fetch_supplementary(
                 doi,
                 metadata,
-                context.artifact_store.asset_download_dir,
+                context.artifact_store.asset_download_dir
+                if strategy.asset_profile != "none"
+                else None,
                 context=context,
             )
         except ProviderFailure as exc:

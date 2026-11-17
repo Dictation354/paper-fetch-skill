@@ -167,6 +167,10 @@ def test_supplementary_acceptance(
     assert report.overall == overall
     assert report.asset.status == asset_status
     assert report.fetch.code == code
+    assert set(report.asset.issue_codes) <= set(report.provenance.warning_codes)
+    assert set(report.asset.failure_codes) <= set(report.provenance.failure_codes)
+    if any(not asset.get("path") for asset in assets):
+        assert "asset_not_archived" in report.provenance.warning_codes
 
 
 def test_index_save_and_cache_round_trip(tmp_path):

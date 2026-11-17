@@ -7,3 +7,5 @@
 遇到 challenge 或 auth_required，按 provider 使用 `paper-fetch auth PROVIDER` 打开人工认证；不代填密码、验证码或绕过访问控制。认证、browser-preflight、抓取和补图共享同一资源机制。外部浏览器占用与 provider 归属冲突分别报错。
 
 `paper-fetch doctor` 是静态诊断；`paper-fetch browser-preflight` 是实际浏览器检查。只有环境问题影响当前任务时使用。更新和安装按用户请求执行，不为普通阅读自动改配置。
+
+AMS 联网获取前必须通过 `paper-fetch auth ams` 完成人工认证及同一原生 profile 的重开验证；仅有目录、Cookie 或普通抓取状态不够。交互 fetch/fetch-assets 自动先认证再继续；批量由调度线程按实际 profile 集中认证，并与其他 CLI 协调，等待可取消。不预持后续抓取租约。非交互或 `--control-stdin` 返回 auth_required；认证提示写 stderr，不占用回执／正文 stdout。兼容缓存和现有本地文件无需认证，resolve/check 不弹认证窗口。已有有效认证标记无需迁移。

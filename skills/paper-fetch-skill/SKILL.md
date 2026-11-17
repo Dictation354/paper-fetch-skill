@@ -13,7 +13,7 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 paper-fetch fetch --query "10.1186/1471-2105-11-421"
 ```
 
-读取 stdout 的 JSON 回执，保存 `query`、`identity`、`acceptance`、`body_path` 和 `manifest_path`。默认正文及图片索引保存在独立系统临时目录，命令退出后仍可读取；不下载正文图片、不使用持久缓存。按回执的绝对路径打开本地 Markdown，用搜索定位章节，再按任务需要分段阅读。
+读取 stdout 的 JSON 回执，保存 `query`、`identity`、`target_satisfied`、`acceptance`、`error`、`body_path` 和 `manifest_path`。默认正文及图片索引保存在独立系统临时目录，命令退出后仍可读取；不下载正文图片、不使用持久缓存。按回执的绝对路径打开本地 Markdown，用搜索定位章节，再按任务需要分段阅读。
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容；局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。优先复用已有图片，需要补取时：
 
@@ -21,14 +21,24 @@ paper-fetch fetch --query "10.1186/1471-2105-11-421"
 paper-fetch fetch-assets --manifest /absolute/path/manifest.json --asset-id img_example
 ```
 
-随后打开返回的实际图片路径。补图沿用原论文身份与图片索引，不重新抓取全文。
+随后打开返回的实际图片路径。公式是图片时先从图片索引定位 asset ID；需要公式图片组用 `fetch-assets --manifest … --kind formula`，再实际打开图片。补图保留原始公式 fallback 验收，不重新抓取全文或改写正文。
+
+只要补充材料时：
+
+```bash
+paper-fetch fetch --target supplementary --query DOI --output-dir ./papers
+```
+
+三个抓取预设默认下载附件；显式 `--asset-profile none` 或 `--artifact-mode none` 禁止下载。按[材料交接](references/reading-handoff.md)读取实际落盘文件，区分仅发现链接、部分下载和完整下载。
 
 ## 参数与边界
 
 - 尊重用户明确的来源、路径、资产范围及覆盖授权。默认预设只补全未指定选项。
+- 建库从 stdout 回执或最终 `batch-results.jsonl` 读取，按 DOI、已验证规范 URL、最后按 manifest 路径识别论文，保留实际获取状态。普通目录扫描排除 `.paper-fetch-results`，其中 `body.md` 是逐篇阅读快照，不是另一篇论文。
 - 多篇使用 `--query-file queries.txt --batch-concurrency 4`；逐篇回执按完成顺序输出，最终 `batch-results.jsonl` 按输入顺序保存。保存每篇身份、路径及实际阅读进度。
 - 仅解析用 `paper-fetch resolve --query ...`；仅探测用 `paper-fetch check --query ...`，都支持 query-file；探测不自动升级为抓取。
-- 依据 acceptance 判断全文、摘要、元数据及降级。全文降级结果仍可成功；仅摘要、元数据或失败退出码为 1，保留文件回执；参数错误为 2。
+- 依据 `target_satisfied`、acceptance 和实际文件判断交付，`status` 只表示任务生命周期。依据 acceptance 判断全文、摘要、元数据及降级。全文降级结果仍可成功；仅摘要、元数据或失败退出码为 1，保留文件回执；参数错误为 2。
+- AMS 联网正文、附件和补图必须先有 `paper-fetch auth ams` 成功且原生 profile 重开验证通过的状态。交互 CLI 缺少状态时先认证再继续；非交互及 `--control-stdin` 返回 `auth_required`。兼容缓存和已有本地文件可直接复用；resolve/check 不自动认证。
 - 浏览器任务按实际 profile 目录排队，等待可取消且不消耗页面预算。返回 challenge/auth_required 时按[环境说明](references/environment.md)处理人工认证，遵守登录、验证码、付费墙及访问权限。
 - PDF 正文以现有转换器输出为边界，不清洗或修复内容。
 - 最终回答对应实际阅读的证据、用户要求与影响结论的降级，不追加固定审计或额外验证流程。

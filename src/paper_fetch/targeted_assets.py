@@ -24,6 +24,7 @@ from .models.markdown import iter_markdown_images
 from .http import RequestFailure
 from .providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
 from .runtime import RuntimeContext
+from .reason_codes import AUTH_REQUIRED
 
 URL_FIELDS = (
     "url",
@@ -347,11 +348,13 @@ def _load_source(state: AssetContext, runtime: RuntimeContext) -> None:
     from .extraction.html.landing import fetch_landing_html
     from .quality.access_boundary import raise_for_paywall
     from .publisher_identity import validate_extracted_identity
+    from .auth import require_ams_auth
 
     if not state.source_url:
         raise ProviderFailure(
             "asset_index_unavailable", "No recoverable article source URL is available."
         )
+    require_ams_auth(runtime.env, provider=state.provider)
     client: Any = runtime.get_clients().get(state.provider)
     from .config import build_publisher_user_agent
 
@@ -457,6 +460,9 @@ def _download_selected(
     output: Path,
     runtime: RuntimeContext,
 ) -> dict[str, Any]:
+    from .auth import require_ams_auth
+
+    require_ams_auth(runtime.env, provider=state.provider)
     client: Any = runtime.get_clients().get(state.provider)
     content = ProviderContent(
         route_kind=state.route_kind,
@@ -536,6 +542,30 @@ def _download_selected(
         )
     finally:
         browser_fetcher.close()
+
+
+def selected_assets_need_network(state, *, asset_ids=None, urls=None, kind=None):
+    selectors = asset_ids if asset_ids is not None else urls
+    selected = [
+        asset
+        for asset in state.assets
+        if (kind is not None and asset["kind"] == kind)
+        or (asset_ids is not None and asset["asset_id"] in asset_ids)
+        or (urls is not None and asset_urls(asset).intersection(urls))
+    ]
+    indexed = selectors is not None and all(
+        any(
+            selector == asset["asset_id"]
+            if asset_ids is not None
+            else selector in asset_urls(asset)
+            for asset in state.assets
+        )
+        for selector in selectors
+    )
+    return (not state.discovery_complete and not indexed) or any(
+        not asset.get("path") or not Path(asset["path"]).expanduser().is_file()
+        for asset in selected
+    )
 
 
 def fetch_selected_assets(
@@ -620,6 +650,11 @@ def fetch_selected_assets(
                             state, [asset], state.temporary_dir(), runtime
                         )
                     except (ProviderFailure, RequestFailure, OSError) as error:
+                        if (
+                            isinstance(error, ProviderFailure)
+                            and error.code == AUTH_REQUIRED
+                        ):
+                            raise
                         results.append(
                             {
                                 "asset_id": asset["asset_id"],

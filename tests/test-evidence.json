@@ -4791,6 +4791,13 @@
         "scope": "Real CLI subprocess persistence and cancellation with synthetic acquisition",
         "reason": "验证文件回执和逐项交付，不证明出版社抓取质量。"
       }
+    },
+    "tests/unit/test_ams_auth_gate.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "AMS verified profile gate, CLI authentication handoff, cache reuse and batch failure contracts.",
+        "reason": "最小状态摘要与边界 mock 验证认证前置，不证明远端访问或出版社内容完整性。"
+      }
     }
   }
 }
