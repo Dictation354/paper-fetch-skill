@@ -8,6 +8,7 @@ from paper_fetch import cli
 from paper_fetch.models import FetchEnvelope, Metadata, Quality
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import HasFulltextProbeResult, PaperFetchFailure
+from tests.support.asset_delivery_scenarios import GIF, asset_state
 from tests.support.workflow_acceptance import _envelope
 
 
@@ -169,6 +170,47 @@ def test_manifest_assets_never_resolve_or_fetch_body(
     assert json.loads(capsys.readouterr().out)["assets"][0]["path"].endswith(
         "figure.png"
     )
+
+
+def test_compact_assets_return_actual_files_when_details_write_fails(
+    tmp_path, capsys, monkeypatch
+):
+    from paper_fetch import targeted_assets
+
+    state = asset_state()
+    image = tmp_path / "formula#1.gif"
+    image.write_bytes(GIF)
+    asset = state.assets[0]
+    asset["path"] = str(image)
+    monkeypatch.setattr(targeted_assets, "context_from_manifest", lambda path: state)
+
+    def fail_write(*args, **kwargs):
+        raise OSError("Unwritable path with token=private-value")
+
+    monkeypatch.setattr(cli.ArtifactStore, "write_json_file", fail_write)
+    assert (
+        cli.main(
+            [
+                "fetch-assets",
+                "--manifest",
+                "manifest.json",
+                "--asset-id",
+                asset["asset_id"],
+                "--output-dir",
+                str(tmp_path / "images"),
+                "--compact",
+            ]
+        )
+        == 0
+    )
+    captured = capsys.readouterr()
+    receipt = json.loads(captured.out)
+    assert receipt["details_path"] is None and receipt["status"] == "ok"
+    (result,) = receipt["results"]
+    assert result["asset_id"] == asset["asset_id"]
+    path = Path(result["path"])
+    assert path.parent == tmp_path / "images" and path.read_bytes() == GIF
+    assert captured.err == "Warning: could not save fetch-assets details.\n"
 
 
 def test_truncation_reports_actual_render_warning(isolated, monkeypatch, capsys):

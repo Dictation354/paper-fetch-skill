@@ -26,10 +26,14 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、resolve、check、fetch-asset
 
 ## 补图与探测
 
-`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind formula` 三者之一。返回实际本地文件路径，不重抓全文。
+`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind formula` 三者之一。使用 manifest 时直接复用论文身份和图片索引。
+
+Skill 调用 `fetch-assets` 时显式传 `--compact`。stdout 的单行 JSON 包括 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、`status`、`results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`，失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。命令级错误提供脱敏的 `status` 和简短 `reason`，`results` 为空。普通调用直接输出详细 JSON。
+
+`details_path` 指向同次调用原子保存的脱敏明细，含图注和逐项诊断。明细随显式输出目录或本次保留的临时目录存放。明细写入失败时该字段为 `null`，stderr 给出提示，仍按回执交付实际下载结果。
 
 resolve 和 check 均接受 --query 或 --query-file；check 只探测。歧义时根据候选消歧后重试，不把候选当作已确认论文。
 
 ## 退出码
 
-取得全文（含降级）为 0；仅摘要、元数据或失败为 1，结果保留；参数错误为 2。批量任一项未满足目标即非零。独立附件任务依据附件验收判断是否满足目标。
+取得全文（含降级）为 0。仅摘要、元数据或失败为 1，结果保留。参数错误为 2。批量任一项未满足目标即非零。独立附件任务依据附件验收判断是否满足目标。补图全部成功为 0，部分成功或失败为 1，参数错误为 2。

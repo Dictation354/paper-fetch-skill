@@ -20,8 +20,8 @@ import threading
 import time
 import tempfile
 from pathlib import Path
-from typing import Any
-from uuid import UUID
+from typing import TYPE_CHECKING, Any
+from uuid import UUID, uuid4
 
 from .auth import (
     AuthCancelledError,
@@ -89,6 +89,9 @@ from .workflow.rendering import rewrite_markdown_asset_links
 from .workflow.rendering import (
     save_markdown_to_disk as save_markdown_to_disk_for_target,
 )
+
+if TYPE_CHECKING:
+    from .targeted_assets import AssetContext
 
 
 class FetchProgress:
@@ -2129,6 +2132,11 @@ def build_parser(
     assets_parser.add_argument(
         "--output-dir", help="Archive images; otherwise retain files in system temp."
     )
+    assets_parser.add_argument(
+        "--compact",
+        action="store_true",
+        help="Print a compact JSON receipt and save the full details separately.",
+    )
     assets_parser.add_argument("--overwrite", action="store_true")
     assets_parser.set_defaults(_command_handler=_run_fetch_assets_namespace)
 
@@ -2236,13 +2244,61 @@ def _run_lookup_namespace(args: argparse.Namespace) -> int:
     )
 
 
+def _compact_asset_receipt(
+    payload: dict[str, Any], *, output_dir: str | None, state: AssetContext | None
+) -> dict[str, Any]:
+    from .delivery.receipts import public_diagnostics
+
+    details = public_diagnostics(payload)
+    results = []
+    for original, item in zip(payload["results"], details["results"], strict=True):
+        if "path" in original:
+            # Local paths can contain URL punctuation and must still open on disk.
+            item["path"] = original["path"]
+        if item["status"] == "ok":
+            results.append({key: item[key] for key in ("status", "asset_id", "path")})
+        else:
+            identity = "asset_id" if "asset_id" in item else "selector"
+            results.append({key: item[key] for key in ("status", identity, "reason")})
+
+    receipt = {
+        "schema_version": 1,
+        "contract": "paper-fetch/asset-receipt",
+        "doi": details["doi"],
+        "status": details["status"],
+        "results": results,
+        "details_path": None,
+    }
+    if "reason" in details:
+        reason = " ".join(details["reason"].split())
+        receipt["reason"] = reason if len(reason) <= 300 else reason[:297] + "..."
+
+    try:
+        if output_dir:
+            directory = Path(output_dir).expanduser().resolve()
+        elif state is not None:
+            directory = state.temporary_dir()
+        else:
+            directory = Path(tempfile.mkdtemp(prefix="paper-fetch-images-"))
+        path = ArtifactStore.from_download_dir(directory).write_json_file(
+            directory / f"fetch-assets-{uuid4().hex}.json", details, overwrite=False
+        )
+        receipt["details_path"] = str(path.resolve())
+    except Exception:
+        sys.stderr.write("Warning: could not save fetch-assets details.\n")
+    return receipt
+
+
 def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
     from .targeted_assets import (
         context_from_query,
         context_from_manifest,
         fetch_selected_assets,
+        selected_assets_need_network,
     )
 
+    state = None
+    output_dir = args.output_dir or None
     try:
         with RuntimeContext(artifact_mode="none") as runtime:
             state = (
@@ -2250,9 +2306,8 @@ def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
                 if args.manifest
                 else context_from_query(args.query, runtime)
             )
-            state.cleanup_temporary = args.output_dir is not None
-            from .targeted_assets import selected_assets_need_network
-
+            # CLI files outlive this process so a host reader can open the paths.
+            state.cleanup_temporary = output_dir is not None
             if state.provider == "ams" and selected_assets_need_network(
                 state, asset_ids=args.asset_ids, urls=args.urls, kind=args.kind
             ):
@@ -2262,19 +2317,30 @@ def _run_fetch_assets_namespace(args: argparse.Namespace) -> int:
                 asset_ids=args.asset_ids,
                 urls=args.urls,
                 kind=args.kind,
-                output_dir=args.output_dir,
+                output_dir=output_dir,
                 overwrite=args.overwrite,
                 runtime=runtime,
             )
-            # CLI files outlive this process so a host reader can open the paths.
             payload["query"] = args.query
-            sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
-            return 0 if payload["status"] == "ok" else 1
+            if not args.compact:
+                sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+                return 0 if payload["status"] == "ok" else 1
+        exit_code = 0 if payload["status"] == "ok" else 1
     except Exception as error:
         payload = _error_payload(error)
-        sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
-        sys.stderr.write(str(error) + "\n")
-        return exit_code_for_error(error)
+        exit_code = exit_code_for_error(error)
+        if not args.compact:
+            sys.stdout.write(json.dumps(payload, ensure_ascii=False) + "\n")
+            sys.stderr.write(str(error) + "\n")
+            return exit_code
+        doi = state.doi if state is not None else None
+        if state is None and args.query:
+            with contextlib.suppress(ValueError):
+                doi = expected_doi_from_query(args.query)
+        payload.update(doi=doi, results=[], query=args.query)
+    receipt = _compact_asset_receipt(payload, output_dir=output_dir, state=state)
+    sys.stdout.write(json.dumps(receipt, separators=(",", ":")) + "\n")
+    return exit_code
 
 
 def _run_update_namespace(_args: argparse.Namespace) -> int:

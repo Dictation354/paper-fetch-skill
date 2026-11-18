@@ -9,19 +9,26 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ## 最短阅读路径
 
+先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围，按实际路径打开仍可访问的正文和图片。跨会话交接时记录论文身份、验收范围、`body_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
+
+只有缺少所需正文时才调用 `fetch`。需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。
+
 ```bash
 paper-fetch fetch --query "10.1186/1471-2105-11-421"
 ```
 
-读取 stdout 的 JSON 回执，保存 `query`、`identity`、`target_satisfied`、`acceptance`、`error`、`body_path` 和 `manifest_path`。默认正文及图片索引保存在独立系统临时目录，命令退出后仍可读取；不下载正文图片、不使用持久缓存。按回执的绝对路径打开本地 Markdown，用搜索定位章节，再按任务需要分段阅读。
+读取 stdout 的 JSON 回执，通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认正文及图片索引保存在独立系统临时目录，命令退出后仍可读取。默认不下载正文图片，也不使用持久缓存。按回执的绝对路径打开本地 Markdown，用搜索定位章节，再按任务需要分段阅读。
 
-依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容；局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。优先复用已有图片，需要补取时：
+依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。
+
+只缺图片时，从已有 `image_index_path` 定位缺失项，用原 manifest 补取。可以一次传入多个 asset ID。
 
 ```bash
-paper-fetch fetch-assets --manifest /absolute/path/manifest.json --asset-id img_example
+paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json \
+  --asset-id img_first --asset-id img_second
 ```
 
-随后打开返回的实际图片路径。公式是图片时先从图片索引定位 asset ID；需要公式图片组用 `fetch-assets --manifest … --kind formula`，再实际打开图片。补图保留原始公式 fallback 验收，不重新抓取全文或改写正文。
+`--kind` 只接受 `formula`。需要公式图片组时，用 `--kind formula` 代替 `--asset-id`。从回执的 `results` 打开成功项的实际图片路径，并把 asset ID 和路径记入交接记录。需要跨会话保留新下载的图片时，将 `--output-dir` 指向任务输出目录。
 
 只要补充材料时：
 

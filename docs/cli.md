@@ -60,12 +60,19 @@ UTF-8 文本每行一个查询。支持 1–8 个执行名额，默认 1。按�
 ## 定向补取图片
 
 ```bash
-paper-fetch fetch-assets --manifest /absolute/path/manifest.json --asset-id img_example
+paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json \
+  --asset-id img_first --asset-id img_second
 paper-fetch fetch-assets --manifest /absolute/path/manifest.json --kind formula
 paper-fetch fetch-assets --query DOI --asset-url https://example.org/figure.png
 ```
 
---manifest 与 --query 互斥。--asset-id、--asset-url 可重复，或使用 --kind formula，三种选择器互斥。manifest 恢复论文身份和已有图片索引，不重新抓取全文；下载后返回实际文件路径。默认图片保存在系统临时目录并保留，--output-dir 可指定位置。
+`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind formula`，三种选择器互斥。manifest 恢复论文身份和已有图片索引，供定向下载。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
+
+默认 stdout 返回详细 JSON。`--compact` 输出一行 JSON，包含 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、总体 `status`、逐项 `results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`。失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。总体结果为 `ok`、`partial` 或 `error`。命令级错误使用相应的错误状态和简短、脱敏的 `reason`，且 `results` 为空。无法确定 DOI 时 `doi` 为 `null`。
+
+紧凑模式每次调用原子保存一份独立的脱敏明细，其中保留图注和逐项诊断。`details_path` 为明细的绝对路径，跟随 `--output-dir` 或本次保留的临时目录。明细写入失败时，`details_path` 为 `null`，stderr 给出简短提示，回执仍包含实际文件路径和下载结果。
+
+全部成功退出 0，部分成功或失败退出 1，参数错误退出 2。参数错误由命令行解析器报告。
 
 ## 独立补充材料任务
 

@@ -21,8 +21,15 @@ def public_diagnostics(value: Any) -> Any:
             str(k): public_diagnostics(v)
             for k, v in value.items()
             if not is_sensitive_configuration_name(str(k))
-            and str(k)
-            not in {"browser_context_seed", "storage_state", "headers", "body"}
+            and str(k).lower()
+            not in {
+                "authorization",
+                "proxy-authorization",
+                "browser_context_seed",
+                "storage_state",
+                "headers",
+                "body",
+            }
         }
     if isinstance(value, (list, tuple)):
         return [public_diagnostics(item) for item in value]

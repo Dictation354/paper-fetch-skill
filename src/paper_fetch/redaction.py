@@ -15,6 +15,9 @@ _CREDENTIAL_NAME_TOKENS = (
     "COOKIE",
     "MAILTO",
 )
+_DIAGNOSTIC_URL_USERINFO_RE = re.compile(
+    r"(?P<scheme>https?://)[^/\s\"'<>?#@]+@", re.IGNORECASE
+)
 _DIAGNOSTIC_URL_IN_TEXT_RE = re.compile(
     r"(?P<base>(?:https?://|/)[^\s\"'<>?]+)\?[^\s\"'<>]*",
     re.IGNORECASE,
@@ -59,7 +62,7 @@ def _diagnostic_secret_assignment_re(
     )
     return re.compile(
         rf"(?P<name>\b(?:{name_pattern})\b[\"']?\s*[=:]\s*[\"']?\s*)"
-        r"(?:bearer\s+)?[^\s&;,\"'<>}\]]+",
+        r"(?:(?:basic|bearer)\s+)?[^\s&;,\"'<>}\]]+",
         re.IGNORECASE,
     )
 
@@ -69,9 +72,10 @@ def redact_text_for_diagnostics(
     *,
     additional_secret_names: Iterable[str] = (),
 ) -> str:
-    """Remove URL queries/fragments and credential assignments from text."""
+    """Remove URL userinfo, queries, fragments, and credential assignments."""
 
     text = str(value or "")
+    text = _DIAGNOSTIC_URL_USERINFO_RE.sub(r"\g<scheme>", text)
     text = _DIAGNOSTIC_URL_IN_TEXT_RE.sub(
         lambda match: f"{match.group('base')}?[redacted]",
         text,

@@ -2,14 +2,14 @@
 
 ## 指定图件
 
-先从正文路径及 image_index_path 找到目标图片。已有本地文件直接查看；只有远程链接时通过逐篇 manifest 定向补取：
+优先打开同一任务交接记录中的本地图片。按 `image_index_path` 找到缺失图片的 asset ID，再用原 manifest 定向补取。
 
 ```bash
-paper-fetch fetch-assets --manifest /absolute/path/manifest.json --asset-id img_example
-paper-fetch fetch-assets --manifest /absolute/path/manifest.json --kind formula
+paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --asset-id img_first --asset-id img_second
+paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --kind formula
 ```
 
-选择器互斥。命令返回下载后的实际路径，再用可用的图片 reader 打开。图注、链接或下载成功不能替代已看过图片的证据。
+选择器互斥。用图片 reader 打开回执中成功项的实际路径。需要图注或下载诊断时读取 `details_path`。补图沿用原 manifest 的身份和索引，保留原始公式 fallback 验收。图注、链接或下载成功不能替代已看过图片的证据。
 
 核对符号定义、公式或图中数值时阅读相关原始表达，并把解释限定在实际可见信息。PDF 以现有转换输出为边界，不追加内容清洗。
 
