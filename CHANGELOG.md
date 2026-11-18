@@ -8,6 +8,11 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 7.7.2 - 2026-11-18
+
+- Add `paper-fetch fetch-assets --compact` for a single-line, versioned receipt with per-image results and absolute file paths. Save captions and download diagnostics in a separate redacted details file. The default invocation continues to return detailed JSON.
+- Reuse existing paper bodies and downloaded images across Skill sessions. When images are missing, select them from the existing index and retrieve them in one call using the original manifest.
+
 ## 7.7.1 - 2026-11-17
 
 - Resolve modern AMS article URLs directly to their `10.1175/` DOI without requesting the landing page, including volume/issue and AOP HTML/PDF paths. Reuse the same identity for batch deduplication and cache lookup before the existing authentication and acquisition flow.
