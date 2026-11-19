@@ -10,6 +10,7 @@ from __future__ import annotations
 
 import argparse
 import hashlib
+import json
 import os
 import shutil
 import stat
@@ -65,15 +66,46 @@ TARGET_ARTIFACTS = (
 )
 
 
-def installer_asset_names() -> frozenset[str]:
-    return frozenset(installer for _target, _artifact, installer in TARGET_ARTIFACTS)
+def stable_target_artifacts(version: str | None) -> tuple[tuple[str, str, str], ...]:
+    if version == "8.0.0":
+        return tuple(
+            artifact
+            for artifact in TARGET_ARTIFACTS
+            if not artifact[0].startswith("macos-")
+        )
+    return TARGET_ARTIFACTS
 
 
-def target_evidence_names() -> frozenset[str]:
+def release_matrix(version: str | None = None) -> dict[str, list[dict[str, str]]]:
+    runners = {
+        "linux": "ubuntu-latest",
+        "macos": "macos-15",
+        "windows": "windows-latest",
+    }
+    rows = []
+    for target, _artifact, _installer in stable_target_artifacts(version):
+        platform, _, abi = target.split("-")
+        rows.append(
+            {
+                "os": runners[platform],
+                "python-version": f"{abi[2]}.{abi[3:]}",
+                "target": target,
+            }
+        )
+    return {"include": rows}
+
+
+def installer_asset_names(version: str | None = None) -> frozenset[str]:
+    return frozenset(
+        installer for _target, _artifact, installer in stable_target_artifacts(version)
+    )
+
+
+def target_evidence_names(version: str | None = None) -> frozenset[str]:
     return frozenset(
         {
             f"paper-fetch-evidence-{target}.{suffix}"
-            for target, _artifact, _installer in TARGET_ARTIFACTS
+            for target, _artifact, _installer in stable_target_artifacts(version)
             for suffix in ("dependency-manifest.json", "sbom.cdx.json")
         }
     )
@@ -87,7 +119,7 @@ def stable_asset_names(version: str) -> frozenset[str]:
         or "\\" in normalized_version
     ):
         raise ValueError(f"Invalid project version: {version!r}")
-    return installer_asset_names()
+    return installer_asset_names(normalized_version)
 
 
 def stable_input_names(version: str) -> frozenset[str]:
@@ -99,8 +131,8 @@ def stable_input_names(version: str) -> frozenset[str]:
     return frozenset(
         {
             "dependency-manifest.json",
-            *installer_asset_names(),
-            *target_evidence_names(),
+            *installer_asset_names(normalized_version),
+            *target_evidence_names(normalized_version),
             *python_assets,
         }
     )
@@ -117,7 +149,7 @@ def stable_input_mapping(version: str) -> dict[Path, str]:
         ),
         Path("dependencies", "dependency-manifest.json"): ("dependency-manifest.json"),
     }
-    for target, artifact, installer in TARGET_ARTIFACTS:
+    for target, artifact, installer in stable_target_artifacts(normalized_version):
         mapping[Path("offline", artifact, installer)] = installer
         for suffix in ("dependency-manifest.json", "sbom.cdx.json"):
             evidence = f"paper-fetch-evidence-{target}.{suffix}"
@@ -277,6 +309,13 @@ def prepare_stable_release(
 def _parser() -> argparse.ArgumentParser:
     parser = argparse.ArgumentParser(description=__doc__)
     subparsers = parser.add_subparsers(dest="command", required=True)
+    matrix = subparsers.add_parser(
+        "matrix",
+        help="emit the native build matrix as JSON",
+    )
+    matrix.add_argument(
+        "--version", help="apply the stable release scope for this version"
+    )
     stable = subparsers.add_parser(
         "prepare-stable",
         help="validate nested stable inputs, flatten them, and write SHA256SUMS",
@@ -290,6 +329,9 @@ def _parser() -> argparse.ArgumentParser:
 
 def main() -> int:
     args = _parser().parse_args()
+    if args.command == "matrix":
+        print(json.dumps(release_matrix(args.version)))
+        return 0
     expected = prepare_stable_release(
         input_root=args.input_root,
         output_dir=args.output_dir,

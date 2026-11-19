@@ -42,18 +42,11 @@ def _workflow(name: str, *, repo_root: Path) -> dict[str, Any]:
 
 
 def _macos_release_matrix(*, repo_root: Path) -> list[dict[str, str]]:
-    workflow = _workflow("offline.yml", repo_root=repo_root)
-    include = (
-        workflow.get("jobs", {})
-        .get("posix", {})
-        .get("strategy", {})
-        .get("matrix", {})
-        .get("include", [])
-    )
+    namespace = runpy.run_path(str(repo_root / "scripts" / "prepare_release_assets.py"))
     return [
-        {str(key): str(value) for key, value in item.items()}
-        for item in include
-        if isinstance(item, dict) and str(item.get("target", "")).startswith("macos-")
+        item
+        for item in namespace["release_matrix"]()["include"]
+        if item["target"].startswith("macos-")
     ]
 
 

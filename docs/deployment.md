@@ -497,7 +497,9 @@ Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级
 | `ci.yml` → `verify.yml` | 锁文件新鲜度、全 extras 漏洞审计、Ruff/mypy/版本、完整 unit/integration、Python 3.11/3.14 的 core/full 安装、原生 macOS 15 / CPython 3.14 gate |
 | `package.yml` | 同一不可变 SHA 的 wheel/sdist exact archive 检查，以及各自在独立环境中的 CLI/import/resource/skill smoke |
 | `offline.yml` | Linux x86_64 和 macOS arm64 的 CPython 3.11–3.14、Windows x86_64 CPython 3.14；原生 build/install/upgrade/uninstall 验证 |
-| `release.yml` | 与项目版本一致的 `v*` tag 或明确手动发布；冻结九目标依赖、构建并核验 staging manifest/SBOM/evidence，再发布九个安装包和九条记录的 `SHA256SUMS` |
+| `release.yml` | 与项目版本一致的 `v*` tag 或明确手动发布；按版本冻结发布目标依赖、构建并核验 staging manifest/SBOM/evidence，再发布对应的安装包及 `SHA256SUMS` |
+
+v8.0.0 的稳定版目标为 Linux x86_64（CPython 3.11–3.14）和 Windows x86_64（CPython 3.14），共五个离线安装包。该版本的候选验证可手动执行 `ci.yml` 并设置 `verify_macos=false`，以及执行 `offline.yml` 并设置 `release_version=8.0.0`。
 
 Release 不运行或等待普通 CI。wheel、sdist、merged dependency manifest、SBOM 和
 sidecar evidence 只用于构建期验证，不进入稳定版公开下载集合；资产集合由 workflow、
@@ -537,7 +539,7 @@ CI setup、工具链版本和重试细节分别以 `.github/actions/`、workflow
    发布前再次确认远端 tag 未移动。候选验证成功本身不等于已公开发布。
 
 平台安装验证的具体安全边界见 [离线包](#离线包)；Windows 必须验证最终 EXE 的
-覆盖升级、用户内容保留及卸载残留树，macOS 必须验证四个 ABI 的原生 tarball。
+覆盖升级、用户内容保留及卸载残留树，包含 macOS 安装包的版本必须验证四个 ABI 的原生 tarball。
 
 本地清理构建、测试缓存和 rollout 日志时可以用：
 

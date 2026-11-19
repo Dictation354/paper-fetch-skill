@@ -27,6 +27,7 @@ environment = ["MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"]
 [evidence.native]
 runner = "macos-15"
 python_version = "3.14"
+# The native matrix applies to releases that ship macOS installers.
 release_matrix_workflow = ".github/workflows/offline.yml"
 
 [safety]

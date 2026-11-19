@@ -7,6 +7,10 @@ on:
         description: Immutable source commit to verify
         required: true
         type: string
+      verify_macos:
+        description: Run the native macOS gate
+        default: true
+        type: boolean
 
 permissions:
   contents: read
@@ -151,6 +155,7 @@ jobs:
       ref: ${{ inputs.ref }}
 
   macos-native:
+    if: inputs.verify_macos
     runs-on: macos-15
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7

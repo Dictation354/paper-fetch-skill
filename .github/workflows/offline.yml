@@ -12,10 +12,18 @@ on:
         required: false
         default: false
         type: boolean
+      release_version:
+        description: Apply the immutable source version's stable release scope
+        required: false
+        type: string
   workflow_dispatch:
     inputs:
       ref:
         description: Git ref to package; defaults to the selected branch
+        required: false
+        type: string
+      release_version:
+        description: Apply the selected source version's stable release scope
         required: false
         type: string
 
@@ -23,35 +31,35 @@ permissions:
   contents: read
 
 jobs:
+  plan:
+    runs-on: ubuntu-latest
+    outputs:
+      posix_matrix: ${{ steps.matrix.outputs.posix_matrix }}
+    steps:
+      - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
+        with:
+          ref: ${{ inputs.ref || github.sha }}
+          persist-credentials: false
+      - name: Select native build targets
+        id: matrix
+        shell: bash
+        env:
+          RELEASE_VERSION: ${{ inputs.release_version }}
+        run: |
+          set -euo pipefail
+          if [[ -n "$RELEASE_VERSION" ]]; then
+            version="$(python3 -c 'import pathlib,tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
+            test "$version" = "$RELEASE_VERSION"
+          fi
+          matrix="$(python3 scripts/prepare_release_assets.py matrix --version "$RELEASE_VERSION" |
+            jq -c '{include: [.include[] | select(.os != "windows-latest")]}')"
+          echo "posix_matrix=$matrix" >> "$GITHUB_OUTPUT"
+
   posix:
+    needs: plan
     strategy:
       fail-fast: false
-      matrix:
-        include:
-          - os: ubuntu-latest
-            python-version: "3.11"
-            target: linux-x86_64-cp311
-          - os: ubuntu-latest
-            python-version: "3.12"
-            target: linux-x86_64-cp312
-          - os: ubuntu-latest
-            python-version: "3.13"
-            target: linux-x86_64-cp313
-          - os: ubuntu-latest
-            python-version: "3.14"
-            target: linux-x86_64-cp314
-          - os: macos-15
-            python-version: "3.11"
-            target: macos-arm64-cp311
-          - os: macos-15
-            python-version: "3.12"
-            target: macos-arm64-cp312
-          - os: macos-15
-            python-version: "3.13"
-            target: macos-arm64-cp313
-          - os: macos-15
-            python-version: "3.14"
-            target: macos-arm64-cp314
+      matrix: ${{ fromJSON(needs.plan.outputs.posix_matrix) }}
     runs-on: ${{ matrix.os }}
     steps:
       - uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7
@@ -158,6 +166,7 @@ jobs:
           if-no-files-found: error
 
   windows:
+    needs: plan
     runs-on: windows-latest
     steps:
       - name: Enable long source paths on Windows

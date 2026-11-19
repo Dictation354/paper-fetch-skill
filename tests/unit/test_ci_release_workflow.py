@@ -4,6 +4,7 @@ from collections.abc import Iterable, Mapping
 from pathlib import Path
 
 import yaml
+from scripts.prepare_release_assets import release_matrix
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 WORKFLOWS = REPO_ROOT / ".github" / "workflows"
@@ -139,11 +140,21 @@ def test_stable_publish_requires_integrity_scan_and_provenance() -> None:
 
 def test_supported_python_and_native_macos_matrix_remains_explicit() -> None:
     offline = _workflow("offline.yml")
-    includes = offline["jobs"]["posix"]["strategy"]["matrix"]["include"]
+    assert offline["jobs"]["posix"]["strategy"]["matrix"] == (
+        "${{ fromJSON(needs.plan.outputs.posix_matrix) }}"
+    )
+    includes = release_matrix()["include"]
     macos_versions = {
         str(item["python-version"]) for item in includes if item.get("os") == "macos-15"
     }
     assert macos_versions == {"3.11", "3.12", "3.13", "3.14"}
+    assert {row["target"] for row in release_matrix("8.0.0")["include"]} == {
+        "linux-x86_64-cp311",
+        "linux-x86_64-cp312",
+        "linux-x86_64-cp313",
+        "linux-x86_64-cp314",
+        "windows-x86_64-cp314",
+    }
 
     verify = _workflow("verify.yml")
     python_versions = verify["jobs"]["python-boundaries"]["strategy"]["matrix"][

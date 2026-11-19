@@ -10,6 +10,8 @@
 
 ## 8.0.0 - 2026-11-19
 
+本次稳定版提供 Linux x86_64（CPython 3.11–3.14）和 Windows x86_64 离线安装包。
+
 ### CLI、数据契约与缓存
 
 - 将 `paper_fetch.cli` 拆分为子包，以强类型命令模型与显式输出规划统一驱动 `fetch`、`lookup`、`resolve`、`check`、`fetch-assets`、`auth`、`browser-preflight`、`doctor` 和 `update`。

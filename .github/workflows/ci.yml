@@ -6,6 +6,11 @@ on:
     tags-ignore: ["v*"]
   pull_request:
   workflow_dispatch:
+    inputs:
+      verify_macos:
+        description: Run the native macOS gate for this candidate
+        default: true
+        type: boolean
 
 concurrency:
   group: ci-${{ github.workflow }}-${{ github.event.pull_request.head.sha || github.sha }}
@@ -19,3 +24,4 @@ jobs:
     uses: ./.github/workflows/verify.yml
     with:
       ref: ${{ github.sha }}
+      verify_macos: ${{ github.event_name != 'workflow_dispatch' || inputs.verify_macos }}

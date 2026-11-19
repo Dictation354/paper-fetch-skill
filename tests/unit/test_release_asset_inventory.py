@@ -14,8 +14,8 @@ from scripts.prepare_release_assets import (
 VERSION = "5.6.1"
 
 
-def _write_stable_inputs(root: Path) -> None:
-    for relative in stable_input_mapping(VERSION):
+def _write_stable_inputs(root: Path, version: str = VERSION) -> None:
+    for relative in stable_input_mapping(version):
         path = root / relative
         path.parent.mkdir(parents=True, exist_ok=True)
         path.write_bytes(f"payload:{relative.as_posix()}\n".encode())
@@ -31,21 +31,25 @@ def _read_checksum_manifest(path: Path) -> dict[str, str]:
     return checksums
 
 
+@pytest.mark.parametrize(("version", "asset_count"), [(VERSION, 9), ("8.0.0", 5)])
 def test_stable_assets_are_exactly_flattened_and_checksums_use_basenames(
     tmp_path: Path,
+    version: str,
+    asset_count: int,
 ) -> None:
     input_root = tmp_path / "inputs"
     output_dir = tmp_path / "release-assets"
-    _write_stable_inputs(input_root)
+    _write_stable_inputs(input_root, version)
 
     expected = prepare_stable_release(
         input_root=input_root,
         output_dir=output_dir,
-        version=VERSION,
+        version=version,
     )
 
-    assert expected == stable_asset_names(VERSION)
-    assert len(expected) == 9
+    assert expected == stable_asset_names(version)
+    assert len(expected) == asset_count
+    assert any("macos" in name for name in expected) == (asset_count == 9)
     assert {path.name for path in output_dir.iterdir()} == {
         *expected,
         "SHA256SUMS",
