@@ -8,6 +8,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.0.0 - 2026-11-19
+
 ### CLI, contracts and caching
 
 - Split `paper_fetch.cli` into a structured subpackage backed by typed command models and explicit output plans across `fetch`, `lookup`, `resolve`, `check`, `fetch-assets`, `auth`, `browser-preflight`, `doctor` and `update`.

@@ -8,6 +8,8 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.0.0 - 2026-11-19
+
 ### CLI、数据契约与缓存
 
 - 将 `paper_fetch.cli` 拆分为子包，以强类型命令模型与显式输出规划统一驱动 `fetch`、`lookup`、`resolve`、`check`、`fetch-assets`、`auth`、`browser-preflight`、`doctor` 和 `update`。

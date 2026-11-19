@@ -76,7 +76,7 @@ jobs:
           formula = resources.files("paper_fetch.resources.formula")
           manifest = resources.files("paper_fetch.resources.manifest")
           assert formula.joinpath("mathml_to_latex_cli.mjs").is_file()
-          assert manifest.joinpath("manifest-record-v2.schema.json").is_file()
+          assert manifest.joinpath("manifest-record-v3.schema.json").is_file()
           skill = Path(sys.prefix) / "share/paper-fetch-skill/skills/paper-fetch-skill"
           assert skill.joinpath("SKILL.md").is_file()
           assert skill.joinpath("references/tool-contract.md").is_file()

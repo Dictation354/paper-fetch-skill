@@ -217,7 +217,7 @@ jobs:
       - name: Verify native macOS filesystem alias semantics
         run: |
           PYTHONPATH=src uv run python -m pytest \
-            tests/unit/test_cache_index_semantics.py::CacheIndexSemanticsTests::test_cache_scope_accepts_equivalent_filesystem_alias_for_root \
+            tests/unit/test_cache_index_semantics.py::ScopedFilesystemTests::test_scoped_file_accepts_equivalent_filesystem_alias_for_root \
             -q
       - name: Set up pinned Haskell toolchain
         id: formula-haskell
