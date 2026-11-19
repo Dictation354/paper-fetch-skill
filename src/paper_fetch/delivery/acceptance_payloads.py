@@ -13,10 +13,9 @@ __all__ = ["compact_acceptance_payload", "expected_doi_from_query"]
 def compact_acceptance_payload(
     report: FetchAcceptanceReport,
 ) -> dict[str, Any]:
-    """Project the canonical report into the CLI receipt v1 contract."""
+    """Project the canonical report into the CLI receipt v2 contract."""
 
     asset = report.asset
-    body = asset.body_assets
     return {
         **(
             {"target": report.target, "content_requested": report.content.requested}
@@ -35,14 +34,14 @@ def compact_acceptance_payload(
         "token_estimate": report.content.token_estimate,
         "asset_summary": (
             {
-                **asset.model_dump(mode="json", exclude={"body_assets"}),
-                "total": asset.discovered,
-                "preview": asset.preview,
-                **{f"body_{key}": value for key, value in body.model_dump().items()},
-                "has_local_body_assets": body.local > 0,
-                "all_body_assets_local": body.all_local,
-                "all_body_assets_full_size": body.all_full_size,
-                "remote_links_preserved": asset.remote_only_count > 0,
+                "requested": True,
+                "profile": asset.profile,
+                "discovered": asset.discovered,
+                "local": asset.local,
+                "full_size": asset.full_size,
+                "failed": asset.failed,
+                "not_archived": asset.not_archived,
+                "issue_codes": list(asset.issue_codes),
             }
             if asset.requested
             else {

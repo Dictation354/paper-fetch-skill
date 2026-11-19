@@ -34,7 +34,7 @@ def test_default_receipt_delivers_retained_full_body(isolated, capsys):
     assert cli.main(["fetch", "--query", "10.1000/acceptance"]) == 0
     receipt = json.loads(capsys.readouterr().out)
     assert (
-        receipt["contract"] == "paper-fetch/receipt" and receipt["schema_version"] == 1
+        receipt["contract"] == "paper-fetch/receipt" and receipt["schema_version"] == 2
     )
     assert receipt["content_kind"] == "fulltext"
     assert receipt["target_satisfied"] is True and receipt["error"] is None
@@ -49,7 +49,7 @@ def test_default_receipt_delivers_retained_full_body(isolated, capsys):
     )
 
 
-def test_receipt_v1_preserves_asset_fields_across_lookup(
+def test_receipt_v2_projects_compact_fields_across_lookup(
     isolated, tmp_path, capsys, monkeypatch
 ):
     envelope = _envelope()
@@ -95,56 +95,24 @@ def test_receipt_v1_preserves_asset_fields_across_lookup(
         == 0
     )
     receipt = json.loads(capsys.readouterr().out)
-    assert receipt["schema_version"] == 1
-    assert {
-        key: receipt["identity"][key]
-        for key in (
-            "canonical_landing_url",
-            "canonical_landing_verified",
-            "canonical_landing_unique",
-        )
-    } == {
-        "canonical_landing_url": None,
-        "canonical_landing_verified": False,
-        "canonical_landing_unique": False,
+    assert receipt["schema_version"] == 2
+    assert receipt["identity"].keys() == {
+        "status",
+        "doi",
+        "expected_doi",
+        "title",
+        "candidate_count",
+        "codes",
     }
     assert receipt["acceptance"]["asset_summary"] == {
         "requested": True,
         "profile": "body",
-        "audited": True,
-        "expected": None,
         "discovered": 2,
-        "attempted": 2,
-        "total": 2,
         "local": 1,
         "full_size": 0,
-        "preview": 1,
-        "accepted_preview": 1,
-        "fallback_preview": 0,
         "failed": 0,
-        "placeholder_suspected": 0,
         "not_archived": 1,
-        "remote_link_count": 1,
-        "remote_only_count": 1,
-        "body_discovered": 2,
-        "body_attempted": 2,
-        "body_local": 1,
-        "body_full_size": 0,
-        "body_preview": 1,
-        "body_failed": 0,
-        "body_not_archived": 1,
-        "body_remote_only_count": 1,
-        "require_local_body_assets": True,
-        "require_full_size_body_assets": True,
-        "has_local_body_assets": True,
-        "all_body_assets_local": False,
-        "all_body_assets_full_size": False,
-        "local_body_assets_satisfied": False,
-        "full_size_body_assets_satisfied": False,
-        "failure_codes": [],
         "issue_codes": ["local_body_assets_required", "full_size_body_assets_required"],
-        "status": "degraded",
-        "remote_links_preserved": True,
     }
     assert cli.main(["lookup", "--doi", doi, *output]) == 0
     assert json.loads(capsys.readouterr().out) == receipt
@@ -269,7 +237,7 @@ def test_resolve_and_check_map_inputs_without_body_fetch(
 
 
 @pytest.mark.parametrize("manifest_version", [2, 3])
-def test_manifest_assets_never_resolve_or_fetch_body(
+def test_manifest_assets_require_v3_and_never_fetch_body(
     isolated, tmp_path, capsys, monkeypatch, manifest_version
 ):
     assert (
@@ -281,15 +249,13 @@ def test_manifest_assets_never_resolve_or_fetch_body(
     receipt = json.loads(capsys.readouterr().out)
     manifest_path = Path(receipt["manifest_path"])
     if manifest_version == 2:
-        from paper_fetch.manifest import parse_manifest_record
-
         payload = json.loads(manifest_path.read_text())
-        record = parse_manifest_record(payload)
+        identity = payload["acceptance"]["identity"]
         payload.update(
             schema_version=2,
             minimum_reader_schema_version=2,
-            doi=record.acceptance.identity.doi,
-            identity=payload["acceptance"]["identity"],
+            doi=identity["doi"],
+            identity=identity,
         )
         payload["acceptance"].update(schema_version=2, minimum_reader_schema_version=2)
         payload["output_artifacts"] = [
@@ -315,22 +281,18 @@ def test_manifest_assets_never_resolve_or_fetch_body(
     monkeypatch.setattr(
         cli, "fetch_paper", lambda *a, **kw: pytest.fail("body fetch forbidden")
     )
-    assert (
-        cli.main(
-            [
-                "fetch-assets",
-                "--manifest",
-                receipt["manifest_path"],
-                "--kind",
-                "formula",
-            ]
-        )
-        == 0
+    exit_code = cli.main(
+        ["fetch-assets", "--manifest", str(manifest_path), "--kind", "formula"]
     )
+    response = json.loads(capsys.readouterr().out)
+    if manifest_version == 2:
+        assert exit_code == 1
+        assert response["status"] == "error" and "schema_version" in response["reason"]
+        assert seen == []
+        return
+    assert exit_code == 0
     assert seen == ["10.1000/acceptance"]
-    assert json.loads(capsys.readouterr().out)["assets"][0]["path"].endswith(
-        "figure.png"
-    )
+    assert response["assets"][0]["path"].endswith("figure.png")
 
 
 def test_compact_assets_return_actual_files_when_details_write_fails(

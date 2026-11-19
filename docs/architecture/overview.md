@@ -90,7 +90,7 @@
 
 因此 transport/adapter 的 `status`、正文事实 `has_fulltext` 和任务级 `overall` 是三个不同维度，任何调用方都不得互相替代解释。metadata-only 可以同时是 `record_status=completed`、`fetch.status=ok`、`has_fulltext=false`、`overall=limited`。
 
-验收 schema 当前为 v3（每份报告序列化 `schema_version=3`）。严格约束 `require_local_body_assets` / `require_full_size_body_assets`（后者隐含前者）的分母只包含需要独立归档文件的正文逻辑资产；已经以内联语义完成且没有 binary payload/remote/failure 的 table、formula 或 figure 不会被误算为缺少本地文件。两项约束默认关闭且只适用于 `body|all`；未满足时 asset/overall 降为 `degraded`，已经取得的全文仍保持 `fetch.status=ok`。`asset.body_assets` 保存正文资产计数。`delivery.acceptance_payloads.compact_acceptance_payload()` 将报告投影为 CLI 回执 v1，保留 `asset_summary` 中的总计、正文计数和严格资产要求的满足状态。未请求资产时仅输出 `requested=false` 与 `profile`。v3 reader 忽略未知 additive field，缺少版本或不支持的版本必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
+验收 schema 当前为 v3（每份报告序列化 `schema_version=3`）。严格约束 `require_local_body_assets` / `require_full_size_body_assets`（后者隐含前者）的分母只包含需要独立归档文件的正文逻辑资产；已经以内联语义完成且没有 binary payload/remote/failure 的 table、formula 或 figure 不会被误算为缺少本地文件。两项约束默认关闭且只适用于 `body|all`；未满足时 asset/overall 降为 `degraded`，已经取得的全文仍保持 `fetch.status=ok`。`asset.body_assets` 保存正文资产计数。`delivery.acceptance_payloads.compact_acceptance_payload()` 将报告投影为 CLI 回执 v2。`asset_summary` 保留请求范围、核心计数与资产问题码。未请求资产时仅输出 `requested=false` 与 `profile`。v3 reader 忽略未知 additive field，缺少版本或不支持的版本必须拒绝，不能猜测迁移。`FetchAcceptanceReport.model_json_schema()` / `fetch_acceptance_json_schema()` 是 JSON Schema 唯一生成入口。
 
 `FetchEnvelope.trace` 是一次 fetch 的唯一完整 trace owner。provider/waterfall 先在局部列表累积事件，workflow 最终只写入 envelope 一次；`Quality` 仅保存质量事实，独立 ArticleModel 保留完整结构化 trace。acceptance、manifest 与 CLI 都只投影 envelope 顶层 trace，两个不同 attempt 的同 code 会保留为两条真实事件。
 
@@ -334,7 +334,7 @@ CLI live 预检入口复用 `paper_fetch.browser_preflight.run_browser_provider_
 - [`../deployment.md`](../deployment.md)
 - [`probe-semantics.md`](probe-semantics.md)
 
-CLI 回执 schema v1 与 manifest schema v3 独立版本化。完整 trace 在本地诊断与 manifest 中，正文从回执给出的文件路径读取。
+CLI 全文回执 schema v2 与 manifest schema v3 独立版本化。完整 trace 在本地诊断与 manifest 中，正文从回执给出的文件路径读取。
 
 公开日期直接使用 publication_dates，不保留 published 别名。日期和文献关系跨 provider、元数据合并、模型编解码、候选、文件命名及渲染传递；未知日期不推测，不自动跟抓关联 DOI。
 

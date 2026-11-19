@@ -11,10 +11,8 @@ import threading
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 from urllib.parse import urljoin
-
-from pydantic import AliasPath, BaseModel, Field
 
 from .extraction.html import decode_html
 from .extraction.html.assets import (
@@ -24,12 +22,7 @@ from .extraction.html.assets import (
     extract_scoped_html_assets,
 )
 from .http import RequestFailure
-from .manifest import (
-    ManifestOutputArtifact,
-    ManifestRequest,
-    build_manifest_request_fingerprint,
-    parse_manifest_record,
-)
+from .manifest import parse_manifest_record
 from .providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
 from .reason_codes import AUTH_REQUIRED
 from .runtime import RuntimeContext
@@ -705,44 +698,20 @@ def fetch_selected_assets(
             runtime.close()
 
 
-class _ImageManifestV2(BaseModel):
-    schema_version: Literal[2]
-    minimum_reader_schema_version: Literal[2]
-    request: ManifestRequest
-    request_fingerprint: str
-    doi: str | None
-    identity_doi: str | None = Field(validation_alias=AliasPath("identity", "doi"))
-    acceptance_doi: str | None = Field(
-        validation_alias=AliasPath("acceptance", "identity", "doi")
-    )
-    output_artifacts: tuple[ManifestOutputArtifact, ...]
-
-
 def context_from_manifest(path: Path) -> AssetContext:
     """Restore durable identity and image descriptors without resolving or fetching a body."""
     path = path.expanduser()
-    payload = json.loads(path.read_text(encoding="utf-8"))
-    if isinstance(payload, dict) and payload.get("schema_version") == 2:
-        legacy = _ImageManifestV2.model_validate(payload)
-        doi = legacy.doi
-        if doi != legacy.identity_doi or doi != legacy.acceptance_doi:
-            raise ValueError("Manifest DOI does not match its acceptance identity.")
-        if legacy.request_fingerprint != build_manifest_request_fingerprint(
-            legacy.request
-        ):
-            raise ValueError("Manifest request fingerprint does not match its request.")
-        artifacts = legacy.output_artifacts
-    else:
-        record = parse_manifest_record(payload)
-        doi = record.acceptance.identity.doi
-        artifacts = record.output_artifacts
-    artifact = next((item for item in artifacts if item.kind == "image_index"), None)
+    record = parse_manifest_record(json.loads(path.read_text(encoding="utf-8")))
+    artifact = next(
+        (item for item in record.output_artifacts if item.kind == "image_index"), None
+    )
     if artifact is None:
         raise ValueError("Manifest has no image index.")
     index_path = Path(artifact.path)
     if not index_path.is_absolute():
         index_path = path.parent / index_path
     data = json.loads(index_path.read_text(encoding="utf-8"))
+    doi = record.acceptance.identity.doi
     if data.get("doi") != doi:
         raise ValueError("Image index identity does not match manifest.")
     return AssetContext(

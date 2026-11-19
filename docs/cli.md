@@ -31,7 +31,7 @@ fetch 默认为 temporary_read。完整 Markdown、逐篇 schema-v3 manifest、�
 
 单篇 `--output -` 按 --format 输出正文；显式文件 --output 则保存正文并返回 JSON 回执。--format 为 markdown、json 或 both；文件输出同时保存可供阅读的 Markdown。--include-refs 默认为 all；--max-tokens 默认为 full_text，可显式指定数值。未显式 --output 时，在输出目录生成安全命名的主文件。
 
-回执独立契约为 `paper-fetch/receipt`、schema_version=1，顶层保留便捷字段 index/query、identity/doi、status、target_satisfied、error、acceptance（七分面状态、has_fulltext/has_abstract、token_estimate 与 asset_summary）、content_kind、source/acquisition、body_path、section_index_path、manifest_path、diagnostic_paths、image_index_path、output_paths、truncated/truncation_reason 及 fallback_codes/warning_codes/failure_codes。请求资产时，`asset_summary` 包含下载计数、正文资产计数和严格资产要求的满足状态。路径均为绝对路径。
+回执独立契约为 `paper-fetch/receipt`、`schema_version=2`，顶层保留便捷字段 index/query、identity/doi、status、target_satisfied、error、acceptance（七分面状态、has_fulltext/has_abstract、token_estimate 与 asset_summary）、content_kind、source/acquisition、body_path、section_index_path、manifest_path、diagnostic_paths、image_index_path、output_paths、truncated/truncation_reason 及 fallback_codes/warning_codes/failure_codes。请求资产时，`asset_summary` 包含 `requested`、`profile`、`discovered`、`local`、`full_size`、`failed`、`not_archived` 和 `issue_codes`。路径均为绝对路径。
 
 `status` 保持任务生命周期含义；`target_satisfied` 直接复用退出码使用的目标满足判断。`error` 无异常为 null，有异常时投影 status、reason、provider、route、stage、http_status、retryable 并脱敏。顶层原因码稳定去重并包含资产验收 issue/failure codes，例如 `asset_not_archived`。
 
@@ -51,7 +51,7 @@ fetch 默认为 temporary_read。完整 Markdown、逐篇 schema-v3 manifest、�
 paper-fetch lookup --doi DOI --output-dir ./papers
 ```
 
-命令只读扫描该目录内的 `.paper-fetch-results` 下逐篇 schema-v3 manifest。按完成时间从新到旧检查验收通过且未截断的全文，核验正文（`body.md`）与章节索引（`sections.json`）均存在且大小、哈希与快照一致，不符时尝试下一条。命中输出一行原结果的 `paper-fetch/receipt` 并退出 0。未命中输出一行含 `status=not_found` 和 `doi` 的 JSON 并退出 1。参数错误退出 2。
+命令只读扫描该目录内的 `.paper-fetch-results` 下逐篇 schema-v3 manifest。按完成时间从新到旧检查验收通过且未截断的全文，核验正文（`body.md`）与章节索引（`sections.json`）均存在且大小、哈希与快照一致，不符时尝试下一条。命中时根据已保存的结果输出一行 v2 `paper-fetch/receipt` 并退出 0。未命中输出一行含 `status=not_found` 和 `doi` 的 JSON 并退出 1。参数错误退出 2。
 
 ## 批量抓取
 
@@ -78,7 +78,7 @@ paper-fetch fetch-assets --manifest /absolute/path/manifest.json --kind formula
 paper-fetch fetch-assets --query DOI --asset-url https://example.org/figure.png
 ```
 
-`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind formula`，三种选择器互斥。`fetch-assets` 支持从 v2 和 v3 manifest 恢复论文身份和已有图片索引。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
+`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind formula`，三种选择器互斥。`fetch-assets` 从 v3 manifest 恢复论文身份和已有图片索引。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
 
 默认 stdout 返回详细 JSON。`--compact` 输出一行 JSON，包含 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、总体 `status`、逐项 `results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`。失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。总体结果为 `ok`、`partial` 或 `error`。命令级错误使用相应的错误状态和简短、脱敏的 `reason`，且 `results` 为空。无法确定 DOI 时 `doi` 为 `null`。
 

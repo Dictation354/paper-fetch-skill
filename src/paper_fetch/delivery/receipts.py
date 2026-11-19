@@ -19,7 +19,7 @@ from ..targeted_assets import context_from_envelope
 from ..workflow.rendering import rewrite_markdown_asset_links
 from .acceptance_payloads import compact_acceptance_payload
 
-CLI_RECEIPT_SCHEMA_VERSION = 1
+CLI_RECEIPT_SCHEMA_VERSION = 2
 _ATX_HEADING = re.compile(r" {0,3}(#{1,6})(?:[ \t]+(.*)|$)")
 _CLOSING_HASHES = re.compile(r"(?:^|[ \t]+)#+[ \t]*$")
 _CODE_FENCE = re.compile(r" {0,3}(`{3,}|~{3,})(.*)")
@@ -235,7 +235,17 @@ def receipt_from_record(record: ManifestRecord, manifest: Path) -> dict[str, Any
             if error is not None
             else None
         ),
-        "identity": record.acceptance.identity.model_dump(mode="json"),
+        "identity": record.acceptance.identity.model_dump(
+            mode="json",
+            include={
+                "status",
+                "doi",
+                "expected_doi",
+                "title",
+                "candidate_count",
+                "codes",
+            },
+        ),
         "doi": record.acceptance.identity.doi,
         "acceptance": compact_acceptance_payload(record.acceptance),
         "content_kind": record.acceptance.content.status.value,

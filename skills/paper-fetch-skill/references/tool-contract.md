@@ -4,7 +4,7 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 ## 文件回执
 
-默认及文件输出的 stdout 每篇一行 JSON，独立契约 `contract="paper-fetch/receipt"`、`schema_version=1`。包含：
+默认及文件输出的 stdout 每篇一行 JSON，独立契约 `contract="paper-fetch/receipt"`、`schema_version=2`。回执包含以下字段。
 
 - 原始 `index/query`、规范 `identity/doi`、生命周期 `status` 和与退出码判断一致的 `target_satisfied`。
 - `error`：无异常为 null；有异常时含 status、reason、provider、route、stage、http_status、retryable，沿用脱敏。
@@ -30,7 +30,7 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 ## 补图与探测
 
-`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind formula` 三者之一。命令可复用 v2 或 v3 manifest 中的论文身份和图片索引。
+`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind formula` 三者之一。命令从 v3 manifest 复用论文身份和图片索引。
 
 Skill 调用 `fetch-assets` 时显式传 `--compact`。stdout 的单行 JSON 包括 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、`status`、`results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`，失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。命令级错误提供脱敏的 `status` 和简短 `reason`，`results` 为空。普通调用直接输出详细 JSON。
 
