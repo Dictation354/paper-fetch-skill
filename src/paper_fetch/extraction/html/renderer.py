@@ -2,20 +2,20 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable
 from dataclasses import dataclass, field
 from typing import Any
-from collections.abc import Callable
 
 from bs4 import BeautifulSoup, Tag
 
-from .language import collect_html_abstract_blocks
-from .parsing import choose_parser
-from .semantics import collect_html_section_hints
 from ._runtime import (
     clean_markdown,
     extract_article_markdown,
     extract_article_markdown_from_cleaned_html,
 )
+from .language import collect_html_abstract_blocks
+from .parsing import choose_parser
+from .semantics import collect_html_section_hints
 
 HtmlMarkdownRenderFn = Callable[[str, str], str]
 MarkdownPostprocessor = Callable[[str], str]

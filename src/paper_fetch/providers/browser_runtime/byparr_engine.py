@@ -3,6 +3,8 @@
 from __future__ import annotations
 
 import importlib
+import importlib.metadata
+
 from paper_fetch.browser_runtime_policy import engine_name as engine_name
 
 
@@ -19,21 +21,19 @@ def prepare_executable(binary_path: str | None = None) -> str | None:
         from invisible_playwright._engine import resolve_executable
 
         return str(resolve_executable(binary_path))
-    from .camoufox_manager import _launch_executable_path
+    from .preparation import _launch_executable_path
 
     return _launch_executable_path(binary_path)
 
 
 def engine_package_versions(site_packages=None) -> dict[str, str]:
     """Read the selected engine from the actual installed distribution inventory."""
-    from importlib.metadata import distributions
-
     inventory = {
         str(dist.metadata["Name"]).lower().replace("_", "-"): dist.version
         for dist in (
-            distributions(path=[str(site_packages)])
+            importlib.metadata.distributions(path=[str(site_packages)])
             if site_packages
-            else distributions()
+            else importlib.metadata.distributions()
         )
     }
     names = (

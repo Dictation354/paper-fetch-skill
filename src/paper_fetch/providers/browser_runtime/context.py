@@ -2,19 +2,13 @@
 
 from __future__ import annotations
 
-from typing import TYPE_CHECKING, Any
 import contextlib
+from typing import TYPE_CHECKING, Any
 
 from .types import BrowserRuntimeConfig, BrowserRuntimeSession
 
 if TYPE_CHECKING:
     from ...runtime import RuntimeContext
-
-
-def context_options_for_config(config: BrowserRuntimeConfig) -> dict[str, Any]:
-    """Build context options without overriding Camoufox fingerprint values."""
-
-    return {"accept_downloads": True}
 
 
 def open_browser_context(
@@ -30,7 +24,7 @@ def open_browser_context(
         )
         if not callable(factory):
             raise RuntimeError(
-                "Runtime context does not support Camoufox browser contexts."
+                "Runtime context does not support publisher browser contexts."
             )
         return None, factory(config)
     from .api import _backend
@@ -64,7 +58,6 @@ def browser_context(
             manager=manager,
         )
     finally:
-        for value in (manager,):
-            if value is not None:
-                with contextlib.suppress(Exception):
-                    value.close()
+        if manager is not None:
+            with contextlib.suppress(Exception):
+                manager.close()

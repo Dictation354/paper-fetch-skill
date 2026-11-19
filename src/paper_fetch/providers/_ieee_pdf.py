@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from .browser_runtime.navigation import navigate_page, managed_action
-
 import time
 from collections.abc import Callable
 from typing import Any
@@ -13,6 +11,7 @@ from bs4 import BeautifulSoup
 
 from ..extraction.html.parsing import choose_parser
 from ..quality.access_boundary import raise_for_paywall
+from .browser_runtime.navigation import managed_action, navigate_page
 
 
 def _article_number(url: str, path: str) -> str:

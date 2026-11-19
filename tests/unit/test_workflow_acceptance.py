@@ -1,30 +1,30 @@
 from __future__ import annotations
-from dataclasses import replace
-from tests.support.workflow_acceptance import _envelope
+
 import json
+from dataclasses import replace
+
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
+
+import paper_fetch.provider_catalog as provider_catalog_module
 from paper_fetch.delivery.fetch_cache import (
     envelope_from_payload,
     payload_from_envelope,
 )
 from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.models import (
-    AcquisitionProvenance,
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+    AcquisitionProvenance,
     Asset,
     AssetDiagnostic,
     AssetQualitySummary,
     SemanticLosses,
 )
 from paper_fetch.reason_codes import METADATA_ONLY, NO_ACCESS, RATE_LIMITED
-import paper_fetch.provider_catalog as provider_catalog_module
-from paper_fetch.tracing import (
-    TraceContext,
-    trace_event,
-)
+from paper_fetch.tracing import TraceContext, trace_event
 from paper_fetch.workflow.acceptance import (
+    FETCH_ACCEPTANCE_SCHEMA_VERSION,
     AssetAcceptanceStatus,
     AssetAcceptanceSummary,
     ContentAcceptanceStatus,
@@ -33,11 +33,12 @@ from paper_fetch.workflow.acceptance import (
     OutputAcceptanceStatus,
     OverallAcceptanceStatus,
     ProvenanceAcceptanceStatus,
+    _route_acceptance_satisfied,
     evaluate_fetch_acceptance,
     fetch_acceptance_json_schema,
     parse_fetch_acceptance_report,
-    _route_acceptance_satisfied,
 )
+from tests.support.workflow_acceptance import _envelope
 
 
 def test_complete_fulltext_has_separate_fetch_content_and_overall_statuses() -> None:
@@ -47,14 +48,13 @@ def test_complete_fulltext_has_separate_fetch_content_and_overall_statuses() -> 
         requested_outputs={"article", "markdown"},
     )
 
+    assert report.schema_version == FETCH_ACCEPTANCE_SCHEMA_VERSION == 3
     assert report.overall == OverallAcceptanceStatus.COMPLETE
     assert report.fetch.status == FetchAcceptanceStatus.OK
-    assert report.fetch.completed is True
     assert report.content.status == ContentAcceptanceStatus.FULLTEXT
     assert report.content.has_fulltext is True
     assert report.output.status == OutputAcceptanceStatus.COMPLETE
-    assert report.provenance.acceptance_policy == "structured_xml_body"
-    assert report.provenance.acceptance_policy_satisfied is True
+    assert report.provenance.status == ProvenanceAcceptanceStatus.COMPLETE
 
 
 def test_catalog_acceptance_policy_mutation_changes_runtime_decision(
@@ -76,8 +76,8 @@ def test_catalog_acceptance_policy_mutation_changes_runtime_decision(
 
     report = evaluate_fetch_acceptance(_envelope(), asset_profile="none")
 
-    assert report.provenance.acceptance_policy == "validated_pdf"
-    assert report.provenance.acceptance_policy_satisfied is False
+    assert report.provenance.status == ProvenanceAcceptanceStatus.PARTIAL
+    assert report.overall == OverallAcceptanceStatus.DEGRADED
 
 
 def test_route_acceptance_policies_use_their_matching_public_facet() -> None:
@@ -88,7 +88,6 @@ def test_route_acceptance_policies_use_their_matching_public_facet() -> None:
         expected=1,
         discovered=1,
         attempted=1,
-        total=1,
         local=1,
         full_size=1,
     )
@@ -176,7 +175,6 @@ def test_validated_asset_requires_local_or_audited_not_applicable_evidence() -> 
             expected=1,
             discovered=1,
             attempted=1,
-            total=1,
             remote_link_count=1,
             remote_only_count=1,
         ),
@@ -246,7 +244,6 @@ def test_ambiguity_and_no_access_require_action(failure_code: str) -> None:
 
     assert report.overall == OverallAcceptanceStatus.ACTION_REQUIRED
     assert report.fetch.status == FetchAcceptanceStatus.ACTION_REQUIRED
-    assert report.fetch.completed is False
     assert report.content.status == ContentAcceptanceStatus.UNAVAILABLE
     if failure_code == "ambiguous":
         assert report.identity.status == IdentityAcceptanceStatus.AMBIGUOUS
@@ -271,7 +268,7 @@ def test_requested_assets_are_unavailable_when_fetch_did_not_complete() -> None:
     )
 
     assert report.identity.status == IdentityAcceptanceStatus.RESOLVED
-    assert report.fetch.completed is False
+    assert report.fetch.status == FetchAcceptanceStatus.ACTION_REQUIRED
     assert report.asset.requested is True
     assert report.asset.status == AssetAcceptanceStatus.UNAVAILABLE
     assert report.provenance.failure_codes == (NO_ACCESS,)
@@ -326,11 +323,10 @@ def test_doi_less_verified_unique_canonical_landing_resolves_identity() -> None:
     )
 
     assert report.identity.status == IdentityAcceptanceStatus.RESOLVED
-    assert report.identity.canonical_landing_verified is True
-    assert report.identity.canonical_landing_unique is True
+    assert report.identity.doi is None
 
 
-def test_asset_profile_none_is_not_requested_and_preserves_remote_links() -> None:
+def test_asset_profile_none_is_not_requested_and_tracks_remote_links() -> None:
     envelope = _envelope(
         assets=[
             Asset(
@@ -353,7 +349,6 @@ def test_asset_profile_none_is_not_requested_and_preserves_remote_links() -> Non
     assert report.asset.status == AssetAcceptanceStatus.NOT_REQUESTED
     assert report.asset.remote_link_count == 1
     assert report.asset.remote_only_count == 1
-    assert report.asset.remote_links_preserved is True
     assert report.asset.failed == 0
     assert report.asset.failure_codes == ()
     assert report.provenance.failure_codes == ()
@@ -410,10 +405,9 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
     summary = AssetAcceptanceSummary(
         requested=True,
         profile="body",
-        total=3,
+        discovered=3,
         local=2,
         full_size=1,
-        preview=1,
         accepted_preview=1,
         placeholder_suspected=1,
         not_archived=1,
@@ -427,6 +421,7 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
 
     assert report.asset.status == AssetAcceptanceStatus.DEGRADED
     assert report.asset.preview == 1
+    assert report.asset.accepted_preview == 1
     assert report.asset.placeholder_suspected == 1
     assert report.asset.not_archived == 1
     assert set(report.provenance.warning_codes) >= {
@@ -441,12 +436,12 @@ def test_asset_summary_extension_preserves_preview_placeholder_and_archive_facts
     [
         (
             SemanticLosses(table_layout_degraded_count=2),
-            "layout_degraded_count",
+            "table_layout_degraded_count",
             "table_layout_degraded",
         ),
         (
             SemanticLosses(table_semantic_loss_count=1),
-            "semantic_loss_count",
+            "table_semantic_loss_count",
             "table_semantic_loss",
         ),
     ],
@@ -456,13 +451,13 @@ def test_table_layout_and_semantic_loss_remain_separate(
 ) -> None:
     report = evaluate_fetch_acceptance(_envelope(losses=losses), asset_profile="none")
 
-    assert getattr(report.content.tables, field) > 0
+    assert getattr(report.content.semantic_losses, field) > 0
     other = (
-        "semantic_loss_count"
-        if field == "layout_degraded_count"
-        else "layout_degraded_count"
+        "table_semantic_loss_count"
+        if field == "table_layout_degraded_count"
+        else "table_layout_degraded_count"
     )
-    assert getattr(report.content.tables, other) == 0
+    assert getattr(report.content.semantic_losses, other) == 0
     assert code in report.provenance.warning_codes
     assert report.overall == OverallAcceptanceStatus.DEGRADED
 
@@ -478,8 +473,8 @@ def test_formula_fallback_and_missing_are_separate_structured_counts() -> None:
         asset_profile="none",
     )
 
-    assert report.content.formulas.fallback_count == 2
-    assert report.content.formulas.missing_count == 1
+    assert report.content.semantic_losses.formula_fallback_count == 2
+    assert report.content.semantic_losses.formula_missing_count == 1
     assert set(report.provenance.warning_codes) >= {
         "formula_fallback",
         "formula_missing",
@@ -533,7 +528,6 @@ def test_audited_body_assets_ignore_remote_only_unrequested_supplements() -> Non
         profile="body",
         audited=True,
         discovered=1,
-        total=1,
         remote_link_count=1,
         remote_only_count=1,
         issue_codes=(),
@@ -559,14 +553,9 @@ def test_default_asset_acceptance_remains_compatible_with_audited_remote_only_ro
         audited=True,
         discovered=1,
         attempted=1,
-        total=1,
         not_archived=1,
         remote_link_count=1,
         remote_only_count=1,
-        body_discovered=1,
-        body_attempted=1,
-        body_not_archived=1,
-        body_remote_only_count=1,
         issue_codes=(),
     )
 
@@ -579,8 +568,6 @@ def test_default_asset_acceptance_remains_compatible_with_audited_remote_only_ro
     assert report.asset.status == AssetAcceptanceStatus.COMPLETE
     assert report.asset.require_local_body_assets is False
     assert report.asset.local_body_assets_satisfied is True
-    assert report.asset.has_local_body_assets is False
-    assert report.asset.all_body_assets_local is False
     assert report.fetch.status == FetchAcceptanceStatus.OK
     assert report.overall == OverallAcceptanceStatus.COMPLETE
 
@@ -592,14 +579,9 @@ def test_strict_local_assets_degrade_acceptance_without_failing_fulltext() -> No
         audited=True,
         discovered=1,
         attempted=1,
-        total=1,
         not_archived=1,
         remote_link_count=1,
         remote_only_count=1,
-        body_discovered=1,
-        body_attempted=1,
-        body_not_archived=1,
-        body_remote_only_count=1,
         issue_codes=(),
     )
 
@@ -626,14 +608,8 @@ def test_strict_full_size_implies_local_and_rejects_accepted_preview() -> None:
         audited=True,
         discovered=1,
         attempted=1,
-        total=1,
         local=1,
-        preview=1,
         accepted_preview=1,
-        body_discovered=1,
-        body_attempted=1,
-        body_local=1,
-        body_preview=1,
         issue_codes=(),
     )
 
@@ -648,7 +624,6 @@ def test_strict_full_size_implies_local_and_rejects_accepted_preview() -> None:
     assert report.asset.require_full_size_body_assets is True
     assert report.asset.local_body_assets_satisfied is True
     assert report.asset.full_size_body_assets_satisfied is False
-    assert report.asset.all_body_assets_full_size is False
     assert "full_size_body_assets_required" in report.asset.issue_codes
     assert report.asset.status == AssetAcceptanceStatus.DEGRADED
     assert report.fetch.status == FetchAcceptanceStatus.OK
@@ -661,13 +636,8 @@ def test_strict_full_size_accepts_all_local_full_size_body_assets() -> None:
         audited=True,
         discovered=2,
         attempted=2,
-        total=2,
         local=2,
         full_size=2,
-        body_discovered=2,
-        body_attempted=2,
-        body_local=2,
-        body_full_size=2,
         issue_codes=(),
     )
 
@@ -679,9 +649,6 @@ def test_strict_full_size_accepts_all_local_full_size_body_assets() -> None:
     )
 
     assert report.asset.status == AssetAcceptanceStatus.COMPLETE
-    assert report.asset.has_local_body_assets is True
-    assert report.asset.all_body_assets_local is True
-    assert report.asset.all_body_assets_full_size is True
     assert report.asset.local_body_assets_satisfied is True
     assert report.asset.full_size_body_assets_satisfied is True
     assert report.overall == OverallAcceptanceStatus.COMPLETE
@@ -695,7 +662,6 @@ def test_strict_local_ignores_inline_semantics_without_binary_payloads() -> None
         profile="body",
         discovered=3,
         attempted=3,
-        total=3,
         local=1,
         full_size=1,
         diagnostics=[
@@ -725,9 +691,6 @@ def test_strict_local_ignores_inline_semantics_without_binary_payloads() -> None
         require_local_body_assets=True,
     )
 
-    assert report.asset.body_discovered == 1
-    assert report.asset.body_local == 1
-    assert report.asset.all_body_assets_local is True
     assert report.asset.local_body_assets_satisfied is True
     assert report.asset.status == AssetAcceptanceStatus.COMPLETE
 
@@ -740,7 +703,6 @@ def test_strict_local_keeps_body_remote_only_failure_in_file_denominator() -> No
         profile="body",
         discovered=2,
         attempted=2,
-        total=2,
         remote_link_count=1,
         remote_only_count=1,
         diagnostics=[
@@ -764,10 +726,7 @@ def test_strict_local_keeps_body_remote_only_failure_in_file_denominator() -> No
         require_local_body_assets=True,
     )
 
-    assert report.asset.body_discovered == 1
-    assert report.asset.body_failed == 1
-    assert report.asset.body_remote_only_count == 1
-    assert report.asset.all_body_assets_local is False
+    assert report.asset.local_body_assets_satisfied is False
     assert report.asset.status == AssetAcceptanceStatus.DEGRADED
 
 
@@ -799,7 +758,6 @@ def test_warning_message_text_is_never_used_as_a_classifier() -> None:
         asset_profile="none",
     )
 
-    assert report.provenance.unstructured_warning_count == 4
     assert report.provenance.warning_codes == ()
     assert report.provenance.failure_codes == ()
     assert report.overall == OverallAcceptanceStatus.COMPLETE
@@ -811,7 +769,6 @@ def test_current_revision_cache_flag_is_provenance_not_degradation() -> None:
         asset_profile="none",
     )
 
-    assert QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION in report.content.flags
     assert QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION not in (
         report.provenance.warning_codes
     )
@@ -826,7 +783,6 @@ def test_missing_requested_output_fails_acceptance() -> None:
     )
 
     assert report.output.status == OutputAcceptanceStatus.MISSING
-    assert report.output.missing == ("markdown",)
     assert report.overall == OverallAcceptanceStatus.FAILED
 
 
@@ -976,7 +932,7 @@ def test_same_envelope_has_identical_acceptance_after_existing_payload_adapters(
         audited=True,
         requested=True,
         profile="body",
-        total=2,
+        discovered=2,
         local=1,
         full_size=1,
         failed=1,
@@ -1012,22 +968,22 @@ def test_same_envelope_has_identical_acceptance_after_existing_payload_adapters(
     assert adapted == direct
 
 
-def test_report_round_trip_schema_and_additive_v2_compatibility() -> None:
+def test_report_round_trip_schema_and_additive_v3_compatibility() -> None:
     report = evaluate_fetch_acceptance(_envelope(), asset_profile="none")
     payload = json.loads(report.to_json())
     schema = fetch_acceptance_json_schema()
 
     Draft202012Validator.check_schema(schema)
     Draft202012Validator(schema).validate(payload)
-    assert payload["schema_version"] == 2
-    assert payload["minimum_reader_schema_version"] == 2
+    assert payload["schema_version"] == 3
+    assert "minimum_reader_schema_version" not in payload
     assert parse_fetch_acceptance_report(payload) == report
 
-    payload["future_additive_field"] = {"accepted_by_v2_reader": True}
+    payload["future_additive_field"] = {"accepted_by_v3_reader": True}
     assert parse_fetch_acceptance_report(payload) == report
 
 
-@pytest.mark.parametrize("schema_version", [None, 1, 3])
+@pytest.mark.parametrize("schema_version", [None, 1, 2, 4])
 def test_missing_or_incompatible_schema_version_is_rejected(
     schema_version: int | None,
 ) -> None:

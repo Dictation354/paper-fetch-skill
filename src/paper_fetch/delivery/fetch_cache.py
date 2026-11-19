@@ -1,17 +1,14 @@
-"""fetch-envelope cache abstraction."""
+"""Versioned v8 fetch-envelope sidecar cache with superset variant reuse."""
 
 from __future__ import annotations
 
-from ..acquisition import PDF_RENDER_REVISION, is_pdf_article
-
+import glob
 import json
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import asdict, dataclass
 from pathlib import Path
-from typing import Any, Literal
+from typing import Any
 
-from pydantic import BaseModel, ConfigDict, Field, model_validator
-
+from ..acquisition import PDF_RENDER_REVISION, is_pdf_article
 from ..artifacts import ArtifactStore
 from ..capability_scope import (
     PUBLIC_CAPABILITY_SCOPE,
@@ -19,201 +16,49 @@ from ..capability_scope import (
 )
 from ..manifest import build_manifest_request_fingerprint
 from ..models import (
+    EXTRACTION_REVISION,
+    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
     ArticleModel,
     Asset,
     FetchEnvelope,
     Metadata,
-    QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
 )
-from ..publisher_identity import extract_doi, normalize_doi
+from ..models.codec import (
+    article_from_payload,
+    dedupe_quality_flags,
+    envelope_from_payload,
+    metadata_from_payload,
+    quality_from_payload,
+    trace_from_payload,
+)
+from ..publisher_identity import extract_doi, nature_doi_from_article_url, normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import normalize_text, sanitize_filename
-from ..workflow.types import PaperFetchFailure
 from ..workflow.acceptance import (
-    FetchAcceptanceReport,
     FetchAcceptanceStatus,
     IdentityAcceptanceStatus,
     OutputAcceptanceStatus,
     ProvenanceAcceptanceStatus,
     evaluate_fetch_acceptance,
 )
-from ..workflow.types import effective_asset_profile
-from .cache_index import (
-    FETCH_ENVELOPE_CACHE_VERSION,
-    FETCH_ENVELOPE_EXTRACTION_REVISION,
-    CacheIndexResult,
+from ..workflow.types import PaperFetchFailure, effective_asset_profile
+from ._scoped_fs import (
     _scoped_file,
-    cache_entry_visible_for_scopes,
     cache_file_lock,
     fetch_envelope_lock_path,
-    list_cache_entries,
-    preferred_cached_entries,
-    read_cache_index,
     read_scoped_file,
-    register_cache_files_for_doi,
-    register_markdown_entry,
-)
-from ..models.codec import (
-    metadata_from_payload as metadata_from_payload,
-    trace_from_payload as trace_from_payload,
-    dedupe_quality_flags as dedupe_quality_flags,
-    _coerce_cached_int as _coerce_cached_int,
-    quality_from_payload as quality_from_payload,
-    article_from_payload as article_from_payload,
-    envelope_from_payload as envelope_from_payload,
 )
 from .requests import FetchPaperRequest
 
+FETCH_ENVELOPE_SIDECAR_VERSION = 8
+FETCH_ENVELOPE_EXTRACTION_REVISION = EXTRACTION_REVISION
 PUBLIC_CREDENTIAL_SCOPE = PUBLIC_CAPABILITY_SCOPE
-_ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE = "_paper_fetch_capability_scope"
+_HEX_DIGITS = frozenset("0123456789abcdef")
+_SIDECAR_SUFFIX = ".fetch-envelope.json"
 
 
-def mark_envelope_capability_scope(
-    envelope: FetchEnvelope,
-    credential_scope: str,
-) -> None:
-    """Attach the non-serialized capability scope that produced an envelope."""
-
-    normalized_scope = normalize_text(credential_scope) or PUBLIC_CREDENTIAL_SCOPE
-    setattr(envelope, _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE, normalized_scope)
-
-
-def envelope_capability_scope(envelope: FetchEnvelope) -> str | None:
-    """Return a transient producer scope without changing the envelope schema."""
-
-    value = normalize_text(
-        getattr(envelope, _ENVELOPE_CAPABILITY_SCOPE_ATTRIBUTE, None)
-    )
-    return value or None
-
-
-def _envelope_proven_artifact_paths(envelope: FetchEnvelope) -> tuple[str, ...]:
-    """Return local paths explicitly carried by the accepted fetch envelope."""
-
-    paths: list[str] = []
-    if envelope.article is not None:
-        paths.extend(
-            path
-            for asset in envelope.article.assets
-            if (path := normalize_text(asset.path))
-        )
-    if envelope.supplementary is not None:
-        paths.extend(
-            str(asset["path"])
-            for asset in envelope.supplementary.assets
-            if asset.get("path")
-        )
-    for diagnostic in envelope.diagnostic_artifacts:
-        if not isinstance(diagnostic, Mapping):
-            continue
-        for key in ("path", "artifact_path", "local_path"):
-            path = normalize_text(diagnostic.get(key))
-            if path:
-                paths.append(path)
-    return tuple(dict.fromkeys(paths))
-
-
-class _CacheRequestSchema(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    target: Literal["paper", "supplementary"]
-    modes: list[str]
-    strategy: dict[str, Any]
-    include_refs: str | None
-    max_tokens: int | str
-
-
-class _CacheAcquisitionSchema(BaseModel):
-    """Strict JSON shape used at the cache trust boundary."""
-
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    provider: str = Field(min_length=1)
-    route: str = Field(min_length=1)
-    representation: Literal["metadata", "html", "xml", "pdf"]
-    transport: Literal["api", "browser", "http"]
-    fallback_used: bool
-
-
-class _CacheQualitySchema(BaseModel):
-    model_config = ConfigDict(extra="allow", strict=True)
-
-    has_fulltext: bool
-    content_kind: Literal["fulltext", "abstract_only", "metadata_only"]
-    has_abstract: bool
-
-    @model_validator(mode="after")
-    def validate_content_flags(self) -> _CacheQualitySchema:
-        if self.has_fulltext != (self.content_kind == "fulltext"):
-            raise ValueError("has_fulltext must match content_kind")
-        if self.content_kind == "abstract_only" and not self.has_abstract:
-            raise ValueError("abstract_only cache payload must have an abstract")
-        return self
-
-
-class _CacheEnvelopePayloadSchema(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    schema_version: Literal[4]
-    doi: str
-    source: str = Field(min_length=1)
-    target: Literal["paper", "supplementary"]
-    supplementary: dict[str, Any] | None
-    acquisition: _CacheAcquisitionSchema
-    quality: _CacheQualitySchema
-    trace: list[dict[str, Any]]
-    article: dict[str, Any] | None
-    markdown: str | None
-    metadata: dict[str, Any] | None
-    diagnostics: dict[str, Any]
-    diagnostic_artifacts: list[dict[str, Any]]
-
-
-class _FetchEnvelopeSidecarSchema(BaseModel):
-    model_config = ConfigDict(extra="forbid", strict=True)
-
-    version: int
-    extraction_revision: int
-    pdf_render_revision: int | None = None
-    request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
-    credential_scope: str
-    request: _CacheRequestSchema
-    payload: _CacheEnvelopePayloadSchema
-
-    @model_validator(mode="after")
-    def validate_versions(self) -> _FetchEnvelopeSidecarSchema:
-        if self.version != FETCH_ENVELOPE_CACHE_VERSION:
-            raise ValueError("unsupported fetch-envelope cache version")
-        if self.extraction_revision != FETCH_ENVELOPE_EXTRACTION_REVISION:
-            raise ValueError("stale fetch-envelope extraction revision")
-        return self
-
-
-@dataclass(frozen=True)
-class CacheSidecarInspection:
-    summary: dict[str, Any]
-    envelope: FetchEnvelope | None = None
-    credential_scope: str | None = None
-
-
-@dataclass(frozen=True, slots=True)
-class FetchCacheDependencies:
-    """Replaceable cache-index operations used by the cache facade."""
-
-    read_index: Callable[..., CacheIndexResult] = read_cache_index
-    list_entries: Callable[[Path], list[dict[str, Any]]] = list_cache_entries
-    preferred_entries: Callable[[list[dict[str, Any]]], dict[str, Any]] = (
-        preferred_cached_entries
-    )
-    register_markdown: Callable[..., dict[str, Any] | None] = register_markdown_entry
-    register_files_for_doi: Callable[..., list[dict[str, Any]]] = (
-        register_cache_files_for_doi
-    )
-
-
-def fetch_envelope_cache_path(download_dir: Path, doi: str) -> Path:
-    normalized_doi = normalize_doi(doi) or normalize_text(doi)
-    return download_dir / f"{sanitize_filename(normalized_doi)}.fetch-envelope.json"
+def _is_sha256_hex(value: str) -> bool:
+    return len(value) == 64 and all(char in _HEX_DIGITS for char in value)
 
 
 def fetch_envelope_variant_path(
@@ -223,12 +68,10 @@ def fetch_envelope_variant_path(
 ) -> Path:
     normalized_doi = normalize_doi(doi) or normalize_text(doi)
     fingerprint = normalize_text(request_fingerprint).lower()
-    if len(fingerprint) != 64 or any(
-        char not in "0123456789abcdef" for char in fingerprint
-    ):
+    if not _is_sha256_hex(fingerprint):
         raise ValueError("request_fingerprint must be a lowercase SHA-256 digest")
     return download_dir / (
-        f"{sanitize_filename(normalized_doi)}.{fingerprint}.fetch-envelope.json"
+        f"{sanitize_filename(normalized_doi)}.{fingerprint}{_SIDECAR_SUFFIX}"
     )
 
 
@@ -262,76 +105,6 @@ def cache_request_fingerprint(
     )
 
 
-def _acceptance_summary(report: FetchAcceptanceReport) -> dict[str, Any]:
-    payload = report.to_dict()
-    return {
-        "status": "evaluated",
-        "overall": payload["overall"],
-        "identity": payload["identity"]["status"],
-        "fetch": payload["fetch"]["status"],
-        "content": payload["content"]["status"],
-        "asset": payload["asset"]["status"],
-        "output": payload["output"]["status"],
-        "provenance": payload["provenance"]["status"],
-        "acquisition": payload["provenance"].get("acquisition"),
-    }
-
-
-def _warning_summary(
-    envelope: FetchEnvelope | None,
-    report: FetchAcceptanceReport | None,
-) -> dict[str, Any]:
-    if report is None:
-        return {
-            "messages": [],
-            "fallback_codes": [],
-            "warning_codes": [],
-            "failure_codes": [],
-            "unstructured_warning_count": 0,
-        }
-    provenance = report.provenance
-    return {
-        "messages": list(envelope.quality.warnings if envelope is not None else ()),
-        "fallback_codes": list(provenance.fallback_codes),
-        "warning_codes": list(provenance.warning_codes),
-        "failure_codes": list(provenance.failure_codes),
-        "unstructured_warning_count": provenance.unstructured_warning_count,
-    }
-
-
-def _entry_summary(entries: Sequence[Mapping[str, Any]]) -> dict[str, Any]:
-    by_kind: dict[str, int] = {}
-    for entry in entries:
-        kind = normalize_text(entry.get("kind")) or "unknown"
-        by_kind[kind] = by_kind.get(kind, 0) + 1
-    return {
-        "total": len(entries),
-        "by_kind": dict(sorted(by_kind.items())),
-    }
-
-
-def _reported_cache_version(value: Any) -> int | str | None:
-    if isinstance(value, bool):
-        return str(value).lower()
-    if isinstance(value, int | str):
-        return value
-    return None
-
-
-def payload_from_envelope(
-    envelope: FetchEnvelope,
-    request: FetchPaperRequest,
-    *,
-    retain_article_for_assets: bool = False,
-) -> dict[str, Any]:
-    payload = envelope.to_dict()
-    # Retain the historical sidecar payload revision for compatible cache reads.
-    payload["schema_version"] = 4
-    if "article" not in request.requested_modes() and not retain_article_for_assets:
-        payload["article"] = None
-    return payload
-
-
 def _request_needs_article_for_assets(
     request: FetchPaperRequest,
     *,
@@ -348,26 +121,63 @@ def _request_needs_article_for_assets(
     )
 
 
+def payload_from_envelope(
+    envelope: FetchEnvelope,
+    request: FetchPaperRequest,
+    *,
+    retain_article_for_assets: bool = False,
+) -> dict[str, Any]:
+    payload = envelope.to_dict()
+    if "article" not in request.requested_modes() and not retain_article_for_assets:
+        payload["article"] = None
+    return payload
+
+
 def cached_request_matches(
     cached_request: Mapping[str, Any],
     request: FetchPaperRequest,
 ) -> bool:
     if cached_request.get("target") != request.target:
         return False
-    cached_modes = {str(item) for item in cached_request.get("modes") or []}
-    if not request.requested_modes().issubset(cached_modes):
+    raw_modes = cached_request.get("modes")
+    if not isinstance(raw_modes, list) or any(
+        not isinstance(item, str) for item in raw_modes
+    ):
+        return False
+    if not request.requested_modes().issubset(set(raw_modes)):
         return False
     if cached_request.get("strategy") != request.strategy.cache_request_payload():
         return False
     if cached_request.get("include_refs") != request.include_refs:
         return False
-    return cached_request.get("max_tokens") == request.max_tokens
+    max_tokens = cached_request.get("max_tokens")
+    if isinstance(max_tokens, bool):
+        return False
+    return max_tokens == request.max_tokens
 
 
 def cached_payload_satisfies_request(
     payload: Mapping[str, Any], request: FetchPaperRequest
 ) -> bool:
     if payload.get("target") != request.target:
+        return False
+    quality = payload.get("quality")
+    if not isinstance(quality, Mapping):
+        return False
+    has_fulltext = quality.get("has_fulltext")
+    content_kind = quality.get("content_kind")
+    has_abstract = quality.get("has_abstract")
+    if (
+        not isinstance(has_fulltext, bool)
+        or not isinstance(has_abstract, bool)
+        or not isinstance(content_kind, str)
+        or content_kind not in {"fulltext", "abstract_only", "metadata_only"}
+        or has_fulltext != (content_kind == "fulltext")
+        or (content_kind == "abstract_only" and not has_abstract)
+    ):
+        return False
+    source = payload.get("source")
+    if not isinstance(source, str):
         return False
     if request.target == "supplementary":
         materials = payload.get("supplementary")
@@ -391,7 +201,7 @@ def cached_payload_satisfies_request(
     if (
         _request_needs_article_for_assets(
             request,
-            source_name=normalize_text(payload.get("source")) or None,
+            source_name=normalize_text(source) or None,
         )
         and payload.get("article") is None
     ):
@@ -399,14 +209,6 @@ def cached_payload_satisfies_request(
     if "markdown" in requested_modes and payload.get("markdown") is None:
         return False
     if "metadata" in requested_modes and payload.get("metadata") is None:
-        return False
-    return True
-
-
-def _cache_sidecar_schema_is_valid(payload: Mapping[str, Any]) -> bool:
-    try:
-        _FetchEnvelopeSidecarSchema.model_validate(payload)
-    except Exception:
         return False
     return True
 
@@ -439,9 +241,7 @@ def cached_envelope_satisfies_request(
         return False
     if normalize_doi(envelope.doi or "") != normalized_expected_doi:
         return False
-    if not normalize_text(envelope.source):
-        return False
-    if envelope.acquisition is None:
+    if not normalize_text(envelope.source) or envelope.acquisition is None:
         return False
     if envelope.quality.has_fulltext != (envelope.quality.content_kind == "fulltext"):
         return False
@@ -471,9 +271,11 @@ def cached_envelope_satisfies_request(
         return False
     if "metadata" in requested_modes:
         raw_metadata = payload.get("metadata")
-        if not isinstance(raw_metadata, Mapping) or not raw_metadata:
-            return False
-        if not _metadata_has_useful_content(envelope.metadata):
+        if (
+            not isinstance(raw_metadata, Mapping)
+            or not raw_metadata
+            or not _metadata_has_useful_content(envelope.metadata)
+        ):
             return False
     if "article" in requested_modes:
         raw_article = payload.get("article")
@@ -576,27 +378,20 @@ def mark_envelope_cached_with_current_revision(envelope: FetchEnvelope) -> None:
 
 
 class FetchCache:
-    """Cache facade for fetch-envelope sidecars and cache index refresh."""
+    """Single-sidecar v8 cache with lightweight header filtering and superset reuse."""
 
     def __init__(
         self,
         download_dir: Path | None,
         *,
         artifact_store: ArtifactStore | None = None,
-        dependencies: FetchCacheDependencies | None = None,
         credential_scope: str = PUBLIC_CREDENTIAL_SCOPE,
         read_credential_scopes: Sequence[str] | None = None,
     ) -> None:
-        cache_deps = dependencies or FetchCacheDependencies()
         self._artifact_store = artifact_store or ArtifactStore.from_download_dir(
             download_dir
         )
         self.download_dir = self._artifact_store.download_dir
-        self._read_cache_index = cache_deps.read_index
-        self._list_cache_entries = cache_deps.list_entries
-        self._preferred_cached_entries = cache_deps.preferred_entries
-        self._register_markdown_entry = cache_deps.register_markdown
-        self._register_cache_files_for_doi = cache_deps.register_files_for_doi
         self.credential_scope = (
             normalize_text(credential_scope) or PUBLIC_CREDENTIAL_SCOPE
         )
@@ -615,11 +410,10 @@ class FetchCache:
             # A private reader may read only its exact scope and then public. It
             # cannot move laterally into a different private capability scope.
             self.read_credential_scopes = (
-                self.credential_scope,
-                PUBLIC_CREDENTIAL_SCOPE,
+                (self.credential_scope, PUBLIC_CREDENTIAL_SCOPE)
+                if self.credential_scope in normalized_scopes
+                else (PUBLIC_CREDENTIAL_SCOPE,)
             )
-            if self.credential_scope not in normalized_scopes:
-                self.read_credential_scopes = (PUBLIC_CREDENTIAL_SCOPE,)
 
     def _candidate_sidecar_paths(
         self,
@@ -631,20 +425,112 @@ class FetchCache:
             or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
         ):
             return []
+        req_payload = request_cache_payload(request)
         exact_paths = [
             fetch_envelope_variant_path(
                 self.download_dir,
                 doi,
-                cache_request_fingerprint(
-                    doi,
-                    request_cache_payload(request),
-                    credential_scope=scope,
-                ),
+                cache_request_fingerprint(doi, req_payload, credential_scope=scope),
             )
             for scope in self.read_credential_scopes
         ]
-        canonical = fetch_envelope_cache_path(self.download_dir, doi)
-        return list(dict.fromkeys([*exact_paths, canonical]))
+        prefix = f"{sanitize_filename(normalize_doi(doi) or normalize_text(doi))}."
+        discovered: list[tuple[int, str, Path]] = []
+        for candidate in self.download_dir.glob(
+            f"{glob.escape(prefix[:-1])}.*{_SIDECAR_SUFFIX}"
+        ):
+            middle = candidate.name.removeprefix(prefix).removesuffix(_SIDECAR_SUFFIX)
+            if not _is_sha256_hex(middle):
+                continue
+            try:
+                mtime_ns = candidate.stat().st_mtime_ns
+            except OSError:
+                continue
+            discovered.append((-mtime_ns, candidate.name, candidate))
+        discovered.sort()
+        return list(dict.fromkeys([*exact_paths, *(item[2] for item in discovered)]))
+
+    def _load_matching_sidecar(
+        self,
+        doi: str,
+        request: FetchPaperRequest,
+        path: Path,
+    ) -> FetchEnvelope | None:
+        assert self.download_dir is not None
+        opened = read_scoped_file(self.download_dir, str(path))
+        if opened is None:
+            return None
+        try:
+            raw_sidecar = json.loads(opened[1].decode("utf-8"))
+        except (RecursionError, ValueError):
+            return None
+        if not isinstance(raw_sidecar, Mapping):
+            return None
+
+        # Lightweight header gate: reject incompatible versions, revisions,
+        # scopes, or non-superset requests before deserializing the body.
+        version = raw_sidecar.get("version")
+        extraction_revision = raw_sidecar.get("extraction_revision")
+        if (
+            type(version) is not int
+            or version != FETCH_ENVELOPE_SIDECAR_VERSION
+            or type(extraction_revision) is not int
+            or extraction_revision != FETCH_ENVELOPE_EXTRACTION_REVISION
+        ):
+            return None
+        raw_scope = raw_sidecar.get("credential_scope")
+        if raw_scope is not None and not isinstance(raw_scope, str):
+            return None
+        cached_scope = normalize_text(raw_scope) or PUBLIC_CREDENTIAL_SCOPE
+        if cached_scope not in self.read_credential_scopes:
+            return None
+        cached_request = raw_sidecar.get("request")
+        payload = raw_sidecar.get("payload")
+        if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
+            return None
+        if not cached_request_matches(cached_request, request):
+            return None
+        try:
+            expected_fp = cache_request_fingerprint(
+                doi, cached_request, credential_scope=cached_scope
+            )
+        except (TypeError, ValueError):
+            return None
+        if raw_sidecar.get("request_fingerprint") != expected_fp:
+            return None
+        if normalize_doi(str(payload.get("doi") or "")) != doi:
+            return None
+        if not cached_payload_satisfies_request(payload, request):
+            return None
+
+        try:
+            envelope = envelope_from_payload(payload)
+        except Exception:
+            return None
+        if (
+            is_pdf_article(envelope)
+            and raw_sidecar.get("pdf_render_revision") != PDF_RENDER_REVISION
+        ):
+            return None
+        if not cached_envelope_assets_are_scoped(envelope, self.download_dir):
+            return None
+        if not cached_envelope_satisfies_request(
+            envelope,
+            payload,
+            request,
+            expected_doi=doi,
+        ):
+            return None
+
+        requested_modes = request.requested_modes()
+        if "article" not in requested_modes:
+            envelope.article = None
+        if "markdown" not in requested_modes:
+            envelope.markdown = None
+        if "metadata" not in requested_modes:
+            envelope.metadata = None
+        mark_envelope_cached_with_current_revision(envelope)
+        return envelope
 
     def load_fetch_envelope(
         self,
@@ -653,11 +539,15 @@ class FetchCache:
         resolve_paper_fn: Callable[..., Any],
         context: RuntimeContext,
     ) -> FetchEnvelope | None:
-        if not request.prefer_cache or self.download_dir is None:
+        if (
+            not request.prefer_cache
+            or self.download_dir is None
+            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
+        ):
             return None
-        # A syntactically known DOI is a complete local cache identity. Enrichment
-        # (including Crossref provider inference) is deferred until a cache miss.
-        doi = normalize_doi(extract_doi(request.query) or "")
+        doi = normalize_doi(
+            nature_doi_from_article_url(request.query) or extract_doi(request.query)
+        )
         if not doi:
             resolved = resolve_paper_fn(request.query, context=context)
             if resolved.candidates and not resolved.doi:
@@ -667,24 +557,17 @@ class FetchCache:
                     candidates=resolved.candidates,
                 )
             doi = normalize_doi(normalize_text(resolved.doi))
-        if not doi:
+        if not doi or not self.download_dir.exists():
             return None
-        selected = self._select_sidecar_variant(doi, request)
-        envelope = (
-            selected.envelope
-            if selected is not None
-            and selected.summary.get("request_satisfied") is True
-            else None
-        )
-        if envelope is None:
-            return None
-        assert selected is not None
-        mark_envelope_capability_scope(
-            envelope,
-            selected.credential_scope or PUBLIC_CREDENTIAL_SCOPE,
-        )
-        mark_envelope_cached_with_current_revision(envelope)
-        return envelope
+
+        with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
+            for candidate_path in self._candidate_sidecar_paths(doi, request):
+                if not candidate_path.exists():
+                    continue
+                envelope = self._load_matching_sidecar(doi, request, candidate_path)
+                if envelope is not None:
+                    return envelope
+        return None
 
     def write_fetch_envelope(
         self,
@@ -701,21 +584,19 @@ class FetchCache:
         doi = normalize_doi(normalize_text(envelope.doi))
         if not doi:
             return
-        mark_envelope_capability_scope(envelope, self.credential_scope)
         request_payload = request_cache_payload(request)
         request_fingerprint = cache_request_fingerprint(
             doi,
             request_payload,
             credential_scope=self.credential_scope,
         )
-        cache_path = fetch_envelope_cache_path(self.download_dir, doi)
         variant_path = fetch_envelope_variant_path(
             self.download_dir,
             doi,
             request_fingerprint,
         )
-        payload = {
-            "version": FETCH_ENVELOPE_CACHE_VERSION,
+        payload: dict[str, Any] = {
+            "version": FETCH_ENVELOPE_SIDECAR_VERSION,
             "extraction_revision": FETCH_ENVELOPE_EXTRACTION_REVISION,
             "request_fingerprint": request_fingerprint,
             "credential_scope": self.credential_scope,
@@ -723,11 +604,9 @@ class FetchCache:
             "payload": payload_from_envelope(
                 envelope,
                 request,
-                retain_article_for_assets=(
-                    _request_needs_article_for_assets(
-                        request,
-                        source_name=envelope.source,
-                    )
+                retain_article_for_assets=_request_needs_article_for_assets(
+                    request,
+                    source_name=envelope.source,
                 ),
             ),
         }
@@ -739,583 +618,28 @@ class FetchCache:
                 payload,
                 commit_guard=commit_guard,
             )
-            self._artifact_store.write_json_file(
-                cache_path,
-                payload,
-                commit_guard=commit_guard,
-            )
         if commit_guard is not None:
             commit_guard()
-        self._register_cache_files_for_doi(
-            self.download_dir,
-            doi,
-            credential_scope=self.credential_scope,
-            proven_artifact_paths=(
-                cache_path,
-                *_envelope_proven_artifact_paths(envelope),
-            ),
-            commit_guard=commit_guard,
-        )
 
-    def register_markdown(
-        self,
-        path: Path,
-        envelope: FetchEnvelope,
-        *,
-        commit_guard: Callable[[], None] | None = None,
-    ) -> dict[str, Any] | None:
-        """Register a saved Markdown file with identity known from its envelope."""
 
-        if (
-            self.download_dir is None
-            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
-        ):
-            return None
-        doi = normalize_doi(normalize_text(envelope.doi))
-        if not doi:
-            return None
-        return self._register_markdown_entry(
-            self.download_dir,
-            doi,
-            path,
-            source=str(envelope.source),
-            acquisition=envelope.acquisition,
-            has_fulltext=envelope.quality.has_fulltext,
-            content_kind=str(envelope.quality.content_kind),
-            credential_scope=self.credential_scope,
-            commit_guard=commit_guard,
-        )
-
-    def list_payload(
-        self,
-        *,
-        _filter_entries: bool = True,
-    ) -> dict[str, Any]:
-        if (
-            self.download_dir is None
-            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
-        ):
-            return {
-                "download_dir": None,
-                "entries": [],
-                "index_status": "unavailable",
-                "index_version": None,
-                "expected_index_version": None,
-                "index_reason": "download directory is disabled",
-            }
-        result = self._read_cache_index(self.download_dir)
-        entries = result.entries
-        if _filter_entries:
-            entries = [
-                entry
-                for entry in entries
-                if cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
-            ]
-        return {
-            "download_dir": str(self.download_dir),
-            "entries": entries,
-            **result.metadata(),
-        }
-
-    def _inspect_sidecar_path(
-        self,
-        doi: str,
-        request: FetchPaperRequest,
-        path: Path,
-    ) -> CacheSidecarInspection:
-        requested_request = request_cache_payload(request)
-        requested_fingerprint = cache_request_fingerprint(
-            doi,
-            requested_request,
-            credential_scope=self.credential_scope,
-        )
-        base: dict[str, Any] = {
-            "status": "missing",
-            "reason_code": "cache_sidecar_missing",
-            "reason": "No fetch-envelope sidecar exists in the selected cache scope.",
-            "path": str(path) if path is not None else None,
-            "version": None,
-            "expected_version": FETCH_ENVELOPE_CACHE_VERSION,
-            "extraction_revision": None,
-            "expected_extraction_revision": FETCH_ENVELOPE_EXTRACTION_REVISION,
-            "cached_request": None,
-            "cached_request_fingerprint": None,
-            "requested_request": requested_request,
-            "requested_request_fingerprint": requested_fingerprint,
-            "request_matches": False,
-            "payload_satisfies_request": False,
-            "request_satisfied": False,
-            "request_status": "unavailable",
-        }
-        candidate_scope: str | None = None
-
-        def finish(
-            status: str,
-            reason_code: str,
-            reason: str,
-            *,
-            updates: Mapping[str, Any] | None = None,
-            envelope: FetchEnvelope | None = None,
-        ) -> CacheSidecarInspection:
-            summary = {
-                **base,
-                "status": status,
-                "reason_code": reason_code,
-                "reason": reason,
-                **dict(updates or {}),
-            }
-            return CacheSidecarInspection(
-                summary=summary,
-                envelope=envelope,
-                credential_scope=candidate_scope,
-            )
-
-        if (
-            self.download_dir is None
-            or self.credential_scope == UNCACHEABLE_CAPABILITY_SCOPE
-        ):
-            return finish(
-                "disabled",
-                "cache_scope_disabled",
-                "The selected cache scope is disabled.",
-            )
-        if not path.exists():
-            return finish(
-                "missing",
-                "cache_sidecar_missing",
-                "No fetch-envelope sidecar exists in the selected cache scope.",
-            )
-        try:
-            resolved_root = self.download_dir.expanduser().resolve()
-            resolved_path = path.expanduser().resolve()
-            resolved_path.relative_to(resolved_root)
-        except (OSError, ValueError):
-            return finish(
-                "invalid_scope",
-                "cache_sidecar_outside_scope",
-                "The fetch-envelope sidecar resolves outside the selected cache scope.",
-            )
-        if not resolved_path.is_file():
-            return finish(
-                "invalid",
-                "cache_sidecar_not_file",
-                "The expected fetch-envelope sidecar is not a regular file.",
-            )
-        try:
-            cache_payload = json.loads(resolved_path.read_text(encoding="utf-8"))
-        except json.JSONDecodeError:
-            return finish(
-                "corrupt",
-                "cache_sidecar_invalid_json",
-                "The fetch-envelope sidecar is not valid JSON.",
-            )
-        except OSError:
-            return finish(
-                "unreadable",
-                "cache_sidecar_unreadable",
-                "The fetch-envelope sidecar could not be read.",
-            )
-        if not isinstance(cache_payload, Mapping):
-            return finish(
-                "invalid",
-                "cache_sidecar_invalid_shape",
-                "The fetch-envelope sidecar root must be an object.",
-            )
-
-        cached_scope = (
-            normalize_text(cache_payload.get("credential_scope"))
-            or PUBLIC_CREDENTIAL_SCOPE
-        )
-        candidate_scope = cached_scope
-        if cached_scope not in self.read_credential_scopes:
-            return finish(
-                "credential_scope_mismatch",
-                "cache_sidecar_credential_scope_mismatch",
-                "The fetch-envelope sidecar belongs to a different credential scope.",
-            )
-        base["requested_request_fingerprint"] = cache_request_fingerprint(
-            doi,
-            requested_request,
-            credential_scope=cached_scope,
-        )
-
-        version = cache_payload.get("version")
-        extraction_revision = cache_payload.get("extraction_revision")
-        version_updates = {
-            "version": _reported_cache_version(version),
-            "extraction_revision": _reported_cache_version(extraction_revision),
-        }
-        if version != FETCH_ENVELOPE_CACHE_VERSION:
-            return finish(
-                "version_mismatch",
-                "cache_sidecar_version_mismatch",
-                "The fetch-envelope sidecar version is not supported.",
-                updates=version_updates,
-            )
-        if extraction_revision != FETCH_ENVELOPE_EXTRACTION_REVISION:
-            return finish(
-                "extraction_revision_mismatch",
-                "cache_sidecar_extraction_revision_mismatch",
-                "The fetch-envelope extraction revision is stale.",
-                updates=version_updates,
-            )
-        if not _cache_sidecar_schema_is_valid(cache_payload):
-            return finish(
-                "invalid",
-                "cache_sidecar_schema_invalid",
-                "The fetch-envelope sidecar does not satisfy the current schema.",
-                updates=version_updates,
-            )
-
-        cached_request = cache_payload.get("request")
-        payload = cache_payload.get("payload")
-        if not isinstance(cached_request, Mapping) or not isinstance(payload, Mapping):
-            return finish(
-                "invalid",
-                "cache_sidecar_missing_request_or_payload",
-                "The fetch-envelope sidecar lacks a structured request or payload.",
-                updates=version_updates,
-            )
-        cached_request_payload = dict(cached_request)
-        try:
-            cached_fingerprint = cache_request_fingerprint(
-                doi,
-                cached_request_payload,
-                credential_scope=cached_scope,
-            )
-        except (TypeError, ValueError):
-            return finish(
-                "invalid",
-                "cache_sidecar_request_not_canonical_json",
-                "The cached request cannot be represented as canonical JSON.",
-                updates=version_updates,
-            )
-        request_updates = {
-            **version_updates,
-            "cached_request": cached_request_payload,
-            "cached_request_fingerprint": cached_fingerprint,
-        }
-        if normalize_doi(str(payload.get("doi") or "")) != doi:
-            return finish(
-                "doi_mismatch",
-                "cache_sidecar_doi_mismatch",
-                "The fetch-envelope payload DOI does not match the requested DOI.",
-                updates=request_updates,
-            )
-        try:
-            envelope = envelope_from_payload(payload)
-        except Exception:  # noqa: BLE001 - local cache corruption is reported.
-            return finish(
-                "invalid",
-                "cache_sidecar_payload_invalid",
-                "The fetch-envelope payload could not be reconstructed.",
-                updates=request_updates,
-            )
-        if (
-            is_pdf_article(envelope)
-            and cache_payload.get("pdf_render_revision") != PDF_RENDER_REVISION
-        ):
-            return finish(
-                "extraction_revision_mismatch",
-                "cache_sidecar_pdf_render_revision_mismatch",
-                "The cached PDF rendering predates verbatim converter output.",
-                updates=request_updates,
-            )
-        if not cached_envelope_assets_are_scoped(envelope, self.download_dir):
-            return finish(
-                "invalid",
-                "cache_sidecar_asset_scope_or_integrity_mismatch",
-                (
-                    "A cached asset resolves outside the cache scope or no longer "
-                    "matches its recorded size/hash."
-                ),
-                updates=request_updates,
-            )
-
-        request_matches = cached_request_matches(cached_request, request)
-        payload_matches = cached_envelope_satisfies_request(
-            envelope,
-            payload,
-            request,
-            expected_doi=doi,
-        )
-        satisfied = request_matches and payload_matches
-        match_updates = {
-            **request_updates,
-            "request_matches": request_matches,
-            "payload_satisfies_request": payload_matches,
-            "request_satisfied": satisfied,
-            "request_status": "satisfied" if satisfied else "mismatch",
-        }
-        if not request_matches:
-            return finish(
-                "ready",
-                "cached_request_mismatch",
-                "A valid sidecar exists, but its cached request does not match the current request.",
-                updates=match_updates,
-                envelope=envelope,
-            )
-        if not payload_matches:
-            return finish(
-                "ready",
-                "cached_payload_missing_requested_modes",
-                "The cached payload does not contain every currently requested output mode.",
-                updates=match_updates,
-                envelope=envelope,
-            )
-        return finish(
-            "ready",
-            "cached_request_satisfied",
-            "The valid fetch-envelope sidecar satisfies the current request.",
-            updates=match_updates,
-            envelope=envelope,
-        )
-
-    def _select_sidecar_variant(
-        self,
-        doi: str,
-        request: FetchPaperRequest,
-    ) -> CacheSidecarInspection | None:
-        """Inspect only the exact current-scope sidecars and canonical sidecar."""
-
-        if self.download_dir is None or not self.download_dir.exists():
-            return None
-        first_inspection: CacheSidecarInspection | None = None
-        with cache_file_lock(fetch_envelope_lock_path(self.download_dir, doi)):
-            for path in self._candidate_sidecar_paths(doi, request):
-                if not path.exists():
-                    continue
-                inspection = self._inspect_sidecar_path(doi, request, path)
-                if first_inspection is None:
-                    first_inspection = inspection
-                if inspection.summary.get("request_satisfied") is True:
-                    return inspection
-        return first_inspection
-
-    def _inspect_fetch_envelope_sidecar(
-        self,
-        doi: str,
-        request: FetchPaperRequest,
-    ) -> CacheSidecarInspection:
-        selected = self._select_sidecar_variant(doi, request)
-        if selected is not None:
-            return selected
-        requested_request = request_cache_payload(request)
-        requested_fingerprint = cache_request_fingerprint(
-            doi,
-            requested_request,
-            credential_scope=self.read_credential_scopes[0],
-        )
-        path = (
-            fetch_envelope_variant_path(self.download_dir, doi, requested_fingerprint)
-            if self.download_dir is not None
-            else None
-        )
-        return CacheSidecarInspection(
-            summary={
-                "status": "disabled" if self.download_dir is None else "missing",
-                "reason_code": (
-                    "cache_scope_disabled"
-                    if self.download_dir is None
-                    else "cache_sidecar_missing"
-                ),
-                "reason": (
-                    "The selected cache scope is disabled."
-                    if self.download_dir is None
-                    else "No fetch-envelope sidecar exists in the selected cache scope."
-                ),
-                "path": str(path) if path is not None else None,
-                "version": None,
-                "expected_version": FETCH_ENVELOPE_CACHE_VERSION,
-                "extraction_revision": None,
-                "expected_extraction_revision": FETCH_ENVELOPE_EXTRACTION_REVISION,
-                "cached_request": None,
-                "cached_request_fingerprint": None,
-                "requested_request": requested_request,
-                "requested_request_fingerprint": requested_fingerprint,
-                "request_matches": False,
-                "payload_satisfies_request": False,
-                "request_satisfied": False,
-                "request_status": "unavailable",
-            }
-        )
-
-    def get_payload(
-        self,
-        doi: str,
-        *,
-        request: FetchPaperRequest | None = None,
-        detail: str = "full",
-        preferred_only: bool = False,
-    ) -> dict[str, Any]:
-        normalized_doi = normalize_doi(doi)
-        if self.download_dir is None:
-            entries: list[dict[str, Any]] = []
-            index_metadata: dict[str, Any] = {
-                "index_status": "unavailable",
-                "index_version": None,
-                "expected_index_version": None,
-                "index_reason": "download directory is disabled",
-            }
-        else:
-            result = self._read_cache_index(self.download_dir)
-            entries = [
-                entry
-                for entry in result.entries
-                if entry.get("doi") == normalized_doi
-                and cache_entry_visible_for_scopes(entry, self.read_credential_scopes)
-            ]
-            index_metadata = result.metadata()
-        preferred = self._preferred_cached_entries(entries)
-        base_payload = {
-            "status": "hit" if entries else "miss",
-            "doi": normalized_doi,
-            "download_dir": str(self.download_dir)
-            if self.download_dir is not None
-            else None,
-            "entries": entries,
-            "preferred": preferred,
-            **index_metadata,
-        }
-        if request is None:
-            return base_payload
-
-        sidecar = self._inspect_fetch_envelope_sidecar(normalized_doi, request)
-        envelope = sidecar.envelope
-        acceptance: FetchAcceptanceReport | None = None
-        acceptance_reason: str | None = sidecar.summary["reason_code"]
-        if envelope is not None:
-            try:
-                acceptance = evaluate_fetch_acceptance(
-                    envelope,
-                    asset_profile=effective_asset_profile(
-                        request.strategy.asset_profile,
-                        source_name=envelope.source,
-                    ),
-                    require_local_body_assets=request.strategy.require_local_body_assets,
-                    require_full_size_body_assets=request.strategy.require_full_size_body_assets,
-                    requested_outputs=request.requested_modes(),
-                    expected_doi=normalized_doi,
-                )
-                acceptance_reason = None
-            except Exception:  # noqa: BLE001 - report malformed local cache facts.
-                acceptance_reason = "cached_acceptance_invalid"
-
-        entry_summary = _entry_summary(entries)
-        preferred_markdown = preferred.get("markdown")
-        content_kind = (
-            str(envelope.quality.content_kind)
-            if envelope is not None
-            else (
-                str(preferred_markdown.get("content_kind"))
-                if isinstance(preferred_markdown, Mapping)
-                and preferred_markdown.get("content_kind") is not None
-                else None
-            )
-        )
-        has_fulltext = (
-            envelope.quality.has_fulltext
-            if envelope is not None
-            else (
-                preferred_markdown.get("has_fulltext")
-                if isinstance(preferred_markdown, Mapping)
-                and isinstance(preferred_markdown.get("has_fulltext"), bool)
-                else None
-            )
-        )
-        confidence = str(envelope.quality.confidence) if envelope is not None else None
-        acquisition = (
-            asdict(envelope.acquisition)
-            if envelope is not None and envelope.acquisition is not None
-            else (
-                preferred_markdown.get("acquisition")
-                if isinstance(preferred_markdown, Mapping)
-                else None
-            )
-        )
-        acceptance_summary = (
-            _acceptance_summary(acceptance)
-            if acceptance is not None
-            else {
-                "status": "not_evaluated",
-                "overall": None,
-                "reason_code": acceptance_reason,
-            }
-        )
-        asset_summary = (
-            acceptance.asset.model_dump(mode="json")
-            if acceptance is not None
-            else {
-                "status": "indexed_only",
-                "total": entry_summary["by_kind"].get("asset", 0),
-            }
-        )
-        scope_status = (
-            "disabled"
-            if self.download_dir is None
-            else "available"
-            if self.download_dir.exists()
-            else "missing"
-        )
-        summary_fields = {
-            "detail": detail,
-            "preferred_only": preferred_only,
-            "scope_status": scope_status,
-            "identity_status": "proven" if entries else "no_proven_entries",
-            "has_entries": bool(entries),
-            "entry_summary": entry_summary,
-            "content_kind": content_kind,
-            "has_fulltext": has_fulltext,
-            "confidence": confidence,
-            "acquisition": acquisition,
-            "acceptance": acceptance_summary,
-            "asset_summary": asset_summary,
-            "warning_summary": _warning_summary(envelope, acceptance),
-            "sidecar": sidecar.summary,
-            "cached_request": sidecar.summary["cached_request"],
-            "cached_request_fingerprint": sidecar.summary["cached_request_fingerprint"],
-            "requested_request": sidecar.summary["requested_request"],
-            "requested_request_fingerprint": sidecar.summary[
-                "requested_request_fingerprint"
-            ],
-            "request_status": sidecar.summary["request_status"],
-            "request_satisfied": sidecar.summary["request_satisfied"],
-        }
-
-        compact_preferred = {
-            "markdown": preferred.get("markdown"),
-            "primary_payload": preferred.get("primary_payload"),
-        }
-        if detail == "compact":
-            return {
-                key: value
-                for key, value in {
-                    "status": base_payload["status"],
-                    "doi": normalized_doi,
-                    "download_dir": base_payload["download_dir"],
-                    "preferred": compact_preferred,
-                    **index_metadata,
-                    **summary_fields,
-                }.items()
-                if key != "entries"
-            }
-
-        if preferred_only:
-            selected_entries: list[dict[str, Any]] = []
-            selected_ids: set[str] = set()
-            for key in ("markdown", "primary_payload"):
-                entry = preferred.get(key)
-                if not isinstance(entry, dict):
-                    continue
-                entry_id = str(entry.get("id") or entry.get("path") or "")
-                if entry_id in selected_ids:
-                    continue
-                selected_ids.add(entry_id)
-                selected_entries.append(entry)
-            return {
-                **base_payload,
-                "entries": selected_entries,
-                "preferred": {**compact_preferred, "assets": []},
-                **summary_fields,
-            }
-        return {**base_payload, **summary_fields}
+__all__ = [
+    "FETCH_ENVELOPE_EXTRACTION_REVISION",
+    "FETCH_ENVELOPE_SIDECAR_VERSION",
+    "PUBLIC_CREDENTIAL_SCOPE",
+    "FetchCache",
+    "article_from_payload",
+    "cache_request_fingerprint",
+    "cached_envelope_assets_are_scoped",
+    "cached_envelope_satisfies_request",
+    "cached_payload_satisfies_request",
+    "cached_request_matches",
+    "dedupe_quality_flags",
+    "envelope_from_payload",
+    "fetch_envelope_variant_path",
+    "mark_envelope_cached_with_current_revision",
+    "metadata_from_payload",
+    "payload_from_envelope",
+    "quality_from_payload",
+    "request_cache_payload",
+    "trace_from_payload",
+]

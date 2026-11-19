@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
@@ -31,7 +31,7 @@ def _compact_failure_diagnostic(values: Mapping[str, Any]) -> dict[str, Any]:
             if normalized:
                 diagnostic[key] = normalized
             continue
-        if isinstance(value, (bool, int, float)):
+        if isinstance(value, bool | int | float):
             diagnostic[key] = value
             continue
         if isinstance(value, list) and value:

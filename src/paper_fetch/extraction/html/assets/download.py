@@ -1,153 +1,127 @@
-"""Asset download helpers with typed asset kinds."""
+"""HTML asset download orchestration and two-stage HTTP/browser scheduling."""
 
 from __future__ import annotations
 
-from uuid import uuid4
-
 import contextlib
+import time
+import urllib.parse
+from collections.abc import Callable, Iterator, Mapping, Sequence
 from dataclasses import dataclass, replace
 from pathlib import Path
-import time
-from typing import Any, Literal
-import urllib.parse
-import uuid
-from collections.abc import Callable, Mapping, Sequence
+from typing import Any
+from uuid import uuid4
 
-from ....asset_budget import (
-    AssetBudget,
-    AssetBudgetExceeded,
-    AssetReservation,
-    current_asset_budget,
-)
-from ....http import (
-    DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    DEFAULT_TRANSIENT_RETRIES,
-    HttpRequestPolicy,
-    HttpStreamOptions,
-    HttpTransport,
-    RequestCancelledError,
-    RequestFailure,
-    is_retryable_network_error,
-    is_transient_http_status,
-    provider_request_policy,
-)
+from ....asset_budget import AssetBudget, AssetBudgetExceeded, current_asset_budget
+from ....http import HttpTransport, RequestFailure
 from ....http.headers import header_value
-from ...image_payloads import image_dimensions_from_path
 from ....image_tools import (
     ImageConversionFailure,
     convert_source_image_path_to_png,
-    convert_source_image_response_to_png,
-    source_image_format_from_payload,
 )
 from ....models.schema import AssetProfile
-from ....reason_codes import (
-    ASSET_BYTES_PER_ASSET_EXCEEDED,
-    ASSET_BYTES_TOTAL_EXCEEDED,
-    ASSET_CANCELLED,
-    ASSET_FILE_LIMIT_EXCEEDED,
-    OFFICIAL_FULL_SIZE_ACCESS_RESTRICTED,
+from ....provider_catalog import (
+    compile_route_execution_policy_for_kind,
+    effective_route_asset_scope,
 )
-from ....utils import (
-    build_asset_output_path,
-    empty_asset_results,
-    normalize_text,
-    sanitize_filename,
-    save_payload,
-)
+from ....reason_codes import ASSET_CANCELLED, ASSET_FILE_LIMIT_EXCEEDED
+from ....utils import empty_asset_results, normalize_text, sanitize_filename
 from ._kind import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
     AssetDownloadKind,
-    failure_from_document_fetch as _failure_from_document_fetch,
+)
+from ._kind import (
     is_preview_candidate as _is_preview_candidate,
+)
+from ._kind import (
     requires_image_payload as _requires_image_payload,
+)
+from ._kind import (
     resolved_full_size_url as _resolved_full_size_url,
 )
+from .conversion import (
+    conversion_failure_attempt,
+    save_asset_resolution,
+)
+from .conversion import (
+    converted_figure_response as _converted_figure_response_with_converter,
+)
 from .dom import (
+    _CLOUDFLARE_CHALLENGE_TOKENS,
     SUPPLEMENTARY_BLOCKING_BODY_TOKENS,
     SUPPLEMENTARY_BLOCKING_TITLE_TOKENS,
-    _CLOUDFLARE_CHALLENGE_TOKENS,
-    _response_dimensions,
-    looks_like_full_size_asset_url,
-    preview_dimensions_are_acceptable,
 )
 from .figures import FigurePageFetcher, figure_download_candidates
-from .identity import html_asset_is_supplementary
-from .requester import cookie_header_for_url as _cookie_header_for_url
+from .identity import html_asset_identity_key, html_asset_is_supplementary
+from .recovery import (
+    AssetFetchPolicy,
+    CandidateResolutionLoopState,
+    FileDocumentFetcher,
+    ImageDocumentFetcher,
+    blocked_response_attempt,
+    browser_asset_recovery_allowed,
+    browser_first_candidate_recovery,
+    browser_preview_upgrade,
+    budget_failure_resolution,
+    preview_fallback_provenance,
+    recover_failed_candidate,
+    request_failure_attempt,
+    requires_caller_thread,
+    should_use_document_fetcher_for_candidate,
+    unsupported_scheme_failure,
+)
 from .state import (
-    AssetBinaryPayload,
+    AssetDeferredBrowserWork,
+    AssetDownloadAttempt,
+    AssetDownloadCandidate,
+    AssetDownloadResolution,
     AssetFetchResponse,
-    AssetDownloadAttempt as _AssetDownloadAttempt,
-    AssetDownloadCandidate as _AssetDownloadCandidate,
-    AssetDownloadFailure as _AssetDownloadFailure,
-    AssetDownloadResolution as _AssetDownloadResolution,
     AssetHostRecoveryCircuit,
     AssetHostRouteDecision,
-    asset_failure as _asset_failure,
-    resolve_and_collect_downloads_as_completed as _resolve_and_collect_downloads_as_completed,
-    resolution_from_attempt as _resolution_from_attempt,
+    asset_failure,
+    empty_asset_timing,
+    resolution_from_attempt,
+    resolve_and_collect_downloads_as_completed,
+)
+from .streaming import (
+    AssetRequestContext,
+    request_asset_candidate,
+    rollback_response_reservation,
+    with_asset_timing,
 )
 
-ImageDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
-FileDocumentFetcher = Callable[[str, Mapping[str, Any]], dict[str, Any] | None]
-AssetFetchPolicy = Literal["browser_first", "direct_then_browser", "browser_only"]
+
+def _active_path_converter(*args: Any, **kwargs: Any) -> Any:
+    return convert_source_image_path_to_png(*args, **kwargs)
 
 
-def _with_asset_timing(
+def _converted_figure_response(
     response: AssetFetchResponse,
-    phase: str,
-    seconds: float,
-) -> AssetFetchResponse:
-    timed = response.copy()
-    timed.timing[phase] = max(0.0, float(timed.timing.get(phase, 0.0))) + max(
-        0.0, float(seconds)
+    *,
+    source_url: str,
+    asset_budget: AssetBudget | None = None,
+) -> tuple[AssetFetchResponse, str]:
+    return _converted_figure_response_with_converter(
+        response,
+        source_url=source_url,
+        asset_budget=asset_budget,
+        path_converter=_active_path_converter,
     )
-    return timed
-
-
-@dataclass(frozen=True)
-class _AssetRequestContext:
-    headers: Mapping[str, str] | None
-    user_agent: str
-    browser_context_seed: Mapping[str, Any] | None
-    browser_cookies: list[dict[str, Any]]
-    fetch_policy: AssetFetchPolicy
-    asset_budget: AssetBudget
-    staging_dir: Path
-    allowed_hosts: tuple[str, ...] | None = None
-    candidate_headers_filter: (
-        Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
-    ) = None
-    sensitive_headers: tuple[str, ...] = ()
-    provider_name: str | None = None
-    route_name: str | None = None
 
 
 @dataclass(frozen=True)
 class AssetResolutionOptions:
-    """Dependencies and runtime state for one asset resolution."""
+    """Dependencies and runtime state for resolving one HTML asset."""
 
     transport: HttpTransport
-    headers: Mapping[str, str] | None
-    user_agent: str
-    browser_context_seed: Mapping[str, Any] | None
-    browser_cookies: list[dict[str, Any]]
-    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None
+    request: AssetRequestContext
+    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None = None
     candidate_url_resolver: Callable[[Mapping[str, Any]], list[str]] | None = None
-    fetch_policy: AssetFetchPolicy = "browser_first"
-    asset_budget: AssetBudget | None = None
-    staging_dir: Path | None = None
-    allowed_hosts: tuple[str, ...] | None = None
-    candidate_headers_filter: (
-        Callable[[str, Mapping[str, str]], Mapping[str, str]] | None
-    ) = None
-    sensitive_headers: tuple[str, ...] = ()
-    provider_name: str | None = None
-    route_name: str | None = None
+    fallback_candidate_url_resolver: Callable[[Mapping[str, Any]], list[str]] | None = (
+        None
+    )
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
-    _fallback_candidate_url_resolver: (
-        Callable[[Mapping[str, Any]], list[str]] | None
-    ) = None
+    defer_browser_to_caller_thread: bool = False
 
 
 @dataclass(frozen=True)
@@ -162,6 +136,7 @@ class AssetDownloadOptions:
     browser_context_seed: Mapping[str, Any] | None = None
     figure_page_fetcher: FigurePageFetcher | None = None
     candidate_builder: Callable[..., list[str]] | None = None
+    fallback_candidate_builder: Callable[..., list[str]] | None = None
     document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None = None
     image_document_fetcher: ImageDocumentFetcher | None = None
     file_document_fetcher: FileDocumentFetcher | None = None
@@ -176,688 +151,16 @@ class AssetDownloadOptions:
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
     _fallback_candidate_builder: Callable[..., list[str]] | None = None
 
-
-_BROWSER_RECOVERABLE_NETWORK_CATEGORIES = {
-    "connection_closed",
-    "connection_reset",
-    "dns_error",
-    "network_error",
-    "timeout",
-    "tls_error",
-}
-_BROWSER_RECOVERABLE_NETWORK_REASON_TOKENS = (
-    "challenge",
-    "cloudflare",
-    "connection closed",
-    "connection reset",
-    "dns",
-    "name resolution",
-    "network error",
-    "remote end closed",
-    "ssl error",
-    "timed out",
-    "timeout",
-    "tls error",
-)
-
-
-def browser_asset_recovery_allowed(
-    *,
-    status: int | None,
-    content_type: str = "",
-    reason: str = "",
-    error_category: str = "",
-) -> bool:
-    """Return whether a failed direct asset request may use browser recovery."""
-
-    if status in {404, 410, 429}:
-        return False
-    if status in {401, 403}:
-        return True
-    if status is None:
-        normalized_category = normalize_text(error_category).lower()
-        normalized_reason = normalize_text(reason).lower()
-        return normalized_category in _BROWSER_RECOVERABLE_NETWORK_CATEGORIES or any(
-            token in normalized_reason
-            for token in _BROWSER_RECOVERABLE_NETWORK_REASON_TOKENS
-        )
-    normalized_type = normalize_text(content_type).split(";", 1)[0].lower()
-    normalized_reason = normalize_text(reason).lower()
-    return status == 200 and (
-        normalized_type in {"text/html", "application/xhtml+xml"}
-        or any(
-            token in normalized_reason
-            for token in ("challenge", "access", "cloudflare", "html")
-        )
-    )
-
-
-def _requires_caller_thread(fetcher: Any) -> bool:
-    return bool(getattr(fetcher, "requires_caller_thread", False))
-
-
-def _response_content_length(response: AssetFetchResponse) -> int | None:
-    raw_value = header_value(response.get("headers"), "content-length")
-    try:
-        parsed = int(raw_value)
-    except (TypeError, ValueError):
-        return None
-    return parsed if parsed >= 0 else None
-
-
-def _stage_browser_response(
-    kind: AssetDownloadKind,
-    response: AssetFetchResponse,
-    *,
-    request_context: _AssetRequestContext,
-) -> AssetFetchResponse:
-    """Apply the normal asset budget and atomic staging path to browser bytes."""
-
-    from ....artifacts import ArtifactStore
-
-    body = bytes(response.get("body") or b"")
-    reservation = request_context.asset_budget.reserve()
-    staging_path = _unique_asset_staging_path(request_context.staging_dir)
-    reservation.register_staging(staging_path)
-    try:
-        request_context.asset_budget.raise_if_cancelled()
-        reservation.declare_content_length(_response_content_length(response))
-        reservation.consume(len(body))
-        reservation.reconcile_actual()
-        ArtifactStore.from_download_dir(request_context.staging_dir).write_bytes_file(
-            staging_path,
-            body,
-        )
-        dimensions = (
-            image_dimensions_from_path(staging_path) if kind.name == "figure" else None
-        )
-        if dimensions is not None:
-            reservation.validate_pixels(*dimensions)
-        request_context.asset_budget.raise_if_cancelled()
-    except BaseException:
-        reservation.rollback()
-        raise
-
-    staged = response.copy()
-    staged.payload = AssetBinaryPayload(
-        body=body[:8192],
-        staging_path=staging_path,
-        downloaded_bytes=len(body),
-        reservation=reservation,
-    )
-    staged["body_preview"] = body[:8192]
-    if dimensions is not None:
-        staged["dimensions"] = {
-            "width": dimensions[0],
-            "height": dimensions[1],
-        }
-    return staged
-
-
-def _fetch_document_fallback(
-    kind: AssetDownloadKind,
-    fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
-    candidate_url: str,
-    asset: Mapping[str, Any],
-    *,
-    transport: HttpTransport | None = None,
-    request_context: _AssetRequestContext | None = None,
-) -> AssetFetchResponse | None:
-    del transport
-    if fetcher is None:
-        return None
-    if kind.name == "figure" and not _requires_image_payload(asset):
-        return None
-    try:
-        browser_started_at = time.monotonic()
-        raw_response = fetcher(candidate_url, asset)
-        response = (
-            AssetFetchResponse.from_mapping(raw_response) if raw_response else None
-        )
-    except (RequestCancelledError, AssetBudgetExceeded):
+    def __post_init__(self) -> None:
         if (
-            request_context is not None
-            and request_context.fetch_policy == "browser_only"
+            self.fallback_candidate_builder is None
+            and self._fallback_candidate_builder is not None
         ):
-            raise
-        return None
-    except Exception:
-        return None
-    if not response:
-        return None
-    body = response.get("body", b"")
-    if not isinstance(body, (bytes, bytearray)):
-        return None
-    content_type = header_value(response.get("headers"), "content-type")
-    if not kind.accepts_response(content_type, bytes(body)):
-        return None
-    recovered = response.copy()
-    recovered = _with_asset_timing(
-        recovered,
-        "browser_recovery",
-        time.monotonic() - browser_started_at,
-    )
-    backend = getattr(fetcher, "browser_backend", None)
-    browser_backend = normalize_text(backend) if isinstance(backend, str) else ""
-    if browser_backend:
-        recovered["_paper_fetch_browser_backend"] = browser_backend
-    if request_context is None:
-        return recovered
-    return _stage_browser_response(
-        kind,
-        recovered,
-        request_context=request_context,
-    )
-
-
-def _with_browser_recovery_diagnostics(
-    response: AssetFetchResponse,
-    direct_attempt: _AssetDownloadAttempt | None,
-) -> AssetFetchResponse:
-    recovered = response.copy()
-    direct_diagnostic = (
-        direct_attempt.failure.diagnostic
-        if direct_attempt is not None and direct_attempt.failure is not None
-        else {}
-    )
-    backend = normalize_text(str(recovered.get("_paper_fetch_browser_backend") or ""))
-    recovered["_paper_fetch_final_fetcher"] = backend or "selected_browser"
-    recovered["_paper_fetch_recovery_attempts"] = [
-        {
-            key: value
-            for key, value in {
-                "stage": "direct",
-                "status": direct_diagnostic.get("status"),
-                "content_type": direct_diagnostic.get("content_type"),
-                "reason": direct_diagnostic.get("reason"),
-                "error_category": direct_diagnostic.get("error_category"),
-            }.items()
-            if value not in (None, "")
-        },
-        {
-            key: value
-            for key, value in {
-                "stage": "browser",
-                "browser_backend": backend or None,
-                "status": int(recovered.get("status_code") or 0) or None,
-                "content_type": header_value(recovered.get("headers"), "content-type"),
-                "reason": "recovered",
-                "final_fetcher": backend or "selected_browser",
-            }.items()
-            if value not in (None, "")
-        },
-    ]
-    return recovered
-
-
-def _candidate_source_image_format(candidate_url: str) -> str:
-    return source_image_format_from_payload(b"", source_url=candidate_url)
-
-
-def _should_use_document_fetcher_for_candidate(
-    kind: AssetDownloadKind,
-    candidate_url: str,
-    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
-) -> bool:
-    if document_fetcher is None:
-        return False
-    if kind.name == "supplementary":
-        return True
-    if kind.name != "figure":
-        return False
-    return _candidate_source_image_format(candidate_url) not in {"eps", "tiff"}
-
-
-def _converted_figure_response_impl(
-    response: AssetFetchResponse,
-    *,
-    source_url: str,
-    asset_budget: AssetBudget | None = None,
-) -> tuple[AssetFetchResponse, str]:
-    if response.payload.staging_path is not None:
-        source_path = response.payload.staging_path
-        source_reservation = response.payload.reservation
-        if (
-            source_path is None
-            or not source_path.is_file()
-            or not isinstance(source_reservation, AssetReservation)
-            or asset_budget is None
-        ):
-            return response.copy(), ""
-        try:
-            with source_path.open("rb") as source_stream:
-                source_prefix = source_stream.read(8192)
-        except OSError:
-            return response.copy(), ""
-        source_format = source_image_format_from_payload(
-            source_prefix,
-            content_type=header_value(response.get("headers"), "content-type"),
-            source_url=source_url,
-        )
-        if source_format not in {"eps", "tiff"}:
-            return response.copy(), ""
-        converted_path = _unique_asset_staging_path(source_path.parent)
-        converted_reservation = asset_budget.reserve()
-        converted_reservation.register_staging(converted_path)
-        try:
-            path_conversion = convert_source_image_path_to_png(
-                source_path,
-                converted_path,
-                content_type=header_value(response.get("headers"), "content-type"),
-                source_url=source_url,
-                max_output_bytes=asset_budget.max_bytes_per_asset,
+            object.__setattr__(
+                self,
+                "fallback_candidate_builder",
+                self._fallback_candidate_builder,
             )
-            if path_conversion is None:
-                converted_reservation.rollback()
-                return response.copy(), ""
-            converted_reservation.declare_content_length(path_conversion.output_bytes)
-            converted_reservation.consume(path_conversion.output_bytes)
-            dimensions = image_dimensions_from_path(converted_path)
-            if dimensions is not None:
-                converted_reservation.validate_pixels(*dimensions)
-            with converted_path.open("rb") as converted_stream:
-                preview = converted_stream.read(8192)
-        except ImageConversionFailure as exc:
-            converted_reservation.rollback()
-            if exc.reason_code == ASSET_BYTES_PER_ASSET_EXCEEDED:
-                diagnostic = {
-                    "max_bytes_per_asset": asset_budget.max_bytes_per_asset,
-                    "boundary": "image_conversion",
-                }
-                asset_budget.cancel(exc.reason_code, diagnostic=diagnostic)
-                raise AssetBudgetExceeded(
-                    exc.reason_code,
-                    diagnostic=diagnostic,
-                    fatal=True,
-                ) from exc
-            raise
-        except BaseException:
-            converted_reservation.rollback()
-            raise
-        converted = response.copy()
-        converted_headers = dict(response.get("headers") or {})
-        converted_headers["content-type"] = path_conversion.content_type
-        converted["headers"] = converted_headers
-        converted.payload = AssetBinaryPayload(
-            body=preview,
-            staging_path=converted_path,
-            downloaded_bytes=path_conversion.output_bytes,
-            reservation=converted_reservation,
-        )
-        converted.original_payload = response.payload
-        converted.original_content_type = header_value(
-            response.get("headers"), "content-type"
-        )
-        converted.source_format = path_conversion.source_format
-        converted.conversion_tool = path_conversion.tool
-        converted["body_preview"] = preview
-        if dimensions is not None:
-            converted["dimensions"] = {
-                "width": dimensions[0],
-                "height": dimensions[1],
-            }
-        return converted, path_conversion.source_format
-    source_format = source_image_format_from_payload(
-        response.get("body", b""),
-        content_type=header_value(response.get("headers"), "content-type"),
-        source_url=source_url,
-    )
-    if source_format not in {"eps", "tiff"}:
-        return response.copy(), ""
-    memory_conversion = convert_source_image_response_to_png(
-        response, source_url=source_url
-    )
-    if memory_conversion is None:
-        return response.copy(), ""
-    converted = response.copy()
-    converted_headers = dict(response.get("headers") or {})
-    converted_headers["content-type"] = memory_conversion.content_type
-    converted["headers"] = converted_headers
-    converted.payload = replace(
-        response.payload,
-        body=memory_conversion.body,
-        downloaded_bytes=len(memory_conversion.body),
-    )
-    converted.original_payload = response.payload
-    converted.original_content_type = header_value(
-        response.get("headers"), "content-type"
-    )
-    converted.source_format = memory_conversion.source_format
-    converted.conversion_tool = memory_conversion.tool
-    return converted, memory_conversion.source_format
-
-
-def _converted_figure_response(
-    response: AssetFetchResponse,
-    *,
-    source_url: str,
-    asset_budget: AssetBudget | None = None,
-) -> tuple[AssetFetchResponse, str]:
-    conversion_started_at = time.monotonic()
-    converted, source_format = _converted_figure_response_impl(
-        response,
-        source_url=source_url,
-        asset_budget=asset_budget,
-    )
-    return (
-        _with_asset_timing(
-            converted,
-            "conversion",
-            time.monotonic() - conversion_started_at,
-        ),
-        source_format,
-    )
-
-
-def _attach_browser_recovery_diagnostics(
-    download: dict[str, Any], response: AssetFetchResponse
-) -> None:
-    browser_backend = normalize_text(
-        str(response.get("_paper_fetch_browser_backend") or "")
-    )
-    final_fetcher = normalize_text(
-        str(response.get("_paper_fetch_final_fetcher") or "")
-    )
-    if browser_backend:
-        download["browser_backend"] = browser_backend
-        final_fetcher = final_fetcher or browser_backend
-    if final_fetcher:
-        download["final_fetcher"] = final_fetcher
-    attempts = response.get("_paper_fetch_recovery_attempts")
-    if not isinstance(attempts, list):
-        return
-    normalized_attempts = [
-        dict(attempt) for attempt in attempts if isinstance(attempt, Mapping)
-    ]
-    if not normalized_attempts:
-        return
-    download["recovery_attempts"] = normalized_attempts
-    browser_attempt: dict[str, Any] = next(
-        (
-            attempt
-            for attempt in reversed(normalized_attempts)
-            if attempt.get("stage") == "browser"
-        ),
-        {},
-    )
-    if browser_attempt.get("browser_backend"):
-        download["browser_backend"] = browser_attempt["browser_backend"]
-    if browser_attempt.get("final_fetcher"):
-        download["final_fetcher"] = browser_attempt["final_fetcher"]
-
-
-def _attach_asset_route_diagnostics(
-    download: dict[str, Any], response: AssetFetchResponse
-) -> None:
-    diagnostics = response.get("_paper_fetch_asset_route_diagnostics")
-    if isinstance(diagnostics, Mapping) and diagnostics:
-        download["asset_route"] = dict(diagnostics)
-
-
-def _conversion_failure_attempt(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate: _AssetDownloadCandidate,
-    response: AssetFetchResponse,
-    exc: ImageConversionFailure,
-) -> _AssetDownloadAttempt:
-    _rollback_response_reservation(response)
-    return _AssetDownloadAttempt(
-        candidate=candidate,
-        failure=_asset_failure(
-            kind.failure_template(
-                asset,
-                candidate.url,
-                status=response.get("status_code"),
-                content_type=header_value(response.get("headers"), "content-type"),
-                final_url=normalize_text(str(response.get("url") or candidate.url)),
-                reason=f"{exc.reason_code}: {exc}",
-            )
-        ),
-    )
-
-
-def _document_fetch_failure(
-    fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
-    candidate_url: str,
-) -> dict[str, Any]:
-    reporter = getattr(fetcher, "failure_for", None)
-    if not callable(reporter):
-        return {}
-    try:
-        failure = reporter(candidate_url)
-    except Exception:
-        return {}
-    return dict(failure) if isinstance(failure, Mapping) else {}
-
-
-def _unsupported_scheme_failure(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate_url: str,
-) -> dict[str, Any]:
-    label = "supplementary URL" if kind.name == "supplementary" else "asset URL"
-    return kind.failure_template(
-        asset,
-        candidate_url,
-        reason=f"Unsupported {label} scheme for {candidate_url}",
-    )
-
-
-def _unique_asset_staging_path(staging_dir: Path) -> Path:
-    return staging_dir / f".paper-fetch-asset-{uuid.uuid4().hex}.part"
-
-
-def _rollback_response_reservation(response: AssetFetchResponse | None) -> None:
-    if response is not None:
-        response.rollback()
-
-
-def _stream_asset_candidate(
-    kind: AssetDownloadKind,
-    transport: HttpTransport,
-    candidate_url: str,
-    *,
-    request_headers: Mapping[str, str],
-    request_context: _AssetRequestContext,
-) -> AssetFetchResponse:
-    last_failure: RequestFailure | None = None
-    retry_wait_seconds = 0.0
-    request_policy = HttpRequestPolicy(
-        allowed_hosts=request_context.allowed_hosts,
-        sensitive_headers=request_context.sensitive_headers,
-        max_response_bytes=request_context.asset_budget.max_bytes_per_asset,
-        max_compressed_response_bytes=request_context.asset_budget.max_bytes_per_asset,
-        timeout_seconds=DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-        retry_on_rate_limit=True,
-        rate_limit_retries=1,
-        max_rate_limit_wait_seconds=5,
-        retry_on_transient=True,
-        transient_retries=DEFAULT_TRANSIENT_RETRIES,
-    )
-    if request_context.provider_name and request_context.route_name:
-        request_policy = provider_request_policy(
-            request_context.provider_name,
-            request_context.route_name,
-            base=request_policy,
-        )
-    max_stream_attempts = (
-        max(0, int(request_policy.transient_retries or 0)) + 1
-        if request_policy.retry_on_transient
-        else 1
-    )
-    for stream_attempt in range(max_stream_attempts):
-        reservation = request_context.asset_budget.reserve()
-        staging_path = _unique_asset_staging_path(request_context.staging_dir)
-        reservation.register_staging(staging_path)
-        try:
-            response = transport.stream_to_file(
-                "GET",
-                candidate_url,
-                staging_path,
-                headers=request_headers,
-                options=HttpStreamOptions(
-                    # Transient retries live in this layer so partial-body retries
-                    # receive a fresh exclusive staging path and reservation.
-                    retry_on_transient=False,
-                    transient_retries=0,
-                    request_policy=request_policy,
-                    on_content_length=reservation.declare_content_length,
-                    on_chunk=reservation.consume,
-                ),
-            )
-            dimensions = (
-                image_dimensions_from_path(staging_path)
-                if kind.name == "figure"
-                else None
-            )
-            if dimensions is not None:
-                reservation.validate_pixels(*dimensions)
-            streamed = AssetFetchResponse.from_mapping(response)
-            transport_timings = response.get("_paper_fetch_timing_seconds")
-            streamed.timing = (
-                dict(transport_timings)
-                if isinstance(transport_timings, Mapping)
-                else {}
-            )
-            streamed = _with_asset_timing(
-                streamed,
-                "retry_wait",
-                retry_wait_seconds,
-            )
-            # Only a fixed-size prefix is retained for signature/challenge
-            # diagnostics. The binary remains solely in the staging file.
-            streamed.payload = replace(
-                streamed.payload,
-                body=bytes(response.get("body_preview") or b""),
-                reservation=reservation,
-            )
-            if dimensions is not None:
-                streamed["dimensions"] = {
-                    "width": dimensions[0],
-                    "height": dimensions[1],
-                }
-            return streamed
-        except AssetBudgetExceeded:
-            reservation.rollback()
-            raise
-        except RequestFailure as exc:
-            reservation.rollback()
-            last_failure = exc
-            reason_code = normalize_text(str(getattr(exc, "reason_code", "") or ""))
-            if reason_code in {
-                ASSET_BYTES_PER_ASSET_EXCEEDED,
-                ASSET_BYTES_TOTAL_EXCEEDED,
-            }:
-                request_context.asset_budget.cancel(
-                    reason_code,
-                    diagnostic={
-                        "boundary": "asset_stream_transport",
-                    },
-                )
-                raise
-            retryable = is_retryable_network_error(exc) or is_transient_http_status(
-                exc.status_code
-            )
-            if stream_attempt + 1 < max_stream_attempts and retryable:
-                sleeper = getattr(transport, "_cancellable_sleep", None)
-                if callable(sleeper):
-                    retry_started_at = time.monotonic()
-                    sleeper(
-                        request_policy.transient_backoff_base_seconds
-                        * (2**stream_attempt)
-                    )
-                    retry_wait_seconds += max(0.0, time.monotonic() - retry_started_at)
-                continue
-            raise
-        except BaseException:
-            reservation.rollback()
-            raise
-    assert last_failure is not None
-    raise last_failure
-
-
-def _request_asset_candidate(
-    kind: AssetDownloadKind,
-    transport: HttpTransport,
-    candidate_url: str,
-    *,
-    request_context: _AssetRequestContext,
-) -> AssetFetchResponse:
-    request_headers = kind.request_headers(
-        request_context.headers,
-        request_context.user_agent,
-        request_context.browser_context_seed,
-    )
-    cookie_header = _cookie_header_for_url(
-        request_context.browser_cookies, candidate_url
-    )
-    if cookie_header:
-        request_headers["Cookie"] = cookie_header
-    if request_context.candidate_headers_filter is not None:
-        request_headers = dict(
-            request_context.candidate_headers_filter(candidate_url, request_headers)
-        )
-    return _stream_asset_candidate(
-        kind,
-        transport,
-        candidate_url,
-        request_headers=request_headers,
-        request_context=request_context,
-    )
-
-
-def _request_failure_attempt(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate: _AssetDownloadCandidate,
-    exc: RequestFailure,
-) -> _AssetDownloadAttempt:
-    content_type = header_value(exc.headers, "content-type")
-    body = exc.body if isinstance(exc.body, (bytes, bytearray)) else b""
-    return _AssetDownloadAttempt(
-        candidate=candidate,
-        failure=_asset_failure(
-            kind.failure_template(
-                asset,
-                candidate.url,
-                status=exc.status_code,
-                content_type=content_type,
-                final_url=exc.url,
-                body=body,
-                reason=normalize_text(str(getattr(exc, "reason_code", "") or ""))
-                or str(exc),
-                error_category=str(getattr(exc, "error_category", "") or ""),
-            )
-        ),
-    )
-
-
-def _blocked_response_attempt(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate: _AssetDownloadCandidate,
-    response: AssetFetchResponse,
-    source_url: str,
-    reason: str,
-) -> _AssetDownloadAttempt:
-    body = response.get("body", b"")
-    if not isinstance(body, (bytes, bytearray)):
-        body = b""
-    return _AssetDownloadAttempt(
-        candidate=candidate,
-        failure=_asset_failure(
-            kind.failure_template(
-                asset,
-                source_url,
-                status=response.get("status_code"),
-                content_type=header_value(response.get("headers"), "content-type"),
-                final_url=normalize_text(str(response.get("url") or source_url)),
-                body=body,
-                reason=reason,
-            )
-        ),
-    )
 
 
 def _resolution_preview_fields(
@@ -882,410 +185,64 @@ def _resolution_preview_fields(
     return preview_url, full_size_url
 
 
-def _asset_request_context(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    options: AssetResolutionOptions,
-) -> _AssetRequestContext:
-    active_budget = options.asset_budget or current_asset_budget() or AssetBudget()
-    staging_root = options.staging_dir or Path.cwd()
-    output_subdir = kind.output_subdir(asset)
-    active_staging_dir = (
-        staging_root / output_subdir if output_subdir is not None else staging_root
-    )
-    return _AssetRequestContext(
-        headers=options.headers,
-        candidate_headers_filter=options.candidate_headers_filter,
-        sensitive_headers=options.sensitive_headers,
-        user_agent=options.user_agent,
-        browser_context_seed=options.browser_context_seed,
-        browser_cookies=options.browser_cookies,
-        fetch_policy=options.fetch_policy,
-        asset_budget=active_budget,
-        staging_dir=active_staging_dir,
-        allowed_hosts=options.allowed_hosts,
-        provider_name=options.provider_name,
-        route_name=options.route_name,
-    )
-
-
 @dataclass(frozen=True)
-class _CandidateRecoveryResult:
-    attempt: _AssetDownloadAttempt | None = None
-    resolution: _AssetDownloadResolution | None = None
-    conversion_degraded: bool = False
-    budget_error: AssetBudgetExceeded | None = None
-    budget_response: AssetFetchResponse | None = None
-    budget_candidate: _AssetDownloadCandidate | None = None
-
-
-@dataclass(frozen=True)
-class _AppliedCandidateRecovery:
-    resolution: _AssetDownloadResolution | None
-    last_attempt: _AssetDownloadAttempt | None
+class _DeferredCandidatePause:
+    candidate_urls: tuple[str, ...]
+    candidate_index: int
+    direct_attempt: AssetDownloadAttempt
     conversion_degraded: bool
     full_size_access_failed: bool
 
 
-def _with_conversion_provenance(
-    resolution: _AssetDownloadResolution,
-    *,
-    conversion_degraded: bool,
-    additional: Sequence[str] = (),
-) -> _AssetDownloadResolution:
-    provenance = tuple(
-        dict.fromkeys(
-            [
-                *resolution.provenance,
-                *(["conversion_degraded"] if conversion_degraded else []),
-                *(normalize_text(str(item)) for item in additional),
-            ]
-        )
-    )
-    if provenance == resolution.provenance:
-        return resolution
-    return replace(resolution, provenance=provenance)
-
-
-def _preview_fallback_provenance(
-    candidate_url: str,
-    *,
-    preview_url: str,
-    full_size_url: str,
-    full_size_access_failed: bool,
-) -> tuple[str, ...]:
-    if full_size_access_failed and _is_preview_candidate(
-        candidate_url,
-        preview_url=preview_url,
-        full_size_url=full_size_url,
-    ):
-        return (OFFICIAL_FULL_SIZE_ACCESS_RESTRICTED,)
-    return ()
-
-
-def _budget_failure_resolution(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    exc: AssetBudgetExceeded,
-    candidate: _AssetDownloadCandidate,
-    *,
-    preview_url: str,
-    full_size_url: str,
-    response: AssetFetchResponse | None = None,
-) -> _AssetDownloadResolution:
-    _rollback_response_reservation(response)
-    attempt = _AssetDownloadAttempt(
-        candidate=candidate,
-        failure=_asset_failure(
-            kind.failure_template(
-                asset,
-                candidate.url,
-                reason=exc.reason_code,
-            )
-        ),
-    )
-    if attempt.failure is not None:
-        attempt.failure.diagnostic.update(exc.diagnostic)
-    return _resolution_from_attempt(
-        asset=asset,
-        attempt=attempt,
-        preview_url=preview_url,
-        full_size_url=full_size_url,
-    )
-
-
-def _apply_candidate_recovery(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    recovery: _CandidateRecoveryResult,
-    candidate: _AssetDownloadCandidate,
-    *,
-    preview_url: str,
-    full_size_url: str,
-    conversion_degraded: bool,
-    full_size_access_failed: bool,
-) -> _AppliedCandidateRecovery:
-    updated_conversion = conversion_degraded or recovery.conversion_degraded
-    if recovery.budget_error is not None:
-        return _AppliedCandidateRecovery(
-            resolution=_budget_failure_resolution(
-                kind,
-                asset,
-                recovery.budget_error,
-                recovery.budget_candidate or candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                response=recovery.budget_response,
-            ),
-            last_attempt=recovery.attempt,
-            conversion_degraded=updated_conversion,
-            full_size_access_failed=full_size_access_failed,
-        )
-    if recovery.resolution is not None:
-        return _AppliedCandidateRecovery(
-            resolution=_with_conversion_provenance(
-                recovery.resolution,
-                conversion_degraded=updated_conversion,
-                additional=_preview_fallback_provenance(
-                    candidate.url,
-                    preview_url=preview_url,
-                    full_size_url=full_size_url,
-                    full_size_access_failed=full_size_access_failed,
-                ),
-            ),
-            last_attempt=recovery.attempt,
-            conversion_degraded=updated_conversion,
-            full_size_access_failed=full_size_access_failed,
-        )
-    return _AppliedCandidateRecovery(
-        resolution=None,
-        last_attempt=recovery.attempt,
-        conversion_degraded=updated_conversion,
-        full_size_access_failed=full_size_access_failed
-        or not _is_preview_candidate(
-            candidate.url,
-            preview_url=preview_url,
-            full_size_url=full_size_url,
-        ),
-    )
-
-
-def _browser_first_candidate_recovery(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate: _AssetDownloadCandidate,
-    *,
-    transport: HttpTransport,
-    request_context: _AssetRequestContext,
-    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
-    preview_url: str,
-    full_size_url: str,
-) -> _CandidateRecoveryResult:
-    try:
-        response = _fetch_document_fallback(
-            kind,
-            document_fetcher,
-            candidate.url,
-            asset,
-            transport=transport,
-            request_context=request_context,
-        )
-    except AssetBudgetExceeded as exc:
-        return _CandidateRecoveryResult(budget_error=exc)
-    if response is None:
-        failure = _document_fetch_failure(document_fetcher, candidate.url)
-        return _CandidateRecoveryResult(
-            attempt=_AssetDownloadAttempt(
-                candidate=candidate,
-                failure=_asset_failure(
-                    _failure_from_document_fetch(kind, asset, candidate.url, failure)
-                ),
-            )
-        )
-    try:
-        converted = response
-        if request_context.fetch_policy != "browser_only":
-            converted, _source_format = _converted_figure_response(
-                response,
-                source_url=candidate.url,
-                asset_budget=request_context.asset_budget,
-            )
-    except AssetBudgetExceeded as exc:
-        return _CandidateRecoveryResult(
-            budget_error=exc,
-            budget_response=response,
-        )
-    except ImageConversionFailure as exc:
-        return _CandidateRecoveryResult(
-            attempt=_conversion_failure_attempt(kind, asset, candidate, response, exc),
-            conversion_degraded=True,
-        )
-    return _CandidateRecoveryResult(
-        resolution=_resolution_from_attempt(
-            asset=asset,
-            attempt=_AssetDownloadAttempt(
-                candidate=candidate,
-                response=converted,
-                source_url=candidate.url,
-            ),
-            preview_url=preview_url,
-            full_size_url=full_size_url,
-        )
-    )
-
-
-def _recover_failed_candidate(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
-    candidate: _AssetDownloadCandidate,
-    *,
-    transport: HttpTransport,
-    request_context: _AssetRequestContext,
-    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher | None,
-    last_attempt: _AssetDownloadAttempt,
-    preview_url: str,
-    full_size_url: str,
-    recovery_allowed: bool,
-) -> _CandidateRecoveryResult:
-    if not recovery_allowed:
-        return _CandidateRecoveryResult(attempt=last_attempt)
-    try:
-        response = _fetch_document_fallback(
-            kind,
-            document_fetcher,
-            candidate.url,
-            asset,
-            transport=transport,
-            request_context=request_context,
-        )
-    except AssetBudgetExceeded as exc:
-        return _CandidateRecoveryResult(
-            attempt=last_attempt,
-            budget_error=exc,
-        )
-    if response is None:
-        fetch_failure = _document_fetch_failure(document_fetcher, candidate.url)
-        if fetch_failure and last_attempt.failure is not None:
-            # Browser fetchers commonly report sparse fields. Do not erase the
-            # direct response status or MIME with their empty placeholders,
-            # while still allowing an actionable browser reason to supersede a
-            # generic HTTP failure.
-            last_attempt.failure.diagnostic.update(
-                {
-                    key: value
-                    for key, value in fetch_failure.items()
-                    if value not in (None, "", [], {})
-                }
-            )
-        return _CandidateRecoveryResult(attempt=last_attempt)
-    response = _with_browser_recovery_diagnostics(response, last_attempt)
-    try:
-        converted, _source_format = _converted_figure_response(
-            response,
-            source_url=candidate.url,
-            asset_budget=request_context.asset_budget,
-        )
-    except AssetBudgetExceeded as exc:
-        return _CandidateRecoveryResult(
-            attempt=last_attempt,
-            budget_error=exc,
-            budget_response=response,
-        )
-    except ImageConversionFailure as exc:
-        return _CandidateRecoveryResult(
-            attempt=_conversion_failure_attempt(kind, asset, candidate, response, exc),
-            conversion_degraded=True,
-        )
-    return _CandidateRecoveryResult(
-        attempt=last_attempt,
-        resolution=_resolution_from_attempt(
-            asset=asset,
-            attempt=_AssetDownloadAttempt(
-                candidate=candidate,
-                response=converted,
-                source_url=candidate.url,
-            ),
-            preview_url=preview_url,
-            full_size_url=full_size_url,
-        ),
-    )
-
-
-def _browser_preview_upgrade(
+def _iter_staged_candidates(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     *,
-    candidate_url: str,
-    response: AssetFetchResponse,
-    transport: HttpTransport,
-    request_context: _AssetRequestContext,
-    document_fetcher: ImageDocumentFetcher | FileDocumentFetcher,
-    preview_url: str,
-    full_size_url: str,
-) -> _CandidateRecoveryResult:
-    """Try browser-owned full-size alternatives without complicating the main loop."""
+    initial_candidates: list[str],
+    start_index: int,
+    fetch_policy: AssetFetchPolicy,
+    fallback_resolver: Callable[[Mapping[str, Any]], list[str]] | None,
+    asset_budget: AssetBudget,
+    loop_state: CandidateResolutionLoopState,
+    materialized_candidates: list[str],
+) -> Iterator[tuple[int, str]]:
+    for index in range(start_index, len(initial_candidates)):
+        yield index, initial_candidates[index]
 
-    conversion_degraded = False
-    upgrade_targets = kind.upgrade_targets
-    if upgrade_targets is None:
-        return _CandidateRecoveryResult()
-    for upgrade_target in upgrade_targets(candidate_url, asset):
-        if upgrade_target == candidate_url:
-            continue
-        budget_candidate = _AssetDownloadCandidate(upgrade_target)
-        try:
-            fallback_response = _fetch_document_fallback(
-                kind,
-                document_fetcher,
-                upgrade_target,
-                asset,
-                transport=transport,
-                request_context=request_context,
-            )
-        except AssetBudgetExceeded as exc:
-            _rollback_response_reservation(response)
-            return _CandidateRecoveryResult(
-                budget_error=exc,
-                budget_candidate=budget_candidate,
-                conversion_degraded=conversion_degraded,
-            )
-        if fallback_response is None:
-            continue
-        try:
-            fallback_response, _ = _converted_figure_response(
-                fallback_response,
-                source_url=upgrade_target,
-                asset_budget=request_context.asset_budget,
-            )
-        except AssetBudgetExceeded as exc:
-            _rollback_response_reservation(response)
-            return _CandidateRecoveryResult(
-                budget_error=exc,
-                budget_response=fallback_response,
-                budget_candidate=budget_candidate,
-                conversion_degraded=conversion_degraded,
-            )
-        except ImageConversionFailure:
-            conversion_degraded = True
-            continue
-        _rollback_response_reservation(response)
-        return _CandidateRecoveryResult(
-            resolution=_resolution_from_attempt(
-                asset=asset,
-                attempt=_AssetDownloadAttempt(
-                    candidate=budget_candidate,
-                    response=fallback_response,
-                    source_url=upgrade_target,
-                    download_tier_override="playwright_canvas_fallback",
-                ),
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-            ),
-            conversion_degraded=conversion_degraded,
-        )
-    return _CandidateRecoveryResult(conversion_degraded=conversion_degraded)
+    if fetch_policy == "browser_only" or fallback_resolver is None:
+        return
+    if asset_budget.internally_cancelled:
+        return
+    asset_budget.raise_if_cancelled()
+    remaining = list(dict.fromkeys(fallback_resolver(asset)))
+    _, loop_state.full_size_url = _resolution_preview_fields(
+        kind, asset, [*initial_candidates, *remaining]
+    )
+    seen = set(initial_candidates)
+    for url in remaining:
+        if url not in seen:
+            seen.add(url)
+            next_index = len(materialized_candidates)
+            materialized_candidates.append(url)
+            yield next_index, url
 
 
-def _resolve_asset_download_impl(
+def _resolve_candidate_loop(
     kind: AssetDownloadKind,
     asset: Mapping[str, Any],
     *,
+    initial_candidates: list[str],
+    start_index: int = 0,
     options: AssetResolutionOptions,
-) -> _AssetDownloadResolution:
-    active_options = options
-    transport = active_options.transport
-    request_context = _asset_request_context(kind, asset, active_options)
+    loop_state: CandidateResolutionLoopState,
+) -> AssetDownloadResolution | _DeferredCandidatePause:
+    transport = options.transport
+    request_context = options.request.for_asset(kind, asset)
     active_budget = request_context.asset_budget
-    document_fetcher = active_options.document_fetcher
-    fetch_policy = active_options.fetch_policy
-    conversion_degraded = False
-    full_size_access_failed = False
-    candidate_urls = (
-        active_options.candidate_url_resolver or kind.candidate_url_resolver
-    )(asset)
-    preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
+    document_fetcher = options.document_fetcher
+    fetch_policy = request_context.fetch_policy
 
-    if not candidate_urls and active_options._fallback_candidate_url_resolver is None:
+    if not initial_candidates and options.fallback_candidate_url_resolver is None:
         failure = (
             kind.failure_template(
                 asset,
@@ -1295,149 +252,129 @@ def _resolve_asset_download_impl(
             if kind.name == "supplementary"
             else None
         )
-        return _resolution_from_attempt(
+        return resolution_from_attempt(
             asset=asset,
             attempt=(
-                _AssetDownloadAttempt(
-                    candidate=_AssetDownloadCandidate(""),
-                    failure=_asset_failure(failure),
+                AssetDownloadAttempt(
+                    candidate=AssetDownloadCandidate(""),
+                    failure=asset_failure(failure),
                 )
                 if failure is not None
                 else None
             ),
-            preview_url=preview_url,
-            full_size_url=full_size_url,
+            preview_url=loop_state.preview_url,
+            full_size_url=loop_state.full_size_url,
         )
 
-    def staged_candidates():
-        nonlocal full_size_url
-        yield from candidate_urls
-        fallback = (
-            None
-            if fetch_policy == "browser_only"
-            else active_options._fallback_candidate_url_resolver
-        )
-        if fallback is not None:
-            if active_budget.internally_cancelled:
-                return
-            active_budget.raise_if_cancelled()
-            remaining = list(dict.fromkeys(fallback(asset)))
-            # Resolve the figure page only after known originals fail, without
-            # resetting conversion/access failures or scheduling the asset twice.
-            _, full_size_url = _resolution_preview_fields(
-                kind, asset, [*candidate_urls, *remaining]
-            )
-            seen = set(candidate_urls)
-            yield from (url for url in remaining if url not in seen)
-
-    last_attempt: _AssetDownloadAttempt | None = None
-    for candidate_url in staged_candidates():
-        candidate = _AssetDownloadCandidate(candidate_url)
+    materialized_candidates = list(initial_candidates)
+    for candidate_index, candidate_url in _iter_staged_candidates(
+        kind,
+        asset,
+        initial_candidates=initial_candidates,
+        start_index=start_index,
+        fetch_policy=fetch_policy,
+        fallback_resolver=options.fallback_candidate_url_resolver,
+        asset_budget=active_budget,
+        loop_state=loop_state,
+        materialized_candidates=materialized_candidates,
+    ):
+        candidate = AssetDownloadCandidate(candidate_url)
         parsed = urllib.parse.urlparse(candidate_url)
         if parsed.scheme not in {"http", "https"}:
-            last_attempt = _AssetDownloadAttempt(
+            loop_state.last_attempt = AssetDownloadAttempt(
                 candidate=candidate,
-                failure=_asset_failure(
-                    _unsupported_scheme_failure(kind, asset, candidate_url)
+                failure=asset_failure(
+                    unsupported_scheme_failure(kind, asset, candidate_url)
                 ),
             )
             continue
 
         if fetch_policy == "browser_only" or (
             fetch_policy == "browser_first"
-            and _should_use_document_fetcher_for_candidate(
+            and should_use_document_fetcher_for_candidate(
                 kind,
                 candidate_url,
                 document_fetcher,
             )
         ):
-            recovery = _browser_first_candidate_recovery(
+            recovery = browser_first_candidate_recovery(
                 kind,
                 asset,
                 candidate,
                 transport=transport,
                 request_context=request_context,
                 document_fetcher=document_fetcher,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
             )
-            applied = _apply_candidate_recovery(
-                kind,
-                asset,
-                recovery,
-                candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                conversion_degraded=conversion_degraded,
-                full_size_access_failed=full_size_access_failed,
-            )
-            conversion_degraded = applied.conversion_degraded
-            full_size_access_failed = applied.full_size_access_failed
-            last_attempt = applied.last_attempt
-            if applied.resolution is not None:
-                return applied.resolution
+            if (resolved := loop_state.apply(recovery, candidate)) is not None:
+                return resolved
             continue
 
         try:
-            response = _request_asset_candidate(
+            response = request_asset_candidate(
                 kind,
                 transport,
                 candidate_url,
                 request_context=request_context,
             )
         except AssetBudgetExceeded as exc:
-            return _budget_failure_resolution(
+            return budget_failure_resolution(
                 kind,
                 asset,
                 exc,
                 candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
             )
         except RequestFailure as exc:
-            last_attempt = _request_failure_attempt(kind, asset, candidate, exc)
-            recovery = _recover_failed_candidate(
+            failed_attempt = request_failure_attempt(kind, asset, candidate, exc)
+            recovery_allowed = browser_asset_recovery_allowed(
+                status=exc.status_code,
+                content_type=header_value(exc.headers, "content-type"),
+                reason=str(exc),
+                error_category=str(getattr(exc, "error_category", "") or ""),
+            )
+            if (
+                options.defer_browser_to_caller_thread
+                and recovery_allowed
+                and should_use_document_fetcher_for_candidate(
+                    kind,
+                    candidate_url,
+                    document_fetcher,
+                )
+            ):
+                return _DeferredCandidatePause(
+                    candidate_urls=tuple(materialized_candidates),
+                    candidate_index=candidate_index,
+                    direct_attempt=failed_attempt,
+                    conversion_degraded=loop_state.conversion_degraded,
+                    full_size_access_failed=loop_state.full_size_access_failed,
+                )
+            recovery = recover_failed_candidate(
                 kind,
                 asset,
                 candidate,
                 transport=transport,
                 request_context=request_context,
                 document_fetcher=document_fetcher,
-                last_attempt=last_attempt,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                recovery_allowed=browser_asset_recovery_allowed(
-                    status=exc.status_code,
-                    content_type=header_value(exc.headers, "content-type"),
-                    reason=str(exc),
-                    error_category=str(getattr(exc, "error_category", "") or ""),
-                ),
+                last_attempt=failed_attempt,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
+                recovery_allowed=recovery_allowed,
             )
-            applied = _apply_candidate_recovery(
-                kind,
-                asset,
-                recovery,
-                candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                conversion_degraded=conversion_degraded,
-                full_size_access_failed=full_size_access_failed,
-            )
-            conversion_degraded = applied.conversion_degraded
-            full_size_access_failed = applied.full_size_access_failed
-            last_attempt = applied.last_attempt
-            if applied.resolution is not None:
-                return applied.resolution
+            if (resolved := loop_state.apply(recovery, candidate)) is not None:
+                return resolved
             continue
 
         body = response.get("body", b"")
-        if not isinstance(body, (bytes, bytearray)):
+        if not isinstance(body, bytes | bytearray):
             body = b""
         content_type = header_value(response.get("headers"), "content-type")
         block_reason = kind.response_block_reason(content_type, bytes(body))
         if block_reason:
-            _rollback_response_reservation(response)
-            last_attempt = _blocked_response_attempt(
+            rollback_response_reservation(response)
+            failed_attempt = blocked_response_attempt(
                 kind,
                 asset,
                 candidate,
@@ -1445,37 +382,41 @@ def _resolve_asset_download_impl(
                 candidate_url,
                 block_reason,
             )
-            recovery = _recover_failed_candidate(
+            recovery_allowed = browser_asset_recovery_allowed(
+                status=int(response.get("status_code") or 0) or None,
+                content_type=content_type,
+                reason=block_reason,
+            )
+            if (
+                options.defer_browser_to_caller_thread
+                and recovery_allowed
+                and should_use_document_fetcher_for_candidate(
+                    kind,
+                    candidate_url,
+                    document_fetcher,
+                )
+            ):
+                return _DeferredCandidatePause(
+                    candidate_urls=tuple(materialized_candidates),
+                    candidate_index=candidate_index,
+                    direct_attempt=failed_attempt,
+                    conversion_degraded=loop_state.conversion_degraded,
+                    full_size_access_failed=loop_state.full_size_access_failed,
+                )
+            recovery = recover_failed_candidate(
                 kind,
                 asset,
                 candidate,
                 transport=transport,
                 request_context=request_context,
                 document_fetcher=document_fetcher,
-                last_attempt=last_attempt,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                recovery_allowed=browser_asset_recovery_allowed(
-                    status=int(response.get("status_code") or 0) or None,
-                    content_type=content_type,
-                    reason=block_reason,
-                ),
+                last_attempt=failed_attempt,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
+                recovery_allowed=recovery_allowed,
             )
-            applied = _apply_candidate_recovery(
-                kind,
-                asset,
-                recovery,
-                candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                conversion_degraded=conversion_degraded,
-                full_size_access_failed=full_size_access_failed,
-            )
-            conversion_degraded = applied.conversion_degraded
-            full_size_access_failed = applied.full_size_access_failed
-            last_attempt = applied.last_attempt
-            if applied.resolution is not None:
-                return applied.resolution
+            if (resolved := loop_state.apply(recovery, candidate)) is not None:
+                return resolved
             continue
 
         if (
@@ -1485,11 +426,11 @@ def _resolve_asset_download_impl(
             and _requires_image_payload(asset)
             and _is_preview_candidate(
                 candidate_url,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
             )
         ):
-            upgrade = _browser_preview_upgrade(
+            upgrade = browser_preview_upgrade(
                 kind,
                 asset,
                 candidate_url=candidate_url,
@@ -1497,28 +438,22 @@ def _resolve_asset_download_impl(
                 transport=transport,
                 request_context=request_context,
                 document_fetcher=document_fetcher,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
             )
-            applied = _apply_candidate_recovery(
-                kind,
-                asset,
-                upgrade,
-                candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
-                conversion_degraded=conversion_degraded,
-                full_size_access_failed=full_size_access_failed,
-            )
-            conversion_degraded = applied.conversion_degraded
-            full_size_access_failed = applied.full_size_access_failed
-            if applied.resolution is not None:
-                return applied.resolution
+            if (
+                resolved := loop_state.apply(
+                    upgrade,
+                    candidate,
+                    preserve_last_attempt=True,
+                )
+            ) is not None:
+                return resolved
 
         try:
             if fetch_policy == "direct_then_browser":
                 response = response.copy()
-                response["_paper_fetch_final_fetcher"] = "direct_http"
+                response.final_fetcher = "direct_http"
             response, _ = (
                 _converted_figure_response(
                     response,
@@ -1529,16 +464,9 @@ def _resolve_asset_download_impl(
                 else (response.copy(), "")
             )
         except ImageConversionFailure as exc:
-            conversion_degraded = True
-            full_size_access_failed = (
-                full_size_access_failed
-                or not _is_preview_candidate(
-                    candidate_url,
-                    preview_url=preview_url,
-                    full_size_url=full_size_url,
-                )
-            )
-            last_attempt = _conversion_failure_attempt(
+            loop_state.conversion_degraded = True
+            loop_state.mark_non_preview_failure(candidate_url)
+            loop_state.last_attempt = conversion_failure_attempt(
                 kind,
                 asset,
                 candidate,
@@ -1547,161 +475,110 @@ def _resolve_asset_download_impl(
             )
             continue
         except AssetBudgetExceeded as exc:
-            return _budget_failure_resolution(
+            return budget_failure_resolution(
                 kind,
                 asset,
                 exc,
                 candidate,
-                preview_url=preview_url,
-                full_size_url=full_size_url,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
                 response=response,
             )
 
-        return _resolution_from_attempt(
+        return resolution_from_attempt(
             asset=asset,
-            attempt=_AssetDownloadAttempt(
+            attempt=AssetDownloadAttempt(
                 candidate=candidate,
                 response=response,
                 source_url=candidate_url,
             ),
-            preview_url=preview_url,
-            full_size_url=full_size_url,
+            preview_url=loop_state.preview_url,
+            full_size_url=loop_state.full_size_url,
             provenance=tuple(
                 dict.fromkeys(
                     [
-                        *(["conversion_degraded"] if conversion_degraded else []),
-                        *_preview_fallback_provenance(
+                        *(
+                            ["conversion_degraded"]
+                            if loop_state.conversion_degraded
+                            else []
+                        ),
+                        *preview_fallback_provenance(
                             candidate_url,
-                            preview_url=preview_url,
-                            full_size_url=full_size_url,
-                            full_size_access_failed=full_size_access_failed,
+                            preview_url=loop_state.preview_url,
+                            full_size_url=loop_state.full_size_url,
+                            full_size_access_failed=loop_state.full_size_access_failed,
                         ),
                     ]
                 )
             ),
         )
 
-    return _resolution_from_attempt(
+    return resolution_from_attempt(
         asset=asset,
-        attempt=last_attempt,
-        preview_url=preview_url,
-        full_size_url=full_size_url,
-        provenance=("conversion_degraded",) if conversion_degraded else (),
+        attempt=loop_state.last_attempt,
+        preview_url=loop_state.preview_url,
+        full_size_url=loop_state.full_size_url,
+        provenance=(("conversion_degraded",) if loop_state.conversion_degraded else ()),
     )
 
 
 def _resolution_with_diagnostics(
-    resolved: _AssetDownloadResolution,
+    resolved: AssetDownloadResolution,
     *,
     candidate_resolution_seconds: float,
     route_diagnostics: Mapping[str, Any] | None = None,
-) -> _AssetDownloadResolution:
+) -> AssetDownloadResolution:
     if resolved.response is not None:
-        timed = _with_asset_timing(
+        timed = with_asset_timing(
             resolved.response, "candidate_resolution", candidate_resolution_seconds
         )
         if route_diagnostics:
-            timed["_paper_fetch_asset_route_diagnostics"] = dict(route_diagnostics)
+            timed.route_diagnostics = {
+                **timed.route_diagnostics,
+                **dict(route_diagnostics),
+            }
         return replace(resolved, response=timed)
     if resolved.failure is not None:
-        diagnostic = dict(resolved.failure.diagnostic)
-        timings = dict(diagnostic.get("_paper_fetch_asset_timing_seconds") or {})
-        timings["candidate_resolution"] = max(
-            0.0, float(timings.get("candidate_resolution", 0.0))
+        failure_timing = dict(resolved.failure.timing)
+        failure_timing["candidate_resolution"] = max(
+            0.0, float(failure_timing.get("candidate_resolution", 0.0))
         ) + max(0.0, candidate_resolution_seconds)
-        diagnostic["_paper_fetch_asset_timing_seconds"] = timings
-        if route_diagnostics:
-            diagnostic["asset_route"] = dict(route_diagnostics)
-        return replace(resolved, failure=_AssetDownloadFailure(diagnostic))
+        merged_route = (
+            {**resolved.failure.route_diagnostics, **dict(route_diagnostics)}
+            if route_diagnostics
+            else dict(resolved.failure.route_diagnostics)
+        )
+        return replace(
+            resolved,
+            failure=replace(
+                resolved.failure,
+                timing=failure_timing,
+                route_diagnostics=merged_route,
+            ),
+        )
     return resolved
 
 
 def _browser_resolution_succeeded(
-    resolved: _AssetDownloadResolution,
+    resolved: AssetDownloadResolution,
     decision: AssetHostRouteDecision,
 ) -> bool:
-    if not isinstance(resolved.response, Mapping):
+    if resolved.response is None:
         return False
     if decision.route == "browser":
         return True
-    final_fetcher = normalize_text(
-        str(resolved.response.get("_paper_fetch_final_fetcher") or "")
-    )
-    browser_backend = normalize_text(
-        str(resolved.response.get("_paper_fetch_browser_backend") or "")
-    )
+    final_fetcher = normalize_text(resolved.response.final_fetcher)
+    browser_backend = normalize_text(resolved.response.browser_backend)
     return bool(browser_backend or (final_fetcher and final_fetcher != "direct_http"))
 
 
-def resolve_asset_download(
-    kind: AssetDownloadKind,
-    asset: Mapping[str, Any],
+def _finalize_circuit_route_diagnostics(
+    resolved: AssetDownloadResolution,
     *,
-    options: AssetResolutionOptions,
-) -> _AssetDownloadResolution:
-    """Resolve one asset with timed candidates and article-local host routing."""
-
-    active_options = options
-    candidate_resolver = (
-        active_options.candidate_url_resolver or kind.candidate_url_resolver
-    )
-    candidate_started_at = time.monotonic()
-    candidate_urls = list(candidate_resolver(asset))
-    candidate_seconds = time.monotonic() - candidate_started_at
-    fallback_resolver = active_options._fallback_candidate_url_resolver
-
-    def timed_fallback(asset: Mapping[str, Any]) -> list[str]:
-        nonlocal candidate_seconds
-        started = time.monotonic()
-        try:
-            return list(fallback_resolver(asset)) if fallback_resolver else []
-        finally:
-            candidate_seconds += time.monotonic() - started
-
-    prepared_options = replace(
-        active_options,
-        candidate_url_resolver=lambda _asset: list(candidate_urls),
-        _fallback_candidate_url_resolver=timed_fallback if fallback_resolver else None,
-    )
-
-    decision: AssetHostRouteDecision | None = None
-    circuit = active_options.host_recovery_circuit
-    if (
-        circuit is not None
-        and active_options.fetch_policy == "direct_then_browser"
-        and active_options.document_fetcher is not None
-    ):
-        circuit_candidate = next(
-            (
-                candidate
-                for candidate in candidate_urls
-                if urllib.parse.urlparse(candidate).scheme in {"http", "https"}
-                and _should_use_document_fetcher_for_candidate(
-                    kind,
-                    candidate,
-                    active_options.document_fetcher,
-                )
-            ),
-            "",
-        )
-        if circuit_candidate:
-            decision = circuit.begin(circuit_candidate)
-            if decision.route == "browser":
-                prepared_options = replace(
-                    prepared_options, fetch_policy="browser_first"
-                )
-
-    try:
-        resolved = _resolve_asset_download_impl(
-            kind,
-            asset,
-            options=prepared_options,
-        )
-    except BaseException:
-        if circuit is not None and decision is not None:
-            circuit.abandon(decision)
-        raise
-
+    circuit: AssetHostRecoveryCircuit | None,
+    decision: AssetHostRouteDecision | None,
+    candidate_seconds: float,
+) -> AssetDownloadResolution:
     route_diagnostics: dict[str, Any] | None = None
     if circuit is not None and decision is not None:
         browser_succeeded = _browser_resolution_succeeded(resolved, decision)
@@ -1711,7 +588,7 @@ def resolve_asset_download(
         )
         route_diagnostics = {
             "host": decision.host,
-            "route": "browser" if browser_succeeded else decision.route,
+            "route": "browser" if browser_succeeded else "direct",
             "probe": decision.probe,
             "reason": (
                 "verified_browser_recovery_reused"
@@ -1723,13 +600,12 @@ def resolve_asset_download(
                 else "direct_route_reused"
             ),
         }
-        if browser_succeeded and isinstance(resolved.response, Mapping):
+        if browser_succeeded and resolved.response is not None:
             response = resolved.response.copy()
-            response.setdefault(
-                "_paper_fetch_final_fetcher",
-                normalize_text(str(response.get("_paper_fetch_browser_backend") or ""))
-                or "selected_browser",
-            )
+            if not normalize_text(response.final_fetcher):
+                response.final_fetcher = (
+                    normalize_text(response.browser_backend) or "selected_browser"
+                )
             resolved = replace(resolved, response=response)
 
     return _resolution_with_diagnostics(
@@ -1739,277 +615,267 @@ def resolve_asset_download(
     )
 
 
-def save_asset_resolution(
+def resolve_asset_download(
     kind: AssetDownloadKind,
-    resolved: _AssetDownloadResolution,
+    asset: Mapping[str, Any],
     *,
-    asset_dir: Path,
-    used_names_by_dir: dict[Path, set[str]],
-    artifact_store: Any | None = None,
-) -> dict[str, Any] | _AssetDownloadFailure:
-    asset = resolved.asset
-    response = resolved.response or AssetFetchResponse()
-    source_url = normalize_text(resolved.source_url)
-    final_url = _response_final_url(response, source_url)
-    body = response.get("body", b"")
-    staging_path = response.payload.staging_path
-    original_payload = response.original_payload
-    original_staging_path = original_payload.staging_path if original_payload else None
-    original_reservation = original_payload.reservation if original_payload else None
-    streamed = staging_path is not None
-    try:
-        streamed_size = staging_path.stat().st_size if staging_path is not None else 0
-    except OSError:
-        streamed_size = 0
-    streamed_has_payload = bool(
-        streamed
-        and staging_path is not None
-        and streamed_size > 0
-        and int(response.get("downloaded_bytes") or 0) > 0
+    options: AssetResolutionOptions,
+) -> AssetDownloadResolution:
+    """Resolve one asset with timed candidates and article-local host routing."""
+
+    candidate_resolver = options.candidate_url_resolver or kind.candidate_url_resolver
+    candidate_started_at = time.monotonic()
+    candidate_urls = list(candidate_resolver(asset))
+    candidate_seconds = time.monotonic() - candidate_started_at
+    fallback_resolver = options.fallback_candidate_url_resolver
+
+    def timed_fallback(current_asset: Mapping[str, Any]) -> list[str]:
+        nonlocal candidate_seconds
+        started = time.monotonic()
+        try:
+            return list(fallback_resolver(current_asset)) if fallback_resolver else []
+        finally:
+            candidate_seconds += time.monotonic() - started
+
+    prepared_options = replace(
+        options,
+        candidate_url_resolver=lambda _asset: list(candidate_urls),
+        fallback_candidate_url_resolver=timed_fallback if fallback_resolver else None,
     )
-    if (streamed and not streamed_has_payload) or (
-        not streamed and (not isinstance(body, (bytes, bytearray)) or not body)
+    preview_url, full_size_url = _resolution_preview_fields(kind, asset, candidate_urls)
+
+    decision: AssetHostRouteDecision | None = None
+    circuit = options.host_recovery_circuit
+    if (
+        circuit is not None
+        and options.request.fetch_policy == "direct_then_browser"
+        and options.document_fetcher is not None
     ):
-        _rollback_response_reservation(response)
-        return _AssetDownloadFailure(
-            kind.failure_template(
-                asset,
-                source_url,
-                status=response.get("status_code")
-                if isinstance(response, Mapping)
-                else None,
-                content_type=header_value(response.get("headers"), "content-type"),
-                final_url=final_url,
-                reason="empty_response_body",
-            )
+        circuit_candidate = next(
+            (
+                candidate
+                for candidate in candidate_urls
+                if urllib.parse.urlparse(candidate).scheme in {"http", "https"}
+                and should_use_document_fetcher_for_candidate(
+                    kind,
+                    candidate,
+                    options.document_fetcher,
+                )
+            ),
+            "",
+        )
+        if circuit_candidate:
+            decision = circuit.begin(circuit_candidate)
+            if decision.route in {"browser", "pending_browser"}:
+                if options.defer_browser_to_caller_thread:
+                    return AssetDownloadResolution(
+                        asset=dict(asset),
+                        preview_url=preview_url,
+                        full_size_url=full_size_url,
+                        deferred_browser=AssetDeferredBrowserWork(
+                            candidate_urls=tuple(candidate_urls),
+                            candidate_index=0,
+                            candidate_seconds=candidate_seconds,
+                            decision=decision,
+                        ),
+                    )
+                if decision.route == "browser":
+                    prepared_options = replace(
+                        prepared_options,
+                        request=replace(
+                            prepared_options.request,
+                            fetch_policy="browser_first",
+                        ),
+                    )
+
+    loop_state = CandidateResolutionLoopState(
+        kind=kind,
+        asset=asset,
+        preview_url=preview_url,
+        full_size_url=full_size_url,
+    )
+    try:
+        outcome = _resolve_candidate_loop(
+            kind,
+            asset,
+            initial_candidates=candidate_urls,
+            options=prepared_options,
+            loop_state=loop_state,
+        )
+    except BaseException:
+        if circuit is not None and decision is not None:
+            circuit.abandon(decision)
+        raise
+
+    if isinstance(outcome, _DeferredCandidatePause):
+        if circuit is not None and decision is not None:
+            circuit.defer_to_browser(decision)
+        direct_timing = (
+            dict(outcome.direct_attempt.failure.timing)
+            if outcome.direct_attempt.failure is not None
+            else {}
+        )
+        return AssetDownloadResolution(
+            asset=dict(asset),
+            preview_url=loop_state.preview_url,
+            full_size_url=loop_state.full_size_url,
+            deferred_browser=AssetDeferredBrowserWork(
+                candidate_urls=outcome.candidate_urls,
+                candidate_index=outcome.candidate_index,
+                candidate_seconds=candidate_seconds,
+                direct_attempt=outcome.direct_attempt,
+                decision=decision,
+                conversion_degraded=outcome.conversion_degraded,
+                full_size_access_failed=outcome.full_size_access_failed,
+                timing=direct_timing,
+            ),
         )
 
-    content_type = header_value(response.get("headers"), "content-type")
-    output_subdir = kind.output_subdir(asset)
-    target_asset_dir = (
-        asset_dir / output_subdir if output_subdir is not None else asset_dir
+    return _finalize_circuit_route_diagnostics(
+        outcome,
+        circuit=circuit,
+        decision=decision,
+        candidate_seconds=candidate_seconds,
     )
-    target_asset_dir.mkdir(parents=True, exist_ok=True)
-    output_path = build_asset_output_path(
-        target_asset_dir,
-        source_url,
-        content_type,
-        final_url,
-        used_names_by_dir.setdefault(target_asset_dir, set()),
-        preferred_filename=(
-            normalize_text(str(asset.get("filename_hint") or "")) or None
-            if kind.name == "supplementary"
+
+
+def _resume_deferred_browser_resolution(
+    kind: AssetDownloadKind,
+    deferred_resolution: AssetDownloadResolution,
+    *,
+    options: AssetResolutionOptions,
+) -> AssetDownloadResolution:
+    """Execute Stage 2 caller-thread browser recovery for a deferred Stage 1 item."""
+
+    deferred = deferred_resolution.deferred_browser
+    assert deferred is not None
+    asset = deferred_resolution.asset
+    candidate_urls = list(deferred.candidate_urls)
+    candidate_seconds = deferred.candidate_seconds
+    fallback_resolver = options.fallback_candidate_url_resolver
+
+    def timed_fallback(current_asset: Mapping[str, Any]) -> list[str]:
+        nonlocal candidate_seconds
+        started = time.monotonic()
+        try:
+            return list(fallback_resolver(current_asset)) if fallback_resolver else []
+        finally:
+            candidate_seconds += time.monotonic() - started
+
+    caller_options = replace(
+        options,
+        defer_browser_to_caller_thread=False,
+        fallback_candidate_url_resolver=(
+            timed_fallback
+            if fallback_resolver is not None
+            and deferred.candidate_index < len(candidate_urls)
             else None
         ),
     )
-    reservation = resolved.reservation
-    original_saved_path = ""
-    if streamed and staging_path is not None:
-        from ....artifacts import ArtifactStore
+    circuit = caller_options.host_recovery_circuit
+    decision = deferred.decision
 
-        store = (
-            artifact_store
-            if isinstance(artifact_store, ArtifactStore)
-            else ArtifactStore.from_download_dir(asset_dir.parent)
-        )
-        if reservation is None:
-            with contextlib.suppress(OSError):
-                staging_path.unlink(missing_ok=True)
-            return _AssetDownloadFailure(
-                kind.failure_template(
+    try:
+        if deferred.direct_attempt is not None:
+            loop_state = CandidateResolutionLoopState(
+                kind=kind,
+                asset=asset,
+                preview_url=deferred_resolution.preview_url,
+                full_size_url=deferred_resolution.full_size_url,
+                last_attempt=deferred.direct_attempt,
+                conversion_degraded=deferred.conversion_degraded,
+                full_size_access_failed=deferred.full_size_access_failed,
+            )
+            current_url = candidate_urls[deferred.candidate_index]
+            current_candidate = AssetDownloadCandidate(current_url)
+            recovery = recover_failed_candidate(
+                kind,
+                asset,
+                current_candidate,
+                transport=caller_options.transport,
+                request_context=caller_options.request.for_asset(kind, asset),
+                document_fetcher=caller_options.document_fetcher,
+                last_attempt=deferred.direct_attempt,
+                preview_url=loop_state.preview_url,
+                full_size_url=loop_state.full_size_url,
+                recovery_allowed=True,
+            )
+            resolved = loop_state.apply(recovery, current_candidate)
+            if resolved is None:
+                outcome = _resolve_candidate_loop(
+                    kind,
                     asset,
-                    source_url,
-                    content_type=content_type,
-                    final_url=final_url,
-                    reason=ASSET_CANCELLED,
+                    initial_candidates=candidate_urls,
+                    start_index=deferred.candidate_index + 1,
+                    options=caller_options,
+                    loop_state=loop_state,
+                )
+                assert isinstance(outcome, AssetDownloadResolution)
+                resolved = outcome
+            return _finalize_circuit_route_diagnostics(
+                resolved,
+                circuit=circuit,
+                decision=decision,
+                candidate_seconds=candidate_seconds,
+            )
+
+        verified_browser = bool(
+            decision is not None
+            and (
+                decision.route == "browser"
+                or (
+                    circuit is not None
+                    and circuit.route_for_url(f"https://{decision.host}/") == "browser"
                 )
             )
-        original_output_path: Path | None = None
-        if original_staging_path is not None and isinstance(
-            original_reservation, AssetReservation
-        ):
-            original_output_path = build_asset_output_path(
-                target_asset_dir,
-                source_url,
-                normalize_text(response.original_content_type),
-                final_url,
-                used_names_by_dir.setdefault(target_asset_dir, set()),
+        )
+        effective_decision = (
+            AssetHostRouteDecision(
+                host=decision.host,
+                route="browser" if verified_browser else "direct",
+                probe=False,
             )
-        published_paths: list[Path] = []
-        try:
-            with contextlib.ExitStack() as stack:
-                stack.enter_context(reservation.commit_critical_section())
-                if isinstance(original_reservation, AssetReservation):
-                    stack.enter_context(original_reservation.commit_critical_section())
-                if (
-                    original_output_path is not None
-                    and original_staging_path is not None
-                ):
-                    published_original = store.publish_staged_file(
-                        original_staging_path,
-                        original_output_path,
-                    )
-                    published_paths.append(published_original)
-                    original_saved_path = str(published_original)
-                published = store.publish_staged_file(staging_path, output_path)
-                published_paths.append(published)
-                saved_path = str(published)
-                reservation.unregister_staging(staging_path)
-                if (
-                    isinstance(original_reservation, AssetReservation)
-                    and original_staging_path is not None
-                ):
-                    original_reservation.unregister_staging(original_staging_path)
-                reservation.commit()
-                if isinstance(original_reservation, AssetReservation):
-                    original_reservation.commit()
-        except BaseException:
-            for published_path in reversed(published_paths):
-                with contextlib.suppress(OSError):
-                    published_path.unlink(missing_ok=True)
-            reservation.rollback()
-            if isinstance(original_reservation, AssetReservation):
-                original_reservation.rollback()
-            raise
-    else:
-        saved_path = save_payload(output_path, bytes(body)) or ""
-    original_body = original_payload.body if original_payload else None
-    original_content_type = normalize_text(response.original_content_type)
-    original_source_format = normalize_text(response.source_format)
-    conversion_tool = normalize_text(response.conversion_tool)
-    if isinstance(original_body, (bytes, bytearray)) and original_body:
-        original_output_path = build_asset_output_path(
-            target_asset_dir,
-            source_url,
-            original_content_type,
-            final_url,
-            used_names_by_dir.setdefault(target_asset_dir, set()),
+            if decision is not None
+            else None
         )
-        original_saved_path = (
-            save_payload(original_output_path, bytes(original_body)) or ""
+        effective_options = (
+            replace(
+                caller_options,
+                request=replace(
+                    caller_options.request,
+                    fetch_policy="browser_first",
+                ),
+            )
+            if verified_browser
+            else caller_options
         )
-    if kind.name == "supplementary":
-        download: dict[str, Any] = {
-            "kind": "supplementary",
-            "heading": asset.get("heading")
-            or asset.get("filename_hint")
-            or "Supplementary Material",
-            "caption": asset.get("caption", ""),
-            "download_url": source_url,
-            "source_url": final_url,
-            "content_type": content_type,
-            "path": saved_path,
-            "downloaded_bytes": int(response.get("downloaded_bytes") or len(body)),
-            "section": "supplementary",
-            "download_tier": "supplementary_file",
-        }
-        for key in (
-            "asset_type",
-            "source_href",
-            "source_page_url",
-            "source_kind",
-            "source_ref",
-            "filename_hint",
-            "attachment_type",
-            "object_type",
-            "category",
-        ):
-            value = asset.get(key)
-            if value:
-                download[key] = value
-        _attach_browser_recovery_diagnostics(download, response)
-        _attach_asset_route_diagnostics(download, response)
-        return download
-
-    preview_url = normalize_text(resolved.preview_url)
-    full_size_url = normalize_text(resolved.full_size_url)
-    download_tier_override = normalize_text(resolved.download_tier_override)
-    dimensions = _response_dimensions(response) or (0, 0)
-    width, height = dimensions
-    download_tier = download_tier_override or (
-        "preview"
-        if preview_url
-        and source_url == preview_url
-        and source_url != full_size_url
-        and not looks_like_full_size_asset_url(source_url.lower())
-        else "full_size"
-    )
-    download = {
-        "kind": asset.get("kind", "figure"),
-        "heading": asset.get("heading", "Figure"),
-        "caption": asset.get("caption", ""),
-        "url": asset.get("url", "") or full_size_url or preview_url,
-        "original_url": full_size_url
-        or normalize_text(str(asset.get("original_url") or ""))
-        or source_url,
-        "preview_url": preview_url,
-        "full_size_url": full_size_url,
-        "figure_page_url": asset.get("figure_page_url", ""),
-        "download_url": source_url,
-        "download_tier": download_tier,
-        "source_url": final_url,
-        "content_type": content_type,
-        "path": saved_path,
-        "downloaded_bytes": int(response.get("downloaded_bytes") or len(body)),
-        "section": asset.get("section") or "body",
-    }
-    for key in (
-        "asset_type",
-        "source_kind",
-        "source_ref",
-        "filename_hint",
-        "attachment_type",
-        "object_type",
-        "category",
-    ):
-        value = asset.get(key)
-        if value:
-            download[key] = value
-    _attach_browser_recovery_diagnostics(download, response)
-    _attach_asset_route_diagnostics(download, response)
-    input_provenance = asset.get("provenance")
-    inherited_provenance = (
-        [
-            normalize_text(str(item))
-            for item in input_provenance
-            if normalize_text(str(item))
-        ]
-        if isinstance(input_provenance, Sequence)
-        and not isinstance(input_provenance, str | bytes | bytearray)
-        else []
-    )
-    provenance = list(dict.fromkeys([*inherited_provenance, *resolved.provenance]))
-    if provenance:
-        download["provenance"] = provenance
-    if original_saved_path:
-        download["original_source_path"] = original_saved_path
-        download["original_content_type"] = original_content_type
-        download["original_download_url"] = source_url
-        download["conversion_source_format"] = original_source_format
-        download["conversion_output_format"] = "png"
-        download["conversion_tool"] = conversion_tool
-        download["download_tier"] = "source_converted"
-    if width > 0 and height > 0:
-        download["width"] = width
-        download["height"] = height
-    if download_tier == "preview" and (
-        _asset_marks_preview_accepted(asset)
-        or preview_dimensions_are_acceptable(width, height)
-    ):
-        download["preview_accepted"] = True
-    return download
-
-
-def _asset_marks_preview_accepted(asset: Mapping[str, Any]) -> bool:
-    value = asset.get("preview_accepted")
-    if isinstance(value, bool):
-        return value
-    return normalize_text(str(value or "")).lower() in {"1", "true", "yes", "accepted"}
-
-
-def _response_final_url(response: AssetFetchResponse, source_url: str) -> str:
-    response_url = normalize_text(str(response.get("url") or ""))
-    return urllib.parse.urljoin(source_url, response_url or source_url)
+        loop_state = CandidateResolutionLoopState(
+            kind=kind,
+            asset=asset,
+            preview_url=deferred_resolution.preview_url,
+            full_size_url=deferred_resolution.full_size_url,
+            conversion_degraded=deferred.conversion_degraded,
+            full_size_access_failed=deferred.full_size_access_failed,
+        )
+        outcome = _resolve_candidate_loop(
+            kind,
+            asset,
+            initial_candidates=candidate_urls,
+            start_index=deferred.candidate_index,
+            options=effective_options,
+            loop_state=loop_state,
+        )
+        assert isinstance(outcome, AssetDownloadResolution)
+        return _finalize_circuit_route_diagnostics(
+            outcome,
+            circuit=circuit,
+            decision=effective_decision,
+            candidate_seconds=candidate_seconds,
+        )
+    except BaseException:
+        if circuit is not None and decision is not None:
+            circuit.abandon(decision)
+        raise
 
 
 def _asset_items_for_kind(
@@ -2024,6 +890,7 @@ def _asset_items_for_kind(
 
 def asset_work_key(kind: AssetDownloadKind, asset: Mapping[str, Any]) -> str:
     """Stable logical-file admission key, shared with bounded provider schedulers."""
+
     return "|".join(
         (
             kind.name,
@@ -2056,30 +923,13 @@ def download_assets(
     if output_dir is None or not assets:
         return empty_asset_results()
     active_options = options or AssetDownloadOptions()
-    headers = active_options.headers
-    browser_context_seed = active_options.browser_context_seed
     figure_page_fetcher = (
         None
         if active_options.fetch_policy == "browser_only"
         else active_options.figure_page_fetcher
     )
-    candidate_builder = active_options.candidate_builder
-    document_fetcher = active_options.document_fetcher
-    image_document_fetcher = active_options.image_document_fetcher
-    file_document_fetcher = active_options.file_document_fetcher
-    asset_download_concurrency = active_options.asset_download_concurrency
-    fetch_policy = active_options.fetch_policy
-    asset_budget = active_options.asset_budget
-    route_concurrency_cap = active_options.route_concurrency_cap
-    allowed_hosts = active_options.allowed_hosts
     provider_name = active_options.provider_name
-    artifact_store = active_options.artifact_store
     runtime_context = active_options.runtime_context
-    host_recovery_circuit = active_options.host_recovery_circuit
-    from ....provider_catalog import (
-        compile_route_execution_policy_for_kind,
-        effective_route_asset_scope,
-    )
 
     asset_execution_policy = None
     if provider_name:
@@ -2107,6 +957,7 @@ def download_assets(
 
     asset_dir = output_dir / f"{sanitize_filename(article_id)}_assets"
     asset_dir.mkdir(parents=True, exist_ok=True)
+    route_concurrency_cap = active_options.route_concurrency_cap
     if route_concurrency_cap is None and asset_execution_policy is not None:
         route_concurrency_cap = asset_execution_policy.asset_concurrency_cap
     runtime_budget = (
@@ -2115,13 +966,15 @@ def download_assets(
         else None
     )
     active_budget = (
-        asset_budget
+        active_options.asset_budget
         or runtime_budget
         or current_asset_budget()
         or AssetBudget(route_concurrency_cap=route_concurrency_cap)
     )
+    artifact_store = active_options.artifact_store
     if artifact_store is None and runtime_context is not None:
         artifact_store = getattr(runtime_context, "artifact_store", None)
+
     work_keys = [asset_work_key(kind, asset) for asset in asset_items]
     admitted = active_budget.admit_work(work_keys)
     rejected_failures = [
@@ -2134,44 +987,45 @@ def download_assets(
                 reason=ASSET_FILE_LIMIT_EXCEEDED,
             ),
             "max_files": active_budget.max_files,
-            "asset_timing": {
-                "queue_ms": 0.0,
-                "candidate_resolution_ms": 0.0,
-                "dns_policy_validation_ms": 0.0,
-                "connect_to_headers_ttfb_ms": 0.0,
-                "body_stream_ms": 0.0,
-                "browser_recovery_ms": 0.0,
-                "retry_wait_ms": 0.0,
-                "conversion_ms": 0.0,
-                "save_ms": 0.0,
-                "total_ms": 0.0,
-                "status": "failed",
-            },
+            "asset_timing": empty_asset_timing(status="failed"),
         }
         for asset, is_admitted in zip(asset_items, admitted, strict=True)
         if not is_admitted
     ]
-    asset_items = [
-        asset
-        for asset, is_admitted in zip(asset_items, admitted, strict=True)
+    admitted_pairs = [
+        (asset, work_key)
+        for asset, work_key, is_admitted in zip(
+            asset_items, work_keys, admitted, strict=True
+        )
         if is_admitted
     ]
-    if not asset_items:
+    if not admitted_pairs:
         return {"assets": [], "asset_failures": rejected_failures}
+    asset_items = [pair[0] for pair in admitted_pairs]
+    admitted_work_keys = [pair[1] for pair in admitted_pairs]
+
     used_names_by_dir: dict[Path, set[str]] = {}
-    browser_cookies = list((browser_context_seed or {}).get("browser_cookies") or [])
-    normalized_allowed_hosts = tuple(allowed_hosts or ()) or None
-    active_document_fetcher = document_fetcher
+    browser_cookies = tuple(
+        dict(cookie)
+        for cookie in (
+            (active_options.browser_context_seed or {}).get("browser_cookies") or []
+        )
+        if isinstance(cookie, Mapping)
+    )
+    normalized_allowed_hosts = tuple(active_options.allowed_hosts or ()) or None
+    active_document_fetcher = active_options.document_fetcher
     if active_document_fetcher is None:
         active_document_fetcher = (
-            image_document_fetcher
+            active_options.image_document_fetcher
             if kind.file_document_fetcher_kind == "image"
-            else file_document_fetcher
+            else active_options.file_document_fetcher
         )
-    document_fetcher_requires_caller_thread = _requires_caller_thread(
-        active_document_fetcher
+    caller_thread_browser = requires_caller_thread(active_document_fetcher)
+    two_stage_caller_thread_recovery = (
+        caller_thread_browser and active_options.fetch_policy == "direct_then_browser"
     )
-    active_host_recovery_circuit = host_recovery_circuit
+
+    active_host_recovery_circuit = active_options.host_recovery_circuit
     if active_host_recovery_circuit is None and active_document_fetcher is not None:
         cache_key = (
             "asset_download",
@@ -2191,12 +1045,14 @@ def download_assets(
         else:
             active_host_recovery_circuit = AssetHostRecoveryCircuit()
 
-    active_candidate_builder = candidate_builder or figure_download_candidates
+    active_candidate_builder = (
+        active_options.candidate_builder or figure_download_candidates
+    )
 
     def candidate_url_resolver(asset: Mapping[str, Any]) -> list[str]:
         if kind.name != "figure":
             return kind.candidate_url_resolver(asset)
-        if fetch_policy == "browser_only":
+        if active_options.fetch_policy == "browser_only":
             asset = {
                 key: value for key, value in asset.items() if key != "figure_page_url"
             }
@@ -2208,7 +1064,7 @@ def download_assets(
         )
 
     def fallback_candidate_url_resolver(asset: Mapping[str, Any]) -> list[str]:
-        builder = active_options._fallback_candidate_builder
+        builder = active_options.fallback_candidate_builder
         return (
             builder(
                 transport,
@@ -2222,17 +1078,17 @@ def download_assets(
 
     # Each discovery/download pass has its own scope; source retries do not
     # accumulate totals from a previous pass. Identity is independent of attempts.
-    from .identity import html_asset_identity_key
-
     scope = f"{article_id}:{kind.name}:{uuid4()}"
     identities = [
-        html_asset_identity_key(asset) or work_keys[index]
+        html_asset_identity_key(asset) or admitted_work_keys[index]
         for index, asset in enumerate(asset_items)
     ]
-    categories = [str(asset.get("kind") or kind.name) for asset in asset_items]
     categories = [
-        value if value in {"figure", "formula", "table", "supplementary"} else kind.name
-        for value in categories
+        value
+        if (value := str(asset.get("kind") or kind.name))
+        in {"figure", "formula", "table", "supplementary"}
+        else kind.name
+        for asset in asset_items
     ]
     finished: dict[str, bool] = {}
 
@@ -2263,44 +1119,66 @@ def download_assets(
         runtime_context.report_progress("stage", stage="assets")
     report_assets()
 
-    collected = _resolve_and_collect_downloads_as_completed(
+    request_context = AssetRequestContext(
+        headers=active_options.headers,
+        candidate_headers_filter=active_options.candidate_headers_filter,
+        sensitive_headers=active_options.sensitive_headers,
+        user_agent=user_agent,
+        browser_context_seed=active_options.browser_context_seed,
+        browser_cookies=browser_cookies,
+        fetch_policy=active_options.fetch_policy,
+        asset_budget=active_budget,
+        staging_dir=asset_dir,
+        allowed_hosts=normalized_allowed_hosts,
+        provider_name=provider_name,
+        route_name=asset_route_name,
+        path_converter=_active_path_converter,
+    )
+    resolution_options = AssetResolutionOptions(
+        transport=transport,
+        request=request_context,
+        document_fetcher=active_document_fetcher,
+        candidate_url_resolver=candidate_url_resolver,
+        fallback_candidate_url_resolver=(
+            fallback_candidate_url_resolver
+            if kind.name == "figure"
+            and active_options.fallback_candidate_builder is not None
+            else None
+        ),
+        host_recovery_circuit=active_host_recovery_circuit,
+        defer_browser_to_caller_thread=two_stage_caller_thread_recovery,
+    )
+
+    effective_concurrency = (
+        1
+        if caller_thread_browser and not two_stage_caller_thread_recovery
+        else active_options.asset_download_concurrency
+    )
+
+    collected = resolve_and_collect_downloads_as_completed(
         asset_items,
         completion_callback=report_assets,
         resolver=lambda asset: resolve_asset_download(
             kind,
             asset,
-            options=AssetResolutionOptions(
-                transport=transport,
-                headers=headers,
-                candidate_headers_filter=active_options.candidate_headers_filter,
-                sensitive_headers=active_options.sensitive_headers,
-                user_agent=user_agent,
-                browser_context_seed=browser_context_seed,
-                browser_cookies=browser_cookies,
-                document_fetcher=active_document_fetcher,
-                candidate_url_resolver=candidate_url_resolver,
-                _fallback_candidate_url_resolver=(
-                    fallback_candidate_url_resolver
-                    if kind.name == "figure"
-                    and active_options._fallback_candidate_builder is not None
-                    else None
-                ),
-                fetch_policy=fetch_policy,
-                asset_budget=active_budget,
-                staging_dir=asset_dir,
-                allowed_hosts=normalized_allowed_hosts,
-                provider_name=provider_name,
-                route_name=asset_route_name,
-                host_recovery_circuit=active_host_recovery_circuit,
-            ),
+            options=resolution_options,
         ),
-        asset_download_concurrency=1
-        if document_fetcher_requires_caller_thread
-        else asset_download_concurrency,
+        caller_thread_resolver=(
+            (
+                lambda deferred_res: _resume_deferred_browser_resolution(
+                    kind,
+                    deferred_res,
+                    options=resolution_options,
+                )
+            )
+            if two_stage_caller_thread_recovery
+            else None
+        ),
+        asset_download_concurrency=effective_concurrency,
         force_worker_thread=(
             kind.name == "figure"
             and active_document_fetcher is not None
-            and not document_fetcher_requires_caller_thread
+            and not caller_thread_browser
         ),
         saver=lambda resolved: save_asset_resolution(
             kind,
@@ -2338,6 +1216,7 @@ __all__ = [
     "AssetResolutionOptions",
     "FileDocumentFetcher",
     "ImageDocumentFetcher",
+    "asset_work_key",
     "browser_asset_recovery_allowed",
     "download_assets",
     "resolve_asset_download",

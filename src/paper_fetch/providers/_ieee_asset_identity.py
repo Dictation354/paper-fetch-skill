@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from ..extraction.html.asset_fields import DEFAULT_ASSET_URL_FIELDS
 from ..utils import normalize_text

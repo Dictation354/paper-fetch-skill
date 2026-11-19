@@ -7,7 +7,6 @@ from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.golden_criteria import golden_criteria_asset
 from tests.support.replay import build_article_from_fixture, persisted_fixture_markdown
 
-
 DOIS = (
     "10.1111/gcb.16561",
     "10.1175/bams-d-24-0223.1",

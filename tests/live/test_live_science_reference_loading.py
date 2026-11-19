@@ -1,14 +1,10 @@
 """Live Science bibliography and local body image acceptance in both modes."""
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-
-
-from functools import wraps
 import json
 import os
 import time
+from dataclasses import replace
+from functools import wraps
 from pathlib import Path
 
 import pytest
@@ -21,10 +17,11 @@ from paper_fetch.providers import browser_runtime
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from paper_fetch.workflow.types import PaperFetchFailure
 from tests.live._runtime_env import build_isolated_live_env
-
+from tests.support.trace import trace_facts
 
 DOI = "10.1126/science.ady3136"
 

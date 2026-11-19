@@ -1,11 +1,8 @@
 """Minimal contracts for the 2026-09-19 audit fixes; no full-paper inputs."""
 
-from paper_fetch.models import Quality
-
-
 from bs4 import BeautifulSoup
 
-from paper_fetch.models import article_from_markdown
+from paper_fetch.models import Quality, article_from_markdown
 from paper_fetch.models.markdown import normalize_markdown_text
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._arxiv_references import _render_arxiv_table_block
@@ -171,9 +168,9 @@ def test_science_unloaded_cited_references_are_reported():
 
 def test_science_missing_reference_flag_reaches_acceptance():
     from paper_fetch.http import HttpTransport
+    from paper_fetch.models import FetchEnvelope
     from paper_fetch.providers._registry import provider_bundle
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-    from paper_fetch.models import FetchEnvelope
     from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 
     doi = "10.1126/example"

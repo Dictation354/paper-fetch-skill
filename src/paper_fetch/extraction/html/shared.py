@@ -6,10 +6,10 @@ import html as html_lib
 import re
 from typing import Any
 
+from bs4 import BeautifulSoup, Tag
+
 from ...utils import normalize_text
 from ..image_payloads import image_mime_type_from_bytes
-
-from bs4 import BeautifulSoup, Tag
 
 
 def direct_child_tags(node: Tag) -> list[Tag]:

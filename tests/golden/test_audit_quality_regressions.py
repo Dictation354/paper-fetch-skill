@@ -1,19 +1,16 @@
 """Source-backed audit regressions; historical captures are not live evidence."""
 
-from paper_fetch.models import Quality
-
-
-from pathlib import Path
 import re
+from pathlib import Path
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
+from paper_fetch.models import Quality, article_from_markdown
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.golden_criteria import golden_criteria_asset
 from tests.support.replay import build_article_from_fixture
 from tests.support.reviewed_publisher_content import _words
-from paper_fetch.models import article_from_markdown
 
 ROOT = Path(__file__).resolve().parents[1] / "fixtures/golden_criteria"
 
@@ -114,8 +111,8 @@ def test_forest_body_order_and_extended_table_entry_match_source():
     assert caption in md
     assert "https://www.nature.com/articles/s41586-020-1941-5/tables/1" in md
 
-    from paper_fetch.providers.springer import SpringerClient
     from paper_fetch.providers._springer_markdown import extract_html_payload
+    from paper_fetch.providers.springer import SpringerClient
     from paper_fetch.runtime import RuntimeContext
     from tests.support._paper_fetch_support import FixtureHtmlTransport
 
@@ -151,6 +148,7 @@ def test_forest_body_order_and_extended_table_entry_match_source():
 )
 def test_multiline_publisher_title_forms_one_complete_h1(doi):
     from markdown_it import MarkdownIt
+
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
     from paper_fetch.providers.royalsocietypublishing import (
         RoyalsocietypublishingClient,
@@ -201,6 +199,7 @@ def test_multiline_publisher_title_forms_one_complete_h1(doi):
 )
 def test_acs_original_multiline_section_is_one_final_heading(doi, prefix):
     from markdown_it import MarkdownIt
+
     from paper_fetch.providers.acs import AcsClient
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
     from tests.support._paper_fetch_support import FixtureHtmlTransport
@@ -250,8 +249,8 @@ def test_acs_original_multiline_section_is_one_final_heading(doi, prefix):
 
 @pytest.mark.parametrize("doi", ["10.1111/cas.16117", "10.1111/cas.16395"])
 def test_wiley_references_have_one_number_per_citation(doi):
-    from paper_fetch.providers._wiley_html import finalize_extraction
     from paper_fetch.models.builders import build_references
+    from paper_fetch.providers._wiley_html import finalize_extraction
 
     source = golden_criteria_asset(
         doi,
@@ -286,7 +285,7 @@ def test_wiley_references_have_one_number_per_citation(doi):
 def test_copernicus_pdf_identity_accepts_publisher_title_markup(
     doi, title, monkeypatch, tmp_path
 ):
-    from paper_fetch.providers import copernicus, _pdf_common
+    from paper_fetch.providers import _pdf_common, copernicus
     from tests.support._paper_fetch_support import FixtureHtmlTransport
 
     fixture = golden_corpus_fixture_for_doi(doi)
@@ -301,12 +300,17 @@ def test_copernicus_pdf_identity_accepts_publisher_title_markup(
     )
 
     def captured_pdf(_transport, candidates, **kwargs):
+        expected_identity = (
+            kwargs["request"].expected_identity
+            if "request" in kwargs
+            else kwargs["expected_identity"]
+        )
         result = _pdf_common.pdf_fetch_result_from_bytes(
             artifact_dir=tmp_path,
             source_url=candidates[0],
             final_url=candidates[0],
             pdf_bytes=body,
-            expected_identity=kwargs["expected_identity"],
+            expected_identity=expected_identity,
         )
         results.append(result)
         return result
@@ -530,8 +534,8 @@ def test_acs_table_graphic_counts_toward_strict_local_acceptance(
         asset_profile="body",
         require_local_body_assets=True,
     )
-    assert acceptance.asset.body_discovered == 10
-    assert acceptance.asset.body_local == (9 if missing_table else 10)
+    assert acceptance.asset.discovered == 10
+    assert acceptance.asset.local == (9 if missing_table else 10)
     assert acceptance.asset.local_body_assets_satisfied is (not missing_table)
     if missing_table:
         assert acceptance.overall != "complete"

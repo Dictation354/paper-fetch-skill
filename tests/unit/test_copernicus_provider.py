@@ -1,21 +1,22 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from unittest import mock
+
 import tempfile
 import unittest
 from pathlib import Path
+from unittest import mock
+
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
-from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.copernicus import CopernicusClient
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.copernicus import CopernicusClient
+from paper_fetch.tracing import trace_event
 from tests.support._paper_fetch_support import (
     RecordingTransport,
     fulltext_pdf_bytes,
     http_response,
 )
-
+from tests.support.trace import trace_facts
 
 DOI = "10.5194/acp-24-1-2024"
 LANDING_URL = "https://acp.copernicus.org/articles/24/1/2024/"

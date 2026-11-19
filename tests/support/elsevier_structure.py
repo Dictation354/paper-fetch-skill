@@ -1,10 +1,10 @@
 """Source-derived numbering and list assertions for paired Elsevier replays."""
 
-from copy import deepcopy
 import re
+from copy import deepcopy
 
-from tests.support.reviewed_publisher_content import _words
 from tests.support.markdown_lists import ancestor, inline_text, markdown_tree
+from tests.support.reviewed_publisher_content import _words
 
 
 def assert_numbering_and_list_structure(source, xml, markdown, *, route):

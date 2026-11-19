@@ -90,10 +90,10 @@ def preserve_dom_scripts(node, *, include_citations=False):
 
 
 def assert_mathml_formulas(nodes, markdown, subtests=None):
-    from contextlib import nullcontext
-
     import re
     from collections import defaultdict
+    from contextlib import nullcontext
+
     from tests.support.canonical_content import (
         math_identifier_text,
         source_tex,

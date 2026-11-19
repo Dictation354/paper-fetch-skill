@@ -3,10 +3,13 @@ from __future__ import annotations
 import importlib.machinery
 from typing import Any
 
-from paper_fetch.provider_catalog import ProviderRouteSpec, ProviderSpec
-from paper_fetch.providers._registry import ProviderBundle
+from paper_fetch.provider_catalog import (
+    PROVIDER_CATALOG,
+    ProviderRouteSpec,
+    ProviderSpec,
+)
 from paper_fetch.providers.base import ProviderClient
-from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
+from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
 from paper_fetch.reason_codes import NOT_CONFIGURED, OK, READY
 
 
@@ -43,23 +46,9 @@ def _catalog(
 
 
 def _install_catalog(monkeypatch: Any, catalog: ProviderSpec) -> None:
-    def client_factory(transport: Any, env: Any) -> ProviderClient:
-        del transport, env
-        return ProviderClient()
-
-    bundle = ProviderBundle(
-        catalog=catalog,
-        client_factory=client_factory,
-        sources=(catalog.name,),
-    )
-
-    def fake_provider_bundle(name: str) -> ProviderBundle:
-        assert name == catalog.name
-        return bundle
-
-    monkeypatch.setattr(
-        "paper_fetch.providers._registry.provider_bundle", fake_provider_bundle
-    )
+    updated = {**PROVIDER_CATALOG, catalog.name: catalog}
+    monkeypatch.setattr("paper_fetch.provider_catalog.PROVIDER_CATALOG", updated)
+    monkeypatch.setattr("paper_fetch.providers.base.PROVIDER_CATALOG", updated)
 
 
 def _client(catalog: ProviderSpec, env: dict[str, str] | None = None) -> ProviderClient:
@@ -127,7 +116,7 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
         "paper_fetch.providers.base.importlib.util.find_spec", fake_find_spec
     )
     monkeypatch.setattr(
-        camoufox_backend,
+        byparr_backend,
         "_dependency_details",
         lambda: {
             "runtime_valid": True,
@@ -155,7 +144,7 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
     )
     _install_catalog(monkeypatch, catalog)
     monkeypatch.setattr(
-        camoufox_backend,
+        byparr_backend,
         "_dependency_details",
         lambda: {
             "runtime_valid": True,

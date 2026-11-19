@@ -1,14 +1,15 @@
 from __future__ import annotations
-from dataclasses import asdict
-from paper_fetch.tracing import trace_event
+
 import json
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import UTC, datetime
 from pathlib import Path
 from uuid import UUID
+
 import pytest
 from jsonschema import Draft202012Validator
 from pydantic import ValidationError
+
 from paper_fetch.manifest import (
     MANIFEST_RECORD_SCHEMA_VERSION,
     ArtifactVerificationStatus,
@@ -22,9 +23,12 @@ from paper_fetch.manifest import (
     parse_manifest_record,
 )
 from paper_fetch.reason_codes import METADATA_ONLY, PDF_FALLBACK
-from paper_fetch.workflow.acceptance import OverallAcceptanceStatus
+from paper_fetch.tracing import trace_event
+from paper_fetch.workflow.acceptance import (
+    FetchAcceptanceStatus,
+    OverallAcceptanceStatus,
+)
 from tests.support.workflow_acceptance import _envelope
-
 
 RUN_ID = UUID("10000000-0000-4000-8000-000000000001")
 RECORD_ID = UUID("20000000-0000-4000-8000-000000000002")
@@ -122,20 +126,17 @@ def test_complete_record_derives_identity_acceptance_trace_and_artifacts() -> No
         ),
     )
 
-    assert record.schema_version == MANIFEST_RECORD_SCHEMA_VERSION == 2
+    assert record.schema_version == MANIFEST_RECORD_SCHEMA_VERSION == 3
     assert record.record_status == ManifestRecordStatus.COMPLETED
-    assert record.query == "  DOI:10.1000/ACCEPTANCE — 气候响应  "
-    assert record.identity == record.acceptance.identity
-    assert record.doi == "10.1000/acceptance"
-    assert record.source == "elsevier_xml"
-    assert record.acquisition == record.acceptance.provenance.acquisition
-    assert record.acquisition is not None
-    assert record.acquisition.route == "xml_api"
+    assert record.request.query == "  DOI:10.1000/ACCEPTANCE — 气候响应  "
+    assert record.acceptance.identity.doi == "10.1000/acceptance"
+    assert record.acceptance.provenance.source == "elsevier_xml"
+    assert record.acceptance.provenance.acquisition is not None
+    assert record.acceptance.provenance.acquisition.route == "xml_api"
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
     assert record.trace[0].stage == "resolve"
-    assert record.fallback_codes == ()
-    assert record.warning_codes == ()
-    assert record.asset_summary == record.acceptance.asset
+    assert record.acceptance.provenance.fallback_codes == ()
+    assert record.acceptance.provenance.warning_codes == ()
     assert [artifact.verification_status for artifact in record.output_artifacts] == [
         ArtifactVerificationStatus.VERIFIED,
         ArtifactVerificationStatus.VERIFIED,
@@ -175,13 +176,16 @@ def test_degraded_record_reuses_structured_trace_and_never_classifies_warning_te
     record = _build_success(envelope=envelope)
 
     assert record.acceptance.overall == OverallAcceptanceStatus.DEGRADED
-    assert set(record.fallback_codes) == {"html_unavailable", PDF_FALLBACK}
-    assert record.warning_codes == ()
-    assert record.failure_codes == ("html_unavailable",)
+    assert set(record.acceptance.provenance.fallback_codes) == {
+        "html_unavailable",
+        PDF_FALLBACK,
+    }
+    assert record.acceptance.provenance.warning_codes == ()
+    assert record.acceptance.provenance.failure_codes == ("html_unavailable",)
     assert record.warnings == (
         "metadata fallback formula missing no_access is arbitrary prose",
     )
-    assert METADATA_ONLY not in record.fallback_codes
+    assert METADATA_ONLY not in record.acceptance.provenance.fallback_codes
 
 
 def test_limited_metadata_record_is_completed() -> None:
@@ -224,7 +228,7 @@ def test_failed_record_preserves_structured_error() -> None:
 
     assert record.record_status == ManifestRecordStatus.FAILED
     assert record.acceptance.overall == OverallAcceptanceStatus.FAILED
-    assert record.failure_codes == ("provider_error",)
+    assert record.acceptance.provenance.failure_codes == ("provider_error",)
     assert record.warnings == ("重试稍后进行",)
     assert record.trace[0].stage == "fulltext"
     assert record.error is not None
@@ -253,8 +257,8 @@ def test_aborted_record_is_distinct_from_failure() -> None:
     )
 
     assert record.record_status == ManifestRecordStatus.ABORTED
-    assert record.acceptance.fetch.completed is False
-    assert record.failure_codes == ("request_cancelled",)
+    assert record.acceptance.fetch.status != FetchAcceptanceStatus.OK
+    assert record.acceptance.provenance.failure_codes == ("request_cancelled",)
 
 
 def test_completed_in_memory_result_can_have_no_output_artifacts() -> None:
@@ -300,7 +304,9 @@ def test_unicode_round_trip_additive_compatibility_and_stable_fingerprint() -> N
     )
     payload = json.loads(record.to_json())
 
-    assert payload["query"] == "标题：森林—气候反馈 🌲"
+    assert payload["request"]["query"] == "标题：森林—气候反馈 🌲"
+    assert "query" not in payload
+    assert "minimum_reader_schema_version" not in payload
     assert parse_manifest_record(payload) == record
     payload["future_additive_field"] = {"v3_reader": True}
     assert parse_manifest_record(payload) == record
@@ -363,7 +369,7 @@ def test_packaged_json_schema_is_current_and_validates_round_trip_payload() -> N
     Draft202012Validator(schema).validate(record.to_dict())
     assert schema["properties"]["index"]["minimum"] == 1
     assert schema["properties"]["attempt"]["minimum"] == 1
-    assert schema["properties"]["schema_version"]["const"] == 2
+    assert schema["properties"]["schema_version"]["const"] == 3
 
 
 @pytest.mark.parametrize("field", ["schema_version", "request_fingerprint"])

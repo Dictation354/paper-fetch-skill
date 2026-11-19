@@ -1,5 +1,4 @@
 from __future__ import annotations
-from paper_fetch.providers import _springer_authors
 
 import json
 from collections.abc import Callable
@@ -7,12 +6,13 @@ from collections.abc import Callable
 import pytest
 
 from paper_fetch.providers import (
+    _ams_authors,
     _arxiv_authors,
     _arxiv_html,
-    _ams_authors,
     _ieee_metadata,
     _pnas_html,
     _science_html,
+    _springer_authors,
     _wiley_html,
 )
 

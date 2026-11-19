@@ -4,7 +4,6 @@ import json
 
 from tests.paths import SRC_DIR
 
-
 FORMULA_PACKAGE = SRC_DIR / "paper_fetch" / "resources" / "formula" / "package.json"
 FORMULA_LOCK = SRC_DIR / "paper_fetch" / "resources" / "formula" / "package-lock.json"
 

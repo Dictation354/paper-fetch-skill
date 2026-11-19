@@ -1,37 +1,29 @@
 """Helpers for the offline golden fulltext corpus."""
 
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from paper_fetch.providers import _springer_dom, _springer_markdown
 
-
-from dataclasses import asdict, dataclass
 import json
+from dataclasses import asdict, dataclass
 from pathlib import Path
 from typing import Any
 
 from bs4 import BeautifulSoup
 
-from paper_fetch.extraction.html.parsing import choose_parser
-from paper_fetch.extraction.html.semantics import collect_html_section_hints
 from paper_fetch.extraction.html._metadata import (
     merge_html_metadata,
     parse_html_metadata,
 )
 from paper_fetch.extraction.html.assets import merge_extracted_and_downloaded_assets
+from paper_fetch.extraction.html.parsing import choose_parser
+from paper_fetch.extraction.html.semantics import collect_html_section_hints
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import article_from_markdown
-from paper_fetch.publisher_identity import normalize_doi, validate_extracted_identity
 from paper_fetch.providers import (
     _acs_html,
     _aip_html,
-    _tandf_html,
-    _pnas_html,
-    _science_html,
     _ams_authors,
     _ams_references,
     _annualreviews_html,
-    _atypon_browser_workflow_profiles as atypon_browser_workflow_profiles,
     _arxiv_html,
     _ieee_html,
     _ieee_metadata,
@@ -39,35 +31,79 @@ from paper_fetch.providers import (
     _mdpi_authors,
     _mdpi_dom,
     _oxfordacademic_html,
+    _pnas_html,
     _royalsocietypublishing_html,
+    _science_html,
+    _springer_dom,
+    _springer_markdown,
+    _tandf_html,
     _wiley_html,
-    copernicus as copernicus_provider,
-    elsevier as elsevier_provider,
-    frontiers as frontiers_provider,
-    arxiv as arxiv_provider,
+)
+from paper_fetch.providers import (
+    _atypon_browser_workflow_profiles as atypon_browser_workflow_profiles,
+)
+from paper_fetch.providers import (
     acs as acs_provider,
+)
+from paper_fetch.providers import (
     aip as aip_provider,
-    tandf as tandf_provider,
-    pnas as pnas_provider,
-    science as science_provider,
+)
+from paper_fetch.providers import (
     ams as ams_provider,
+)
+from paper_fetch.providers import (
     annualreviews as annualreviews_provider,
+)
+from paper_fetch.providers import (
+    arxiv as arxiv_provider,
+)
+from paper_fetch.providers import (
+    copernicus as copernicus_provider,
+)
+from paper_fetch.providers import (
+    elsevier as elsevier_provider,
+)
+from paper_fetch.providers import (
+    frontiers as frontiers_provider,
+)
+from paper_fetch.providers import (
     iop as iop_provider,
+)
+from paper_fetch.providers import (
     mdpi as mdpi_provider,
+)
+from paper_fetch.providers import (
     plos as plos_provider,
+)
+from paper_fetch.providers import (
+    pnas as pnas_provider,
+)
+from paper_fetch.providers import (
     royalsocietypublishing as royalsocietypublishing_provider,
+)
+from paper_fetch.providers import (
+    science as science_provider,
+)
+from paper_fetch.providers import (
     springer as springer_provider,
+)
+from paper_fetch.providers import (
+    tandf as tandf_provider,
+)
+from paper_fetch.providers import (
     wiley as wiley_provider,
 )
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
+from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow.asset_download import (
     plan_browser_asset_download,
 )
 from paper_fetch.providers.ieee import IeeeClient
+from paper_fetch.publisher_identity import normalize_doi, validate_extracted_identity
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.utils import normalize_text
 from tests.golden_corpus_adapters import (
     GoldenCorpusAdapter,
@@ -361,8 +397,9 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
     captured = captured_table_pages(fixture)
     if not list(fixture.raw_path.parent.glob("table*.html")) and not captured:
         return _build_springer_inline_article(fixture)
-    from urllib.parse import urljoin
     import re
+    from urllib.parse import urljoin
+
     from tests.support._paper_fetch_support import FixtureHtmlTransport
 
     metadata = _base_metadata(fixture)
@@ -398,6 +435,7 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
 def replay_springer_pdf_fallback(fixture):
     """Replay the captured landing page and the exact official PDF download boundary."""
     from unittest.mock import patch
+
     from tests.support._paper_fetch_support import FixtureHtmlTransport
 
     landing = golden_criteria_asset(fixture.doi, "landing.html")
@@ -420,7 +458,7 @@ def replay_springer_pdf_fallback(fixture):
             source_url=fixture.source_url,
             final_url=fixture.source_url,
             pdf_bytes=fixture.raw_path.read_bytes(),
-            expected_identity=kwargs["expected_identity"],
+            expected_identity=kwargs["request"].expected_identity,
         )
 
     client = springer_provider.SpringerClient(transport, {})
@@ -561,6 +599,7 @@ def _captured_body_assets(
 ) -> list[dict[str, Any]]:
     """Keep source links and attach only captured original image responses."""
     import hashlib
+
     from tests.support.acquired_publisher_inputs import capture_url_identity
 
     fixture_dir = (

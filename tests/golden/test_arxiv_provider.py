@@ -1,51 +1,46 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from tests.support.markdown_presentation import visible_markdown
-from tests.support._paper_fetch_support import (
-    RecordingTransport,
-    http_response,
-)
-from tests.golden_criteria import (
-    golden_criteria_asset,
-)
-from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.arxiv import ArxivClient
-from paper_fetch.providers import (
-    _arxiv_assets,
-    _arxiv_atom,
-    _arxiv_html,
-)
-from paper_fetch.arxiv_id import canonical_arxiv_html_url, canonical_arxiv_pdf_url
-from paper_fetch import service as paper_fetch
-from tests.support.acquired_publisher_inputs import _record, _response
-from pathlib import Path
-import unittest
-import tempfile
-import tarfile
+
 import io
-from datetime import datetime
 import json
 import re
+import tarfile
+import tempfile
+import unittest
+from dataclasses import replace
+from datetime import datetime
+from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
 from xml.sax.saxutils import escape
+
+from paper_fetch import service as paper_fetch
+from paper_fetch.arxiv_id import canonical_arxiv_html_url, canonical_arxiv_pdf_url
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.http import RequestErrorCategory
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import (
     _arxiv_asset_strategy,
+    _arxiv_assets,
+    _arxiv_atom,
+    _arxiv_html,
 )
 from paper_fetch.providers._html_section_markdown import render_container_markdown
+from paper_fetch.providers.arxiv import ArxivClient
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.tracing import trace_event
 from tests.golden_criteria import (
+    golden_criteria_asset,
     golden_criteria_dir_for_doi,
     golden_criteria_sample_for_doi,
 )
 from tests.support._paper_fetch_support import (
     FixtureProvider,
+    RecordingTransport,
+    http_response,
 )
-
+from tests.support.acquired_publisher_inputs import _record, _response
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.trace import trace_facts
 
 PDF_FALLBACK_IDS = ("2006.11239v2", "1406.2661v1")
 HTML_ROUTE_IDS = (

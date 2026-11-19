@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from ..publication_dates import publication_date, normalize_publication_dates
-
 import copy
+import re
+from collections.abc import Mapping, Sequence
 from datetime import datetime
 from typing import Any, cast
-from collections.abc import Mapping, Sequence
-import re
 
 from ..arxiv_id import (
     arxiv_id_from_doi,
@@ -23,6 +21,7 @@ from ..extraction.html.semantics import SECTION_HEADING_PATTERN
 from ..failure import FailureDiagnostics
 from ..http import PDF_MIME_TYPE
 from ..metadata.types import MetadataMergeRule, ProviderMetadata, merge_metadata_layers
+from ..publication_dates import normalize_publication_dates, publication_date
 from ..publisher_identity import validate_extracted_identity
 from ..reason_codes import IDENTITY_MISMATCH, NO_RESULT, NOT_SUPPORTED
 from ..utils import dedupe_authors, normalize_text

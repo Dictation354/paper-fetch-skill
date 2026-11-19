@@ -3,31 +3,31 @@
 from __future__ import annotations
 
 import time as time
+
 from .context import (
     BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
-    _SharedBrowserPageSession,
     _choose_browser_seed_url,
     _normalized_response_headers,
     _replace_runtime_shared_page_session,
     _restore_runtime_shared_page_session,
     _runtime_figure_page_session,
+    _SharedBrowserPageSession,
 )
 from .diagnostics import (
     BROWSER_CONTEXT_ERROR,
     _compact_failure_diagnostic,
 )
 from .file import (
+    _build_shared_browser_file_fetcher,
     _SharedBrowserFileDocumentFetcher,
     _ThreadLocalSharedBrowserFileDocumentFetcher,
-    _build_shared_browser_file_fetcher,
 )
 from .image import (
     _IMAGE_DOCUMENT_FETCH_TIMEOUT_MS,
+    _build_shared_browser_image_fetcher,
     _SharedBrowserImageDocumentFetcher,
     _ThreadLocalSharedBrowserImageDocumentFetcher,
-    _browser_image_document_payload,
-    _build_shared_browser_image_fetcher,
     fetch_image_document_with_browser,
 )
 from .memo import _MemoizedFigurePageFetcher, _MemoizedImageDocumentFetcher
@@ -52,7 +52,6 @@ __all__ = [
     "_SharedBrowserPageSession",
     "_ThreadLocalSharedBrowserFileDocumentFetcher",
     "_ThreadLocalSharedBrowserImageDocumentFetcher",
-    "_browser_image_document_payload",
     "_build_shared_browser_file_fetcher",
     "_build_shared_browser_image_fetcher",
     "_choose_browser_seed_url",

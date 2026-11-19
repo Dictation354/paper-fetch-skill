@@ -2,16 +2,12 @@
 
 from __future__ import annotations
 
-from ...quality.access_boundary import propagate_paywall
-
-from ...quality.access_boundary import raise_for_paywall, use_html_analysis_context
-
 import hashlib
 import logging
-from dataclasses import dataclass, replace
 import time
-from typing import TYPE_CHECKING, Any, cast
 from collections.abc import Callable, Mapping, Sequence
+from dataclasses import dataclass, replace
+from typing import TYPE_CHECKING, Any, cast
 
 from ...extraction.html.assets import extract_scoped_html_assets
 from ...extraction.html.signals import (
@@ -22,6 +18,16 @@ from ...extraction.html.signals import (
 from ...http import diagnostic_url_payload
 from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
+from ...page_diagnostics import (
+    PageDiagnosticRequest,
+    capture_page_diagnostic,
+    is_empty_article_shell,
+)
+from ...quality.access_boundary import (
+    propagate_paywall,
+    raise_for_paywall,
+    use_html_analysis_context,
+)
 from ...reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
@@ -35,13 +41,15 @@ from ...reason_codes import (
     STRUCTURED_MISSING_BODY_SECTIONS,
 )
 from ...runtime import RuntimeContext
-from ...page_diagnostics import (
-    PageDiagnosticRequest,
-    capture_page_diagnostic,
-    is_empty_article_shell,
-)
 from ...tracing import fulltext_event
 from ...utils import normalize_text
+from .._registry import provider_bundle
+from ..atypon_browser_workflow import (
+    extract_atypon_browser_workflow_markdown,
+    extract_browser_workflow_asset_html_scopes,
+    rewrite_inline_figure_links,
+)
+from ..base import ProviderContent, RawFulltextPayload
 from ..browser_runtime import (
     BrowserFetchedHtml,
     BrowserHtmlFetchOptions,
@@ -53,12 +61,6 @@ from ..browser_runtime.api import (
     DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     fetch_html_with_browser,
 )
-from ..atypon_browser_workflow import (
-    extract_browser_workflow_asset_html_scopes,
-    extract_atypon_browser_workflow_markdown,
-    rewrite_inline_figure_links,
-)
-from ..base import ProviderContent, RawFulltextPayload
 from .shared import normalize_browser_url
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
@@ -249,8 +251,6 @@ def _with_browser_runtime_trace_history(
 def _remaining_review_candidates(
     provider: str, html_candidates: Sequence[str], html_result: BrowserFetchedHtml
 ) -> list[str]:
-    from .._registry import provider_bundle
-
     try:
         callback = provider_bundle(
             provider
@@ -324,22 +324,6 @@ def _empty_shell_retry_decision(
     if remaining_candidates:
         decision["next_candidate"] = diagnostic_url_payload(remaining_candidates[0])
     return decision
-
-
-__all__ = [
-    "_FAST_BROWSER_HTML_RETRY_KINDS",
-    "_FAST_BROWSER_HTML_TIMEOUT_MS",
-    "_FAST_BROWSER_HTML_WAIT_SECONDS",
-    "_FAST_BROWSER_HTML_WARM_WAIT_SECONDS",
-    "_browser_workflow_html_payload",
-    "_cached_browser_workflow_assets",
-    "_cached_browser_workflow_markdown",
-    "_fetch_browser_html_payload",
-    "_fetch_browser_html_payload_with_fast_path",
-    "extract_atypon_browser_workflow_markdown",
-    "extract_browser_workflow_asset_html_scopes",
-    "rewrite_inline_figure_links",
-]
 
 
 def _cached_browser_workflow_markdown(
@@ -456,10 +440,12 @@ def _fetch_browser_html_payload(
     context: RuntimeContext,
     warnings: list[str] | None = None,
     html_fetcher: Callable[..., BrowserFetchedHtml] = fetch_html_with_browser,
-    policy: BrowserHtmlFetchPolicy = BrowserHtmlFetchPolicy(),
+    policy: BrowserHtmlFetchPolicy | None = None,
     browser_context_seed: Mapping[str, Any] | None = None,
-    prior_state: BrowserHtmlPriorAttemptState = BrowserHtmlPriorAttemptState(),
+    prior_state: BrowserHtmlPriorAttemptState | None = None,
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
+    policy = policy or BrowserHtmlFetchPolicy()
+    prior_state = prior_state or BrowserHtmlPriorAttemptState()
     configured_timeout_ms = max(1, int(runtime.timeout_ms))
     operation_cap_ms = min(
         configured_timeout_ms,
@@ -489,9 +475,9 @@ def _fetch_browser_html_payload(
         "disable_media": policy.disable_media,
         "runtime_context": context,
         "options": BrowserHtmlFetchOptions(
-            blocked_resource_types=profile.blocked_resource_types or None,
-            empty_script_response_urls=profile.empty_script_response_urls,
-            readiness_budget_seconds=profile.html_readiness_budget_seconds,
+            blocked_resource_types=profile.policy.blocked_resource_types or None,
+            empty_script_response_urls=profile.policy.empty_script_response_urls,
+            readiness_budget_seconds=profile.policy.html_readiness_budget_seconds,
         ),
     }
     if profile.html_readiness is not None:
@@ -747,7 +733,7 @@ def _retry_candidates_after_fast_failure(
 ) -> list[str]:
     candidates = list(html_candidates)
     failure_kind = _browser_failure_kind(fast_failure) if fast_failure else ""
-    retry_incomplete = client.require_profile().retry_incomplete_html_candidates
+    retry_incomplete = client.require_profile().policy.retry_incomplete_html_candidates
     html_result = getattr(fast_failure, "html_result", None)
     if isinstance(html_result, BrowserFetchedHtml):
         remaining_review_candidates = _remaining_review_candidates(
@@ -789,7 +775,7 @@ def _fetch_browser_html_payload_with_fast_path(
     html_fetcher: Callable[..., BrowserFetchedHtml] = fetch_html_with_browser,
 ) -> tuple[BrowserFetchedHtml, RawFulltextPayload]:
     profile = client.require_profile()
-    if not profile.fast_html_attempt:
+    if not profile.policy.fast_html_attempt:
         return _fetch_browser_html_payload(
             client,
             html_candidates,
@@ -905,3 +891,19 @@ def _fetch_browser_html_payload_with_fast_path(
         ):
             raise fast_failure from retry_failure
         raise
+
+
+__all__ = [
+    "_FAST_BROWSER_HTML_RETRY_KINDS",
+    "_FAST_BROWSER_HTML_TIMEOUT_MS",
+    "_FAST_BROWSER_HTML_WAIT_SECONDS",
+    "_FAST_BROWSER_HTML_WARM_WAIT_SECONDS",
+    "_browser_workflow_html_payload",
+    "_cached_browser_workflow_assets",
+    "_cached_browser_workflow_markdown",
+    "_fetch_browser_html_payload",
+    "_fetch_browser_html_payload_with_fast_path",
+    "extract_atypon_browser_workflow_markdown",
+    "extract_browser_workflow_asset_html_scopes",
+    "rewrite_inline_figure_links",
+]

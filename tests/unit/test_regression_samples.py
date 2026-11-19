@@ -1,9 +1,9 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
+
 import unittest
+from dataclasses import replace
+
 from paper_fetch import service as paper_fetch
-from paper_fetch.extraction.html.assets import extract_html_assets
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import (
     clean_markdown,
@@ -11,6 +11,7 @@ from paper_fetch.extraction.html._runtime import (
     extract_html_abstract_blocks,
     extract_html_section_hints,
 )
+from paper_fetch.extraction.html.assets import extract_html_assets
 from paper_fetch.http import HttpTransport
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import elsevier as elsevier_provider
@@ -23,11 +24,12 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_event
+from tests.paths import FIXTURE_DIR
 from tests.provider_benchmark_samples import (
     iter_provider_benchmark_samples,
     provider_benchmark_sample,
 )
-from tests.paths import FIXTURE_DIR
 
 
 class ProviderStub:

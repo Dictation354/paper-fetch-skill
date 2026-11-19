@@ -1,25 +1,23 @@
 """PNAS backend policy, isolated preparation and static probe boundary contracts."""
 
-from dataclasses import replace
-
-
 import asyncio
 import hashlib
 import io
 import json
-from types import SimpleNamespace
 import zipfile
+from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 
+from paper_fetch import browser_runtime_policy as policy
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.browser_runtime import byparr_launcher
+from paper_fetch.providers.browser_runtime import byparr_preparation as prep
+from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.backends.byparr import (
     _dependency_details as _REAL_DEPENDENCY_DETAILS,
 )
-from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_runtime import platforms, selection
-from paper_fetch.providers.browser_runtime import byparr_preparation as prep
-from paper_fetch.providers.browser_runtime import byparr_launcher
-from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
@@ -78,17 +76,17 @@ def test_shared_page_wait_preserves_remaining_operation_budget(monkeypatch, dead
     ],
 )
 def test_auto_backend_is_pnas_only(monkeypatch, system, machine, backend):
-    monkeypatch.setattr(platforms.sys, "platform", system)
-    monkeypatch.setattr(platforms.platform, "machine", lambda: machine)
-    assert selection.selected_backend({}, provider="pnas") == backend
+    monkeypatch.setattr(policy.sys, "platform", system)
+    monkeypatch.setattr(policy.platform, "machine", lambda: machine)
+    assert policy.selected_backend({}, provider="pnas") == backend
     assert (
-        selection.selected_backend(
+        policy.selected_backend(
             {"PAPER_FETCH_PNAS_BROWSER_BACKEND": "byparr"}, provider="wiley"
         )
         == "byparr"
     )
     assert (
-        selection.selected_backend(
+        policy.selected_backend(
             {"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}, provider="pnas"
         )
         == "byparr"
@@ -96,7 +94,7 @@ def test_auto_backend_is_pnas_only(monkeypatch, system, machine, backend):
 
 
 def test_backend_is_fixed_and_ignores_removed_selector():
-    assert selection.selected_backend({}, provider="pnas") == "byparr"
+    assert policy.selected_backend({}, provider="pnas") == "byparr"
 
 
 def test_byparr_reuses_executable_but_isolates_native_state(monkeypatch, tmp_path):
@@ -221,7 +219,9 @@ def test_backend_cache_states_are_isolated(monkeypatch, tmp_path):
 
 
 def test_solver_error_survives_candidate_deadline():
-    from paper_fetch.providers._playwright_browser import _candidate_deadline_failure
+    from paper_fetch.providers.browser_runtime.html_fetcher import (
+        _candidate_deadline_failure,
+    )
 
     failure = BrowserRuntimeFailure(
         "byparr_navigation_failed", "Cloudflare denied the request"
@@ -279,17 +279,25 @@ def test_pnas_attachment_mode_uses_its_actual_backend(tmp_path, backend, mode):
 def test_shared_playwright_version_boundary(
     monkeypatch, tmp_path, engine, version, accepted
 ):
-    from paper_fetch.providers.browser_runtime.backends import byparr, camoufox
-    from paper_fetch.providers.browser_runtime import byparr_engine
     import importlib.metadata
     import importlib.util
+
+    from paper_fetch.providers.browser_runtime import byparr_engine
+    from paper_fetch.providers.browser_runtime.backends import byparr
 
     monkeypatch.setattr(byparr_engine, "engine_name", lambda: engine)
     monkeypatch.setattr(byparr, "_dependency_details", _REAL_DEPENDENCY_DETAILS)
     monkeypatch.setattr(
-        camoufox,
-        "_dependency_details",
-        lambda: {"packages": {"camoufox": True, "playwright": True}},
+        byparr,
+        "probe_camoufox_managed_runtime",
+        lambda: SimpleNamespace(
+            installed=False,
+            valid=False,
+            runtime_path=None,
+            state="missing",
+            version=None,
+            message=None,
+        ),
     )
     monkeypatch.setattr(importlib.util, "find_spec", lambda _: object())
     versions = {

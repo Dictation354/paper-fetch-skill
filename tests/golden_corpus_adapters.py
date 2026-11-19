@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, field
 from typing import Any

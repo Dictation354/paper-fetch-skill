@@ -1,5 +1,4 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
 
 from types import SimpleNamespace
 from unittest import mock
@@ -15,6 +14,7 @@ from paper_fetch.tracing import (
     trace_event,
 )
 from paper_fetch.workflow import fulltext
+from tests.support.trace import trace_facts
 
 
 def test_official_provider_structured_fallback_trace_reaches_article() -> None:

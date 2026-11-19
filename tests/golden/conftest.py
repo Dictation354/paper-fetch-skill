@@ -1,6 +1,7 @@
 """One session-local canonical result per source, route and adapter options."""
 
 import pytest
+
 from paper_fetch.formula.convert import formula_runtime_env
 from tests.support.formula_runtime import captured_formula_environment
 

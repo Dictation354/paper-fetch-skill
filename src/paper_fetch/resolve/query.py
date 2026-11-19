@@ -7,9 +7,9 @@ import argparse
 import json
 import re
 import urllib.parse
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass, field
 from typing import Any
-from collections.abc import Mapping
 
 from rapidfuzz import fuzz
 
@@ -26,9 +26,10 @@ from ..errors import ProviderFailure
 from ..extraction.html.landing import fetch_landing_html
 from ..html_lookup import is_usable_html_lookup_title
 from ..http import HttpTransport, RequestFailure
+from ..mdpi_url import mdpi_doi_from_landing_url
 from ..metadata.crossref import CrossrefLookupClient
 from ..metadata.types import CrossrefMetadata
-from ..mdpi_url import mdpi_doi_from_landing_url
+from ..publication_dates import publication_years
 from ..publisher_identity import (
     extract_doi,
     extract_doi_from_url,
@@ -37,7 +38,6 @@ from ..publisher_identity import (
 )
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
 from ..utils import canonical_author_key, normalize_text
-from ..publication_dates import publication_years
 
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
@@ -102,9 +102,12 @@ class ResolvedQuery:
     candidates: list[dict[str, Any]] = field(default_factory=list)
     title: str | None = None
     provider_identifiers: dict[str, str] = field(default_factory=dict)
+    duration_ms: float | None = field(default=None, repr=False, compare=False)
 
     def to_dict(self) -> dict[str, Any]:
-        return asdict(self)
+        payload = asdict(self)
+        del payload["duration_ms"]
+        return payload
 
 
 def is_url(value: str) -> bool:

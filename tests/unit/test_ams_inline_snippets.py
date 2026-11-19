@@ -1,7 +1,8 @@
 """Caption paragraphs copied from the four original AMS replays; no full article."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch.providers._ams_dom import _render_ams_inline_text
 from tests.golden_criteria import golden_criteria_scenario_asset
 

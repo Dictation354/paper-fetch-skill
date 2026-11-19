@@ -2,17 +2,13 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
+import re
+import time
+import urllib.parse
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
-import urllib.parse
-import re
-import time
 
 from ..arxiv_id import (
     arxiv_id_from_doi,
@@ -23,16 +19,16 @@ from ..arxiv_id import (
     normalize_arxiv_id,
 )
 from ..config import build_publisher_user_agent, build_user_agent
-from ..failure import FailureDiagnostics
+from ..extraction.html import assets as html_assets
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderHtmlRules
-from ..extraction.html import assets as html_assets
+from ..failure import FailureDiagnostics
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
     PDF_MIME_TYPE,
-    RequestFailure,
+    HttpTransport,
     RequestCancelledError,
+    RequestFailure,
     classify_network_error,
 )
 from ..metadata.types import ProviderMetadata
@@ -42,9 +38,15 @@ from ..models import (
     article_from_markdown,
     metadata_only_article,
 )
+from ..quality.access_boundary import propagate_paywall
+from ..reason_codes import ERROR, NO_ACCESS, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, normalize_text
+from ._arxiv_asset_strategy import (
+    ArxivHtmlAssetDownloadPlan,
+    download_arxiv_html_figure_assets,
+)
 from ._arxiv_assets import (
     ARXIV_IMAGE_ACCEPT,
     _arxiv_asset_download_concurrency,
@@ -52,15 +54,15 @@ from ._arxiv_assets import (
     inline_arxiv_source_assets_in_markdown,
     reconcile_arxiv_body_assets,
 )
-from ._arxiv_asset_strategy import (
-    ArxivHtmlAssetDownloadPlan,
-    download_arxiv_html_figure_assets,
-)
 from ._arxiv_atom import (
     ARXIV_API_DELAY_SECONDS,
     ARXIV_API_NUM_RETRIES,
     ARXIV_API_TIMEOUT_SECONDS,
+)
+from ._arxiv_atom import (
     ArxivSearch as _ArxivSearch,
+)
+from ._arxiv_atom import (
     InternalArxivApiClient as _InternalArxivApiClient,
 )
 from ._arxiv_html import _extract_arxiv_html_markdown, _looks_like_html
@@ -71,10 +73,12 @@ from ._arxiv_metadata import (
     _merge_arxiv_metadata_layers,
     _minimal_arxiv_metadata,
     arxiv_metadata_probe_short_circuit,
+)
+from ._arxiv_metadata import (
     metadata_from_arxiv_result as _metadata_from_arxiv_result,
 )
+from ._definitions import PROVIDER_DEFINITIONS
 from ._payloads import build_provider_payload
-from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
 from ._pdf_common import (
     default_pdf_headers,
     pdf_asset_output_dir,
@@ -82,14 +86,14 @@ from ._pdf_common import (
     pdf_fetch_result_assets,
     pdf_fetch_result_warnings,
 )
+from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
 from ._registry import ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
-    ProviderWaterfallStep,
     ProviderWaterfallState,
+    ProviderWaterfallStep,
     run_provider_waterfall,
 )
-from ..reason_codes import ERROR, NO_ACCESS, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -100,7 +104,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["arxiv"]
 

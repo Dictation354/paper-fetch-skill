@@ -4,11 +4,12 @@ from __future__ import annotations
 
 import socket
 import ssl
-from collections.abc import Iterator
+from collections.abc import Iterator, Mapping
 from enum import StrEnum
-from collections.abc import Mapping
 
 import urllib3
+
+from .cache import redact_url_for_cache
 
 
 class RequestErrorCategory(StrEnum):
@@ -74,8 +75,6 @@ class RequestCancelledError(Exception):
 def build_http_error_message(
     status_code: int | None, url: str, *, retry_after_seconds: int | None = None
 ) -> str:
-    from .cache import redact_url_for_cache
-
     message = f"HTTP {status_code} for {redact_url_for_cache(url)}"
     if retry_after_seconds is not None:
         message += f" (Retry-After: {retry_after_seconds}s)"
@@ -103,9 +102,7 @@ def iter_network_error_causes(exc: Exception) -> Iterator[BaseException]:
 
 def is_timeout_network_error(exc: Exception) -> bool:
     return any(
-        isinstance(
-            item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError)
-        )
+        isinstance(item, TimeoutError | urllib3.exceptions.TimeoutError)
         for item in iter_network_error_causes(exc)
     )
 
@@ -115,14 +112,12 @@ def classify_network_error(exc: Exception) -> RequestErrorCategory:
 
     causes = list(iter_network_error_causes(exc))
     if any(
-        isinstance(
-            item, (socket.timeout, TimeoutError, urllib3.exceptions.TimeoutError)
-        )
+        isinstance(item, TimeoutError | urllib3.exceptions.TimeoutError)
         for item in causes
     ):
         return RequestErrorCategory.TIMEOUT
     if any(
-        isinstance(item, (ssl.SSLError, urllib3.exceptions.SSLError)) for item in causes
+        isinstance(item, ssl.SSLError | urllib3.exceptions.SSLError) for item in causes
     ):
         return RequestErrorCategory.TLS_ERROR
     if any(isinstance(item, socket.gaierror) for item in causes):
@@ -173,3 +168,16 @@ def build_network_error_detail(exc: Exception) -> str:
         if detail:
             return detail
     return str(exc)
+
+
+__all__ = [
+    "RequestCancelledError",
+    "RequestErrorCategory",
+    "RequestFailure",
+    "build_http_error_message",
+    "build_network_error_detail",
+    "classify_network_error",
+    "is_retryable_network_error",
+    "is_timeout_network_error",
+    "iter_network_error_causes",
+]

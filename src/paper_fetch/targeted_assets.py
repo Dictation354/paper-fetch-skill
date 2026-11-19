@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from collections.abc import Mapping, Sequence
-from dataclasses import asdict, dataclass, field
 import copy
 import hashlib
-from pathlib import Path
+import json
 import shutil
 import tempfile
-from urllib.parse import urljoin
 import threading
-from typing import Any
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass, field
+from pathlib import Path
+from typing import Any, Literal
+from urllib.parse import urljoin
+
+from pydantic import AliasPath, BaseModel, Field
 
 from .extraction.html import decode_html
 from .extraction.html.assets import (
@@ -20,11 +23,16 @@ from .extraction.html.assets import (
     download_assets,
     extract_scoped_html_assets,
 )
-from .models.markdown import iter_markdown_images
 from .http import RequestFailure
+from .manifest import (
+    ManifestOutputArtifact,
+    ManifestRequest,
+    build_manifest_request_fingerprint,
+    parse_manifest_record,
+)
 from .providers.base import ProviderContent, ProviderFailure, RawFulltextPayload
-from .runtime import RuntimeContext
 from .reason_codes import AUTH_REQUIRED
+from .runtime import RuntimeContext
 
 URL_FIELDS = (
     "url",
@@ -172,13 +180,13 @@ def discover_content_images(
 def _xml_image_assets(
     body: bytes, source_url: str, provider: str
 ) -> list[dict[str, Any]]:
-    from .xml_security import parse_xml
     from .providers._article_markdown_jats_blocks import _figure_entry
+    from .xml_security import parse_xml
 
     if provider == "elsevier":
         from .providers.elsevier import (
-            extract_elsevier_asset_references,
             elsevier_asset_result_kind,
+            extract_elsevier_asset_references,
         )
 
         return [
@@ -225,7 +233,6 @@ def _xml_image_assets(
             )
     if provider == "plos":
         from .providers.plos import _normalize_plos_asset_links
-
         from .publisher_identity import normalize_doi
 
         doi = next(
@@ -312,43 +319,12 @@ def context_from_envelope(envelope: Any) -> AssetContext:
     )
 
 
-def image_delivery(envelope: Any, *, returned_images: int = 0) -> dict[str, Any]:
-    state = context_from_envelope(envelope)
-    references = {image.url for image in iter_markdown_images(envelope.markdown or "")}
-    formulas = [
-        asset
-        for asset in state.assets
-        if asset["kind"] == "formula"
-        and (asset_urls(asset) | {str(asset.get("path") or "")}) & references
-    ]
-    known = (
-        set().union(
-            *(
-                asset_urls(asset) | {str(asset.get("path") or "")}
-                for asset in state.assets
-            )
-        )
-        if state.assets
-        else set()
-    )
-    complete = state.discovery_complete and references <= known
-    return {
-        "discovery_complete": complete,
-        "formula_images": len(formulas),
-        "local_images": sum(
-            bool(asset.get("path") and Path(asset["path"]).is_file())
-            for asset in state.assets
-        ),
-        "returned_images": returned_images,
-    }
-
-
 def _load_source(state: AssetContext, runtime: RuntimeContext) -> None:
     """Read a source page/index only; never call fetch_paper or a PDF converter."""
-    from .extraction.html.landing import fetch_landing_html
-    from .quality.access_boundary import raise_for_paywall
-    from .publisher_identity import validate_extracted_identity
     from .auth import require_ams_auth
+    from .extraction.html.landing import fetch_landing_html
+    from .publisher_identity import validate_extracted_identity
+    from .quality.access_boundary import raise_for_paywall
 
     if not state.source_url:
         raise ProviderFailure(
@@ -729,27 +705,48 @@ def fetch_selected_assets(
             runtime.close()
 
 
+class _ImageManifestV2(BaseModel):
+    schema_version: Literal[2]
+    minimum_reader_schema_version: Literal[2]
+    request: ManifestRequest
+    request_fingerprint: str
+    doi: str | None
+    identity_doi: str | None = Field(validation_alias=AliasPath("identity", "doi"))
+    acceptance_doi: str | None = Field(
+        validation_alias=AliasPath("acceptance", "identity", "doi")
+    )
+    output_artifacts: tuple[ManifestOutputArtifact, ...]
+
+
 def context_from_manifest(path: Path) -> AssetContext:
     """Restore durable identity and image descriptors without resolving or fetching a body."""
-    import json
-    from .manifest import parse_manifest_record
-
-    record = parse_manifest_record(
-        json.loads(path.expanduser().read_text(encoding="utf-8"))
-    )
-    artifact = next(
-        (item for item in record.output_artifacts if item.kind == "image_index"), None
-    )
+    path = path.expanduser()
+    payload = json.loads(path.read_text(encoding="utf-8"))
+    if isinstance(payload, dict) and payload.get("schema_version") == 2:
+        legacy = _ImageManifestV2.model_validate(payload)
+        doi = legacy.doi
+        if doi != legacy.identity_doi or doi != legacy.acceptance_doi:
+            raise ValueError("Manifest DOI does not match its acceptance identity.")
+        if legacy.request_fingerprint != build_manifest_request_fingerprint(
+            legacy.request
+        ):
+            raise ValueError("Manifest request fingerprint does not match its request.")
+        artifacts = legacy.output_artifacts
+    else:
+        record = parse_manifest_record(payload)
+        doi = record.acceptance.identity.doi
+        artifacts = record.output_artifacts
+    artifact = next((item for item in artifacts if item.kind == "image_index"), None)
     if artifact is None:
         raise ValueError("Manifest has no image index.")
     index_path = Path(artifact.path)
     if not index_path.is_absolute():
         index_path = path.parent / index_path
     data = json.loads(index_path.read_text(encoding="utf-8"))
-    if data.get("doi") != record.doi:
+    if data.get("doi") != doi:
         raise ValueError("Image index identity does not match manifest.")
     return AssetContext(
-        doi=record.doi,
+        doi=doi,
         provider=data["provider"],
         source_url=data["source_url"],
         assets=image_index(data.get("assets", [])),

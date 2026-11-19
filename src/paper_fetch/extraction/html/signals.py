@@ -6,7 +6,8 @@ import warnings
 from collections.abc import Mapping
 from typing import Any
 
-from ...utils import normalize_text
+from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
+
 from ...reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
@@ -20,11 +21,10 @@ from ...reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
     STRUCTURED_MISSING_BODY_SECTIONS,
 )
+from ...utils import normalize_text
 from .html_tags import HTML_DROP_TAGS
 from .parsing import choose_parser
 from .ui_tokens import SPRINGER_PREVIEW_PHRASE
-
-from bs4 import BeautifulSoup, XMLParsedAsHTMLWarning
 
 CHALLENGE_PATTERNS = (
     "just a moment",

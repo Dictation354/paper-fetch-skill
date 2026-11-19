@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import json
 import os
+import subprocess
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
-import subprocess
 from pathlib import Path
 from unittest import mock
+
 from paper_fetch.formula import convert as formula_conversion
 from tests.golden_criteria import golden_criteria_scenario_asset
 
@@ -128,11 +130,9 @@ class FormulaConversionTests(unittest.TestCase):
             formula_conversion.AUTO_BACKENDS, ("texmath", "mathml-to-latex")
         )
 
-    def test_backend_registry_resolves_aliases(self) -> None:
-        self.assertEqual(
-            formula_conversion.resolve_backend(backend="mathml_to_latex"),
-            "mathml-to-latex",
-        )
+    def test_backend_registry_rejects_removed_underscore_alias(self) -> None:
+        with self.assertRaisesRegex(ValueError, "Unsupported formula backend"):
+            formula_conversion.resolve_backend(backend="mathml_to_latex")
 
     def test_auto_backend_uses_registry_order_without_texmath_default_fallback(
         self,

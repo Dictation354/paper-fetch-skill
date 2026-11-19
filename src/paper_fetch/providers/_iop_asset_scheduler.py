@@ -2,27 +2,28 @@
 
 from __future__ import annotations
 
+import time
+from collections.abc import Callable, Mapping
 from concurrent.futures import FIRST_COMPLETED, ThreadPoolExecutor, wait
 from contextvars import copy_context
 from dataclasses import replace
 from pathlib import Path
-import time
 from typing import Any
-from collections.abc import Callable, Mapping
+
 from ..asset_budget import AssetBudget, current_asset_budget
-from ..provider_catalog import compile_route_execution_policy_for_kind
 from ..extraction.html.assets import FIGURE_KIND, AssetDownloadOptions
 from ..extraction.html.assets.download import asset_work_key
 from ..extraction.html.assets.state import AssetHostRecoveryCircuit
+from ..provider_catalog import compile_route_execution_policy_for_kind
 from ..utils import empty_asset_results
-from .browser_workflow.shared import BrowserWorkflowDeps
 from .browser_workflow.asset_download import (
-    _raise_if_cancelled,
-    _asset_failure_allows_browser_recovery,
     _annotate_split_browser_recovery,
-    _matching_failure,
+    _asset_failure_allows_browser_recovery,
     _attempt_from_failure,
+    _matching_failure,
+    _raise_if_cancelled,
 )
+from .browser_workflow.shared import BrowserWorkflowDeps
 
 
 def _download_iop_body_assets(

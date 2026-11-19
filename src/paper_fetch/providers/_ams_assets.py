@@ -7,6 +7,8 @@ import re
 import urllib.parse
 from typing import Any
 
+from bs4 import BeautifulSoup, Tag
+
 from ..common_patterns import TABLE_LABEL_PATTERN
 from ..extraction.html.assets import extract_formula_assets
 from ..extraction.html.parsing import choose_parser
@@ -20,9 +22,6 @@ from ._ams_dom import (
     _render_ams_inline_text,
 )
 from ._ams_markdown import _normalize_ams_label_text
-
-from bs4 import BeautifulSoup, Tag
-
 
 AMS_SOURCE_FIGURE_FORMATS = {"eps", "tiff"}
 AMS_SOURCE_FIGURE_KEY_PATTERN = re.compile(

@@ -1,9 +1,9 @@
 """An actual failed pytest run must not print runtime credentials in its reports."""
 
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 
 
 def test_failed_assertion_traceback_junit_and_diagnostics_hide_runtime_env(tmp_path):

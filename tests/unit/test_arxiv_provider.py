@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import io
 import tarfile
 import tempfile
 import unittest
 from pathlib import Path
+
 from paper_fetch import artifacts as paper_fetch_artifacts
 from paper_fetch import service as paper_fetch
 from paper_fetch.arxiv_id import canonical_arxiv_html_url, canonical_arxiv_pdf_url
@@ -25,7 +27,6 @@ from tests.support._paper_fetch_support import (
     RecordingTransport,
     http_response,
 )
-
 
 PDF_FALLBACK_IDS = ("2006.11239v2", "1406.2661v1")
 HTML_ROUTE_IDS = (

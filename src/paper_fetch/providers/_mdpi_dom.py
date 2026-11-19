@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
@@ -22,16 +22,15 @@ from ..extraction.html.shared import append_text_block, short_text, soup_root
 from ..extraction.html.signals import HtmlExtractionFailure
 from ..extraction.html.tables import render_table_markdown
 from ..extraction.markdown_render.formulas import (
-    render_html_formula_container,
     html_formula_latex_from_node,
+    render_html_formula_container,
 )
-from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..markdown.images import render_markdown_image
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..utils import normalize_text
 from ._article_markdown_math import (
     render_external_mathml_expression,
 )
-
 
 MDPI_NOISE_PROFILE = "mdpi"
 

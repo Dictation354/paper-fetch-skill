@@ -155,4 +155,4 @@ if [ -n "$DEFAULT_ENV_FILE" ]; then
 else
     echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to your PAPER_FETCH_ENV_FILE or user config before fetching Elsevier papers."
 fi
-echo "Smoke test: $PYTHON_BIN -m paper_fetch.cli --query \"10.1186/1471-2105-11-421\""
+echo "Smoke test: $PYTHON_BIN -m paper_fetch.cli fetch --query \"10.1186/1471-2105-11-421\""

@@ -7,15 +7,14 @@ existing Markdown/table-entry contracts.
 
 from __future__ import annotations
 
+import re
+from collections.abc import Iterable, Sequence
 from dataclasses import dataclass
 from enum import StrEnum
-import re
 from typing import Final
-from collections.abc import Iterable, Sequence
 
-from ..utils import normalize_text
 from ..markdown.math import normalize_prose_preserving_math
-
+from ..utils import normalize_text
 
 MAX_TABLE_ROWS: Final = 1_000
 MAX_TABLE_COLUMNS: Final = 256

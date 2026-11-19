@@ -1,15 +1,15 @@
 """Real-source coverage plus explicitly classified mutation controls."""
 
-from collections import Counter
 import re
+from collections import Counter
 
 import pytest
 
 from tests.golden_corpus import (
-    iter_golden_corpus_fixtures,
     golden_corpus_fixture_for_doi,
+    iter_golden_corpus_fixtures,
 )
-from tests.support.canonical_content import source_soup, source_formulas, formula_route
+from tests.support.canonical_content import formula_route, source_formulas, source_soup
 from tests.support.replay import build_article_from_fixture
 from tests.support.scientific_content import assert_mathml_formulas
 
@@ -84,7 +84,7 @@ def test_real_figure_bindings_reject_swapped_assets():
 
 
 def test_real_table_checks_reject_row_loss_and_whole_table_relocation():
-    from tests.support.canonical_content import source_tables, source_prose_blocks
+    from tests.support.canonical_content import source_prose_blocks, source_tables
     from tests.support.object_content import assert_source_tables, rendered_tables
 
     fixture = golden_corpus_fixture_for_doi("10.5194/bg-21-1-2024")

@@ -7,7 +7,6 @@ from typing import Any
 
 from paper_fetch.runtime import RuntimeContext
 
-
 WORKER_COUNT = 6
 
 

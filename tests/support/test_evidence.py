@@ -7,15 +7,15 @@ same read set, including the cross-worker canonical build envelope.
 
 from __future__ import annotations
 
-
 import ast
-from collections import defaultdict
-from contextlib import contextmanager
-from functools import cache as _cache, wraps
 import json
 import os
-from pathlib import Path
 import sys
+from collections import defaultdict
+from contextlib import contextmanager
+from functools import cache as _cache
+from functools import wraps
+from pathlib import Path
 
 import pytest
 

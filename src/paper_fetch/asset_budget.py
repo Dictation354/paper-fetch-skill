@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import contextlib
+import threading
 from collections.abc import Callable, Iterator, Mapping, Sequence
 from contextvars import ContextVar, Token
 from dataclasses import dataclass, field
 from pathlib import Path
-import threading
 from typing import Any
 
 from .reason_codes import (

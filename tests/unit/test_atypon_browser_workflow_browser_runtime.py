@@ -5,7 +5,8 @@ import unittest
 from pathlib import Path
 from unittest import mock
 
-from paper_fetch.providers import _playwright_browser, browser_runtime
+from paper_fetch.providers import browser_runtime
+from paper_fetch.providers.browser_runtime import html_fetcher
 
 
 class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
@@ -109,8 +110,8 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             config = self._runtime_config(tmpdir, "wiley", "10.1111/test")
             with mock.patch.object(
-                _playwright_browser,
-                "fetch_html_with_playwright",
+                html_fetcher,
+                "fetch_browser_html",
                 return_value=browser_runtime.BrowserFetchedHtml(
                     source_url="https://onlinelibrary.wiley.com/doi/epdf/10.1111/test",
                     final_url="https://onlinelibrary.wiley.com/doi/10.1111/test",

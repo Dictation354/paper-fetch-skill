@@ -1,15 +1,16 @@
 from __future__ import annotations
+
 from dataclasses import replace
 from functools import cache
 from pathlib import Path
 from typing import Any
+
 from paper_fetch import config
 from paper_fetch.providers import browser_runtime
-from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
 from paper_fetch.providers import wiley as wiley_provider
+from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
-
 
 MARKDOWN_REVIEWED_FIXTURES = {
     "structure": "10.1111_gcb.16414",

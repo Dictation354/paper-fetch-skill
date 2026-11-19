@@ -6,18 +6,16 @@ import re
 import urllib.parse
 from typing import Any
 
-from ..common_patterns import EXTENDED_DATA_PREFIX_PATTERN
-from ..extraction.html.ui_tokens import SPRINGER_NATURE_SOURCE_DATA_LABEL
+from bs4 import BeautifulSoup, Tag
 
+from ..common_patterns import EXTENDED_DATA_PREFIX_PATTERN
+from ..extraction.html._runtime import clean_markdown, count_words
 from ..extraction.html.cleanup_policy import classify_dom_cleanup_node
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import (
     cleanup_policy_for_profile,
     normalize_provider_heading,
 )
-from ..extraction.html._runtime import clean_markdown, count_words
-from ..models import normalize_text
-from ..provider_catalog import matching_provider_domain, provider_domain_matches
 from ..extraction.html.semantics import (
     ANCILLARY_HEADINGS,
     BACK_MATTER_HEADINGS,
@@ -26,23 +24,24 @@ from ..extraction.html.semantics import (
     node_identity_text,
     normalize_section_title,
 )
+from ..extraction.html.ui_tokens import SPRINGER_NATURE_SOURCE_DATA_LABEL
 from ..markdown.citations import (
     COMMON_FIGURE_LINE_PATTERN,
     COMMON_LABEL_PATTERN,
     clean_citation_markers,
     normalize_inline_citation_markdown,
 )
+from ..models import normalize_text
+from ..provider_catalog import matching_provider_domain, provider_domain_matches
 from ._html_section_markdown import (
     FIGURE_ACTION_TRAILING_LINK_PATTERN,
     extract_section_title,
-    render_heading_text_from_html,
     render_container_markdown,
+    render_heading_text_from_html,
     render_retained_text_from_html,
     render_section_markdown,
     section_has_direct_renderable_content,
 )
-
-from bs4 import BeautifulSoup, Tag
 
 SPRINGER_NATURE_ROOT_SELECTORS = (
     "article",

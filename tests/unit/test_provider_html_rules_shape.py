@@ -1,18 +1,18 @@
 from __future__ import annotations
-from dataclasses import replace
 
+from dataclasses import replace
 
 import pytest
 
-from paper_fetch.providers._definitions import (
-    PROVIDER_DEFINITIONS,
-    validate_provider_definitions,
-)
 from paper_fetch.extraction.html.provider_rules import (
     GENERIC_HTML_RULES,
     cleanup_policy_for_profile,
     provider_html_rules,
     require_provider_html_rules,
+)
+from paper_fetch.providers._definitions import (
+    PROVIDER_DEFINITIONS,
+    validate_provider_definitions,
 )
 
 

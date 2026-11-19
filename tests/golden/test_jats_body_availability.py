@@ -1,8 +1,9 @@
 from __future__ import annotations
+
+from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_jats import (
     parse_jats_xml,
 )
-from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from tests.golden_criteria import golden_criteria_asset
 
 

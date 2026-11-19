@@ -2,11 +2,13 @@ from __future__ import annotations
 
 import pytest
 
-from paper_fetch.providers import _playwright_browser
+from paper_fetch import runtime as runtime_module
 from paper_fetch.providers.aip import AIP_BROWSER_PROFILE
+from paper_fetch.providers.browser_runtime.readiness import (
+    wait_for_browser_html_readiness,
+)
 from paper_fetch.providers.browser_runtime.types import BrowserHtmlReadiness
 from paper_fetch.providers.browser_workflow.fetchers import readiness
-from paper_fetch import runtime as runtime_module
 from paper_fetch.runtime import RuntimeContext
 
 
@@ -185,17 +187,16 @@ def test_aip_readiness_waits_for_slow_body_within_remaining_budget(
 
     monkeypatch.setattr(readiness.time, "monotonic", lambda: clock[0])
     trace = {}
-    result = _playwright_browser._wait_for_browser_html_readiness(
+    result = wait_for_browser_html_readiness(
         Page(),
         publisher="aip",
         readiness=BrowserHtmlReadiness(wait_for_article_body=True),
         wait_seconds=8,
         timeout_ms=int((request_budget + 10.0) * 1000),
         request_started=0.0,
-        return_image_payload=False,
         runtime_context=None,
         candidate_trace=trace,
-        readiness_timeout_seconds=AIP_BROWSER_PROFILE.html_readiness_budget_seconds,
+        readiness_timeout_seconds=AIP_BROWSER_PROFILE.policy.html_readiness_budget_seconds,
     )
 
     assert result.ready is expected_ready

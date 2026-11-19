@@ -1,19 +1,17 @@
 """Paired ScienceDirect/Article API sources independently anchor content checks."""
 
-from copy import deepcopy
 import hashlib
 import json
 import re
+from copy import deepcopy
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.providers import _elsevier_html
-from tests.golden_criteria import golden_criteria_asset
-from tests.support.reviewed_publisher_content import _words
+from tests.golden_criteria import golden_criteria_asset, iter_manifest_samples
 from tests.support.elsevier_structure import assert_numbering_and_list_structure
-
-from tests.golden_criteria import iter_manifest_samples
+from tests.support.reviewed_publisher_content import _words
 
 DOIS = [
     sample["doi"]

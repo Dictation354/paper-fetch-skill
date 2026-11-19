@@ -2,13 +2,12 @@
 
 from __future__ import annotations
 
+import json
+from collections.abc import Mapping
 from functools import cache
 from importlib.resources import files
-import json
 from types import MappingProxyType
 from typing import Any
-from collections.abc import Mapping
-
 
 JOURNAL_ROUTES_SCHEMA_VERSION = 1
 JOURNAL_ROUTES_RESOURCE = "journal-routes-v1.json"

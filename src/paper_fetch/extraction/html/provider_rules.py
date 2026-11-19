@@ -4,22 +4,14 @@ from __future__ import annotations
 
 import copy
 import warnings
-from collections.abc import Iterator, Mapping as MappingABC, Set as SetABC
+from collections.abc import Callable, Iterator, Mapping, Sequence
+from collections.abc import Mapping as MappingABC
+from collections.abc import Set as SetABC
 from dataclasses import dataclass, field, replace
 from typing import Any, Protocol
-from collections.abc import Callable, Mapping, Sequence
 
 from ...common_patterns import EXTENDED_DATA_LABEL
 from ...utils import normalize_text
-from .html_tags import HTML_DROP_TAGS
-from .signals import COMMON_ACCESS_BLOCK_TOKENS as SHARED_COMMON_ACCESS_BLOCK_TOKENS
-from .ui_tokens import (
-    CITATION_TOOL_CHROME_TOKENS,
-    COMMON_NOISE_TOKENS,
-    DOWNLOAD_PDF_LABEL,
-    RELATED_CONTENT_CHROME_TOKENS,
-    SPRINGER_NATURE_SOURCE_DATA_LABEL,
-)
 from .availability_policy import AvailabilityContainerRules, AvailabilityPolicy
 from .cleanup_policy import (
     AVAILABILITY_DROP_TAGS,
@@ -28,8 +20,16 @@ from .cleanup_policy import (
     CleanupPolicy,
     build_cleanup_policy,
 )
+from .html_tags import HTML_DROP_TAGS
 from .provider_keys import normalize_provider_key
-
+from .signals import COMMON_ACCESS_BLOCK_TOKENS as SHARED_COMMON_ACCESS_BLOCK_TOKENS
+from .ui_tokens import (
+    CITATION_TOOL_CHROME_TOKENS,
+    COMMON_NOISE_TOKENS,
+    DOWNLOAD_PDF_LABEL,
+    RELATED_CONTENT_CHROME_TOKENS,
+    SPRINGER_NATURE_SOURCE_DATA_LABEL,
+)
 
 DEFAULT_NOISE_PROFILE = "generic"
 COMMON_MARKDOWN_PROMO_TOKENS = ("learn more",)
@@ -604,7 +604,7 @@ PROVIDER_HTML_RULES: Mapping[str, ProviderHtmlRules] = _ProviderHtmlRulesMapping
 
 
 def _rules_for_key(key: str, *, noise: bool = False) -> ProviderHtmlRules | None:
-    from ...providers._definitions import RULE_PROVIDER_INDEX, NOISE_PROVIDER_INDEX
+    from ...providers._definitions import NOISE_PROVIDER_INDEX, RULE_PROVIDER_INDEX
     from ...providers._registry import provider_bundle
 
     provider = (NOISE_PROVIDER_INDEX if noise else RULE_PROVIDER_INDEX).get(key)

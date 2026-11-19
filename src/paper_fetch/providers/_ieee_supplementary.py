@@ -6,9 +6,11 @@ import html as html_lib
 import json
 import re
 import urllib.parse
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
+
+from bs4 import BeautifulSoup, Tag
 
 from ..config import resolve_asset_download_concurrency
 from ..extraction.html import decode_html
@@ -28,11 +30,13 @@ from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
 from ..http.headers import header_value
 from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
-from ..utils import empty_asset_results, normalize_text, strip_html_tags
 from ..runtime import RuntimeContext
+from ..utils import empty_asset_results, normalize_text, strip_html_tags
 from ._ieee_asset_memo import (
     cache_ieee_multimedia_assets,
     cached_ieee_multimedia_assets,
+)
+from ._ieee_asset_memo import (
     ieee_asset_key as _supplementary_asset_key,
 )
 from ._ieee_metadata import IeeeLandingAttempt, _landing_metadata_has_multimedia_scope
@@ -46,8 +50,6 @@ from ._ieee_url import (
     _is_ignored_ieee_asset_url,
 )
 from .browser_runtime.types import BrowserRuntimeConfig
-
-from bs4 import BeautifulSoup, Tag
 
 IEEE_SUPPLEMENTARY_SEMANTIC_TOKENS = (
     *GENERIC_SUPPLEMENTARY_TEXT_TOKENS,

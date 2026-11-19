@@ -1,8 +1,8 @@
 """Launch the prepared Camoufox bundle without probing or downloading a runtime."""
 
-from contextlib import contextmanager
 import json
 import os
+from contextlib import contextmanager
 from pathlib import Path
 
 import pytest

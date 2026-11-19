@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 from ..utils import normalize_text
 

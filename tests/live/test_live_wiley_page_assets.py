@@ -1,11 +1,11 @@
 """Opt-in full-paper Wiley audit; serial headed/headless runs retain all evidence."""
 
-from dataclasses import asdict
 import hashlib
 import json
 import os
 import re
 import time
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
@@ -81,8 +81,8 @@ def test_wiley_live_page_assets(headless, doi, expected, monkeypatch):
         requests.append(record)
         try:
             response = original_call(self, url, asset)
-            record["recovery_attempts"] = (response or {}).get(
-                "_paper_fetch_recovery_attempts", []
+            record["recovery_attempts"] = (
+                list(response.recovery_attempts) if response is not None else []
             )
             record["failure"] = self.failure_for(url)
             record["success"] = response is not None

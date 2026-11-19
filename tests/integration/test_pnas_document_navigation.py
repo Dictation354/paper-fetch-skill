@@ -1,20 +1,19 @@
 """PNAS document replacement and candidate readiness in a real offline browser."""
 
-from dataclasses import replace
-
-
 import json
 import os
+from dataclasses import replace
 from pathlib import Path
 
 import pytest
 
-from paper_fetch.providers import _playwright_browser, pnas
+from paper_fetch.providers import pnas
 from paper_fetch.providers.browser_runtime import (
     BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
+    html_fetcher,
 )
 from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 
@@ -93,7 +92,7 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
         context = browser.new_context()
         context.route("**/*", serve)
         monkeypatch.setattr(
-            _playwright_browser,
+            html_fetcher,
             "open_browser_context",
             lambda *args, **kwargs: (None, context),
         )
@@ -113,9 +112,9 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
         )
         if scenario == "denied":
             with pytest.raises(BrowserRuntimeFailure):
-                _playwright_browser.fetch_html_with_playwright([url], **kwargs)
+                html_fetcher.fetch_browser_html([url], **kwargs)
             return
-        result = _playwright_browser.fetch_html_with_playwright(
+        result = html_fetcher.fetch_browser_html(
             [url, alternate] if scenario == "next_candidate" else [url], **kwargs
         )
         assert result.response_status == 200

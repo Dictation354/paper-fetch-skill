@@ -9,15 +9,15 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ## 最短阅读路径
 
-先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围，按实际路径打开仍可访问的正文和图片。跨会话交接时记录论文身份、验收范围、`body_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
+先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。只有 DOI 和任务目录时，先用 `paper-fetch lookup --doi DOI --output-dir ./papers` 找回已验收全文。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
 
 只有缺少所需正文时才调用 `fetch`。需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。
 
 ```bash
-paper-fetch fetch --query "10.1186/1471-2105-11-421"
+paper-fetch fetch --progress text --query "10.1186/1471-2105-11-421"
 ```
 
-读取 stdout 的 JSON 回执，通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认正文及图片索引保存在独立系统临时目录，命令退出后仍可读取。默认不下载正文图片，也不使用持久缓存。按回执的绝对路径打开本地 Markdown，用搜索定位章节，再按任务需要分段阅读。
+从 stdout 读取 JSON 回执，进度见 stderr。通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认正文及索引保存在独立系统临时目录，命令退出后仍可读取。从 `section_index_path` 取得所需章节的行范围，再按范围读取 `body_path`。Nature 文章的无标题引言可从 `Main` 起读。
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。
 
@@ -33,10 +33,10 @@ paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json \
 只要补充材料时：
 
 ```bash
-paper-fetch fetch --target supplementary --query DOI --output-dir ./papers
+paper-fetch fetch --progress text --target supplementary --query DOI --output-dir ./papers
 ```
 
-三个抓取预设默认下载附件；显式 `--asset-profile none` 或 `--artifact-mode none` 禁止下载。按[材料交接](references/reading-handoff.md)读取实际落盘文件，区分仅发现链接、部分下载和完整下载。
+仅 `--target supplementary` 默认下载附件。随普通正文一起下载附件时用 `--asset-profile all`。显式 `--asset-profile none` 或 `--artifact-mode none` 仅保留发现结果。按[材料交接](references/reading-handoff.md)读取实际落盘文件，区分仅发现链接、部分下载和完整下载。
 
 ## 参数与边界
 

@@ -1,11 +1,11 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
 
 import unittest
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from paper_fetch.extraction.html.landing import fetch_landing_html
+from tests.support.transport import RecordedStreamTransport
 
 
 class FakeLandingTransport(RecordedStreamTransport):

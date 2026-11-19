@@ -5,21 +5,21 @@ from __future__ import annotations
 import urllib.parse
 from typing import Any
 
+from bs4 import BeautifulSoup, Tag
+
 from ..formula_rules import (
     FORMULA_IMAGE_ATTRS,
-    FORMULA_IMAGE_URL_PATTERN,
     FORMULA_IMAGE_SRCSET_ATTRS,
+    FORMULA_IMAGE_URL_PATTERN,
     display_formula_nodes,
-    is_formula_container,
     formula_heading_for_image,
     formula_image_url_from_node,
     html_node_is_figure_asset_context,
+    is_formula_container,
     looks_like_formula_image,
 )
 from ..parsing import choose_parser
 from .dom import _soup_attr_url
-
-from bs4 import BeautifulSoup, Tag
 
 
 def _looks_like_formula_image(

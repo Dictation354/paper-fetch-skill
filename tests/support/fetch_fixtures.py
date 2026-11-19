@@ -1,20 +1,11 @@
 from __future__ import annotations
+
 import asyncio
-import json
 import threading
 import time
 from pathlib import Path
-from paper_fetch.delivery.cache_index import (
-    register_cache_files_for_doi,
-    register_markdown_entry,
-)
-from paper_fetch.delivery.fetch_cache import (
-    FETCH_ENVELOPE_CACHE_VERSION,
-    fetch_envelope_cache_path,
-    cache_request_fingerprint,
-)
+
 from paper_fetch.models import (
-    EXTRACTION_REVISION,
     AcquisitionProvenance,
     ArticleModel,
     FetchEnvelope,
@@ -24,11 +15,8 @@ from paper_fetch.models import (
     TokenEstimateBreakdown,
 )
 from paper_fetch.resolve.query import ResolvedQuery
-from paper_fetch.service import (
-    HasFulltextProbeResult,
-)
+from paper_fetch.service import HasFulltextProbeResult
 from paper_fetch.tracing import TraceContext, trace_event
-from paper_fetch.utils import sanitize_filename
 
 
 def sample_article() -> ArticleModel:
@@ -93,9 +81,9 @@ def sample_envelope(*, modes: set[str], doi: str = "10.1000/example") -> FetchEn
         ],
         quality=article.quality,
         article=article if "article" in modes else None,
-        markdown="# Example Article\n\nExample body.\n"
-        if "markdown" in modes
-        else None,
+        markdown=(
+            "# Example Article\n\nExample body.\n" if "markdown" in modes else None
+        ),
         metadata=article.metadata if "metadata" in modes else None,
         acquisition=article.acquisition,
     )
@@ -131,93 +119,6 @@ def sample_probe_result(
         evidence=list(evidence or ["crossref_fulltext_link"]),
         warnings=list(warnings or []),
     )
-
-
-def create_cached_downloads(download_dir: Path, doi: str) -> None:
-    base = sanitize_filename(doi)
-    download_dir.mkdir(parents=True, exist_ok=True)
-    (download_dir / f"{base}.xml").write_text("<article />", encoding="utf-8")
-    (download_dir / f"{base}.md").write_text(
-        "\n".join(
-            [
-                "---",
-                f'doi: "{doi}"',
-                'source: "unit_test"',
-                "has_fulltext: true",
-                'content_kind: "fulltext"',
-                "---",
-                "",
-                "# Cached Markdown",
-                "",
-            ]
-        ),
-        encoding="utf-8",
-    )
-    asset_dir = download_dir / f"{base}_assets"
-    asset_dir.mkdir(parents=True, exist_ok=True)
-    asset_path = asset_dir / "figure-1.png"
-    asset_path.write_bytes(b"\x89PNG\r\n")
-    register_markdown_entry(
-        download_dir,
-        doi,
-        download_dir / f"{base}.md",
-        source="unit_test",
-        acquisition=AcquisitionProvenance(
-            provider="elsevier",
-            route="xml_api",
-            representation="xml",
-            transport="api",
-        ),
-        has_fulltext=True,
-        content_kind="fulltext",
-    )
-    register_cache_files_for_doi(
-        download_dir,
-        doi,
-        proven_artifact_paths=(download_dir / f"{base}.xml", asset_path),
-    )
-
-
-def create_cached_fetch_envelope(
-    download_dir: Path,
-    doi: str,
-    *,
-    modes: list[str] | None = None,
-    extraction_revision: int = EXTRACTION_REVISION,
-) -> None:
-    request = {
-        "target": "paper",
-        "modes": list(modes or ["markdown"]),
-        "strategy": {
-            "allow_metadata_only_fallback": True,
-            "preferred_providers": None,
-            "asset_profile": "none",
-            "require_local_body_assets": False,
-            "require_full_size_body_assets": False,
-        },
-        "include_refs": "all",
-        "max_tokens": "full_text",
-    }
-    payload = sample_envelope(modes=set(request["modes"]), doi=doi).to_dict()
-    payload["schema_version"] = 4
-    path = fetch_envelope_cache_path(download_dir, doi)
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(
-        json.dumps(
-            {
-                "version": FETCH_ENVELOPE_CACHE_VERSION,
-                "extraction_revision": extraction_revision,
-                "credential_scope": "public",
-                "request_fingerprint": cache_request_fingerprint(doi, request),
-                "request": request,
-                "payload": payload,
-            },
-            ensure_ascii=False,
-            indent=2,
-        ),
-        encoding="utf-8",
-    )
-    register_cache_files_for_doi(download_dir, doi, proven_artifact_paths=(path,))
 
 
 def write_binary(path: Path, size: int = 8) -> None:

@@ -1,24 +1,21 @@
 """Unmodified originals collected while reviewing removal of speculative routes."""
 
-from paper_fetch.providers import _springer_dom, _springer_markdown
-
-
-from urllib.parse import urlsplit
 from unittest import mock
+from urllib.parse import urlsplit
 
 import pytest
 from bs4 import BeautifulSoup
-from paper_fetch.extraction.image_payloads import image_dimensions_from_bytes
 
+from paper_fetch.extraction.image_payloads import image_dimensions_from_bytes
+from paper_fetch.providers import _springer_dom, _springer_markdown
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingClient
 from paper_fetch.providers.science import ScienceClient
-from paper_fetch.runtime import RuntimeContext
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.runtime import RuntimeContext
 from tests.support._paper_fetch_support import FixtureHtmlTransport
-from tests.support.acquired_publisher_inputs import _record
-from tests.support.acquired_publisher_inputs import _response
+from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support.captured_images import download_captured_images
 
 SPRINGER_CAPTURE = "acquisition/requested-templates-2026-09-16/article-response.html"
@@ -43,7 +40,7 @@ def test_original_silverchair_article_requires_downloadimage_unwrapping(
     wrapper = figure.select_one('a[href*="DownloadImage.aspx"]')
     assert wrapper is not None
     client = client_type(FixtureHtmlTransport({}), {})
-    assert client.profile.figure_page_discovery is (
+    assert client.profile.policy.figure_page_discovery is (
         client.name == "royalsocietypublishing"
     )
     if client.name == "royalsocietypublishing":
@@ -158,7 +155,7 @@ def test_current_springer_early_article_notice_requests_pdf_fallback(entrypoint)
             )
     fetch_pdf.assert_called_once()
     assert pdf_link in fetch_pdf.call_args.args[1]
-    assert fetch_pdf.call_args.kwargs["expected_identity"] == {
+    assert fetch_pdf.call_args.kwargs["request"].expected_identity == {
         "doi": metadata["doi"],
         "title": metadata["title"],
     }
@@ -255,20 +252,20 @@ def test_original_science_image_and_native_canvas_are_separate_evidence(
 
 
 def test_original_royal_missing_original_downloads_from_its_actual_viewer(tmp_path):
+    from functools import partial
     from pathlib import Path
     from unittest import mock
-    from paper_fetch.providers import browser_runtime
-    from paper_fetch.providers.browser_runtime import BrowserRuntimeConfig
+
     from paper_fetch.extraction.html.assets.figures import (
         extract_full_size_figure_image_url,
     )
+    from paper_fetch.providers import browser_runtime
+    from paper_fetch.providers.browser_runtime import BrowserRuntimeConfig
     from tests.support._atypon_browser_workflow_provider_support import (
         _typed_raw_payload,
     )
     from tests.support._browser_workflow_deps import install_browser_workflow_deps
-    from tests.support.acquired_publisher_inputs import _response
-    from functools import partial
-    from tests.support.acquired_publisher_inputs import capture_url_identity
+    from tests.support.acquired_publisher_inputs import _response, capture_url_identity
 
     _identity = partial(capture_url_identity, provider="royalsocietypublishing")
 

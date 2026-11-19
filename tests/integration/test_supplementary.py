@@ -1,15 +1,15 @@
 """CLI/MCP supplementary outputs with real HTTP, downloads and index files."""
 
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import json
-from pathlib import Path
 import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 
 from paper_fetch import cli, service
-from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
+from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow import supplementary
@@ -210,12 +210,12 @@ def test_cli_empty_single_and_batch_return_nonzero_with_empty_lists(
 
 @pytest.mark.browser
 def test_browser_index_accepts_paywalled_abstract_without_body(monkeypatch, tmp_path):
-    from paper_fetch.providers import _playwright_browser as browser_fetcher
     from paper_fetch.providers.browser_runtime import (
         BrowserHtmlFetchOptions,
         BrowserHtmlReadiness,
         BrowserRuntimeConfig,
     )
+    from paper_fetch.providers.browser_runtime import html_fetcher as browser_fetcher
     from tests.support.offline_camoufox import prepared_browser
 
     with prepared_browser(monkeypatch) as browser:
@@ -251,7 +251,7 @@ def test_browser_index_accepts_paywalled_abstract_without_body(monkeypatch, tmp_
         monkeypatch.setattr(
             browser_fetcher, "open_browser_context", lambda *_a, **_k: (None, context)
         )
-        result = browser_fetcher.fetch_html_with_playwright(
+        result = browser_fetcher.fetch_browser_html(
             [url],
             publisher="science",
             config=BrowserRuntimeConfig(

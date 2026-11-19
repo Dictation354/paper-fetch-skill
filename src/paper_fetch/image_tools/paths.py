@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import os
 import shutil
+from collections.abc import Mapping
 from functools import lru_cache
 from pathlib import Path
-from collections.abc import Mapping
 
 from ..config import resolve_user_data_dir
 

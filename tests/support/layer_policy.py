@@ -8,14 +8,14 @@ function aliases captured during collection.
 
 from __future__ import annotations
 
-from functools import wraps
 import importlib
 import importlib.util
 import os
-from pathlib import Path
 import sys
-import pytest
+from functools import wraps
+from pathlib import Path
 
+import pytest
 
 UNIT_NODE: str | None = None
 FIXTURES = Path(__file__).resolve().parents[1] / "fixtures"

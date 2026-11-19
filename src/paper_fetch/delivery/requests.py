@@ -3,7 +3,9 @@
 from __future__ import annotations
 
 from typing import Any, Literal
+
 from pydantic import BaseModel, ConfigDict, Field, model_validator
+
 from ..models import RenderOptions
 from ..workflow.types import FetchStrategy
 
@@ -17,7 +19,7 @@ class FetchStrategyInput(BaseModel):
     require_full_size_body_assets: bool = False
 
     @model_validator(mode="after")
-    def imply_local_assets(self):
+    def imply_local_assets(self) -> FetchStrategyInput:
         if self.require_full_size_body_assets:
             self.require_local_body_assets = True
         return self
@@ -54,3 +56,6 @@ class FetchPaperRequest(BaseModel):
             max_tokens=self.max_tokens,
             asset_profile=self.strategy.asset_profile,
         )
+
+
+__all__ = ["FetchPaperRequest", "FetchStrategyInput"]

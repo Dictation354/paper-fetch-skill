@@ -6,13 +6,13 @@ import asyncio
 import contextlib
 import json
 import os
-from pathlib import Path
 import signal
 import subprocess
 import sys
 import threading
 import time
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 
 def main():
@@ -34,8 +34,8 @@ def main():
 
     sys.modules["byparr_challenge"] = load_challenge(runtime)
     from camoufox.utils import launch_options, spoofs_window_dimensions
-    from playwright._impl._driver import compute_driver_executable
     from camoufox_options import macos_proxy_preferences
+    from playwright._impl._driver import compute_driver_executable
 
     proxy_prefs = macos_proxy_preferences()
     options = launch_options(
@@ -119,8 +119,8 @@ async def _shared_page(browser, payload):
 
 
 async def serve(settings, root, endpoint, node_process):
-    from playwright.async_api import BrowserContext, async_playwright
     from byparr_adapter import ManagedOperation
+    from playwright.async_api import BrowserContext, async_playwright
 
     async with async_playwright() as playwright:
         browser = await playwright.firefox.connect(endpoint)

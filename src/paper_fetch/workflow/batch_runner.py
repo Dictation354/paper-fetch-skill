@@ -3,17 +3,17 @@
 from __future__ import annotations
 
 import asyncio
-from contextvars import copy_context
-from collections import Counter
-from collections.abc import Awaitable, Callable, Hashable, Mapping, Sequence
-from concurrent.futures import ThreadPoolExecutor
 import contextlib
-from dataclasses import dataclass
-from enum import StrEnum
 import inspect
 import math
 import threading
 import time
+from collections import Counter
+from collections.abc import Awaitable, Callable, Hashable, Mapping, Sequence
+from concurrent.futures import ThreadPoolExecutor
+from contextvars import copy_context
+from dataclasses import dataclass
+from enum import StrEnum
 from typing import Generic, TypeVar, cast
 
 from ..http import RequestCancelledError

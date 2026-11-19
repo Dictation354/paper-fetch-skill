@@ -2,10 +2,6 @@
 
 from __future__ import annotations
 
-from .browser_runtime.navigation import navigate_page
-
-from ..quality.access_boundary import propagate_paywall
-
 import contextlib
 import time
 from typing import Any
@@ -13,15 +9,20 @@ from typing import Any
 from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..failure import FailureDiagnostics
 from ..http import RequestCancelledError, redact_url_for_diagnostics
+from ..quality.access_boundary import propagate_paywall
 from ..reason_codes import ERROR, NO_RESULT
 from ..runtime import RuntimeContext
-from ..runtime_browser import browser_page_user_agent
 from ..utils import normalize_text
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
+from ._ieee_browser_payload import (
+    IeeeAssetExtractor,
+    IeeeBrowserPayloadRequest,
+    IeeeBrowserPayloadSource,
+    build_ieee_browser_payload,
+)
 from ._ieee_browser_readiness import (
     _BrowserFailureContext,
-    _RestHtmlSelection,
     _capture_rest_html,
     _page_content,
     _page_has_article,
@@ -29,23 +30,20 @@ from ._ieee_browser_readiness import (
     _playwright_response_headers,
     _playwright_response_status,
     _playwright_timeout_error,
+    _RestHtmlSelection,
     _unready_browser_failure,
 )
-from ._ieee_browser_payload import (
-    IeeeAssetExtractor,
-    IeeeBrowserPayloadRequest,
-    IeeeBrowserPayloadSource,
-    build_ieee_browser_payload,
-)
 from .base import ProviderFailure, RawFulltextPayload
-from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 from .browser_runtime import (
-    BrowserRuntimeFailure,
     BrowserRuntimeConfig,
+    BrowserRuntimeFailure,
     browser_context,
     browser_context_seed_from_session,
+    browser_page_user_agent,
     merge_browser_context_seeds,
 )
+from .browser_runtime.navigation import navigate_page
+from .browser_workflow.shared import BROWSER_HTML_BLOCKED_RESOURCE_TYPES
 
 IEEE_BROWSER_HTML_NAVIGATION_TIMEOUT_MS = 60000
 IEEE_BROWSER_HTML_REST_WAIT_TIMEOUT_MS = 15000

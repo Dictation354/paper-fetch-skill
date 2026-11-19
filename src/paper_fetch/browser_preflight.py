@@ -3,22 +3,22 @@
 from __future__ import annotations
 
 import contextlib
+import re
+from collections.abc import Callable, Iterable, Mapping
 from dataclasses import dataclass, replace
 from importlib import util as importlib_util
 from pathlib import Path
-import re
 from typing import Any, Literal
-from collections.abc import Callable, Iterable, Mapping
 
-from .auth import AUTH_TARGETS, AuthTarget
 from .artifacts import ArtifactMode
+from .auth import AUTH_TARGETS, AuthTarget
+from .browser_runtime_policy import selected_backend as choose_backend
 from .config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     build_runtime_env,
 )
 from .http import RequestCancelledError, diagnostic_url_payload
 from .page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
-from .publisher_identity import extract_doi, extract_doi_from_url
 from .provider_catalog import browser_preflight_provider_names
 from .providers.base import ProviderFailure
 from .providers.browser_runtime import (
@@ -37,6 +37,7 @@ from .providers.browser_workflow.shared import (
     default_browser_workflow_deps,
 )
 from .providers.registry import build_clients
+from .publisher_identity import extract_doi, extract_doi_from_url
 from .reason_codes import (
     BROWSER_CONTEXT_CREATE_FAILED,
     BROWSER_PAGE_CREATE_FAILED,
@@ -44,7 +45,6 @@ from .reason_codes import (
 )
 from .runtime import RuntimeContext
 from .utils import normalize_text, provider_display_name
-
 
 BrowserPreflightStatus = Literal[
     "ready",
@@ -287,8 +287,6 @@ def static_browser_capabilities(
     )
     packages = dependency_details.get("packages")
     package_states = packages if isinstance(packages, Mapping) else {}
-    from .providers.browser_runtime.selection import selected_backend as choose_backend
-
     selected_backend = choose_backend(env, provider=provider_key)
 
     def package_capability(package: str) -> dict[str, object]:

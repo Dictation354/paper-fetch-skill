@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import argparse
 import json
-from pathlib import Path
 import subprocess
 import sys
-from scripts import resolve_offline_dependencies as module
+from pathlib import Path
 
+from scripts import resolve_offline_dependencies as module
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

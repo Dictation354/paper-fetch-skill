@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import copy
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ...extraction.html import assets as _html_asset_impl
 from ...extraction.html.parsing import choose_parser
@@ -33,8 +35,6 @@ from .profile import (
     _dedupe_top_level_nodes,
     _publisher_profile,
 )
-
-from bs4 import BeautifulSoup, Tag
 
 ATYPON_BROWSER_WORKFLOW_SUPPLEMENTARY_SECTION_SELECTORS = (
     "section#supplementary-materials",

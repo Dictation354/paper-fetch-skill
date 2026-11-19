@@ -10,8 +10,8 @@ import pytest
 from paper_fetch.http import (
     HttpRequestPolicy,
     HttpStreamOptions,
-    HttpTransportOptions,
     HttpTransport,
+    HttpTransportOptions,
     RequestErrorCategory,
     RequestFailure,
     SafeRemoteUrlPolicy,
@@ -73,7 +73,7 @@ class _StreamingResponse(_Response):
         return self._stream.read(amount)
 
     def geturl(self) -> str:
-        return str(getattr(self, "_paper_fetch_final_url", "") or "")
+        return ""
 
     def release_conn(self) -> None:
         self.released = True
@@ -175,6 +175,8 @@ def test_transport_validates_every_redirect_and_drops_cross_origin_secrets() -> 
     )
 
     assert response.status == 200
+    assert not hasattr(response, "_paper_fetch_final_url")
+    assert not hasattr(response, "_paper_fetch_timing_seconds")
     assert pool.requests[1][1] == "https://cdn.example/article.xml"
     assert "Authorization" not in pool.requests[1][2]
     assert pool.requests[1][2]["Accept"] == "application/xml"

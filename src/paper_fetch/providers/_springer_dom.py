@@ -5,8 +5,10 @@ from __future__ import annotations
 import copy
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ..common_patterns import (
     EXTENDED_DATA_LABEL,
@@ -16,17 +18,17 @@ from ..common_patterns import (
     TABLE_LABEL_PREFIX_PATTERN,
 )
 from ..extraction.html import decode_html as _decode_html
-from ..extraction.html.assets import (
-    FULL_SIZE_IMAGE_ATTRS,
-    _soup_attr_url,
-    looks_like_full_size_asset_url,
-)
 from ..extraction.html._metadata import (
     parse_html_metadata as parse_generic_html_metadata,
 )
 from ..extraction.html._runtime import (
     clean_markdown,
     prune_html_tree,
+)
+from ..extraction.html.assets import (
+    FULL_SIZE_IMAGE_ATTRS,
+    _soup_attr_url,
+    looks_like_full_size_asset_url,
 )
 from ..extraction.html.language import (
     collect_html_abstract_blocks,
@@ -38,8 +40,8 @@ from ..extraction.html.semantics import (
     SUPPLEMENTARY_BACK_MATTER_HEADINGS,
     collect_html_section_hints,
     heading_category,
-    normalize_section_title,
     node_source_selector,
+    normalize_section_title,
 )
 from ..extraction.html.ui_tokens import (
     SPRINGER_FULL_SIZE_IMAGE_LABEL,
@@ -49,20 +51,20 @@ from ..extraction.html.ui_tokens import (
 from ..metadata.types import MetadataMergeRule, merge_metadata_layers
 from ..publisher_identity import normalize_doi
 from ..utils import dedupe_authors, normalize_text
+from ._html_section_markdown import (
+    FIGURE_ACTION_TRAILING_LINK_PATTERN as SPRINGER_FIGURE_TRAILING_LINK_PATTERN,
+)
+from ._html_section_markdown import (
+    render_clean_text_from_html,
+)
 from ._springer_authors import normalize_display_authors
 from .html_springer_nature import (
     clean_springer_nature_text_fragment,
-    is_springer_nature_url,
     is_nature_url,
+    is_springer_nature_url,
     select_nature_abstract_section,
     select_springer_nature_article_root,
 )
-from ._html_section_markdown import (
-    FIGURE_ACTION_TRAILING_LINK_PATTERN as SPRINGER_FIGURE_TRAILING_LINK_PATTERN,
-    render_clean_text_from_html,
-)
-
-from bs4 import BeautifulSoup, Tag
 
 
 def access_check_html(html_text: str) -> str:

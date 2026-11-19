@@ -2,13 +2,21 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
-from .. import _playwright_browser
+from ...browser_runtime_policy import selected_backend
 from ..base import ProviderStatusResult
-from .selection import selected_backend
-from .backend import BrowserBackend
+from .backends.byparr import DEFAULT_BYPARR_BACKEND, ByparrBackend
+from .types import (
+    DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS as DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS,
+)
+from .types import (
+    DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS as DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
+)
+from .types import (
+    DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS as DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
+)
 from .types import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
@@ -16,23 +24,10 @@ from .types import (
 )
 
 
-def _backend(name: str) -> BrowserBackend:
+def _backend(name: str) -> ByparrBackend:
     if name == "byparr":
-        from .backends.byparr import DEFAULT_BYPARR_BACKEND
-
         return DEFAULT_BYPARR_BACKEND
     raise ValueError(f"Unknown browser backend: {name}")
-
-
-DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = (
-    _playwright_browser.DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
-)
-DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = (
-    _playwright_browser.DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS
-)
-DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = (
-    _playwright_browser.DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS
-)
 
 
 def load_runtime_config(

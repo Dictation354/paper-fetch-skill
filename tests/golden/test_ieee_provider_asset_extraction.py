@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from paper_fetch.providers import _ieee_metadata
 from tests.support._ieee_provider_support import *
 

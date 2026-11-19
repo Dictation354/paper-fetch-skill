@@ -14,12 +14,12 @@ from ..extraction.html.assets import (
 )
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.signals import HtmlExtractionFailure
+from ..mdpi_url import is_mdpi_url
 from ..models.markdown import (
     image_reference_candidates,
     image_references_match,
     iter_markdown_images,
 )
-from ..mdpi_url import is_mdpi_url
 from ..utils import extend_unique, normalize_text
 from ._mdpi_dom import (
     MDPI_NOISE_PROFILE,

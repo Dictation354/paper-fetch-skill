@@ -1,12 +1,12 @@
-"""Shared URL and signal helpers for browser-workflow providers."""
+"""Shared URL helpers, dependency container, and default factory for browser workflows."""
 
 from __future__ import annotations
 
+import functools
 import urllib.parse
-
+from collections.abc import Callable
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Callable
 
 from ...provider_catalog import host_matches_domain
 from ...quality import html_profiles as _html_profiles
@@ -69,12 +69,16 @@ class BrowserWorkflowDeps:
     _browser_workflow_image_download_candidates: Callable[..., Any]
 
 
+@functools.cache
 def default_browser_workflow_deps() -> BrowserWorkflowDeps:
-    """返回生产默认依赖。"""
+    """Assemble and cache the default production ``BrowserWorkflowDeps``."""
+
     from ...extraction.html.assets import (
         download_assets,
         split_body_and_supplementary_assets,
     )
+    from .._pdf_fallback import fetch_pdf_with_browser
+    from ..atypon_browser_workflow import extract_atypon_browser_workflow_markdown
     from ..browser_runtime import (
         ensure_runtime_ready,
         fetch_html_with_browser,
@@ -82,8 +86,6 @@ def default_browser_workflow_deps() -> BrowserWorkflowDeps:
         probe_runtime_status,
         warm_browser_context,
     )
-    from .._pdf_fallback import fetch_pdf_with_browser
-    from ..atypon_browser_workflow import extract_atypon_browser_workflow_markdown
     from .assets import (
         _assets_matching_download_failures,
         _browser_workflow_image_download_candidates,

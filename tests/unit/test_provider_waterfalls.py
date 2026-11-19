@@ -1,44 +1,50 @@
 from __future__ import annotations
-from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
-from tests.support.transport import RecordedStreamTransport
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
+import tempfile
+import unittest
 from dataclasses import replace
-from paper_fetch.providers import _springer_authors
+from pathlib import Path
+from unittest import mock
+
+from paper_fetch.http import RequestFailure
+from paper_fetch.providers import (
+    _springer_authors,
+    browser_runtime,
+    browser_workflow,
+)
+from paper_fetch.providers import (
+    _springer_dom as springer_dom,
+)
+from paper_fetch.providers import (
+    _springer_markdown as springer_markdown,
+)
+from paper_fetch.providers import (
+    elsevier as elsevier_provider,
+)
+from paper_fetch.providers import (
+    springer as springer_provider,
+)
+from paper_fetch.providers import (
+    wiley as wiley_provider,
+)
+from paper_fetch.providers.base import (
+    ProviderContent,
+    ProviderFailure,
+    RawFulltextPayload,
+)
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+from paper_fetch.reason_codes import NO_ACCESS
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
+from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.provider_benchmark_samples import (
     WILEY_PDF_FALLBACK_SAMPLE,
     provider_benchmark_sample,
 )
-from tests.golden_criteria import golden_criteria_scenario_asset
-from paper_fetch.runtime import RuntimeContext
-from unittest import mock
-from pathlib import Path
-import unittest
-from tests.support._paper_fetch_support import RecordingTransport
-from paper_fetch.providers.base import (
-    ProviderContent,
-    RawFulltextPayload,
-)
-from paper_fetch.providers import (
-    browser_runtime,
-    elsevier as elsevier_provider,
-)
-from paper_fetch.http import RequestFailure
-import tempfile
-from paper_fetch.providers import _springer_dom as springer_dom
-from paper_fetch.providers import _springer_markdown as springer_markdown
-from paper_fetch.providers import (
-    browser_workflow,
-    springer as springer_provider,
-    wiley as wiley_provider,
-)
-from paper_fetch.providers.base import (
-    ProviderFailure,
-)
-from paper_fetch.reason_codes import NO_ACCESS
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
-from tests.support._paper_fetch_support import fulltext_pdf_bytes
-
+from tests.support._paper_fetch_support import RecordingTransport, fulltext_pdf_bytes
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
 
 ELSEVIER_SAMPLE = provider_benchmark_sample("elsevier")
 SPRINGER_SAMPLE = provider_benchmark_sample("springer")
@@ -709,7 +715,8 @@ class PublisherWaterfallTests(unittest.TestCase):
             article = client.to_article_model(metadata, raw_payload)
 
         mocked_pdf.assert_called_once()
-        self.assertEqual(mocked_pdf.call_args.kwargs["seed_urls"], [landing_url])
+        self.assertEqual(mocked_pdf.call_args.kwargs["headers"]["Referer"], landing_url)
+        self.assertNotIn("seed_urls", mocked_pdf.call_args.kwargs)
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
         self.assertTrue(raw_payload.content.needs_local_copy)
         self.assertEqual(article.source, "springer_pdf")
@@ -1441,7 +1448,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 mock.patch.object(
                     wiley_provider,
                     "_fetch_wiley_tdm_pdf_result",
-                    side_effect=wiley_provider.PdfFallbackFailure(
+                    side_effect=wiley_provider.PdfFetchFailure(
                         "pdf_download_failed",
                         "Wiley API PDF fallback failed.",
                     ),
@@ -1488,7 +1495,7 @@ class PublisherWaterfallTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "wiley", doi)
             mocked_browser_pdf = mock.Mock(
-                side_effect=browser_workflow.PdfFallbackFailure(
+                side_effect=browser_workflow.PdfFetchFailure(
                     "download_not_triggered",
                     "Browser PDF download was not triggered.",
                 )
@@ -1509,7 +1516,7 @@ class PublisherWaterfallTests(unittest.TestCase):
                 mock.patch.object(
                     wiley_provider,
                     "_fetch_wiley_tdm_pdf_result",
-                    side_effect=wiley_provider.PdfFallbackFailure(
+                    side_effect=wiley_provider.PdfFetchFailure(
                         "downloaded_file_not_pdf",
                         "Wiley API PDF fallback did not return a PDF file.",
                     ),

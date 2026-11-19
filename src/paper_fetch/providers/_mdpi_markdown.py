@@ -3,11 +3,12 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
+from ..extraction.html.object_links import resolve_retained_object_links
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import clean_rendered_markdown, render_html_markdown
 from ..extraction.html.semantics import collect_html_section_hints
@@ -36,7 +37,6 @@ from ._mdpi_references import (
     extract_keywords,
     extract_references,
 )
-from ..extraction.html.object_links import resolve_retained_object_links
 
 _NOISY_MARKDOWN_LINES = {
     "browse figures",

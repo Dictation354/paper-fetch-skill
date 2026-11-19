@@ -2,23 +2,23 @@
 
 from __future__ import annotations
 
-from ...browser_runtime.navigation import navigate_page, managed_action
-
 import contextlib
 import json
 import tempfile
-from pathlib import Path
 import time
-from typing import Any
 from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
 from urllib.parse import urljoin, urlsplit
 
 from ....asset_budget import DEFAULT_ASSET_MAX_BYTES_PER_ASSET, AssetBudgetExceeded
 from ....extraction.html.assets import supplementary_response_block_reason
+from ....extraction.html.assets.state import AssetBinaryPayload, AssetFetchResponse
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
-from .context import _browser_response_headers, _browser_response_status
 from ..._registry import BrowserAssetPolicy, browser_asset_policy
+from ...browser_runtime.navigation import managed_action, navigate_page
+from .context import _browser_response_headers, _browser_response_status
 
 _CLICK_TIMEOUT_SECONDS = 60.0
 
@@ -424,16 +424,19 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                     return None
                 route["final_url"] = redact_url_for_cache(str(response.url))
                 fetcher._last_failure_by_url.pop(file_url, None)
-                return {
-                    "status_code": status,
-                    "headers": headers,
-                    "body": body,
-                    "url": str(response.url),
-                    "_paper_fetch_asset_route_diagnostics": dict(route),
-                    "_paper_fetch_recovery_attempts": [
-                        {"stage": "page_click", **route}
-                    ],
-                }
+                return AssetFetchResponse(
+                    payload=AssetBinaryPayload(
+                        body=body,
+                        downloaded_bytes=len(body),
+                    ),
+                    recovery_attempts=[{"stage": "page_click", **route}],
+                    route_diagnostics=dict(route),
+                    diagnostics={
+                        "status_code": status,
+                        "headers": headers,
+                        "url": str(response.url),
+                    },
+                )
             page.wait_for_timeout(min(50, remaining_ms()))
     except (RequestCancelledError, AssetBudgetExceeded):
         raise

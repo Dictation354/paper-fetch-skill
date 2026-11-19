@@ -9,7 +9,6 @@ from ..models import FetchEnvelope, OutputMode, RenderOptions
 from ..runtime import RuntimeContext
 from .types import FetchStrategy
 
-
 FetchPaperFn = Callable[..., FetchEnvelope]
 
 

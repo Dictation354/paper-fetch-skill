@@ -1,17 +1,17 @@
 """Small source contracts with arbitrary identifiers, labels and prose."""
 
+import pytest
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
-import pytest
 
 from paper_fetch.extraction.html.object_links import prepare_retained_object_links
-from paper_fetch.providers._html_section_markdown import (
-    render_container_markdown,
-    render_clean_text_from_html,
-)
 from paper_fetch.extraction.html.tables import render_table_inline_text
 from paper_fetch.extraction.markdown_render.formulas import render_inline_latex_markdown
 from paper_fetch.models import article_from_markdown
+from paper_fetch.providers._html_section_markdown import (
+    render_clean_text_from_html,
+    render_container_markdown,
+)
 
 
 @pytest.mark.parametrize("identity", ["note-Z73", "custom.figure.241"])
@@ -95,8 +95,8 @@ def test_pdf_body_and_metadata_abstract_have_separate_rendering():
 def test_semantic_insertion_keeps_list_continuations_and_display_math(marker):
     from paper_fetch.extraction.html._runtime import _filtered_body_blocks
     from paper_fetch.providers._arxiv_html import (
-        _inject_arxiv_semantic_blocks,
         _clean_arxiv_html_markdown_noise,
+        _inject_arxiv_semantic_blocks,
     )
 
     indent = " " * (len(marker) + 1)
@@ -155,6 +155,7 @@ def test_semantic_insertion_keeps_list_continuations_and_display_math(marker):
 @pytest.mark.parametrize("operators", ["[[ and [ ,", "[  versus ] and"])
 def test_citation_normalization_preserves_literal_bracket_spacing(operators):
     import xml.etree.ElementTree as ET
+
     from paper_fetch.providers._article_markdown_common import render_inline_text
 
     prose = f"Operators {operators} remain part of the API."
@@ -173,6 +174,7 @@ def test_citation_normalization_preserves_literal_bracket_spacing(operators):
 @pytest.mark.parametrize("distance", ["83", "249"])
 def test_literal_comparison_remains_visible_in_list(distance):
     import xml.etree.ElementTree as ET
+
     from paper_fetch.providers._article_markdown_common import render_inline_text
 
     text = render_inline_text(ET.fromstring(f"<p>&gt;{distance} km of coverage.</p>"))

@@ -1,15 +1,15 @@
 from __future__ import annotations
-from paper_fetch.providers import _springer_dom, _springer_markdown
+
+import unittest
+
+from paper_fetch.extraction.html._metadata import parse_html_metadata
+from paper_fetch.extraction.html._runtime import body_metrics
+from paper_fetch.providers import _springer_dom, _springer_markdown, browser_workflow
 from paper_fetch.quality.html_availability import (
     assess_html_fulltext_availability,
 )
-import unittest
-from paper_fetch.extraction.html._metadata import parse_html_metadata
-from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers import browser_workflow
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset
-
 
 SCIENCE_ENTITLED_FIXTURE = golden_criteria_asset(
     "10.1126/science.aeg3511", "original.html"

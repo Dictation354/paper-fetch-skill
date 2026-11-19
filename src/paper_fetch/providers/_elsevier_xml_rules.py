@@ -7,8 +7,8 @@ element semantics instead of ad-hoc paper-specific checks.
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
+from dataclasses import dataclass
 
 from ..extraction.html.semantics import FRONT_MATTER_HEADINGS
 from ..reason_codes import METADATA_ONLY

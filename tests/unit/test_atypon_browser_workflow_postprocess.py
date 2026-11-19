@@ -1,13 +1,14 @@
 from __future__ import annotations
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
+
+import json
 import unittest
+
+from paper_fetch.extraction.html.figure_links import inject_inline_figure_links
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
     rewrite_inline_figure_links,
 )
-import json
-from paper_fetch.extraction.html.figure_links import inject_inline_figure_links
-
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 WILEY_FULL_FIXTURE = golden_criteria_asset("10.1111/gcb.16414", "original.html")
 WILEY_ABBREV_FIXTURE = golden_criteria_asset("10.1111/cas.16395", "original.html")

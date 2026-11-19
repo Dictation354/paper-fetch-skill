@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 from urllib.parse import quote, unquote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -16,13 +16,13 @@ from ..extraction.html.formula_rules import (
     is_display_formula_node,
     is_tex_formula_script_node,
 )
+from ..extraction.html.parsing import choose_parser
+from ..extraction.html.provider_rules import COMMON_ACCESS_BLOCK_TOKENS
+from ..extraction.html.signals import HtmlExtractionFailure
 from ..extraction.markdown_render.formulas import (
     html_formula_latex_from_node,
     render_inline_latex_markdown,
 )
-from ..extraction.html.parsing import choose_parser
-from ..extraction.html.provider_rules import COMMON_ACCESS_BLOCK_TOKENS
-from ..extraction.html.signals import HtmlExtractionFailure
 from ..models.markdown import (
     image_reference_candidates,
     image_references_match,
@@ -32,11 +32,10 @@ from ..provider_catalog import host_matches_domain
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import TextMarkerRule, TextMarkerSignalSet
 from ..utils import extend_unique, normalize_text
+from . import browser_workflow
 from ._html_references import (
     extract_numbered_references_from_soup,
 )
-from . import browser_workflow
-
 
 IOP_NOISE_PROFILE = "iop"
 
@@ -1059,8 +1058,8 @@ def _is_iop_formula_script(node: Any) -> bool:
 
 
 def iop_before_inline_formula_normalization(container: Tag) -> None:
-    from .atypon_browser_workflow.profile import _dedupe_top_level_nodes
     from .atypon_browser_workflow.formulas import _raw_markdown_node
+    from .atypon_browser_workflow.profile import _dedupe_top_level_nodes
 
     nodes = _dedupe_top_level_nodes(
         [node for node in container.select(".inline-eqn") if isinstance(node, Tag)]

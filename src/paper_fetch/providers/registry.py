@@ -2,16 +2,15 @@
 
 from __future__ import annotations
 
-
-from collections.abc import Iterable, Iterator, Mapping
 import threading
+from collections.abc import Iterable, Iterator, Mapping
 
 from ..config import build_runtime_env
 from ..failure import FailureDiagnostics
 from ..http import HttpTransport
 from ..provider_catalog import PROVIDER_CATALOG
-from ._registry import provider_bundle
 from ..reason_codes import ERROR
+from ._registry import provider_bundle
 from .base import (
     ProviderClient,
     ProviderFailure,

@@ -2,34 +2,45 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-from copy import deepcopy
 import csv
-from functools import partial
 import io
 import json
 import re
 import time
+from collections.abc import Callable, Mapping
+from copy import deepcopy
+from functools import partial
 from typing import Any
 from urllib.parse import parse_qs, urljoin, urlparse
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
+from ..extraction.html import assets as html_assets
 from ..extraction.html.parsing import choose_parser
+from ..extraction.markdown_render.formulas import (
+    html_formula_latex_from_node,
+    render_inline_latex_markdown,
+)
 from ..models import normalize_markdown_text
 from ..provider_catalog import host_matches_domain
-from ._reference_doi import reference_doi
 from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
+from ._html_asset_engine import (
+    HtmlAssetExtractionPolicy,
+    extract_scoped_assets_with_policy,
+)
 from ._html_authors import (
     AuthorExtractionPipeline,
     AuthorStep,
     extract_jsonld_authors,
     extract_meta_authors,
 )
-from ._html_references import extract_numbered_references_from_soup
+from ._html_references import _reference_doi, extract_numbered_references_from_soup
+from ._html_section_markdown import _render_html_list
+from ._reference_doi import reference_doi
 from ._script_json import extract_assignment_json
-
+from .atypon_browser_workflow.formulas import _structured_latex_from_math_node
+from .browser_runtime.navigation import navigator_for, recover_get_result
 
 TANDF_JSONLD_ARTICLE_TYPES = frozenset({"article", "scholarlyarticle"})
 # SITE_UI_COPY_REGRESSION_MARKER: Taylor & Francis article chrome selectors are
@@ -613,8 +624,6 @@ def prepare_source_images(container: Any, source_url: str) -> None:
             wrapper["data-tandf-formula-placeholder"] = "true"
             image.decompose()
     # Keep actual TeX data through this provider's script/chrome cleanup.
-    from ..extraction.markdown_render.formulas import html_formula_latex_from_node
-
     for wrapper in container.select(".NLM_disp-formula"):
         for script in list(wrapper.select('script[type^="math/tex"]')):
             latex = html_formula_latex_from_node(script)
@@ -631,7 +640,6 @@ def _prefer_mathml_over_formula_placeholders(container: Any) -> None:
 
     if not isinstance(container, Tag):
         return
-    from .atypon_browser_workflow.formulas import _structured_latex_from_math_node
 
     for image_fallback in list(container.select(".NLM_disp-formula-image")):
         sibling = image_fallback.next_sibling
@@ -667,10 +675,6 @@ def _prefer_mathml_over_formula_placeholders(container: Any) -> None:
                     "disp-formula" not in sibling_classes
                     and sibling.find("math") is None
                 ):
-                    from ..extraction.markdown_render.formulas import (
-                        render_inline_latex_markdown,
-                    )
-
                     sibling.clear()
                     sibling.append(render_inline_latex_markdown(latex))
                     sibling["data-paper-fetch-markdown"] = "1"
@@ -966,8 +970,6 @@ def tandf_before_block_normalization(container: Any) -> None:
             wrapper.append(item)
         table.replace_with(wrapper)
         if wrapper.find_parent(class_="hlFld-Abstract") is not None:
-            from ._html_section_markdown import _render_html_list
-
             block = factory.new_tag("p", attrs={"data-paper-fetch-markdown": "1"})
             block.string = "\n".join(_render_html_list(wrapper, level=2))
             wrapper.replace_with(block)
@@ -1188,7 +1190,6 @@ def _fetch_tandf_csv_table_batch(
         return []
     if not isinstance(raw_results, list):
         return []
-    from .browser_runtime.navigation import recover_get_result, navigator_for
 
     if navigator_for(page) is None:
         return raw_results
@@ -1506,8 +1507,6 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
     references = extract_numbered_references_from_soup(soup)
     # T&F linkouts use the current article's `doi` alongside a distinct
     # `refDoi`/`doiOfLink` for the cited work. Only the latter identify references.
-    from ._html_references import _reference_doi
-
     reference_dois: dict[str, str] = {}
     direct_dois: dict[str, str | None] = {}
     for index, node in enumerate(reference_nodes, start=1):
@@ -1602,8 +1601,6 @@ def extract_asset_html_scopes(
 def _extract_tandf_supplementary_assets(
     html_text: str, source_url: str
 ) -> list[dict[str, str]]:
-    from ..extraction.html import assets as html_assets
-
     assets = [
         asset
         for asset in html_assets.extract_supplementary_assets(html_text, source_url)
@@ -1645,11 +1642,6 @@ def scoped_asset_extractor(
     asset_profile,
     supplementary_html_text: str | None = None,
 ) -> list[dict[str, Any]]:
-    from ._html_asset_engine import (
-        HtmlAssetExtractionPolicy,
-        extract_scoped_assets_with_policy,
-    )
-
     return extract_scoped_assets_with_policy(
         body_html_text,
         source_url,

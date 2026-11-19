@@ -1,12 +1,12 @@
 """Real locks, path aliases and batch execution admission using a fake native engine."""
 
-from dataclasses import replace
 import threading
 import time
+from dataclasses import replace
 
 from paper_fetch.providers.browser_runtime import profile
-from paper_fetch.providers.browser_runtime.backends.camoufox import (
-    DEFAULT_CAMOUFOX_BACKEND,
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    DEFAULT_BYPARR_BACKEND,
 )
 from paper_fetch.providers.browser_runtime.context import open_browser_context
 from paper_fetch.runtime import RuntimeContext
@@ -16,7 +16,7 @@ from tests.support.publisher_profiles import NativeProfileDouble
 
 def test_profile_wait_longer_than_page_budget_then_full_budget(tmp_path, monkeypatch):
     monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
-    config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
+    config = DEFAULT_BYPARR_BACKEND.load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="10.1073/pnas.test"
     )
     first, _ = open_browser_context(config)
@@ -47,7 +47,7 @@ def test_profile_wait_longer_than_page_budget_then_full_budget(tmp_path, monkeyp
 
 def test_waiter_yields_batch_capacity_for_another_profile(tmp_path, monkeypatch):
     monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
-    config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
+    config = DEFAULT_BYPARR_BACKEND.load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="10.1073/pnas.test"
     )
     first, _ = open_browser_context(config)
@@ -87,7 +87,7 @@ def test_reuse_and_profile_switch_share_budget_excluding_queue(tmp_path, monkeyp
     from filelock import FileLock
 
     monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
-    config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config(
+    config = DEFAULT_BYPARR_BACKEND.load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="10.1073/pnas.test"
     )
     config = replace(config, timeout_ms=1000)

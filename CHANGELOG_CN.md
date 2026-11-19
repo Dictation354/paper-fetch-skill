@@ -8,6 +8,19 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### CLI、数据契约与缓存
+
+- 将 `paper_fetch.cli` 拆分为子包，以强类型命令模型与显式输出规划统一驱动 `fetch`、`lookup`、`resolve`、`check`、`fetch-assets`、`auth`、`browser-preflight`、`doctor` 和 `update`。
+- 新增 `paper-fetch lookup --doi DOI --output-dir DIR` 只读找回目录内未截断且快照完好的已验收全文，并为已完成全文生成从 1 起算的章节行号索引 `sections.json`（回执新增 `section_index_path`）。普通正文预设默认保持 `asset_profile=none`，仅 `--target supplementary` 默认下载附件。
+- 将 `FetchAcceptanceReport` 与 `ManifestRecord` 升级至 schema v3（打包 `manifest-record-v3.schema.json`）：验收报告移除 `minimum_reader_schema_version`、`fetch.completed`、嵌套 `table`/`formula` 子分面、平铺的 `body_*`、`total` 与 `remote_links_preserved` 字段。正文资产计数从 `asset.body_assets` 读取，语义损失从 `content.semantic_losses` 读取。CLI 回执 v1 保留已有身份和资产字段。`fetch-assets --manifest` 接受 v2 和 v3 manifest。`ManifestRecord` 移除顶层重复镜像的 `query`、`identity`、`doi`、`source`、`acquisition`、`fallback_codes`、`warning_codes`、`failure_codes`、`semantic_losses` 与 `asset_summary`，统一从 `record.request` 和 `record.acceptance` 读取，CLI `paper-fetch/receipt` 顶层便捷字段保持不变。
+- 将 `FetchCache` sidecar 升级至 v8，仅写入单文件 `<doi>.<request_fingerprint>.fetch-envelope.json`，移除 `.paper-fetch-cache.json`／`.paper-fetch-mcp-cache.json` 缓存索引、缓存巡检模块与无指纹双写；读取时先精确匹配请求指纹，再按同 DOI 前缀扫描超集变体，经轻量头部过滤后再反序列化并核验目录内资产。
+
+### 浏览器运行时、传输与安装
+
+- 将原 `_playwright_browser` 与 `runtime_browser` 归位至 `providers.browser_runtime`（`html_fetcher`、`readiness`、`telemetry` 与 `sessions`），后端层拍平为单一 `ByparrBackend`；移除未使用的浏览器后端选择层、`RuntimeContext` 旧 `_camoufox_*` 转发属性及 `PAPER_FETCH_WILEY_PROFILE_DIR` 环境变量别名。
+- 内聚化 HTTP 传输限流门控（`RequestRateGate` 统一管理同主机并发信号量、`Retry-After` 冷却与 QPS 时隙）及 HTML 资产两阶段下载状态机（`download`、`state`、`streaming`、`recovery`、`conversion`）；在 manifest `trace` 中记录 resolver、Crossref 元数据及 Springer HTML 请求、解析与正文提取阶段的 `duration_ms` 耗时。
+- 移除 `legacy_cleanup` 模块及 Unix／macOS／Windows 安装、升级、卸载脚本对 7.6.3 之前旧 MCP 注册与 Codex 配置块的清理逻辑；精简 `docs/macos-adaptation-contract.toml` 至长期支持矩阵、安全不变量与原生证据边界；启用 Ruff `I`（isort）导入排序并同步 Skill 与架构文档。
+
 ## 7.7.2 - 2026-11-18
 
 - `paper-fetch fetch-assets --compact` 输出单行版本化回执，包含逐图结果和实际文件的绝对路径。图注和下载诊断保存到独立的脱敏明细文件。普通调用继续输出详细 JSON。

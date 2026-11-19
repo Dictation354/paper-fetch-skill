@@ -1,9 +1,10 @@
 """Shared test support; contains no collected tests."""
 
-from unittest import mock
 from contextlib import ExitStack
 from pathlib import Path
 from tempfile import TemporaryDirectory
+from unittest import mock
+
 from paper_fetch import service
 from paper_fetch.config import BROWSER_PROFILE_DIR_ENV_VAR
 from tests.support._paper_fetch_support import FixtureProvider

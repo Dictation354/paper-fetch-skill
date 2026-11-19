@@ -1,26 +1,26 @@
 """Real shared Camoufox/Byparr lifecycle and local HTTP/browser contracts."""
 
-from dataclasses import replace
-
-
 import base64
 import contextlib
 import os
-from pathlib import Path
 import threading
 import time
+from dataclasses import replace
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
+from pathlib import Path
 
 import pytest
 
 from paper_fetch import offline_byparr
-from paper_fetch.providers.browser_runtime import byparr_manager as managed
-from paper_fetch.providers.browser_runtime import byparr_preparation as prep
+from paper_fetch.browser_runtime_policy import supported_platform
+from paper_fetch.providers.browser_runtime import (
+    byparr_manager as managed,
+)
+from paper_fetch.providers.browser_runtime import (
+    byparr_preparation as prep,
+)
 from paper_fetch.providers.browser_runtime.api import fetch_html_with_browser
 from paper_fetch.providers.browser_runtime.navigation import navigate_page
-from paper_fetch.providers.browser_runtime.platforms import (
-    supported_platform,
-)
 from paper_fetch.providers.browser_runtime.types import (
     BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
@@ -28,7 +28,6 @@ from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeFailure,
 )
 from paper_fetch.runtime import RuntimeContext
-
 
 pytestmark = pytest.mark.browser
 
@@ -72,8 +71,8 @@ def prepared(monkeypatch):
         monkeypatch.delenv("PAPER_FETCH_BROWSER_BINARY_PATH", raising=False)
     else:
         from tests._environment import (
-            PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
             PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
+            PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
         )
 
         executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
@@ -83,7 +82,7 @@ def prepared(monkeypatch):
         monkeypatch.setenv("XDG_CACHE_HOME", cache_home)
         monkeypatch.setenv("PAPER_FETCH_BROWSER_BINARY_PATH", executable)
         monkeypatch.setattr(
-            "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
+            "paper_fetch.providers.browser_runtime.preparation._launch_executable_path",
             lambda _: None if os.sys.platform == "darwin" else executable,
         )
     yield
@@ -531,13 +530,13 @@ def test_elsevier_pdf_route_downloads_in_owned_context_without_http_lane(
     prepared, monkeypatch, tmp_path
 ):
     from paper_fetch.providers import _pdf_fallback as pdf
+    from paper_fetch.providers._pdf_common import PdfFetchResult
     from paper_fetch.providers.browser_workflow.pdf_fallback import (
         fetch_seeded_browser_pdf_payload,
     )
     from paper_fetch.providers.browser_workflow.shared import (
         default_browser_workflow_deps,
     )
-    from paper_fetch.providers._pdf_common import PdfFetchResult
 
     home = "https://www.sciencedirect.com/"
     url = home + "science/article/pii/S016819232400090X/pdfft?download=true"
@@ -614,6 +613,7 @@ def test_elsevier_pdf_route_downloads_in_owned_context_without_http_lane(
 
 def _set_home(monkeypatch, provider, url):
     from dataclasses import replace
+
     from paper_fetch import provider_catalog
 
     catalog = dict(provider_catalog.PROVIDER_CATALOG)
@@ -703,8 +703,8 @@ def test_challenged_get_recovers_once_in_same_context(prepared, site, tmp_path):
 def test_invisible_delayed_challenge_calls_upstream_and_receives_article(
     prepared, site, tmp_path
 ):
-    from paper_fetch.providers.browser_runtime.context import open_browser_context
     from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
+    from paper_fetch.providers.browser_runtime.context import open_browser_context
 
     if engine_name() != "invisible":
         pytest.skip("Invisible sync polling contract")

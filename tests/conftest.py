@@ -7,22 +7,20 @@ browser/runtime launch, or an unapproved subprocess.
 
 from __future__ import annotations
 
-
 import os
-from pathlib import Path
 import shutil
 import tempfile
+from pathlib import Path
 from typing import Any
 
-from platformdirs import user_cache_path, user_data_path
 import pytest
+from platformdirs import user_cache_path, user_data_path
 
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
-
 
 pytest_plugins = ["tests.support.test_evidence"]
 
@@ -91,6 +89,7 @@ def _preserve_installed_camoufox_executable() -> None:
         return
     try:
         from camoufox import pkgman
+
         from paper_fetch.providers.browser_runtime.preparation import (
             probe_camoufox_managed_runtime,
         )
@@ -232,12 +231,14 @@ def _paper_fetch_test_safety(request, monkeypatch):
         yield
         return
     layer_policy.UNIT_NODE = request.node.nodeid
-    from paper_fetch.providers import _playwright_browser, _pdf_common
+    from paper_fetch.providers import _pdf_common
+    from paper_fetch.providers.browser_runtime import byparr_manager, html_fetcher
 
     def blocked(*args: Any, **kwargs: Any) -> None:
         layer_policy.reject("real browser runtime")
 
-    monkeypatch.setattr(_playwright_browser, "open_browser_context", blocked)
+    monkeypatch.setattr(html_fetcher, "open_browser_context", blocked)
+    monkeypatch.setattr(byparr_manager.ByparrManager, "new_context", blocked)
     original = _pdf_common._call_pdf_renderer_with_tessdata_retry
 
     def guarded_renderer(renderer, *args, **kwargs):

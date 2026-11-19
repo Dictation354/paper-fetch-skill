@@ -5,12 +5,14 @@ Browser observations lack HTTP envelopes and do not exercise provider readiness.
 """
 
 from unittest import mock
-from bs4 import BeautifulSoup
+
 import pytest
+from bs4 import BeautifulSoup
+
+from paper_fetch.extraction.html.signals import detect_html_block
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers._pdf_common import PdfFetchFailure
 from paper_fetch.providers._pdf_fallback import fetch_pdf_over_http
-from paper_fetch.providers._playwright_browser import detect_html_block
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.acquired_publisher_inputs import _record
 

@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from typing import Any
-from dataclasses import asdict
 from collections.abc import Mapping
+from dataclasses import asdict
+from typing import Any
 from urllib.parse import quote, urlparse
 
 from ..extraction.html.assets import filter_assets_for_profile
@@ -31,10 +29,10 @@ from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _royalsocietypublishing_html as royal_html
 from . import browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import BrowserAssetPolicy, ProviderBundle
 from .base import RawFulltextPayload
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["royalsocietypublishing"]
 

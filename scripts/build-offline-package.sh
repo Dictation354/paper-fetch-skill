@@ -285,7 +285,6 @@ copy_runtime_assets() {
   cp "$REPO_DIR/LICENSE" "$staging/LICENSE"
   cp "$INSTALLER_MANIFEST_FILE" "$staging/installer/manifest.json"
   cp "$REPO_DIR/scripts/skill_integrity.py" "$staging/scripts/skill_integrity.py"
-  cp "$REPO_DIR/src/paper_fetch/legacy_cleanup.py" "$staging/scripts/cleanup_legacy_mcp.py"
   cp -a "$REPO_DIR/skills/paper-fetch-skill" "$staging/skills/"
 }
 

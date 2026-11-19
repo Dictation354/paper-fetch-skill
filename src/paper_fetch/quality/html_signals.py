@@ -1,15 +1,15 @@
 """HTML availability signal helpers and typed provider signal sets."""
 
 from __future__ import annotations
+
 import json
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass
+from re import Pattern
 from types import MappingProxyType
 from typing import Any
-from re import Pattern
-from collections.abc import Mapping
-from ..extraction.html.provider_keys import normalize_provider_key
-from ..extraction.html.signals import ACCESS_GATE_PATTERNS
+
 from ..utils import normalize_text
 
 
@@ -418,16 +418,35 @@ IEEE_AVAILABILITY_OVERRIDES = AvailabilityOverrides(
 )
 
 
+def _normalize_provider_key(value: str | None) -> str:
+    return " ".join(str(value or "").strip().lower().replace("-", "_").split())
+
+
 def authorless_heading_signatures_for_provider(
     provider_name: str | None,
 ) -> tuple[tuple[str, ...], ...]:
     return PROVIDER_AUTHORLESS_HEADING_SIGNATURES.get(
-        normalize_provider_key(provider_name), ()
+        _normalize_provider_key(provider_name), ()
     )
 
 
 def dedupe_signals(values: list[str]) -> list[str]:
     return list(dict.fromkeys(value for value in values if value))
+
+
+def default_positive_signals(
+    html_text: str,
+) -> tuple[list[str], list[str], list[str]]:
+    strong: list[str] = []
+    soft: list[str] = []
+    lowered = html_text.lower()
+    if any(marker in lowered for marker in HTML_STRONG_FULLTEXT_MARKERS):
+        strong.append("article_body_marker")
+    if any(marker in lowered for marker in HTML_STRUCTURE_MARKERS):
+        soft.append("article_body_structure_marker")
+    if "<article" in lowered:
+        soft.append("article_tag_present")
+    return dedupe_signals(strong), dedupe_signals(soft), []
 
 
 def _datalayer_rule_value(value: str) -> str:
@@ -466,7 +485,7 @@ def evaluate_datalayer_blocking_signals(
     return _evaluate_datalayer_rules(datalayer, signal_set.blocking_rules)
 
 
-def _evaluate_datalayer_positive_signal_set(
+def evaluate_datalayer_positive_signals(
     html_text: str, signal_set: DatalayerSignalSet
 ) -> tuple[list[str], list[str], list[str]]:
     strong, soft, abstract_only = default_positive_signals(html_text)
@@ -497,6 +516,8 @@ def _matches_text_marker_rule(lowered: str, rule: TextMarkerRule) -> bool:
             _datalayer_rule_value(token) in lowered for token in rule.absent
         )
     if rule.access_gate_context:
+        from ..extraction.html.signals import ACCESS_GATE_PATTERNS
+
         matched = matched and rule.substring in ACCESS_GATE_PATTERNS
     return not matched if rule.negate else matched
 
@@ -516,7 +537,7 @@ def evaluate_text_marker_blocking_signals(
     return _evaluate_text_marker_rules(html_text, signal_set.blocking_rules)
 
 
-def _evaluate_text_marker_positive_signal_set(
+def evaluate_text_marker_positive_signals(
     html_text: str, signal_set: TextMarkerSignalSet
 ) -> tuple[list[str], list[str], list[str]]:
     strong, soft, abstract_only = default_positive_signals(html_text)
@@ -528,7 +549,7 @@ def _evaluate_text_marker_positive_signal_set(
     return dedupe_signals(strong), dedupe_signals(soft), dedupe_signals(abstract_only)
 
 
-def _apply_availability_override_rules(
+def apply_availability_overrides(
     state: AvailabilityOverrideState, overrides: AvailabilityOverrides
 ) -> None:
     for selector_flag_rule in overrides.selector_flags:
@@ -556,17 +577,18 @@ def _apply_availability_override_rules(
             and state.blocking_fallback_signals is not None
         ):
             state.blocking_fallback_signals.append(selector_blocking_rule.token)
-    page_text = normalize_text(" ".join(state.soup.stripped_strings)).lower()
-    for text_blocking_rule in overrides.text_blocking_rules:
-        if text_blocking_rule.require_structure_field_false and getattr(
-            state.structure, text_blocking_rule.require_structure_field_false, False
-        ):
-            continue
-        if (
-            normalize_text(text_blocking_rule.substring).lower() in page_text
-            and state.blocking_fallback_signals is not None
-        ):
-            state.blocking_fallback_signals.append(text_blocking_rule.token)
+    if overrides.text_blocking_rules:
+        page_text = normalize_text(" ".join(state.soup.stripped_strings)).lower()
+        for text_blocking_rule in overrides.text_blocking_rules:
+            if text_blocking_rule.require_structure_field_false and getattr(
+                state.structure, text_blocking_rule.require_structure_field_false, False
+            ):
+                continue
+            if (
+                normalize_text(text_blocking_rule.substring).lower() in page_text
+                and state.blocking_fallback_signals is not None
+            ):
+                state.blocking_fallback_signals.append(text_blocking_rule.token)
     for empty_shell_rule in overrides.empty_shell_rules:
         node = state.soup.select_one(empty_shell_rule.selector)
         if node is None:
@@ -578,27 +600,6 @@ def _apply_availability_override_rules(
             and state.blocking_fallback_signals is not None
         ):
             state.blocking_fallback_signals.append(empty_shell_rule.token)
-
-
-def _default_positive_signal_values(
-    html_text: str,
-) -> tuple[list[str], list[str], list[str]]:
-    strong: list[str] = []
-    soft: list[str] = []
-    lowered = html_text.lower()
-    if any(marker in lowered for marker in HTML_STRONG_FULLTEXT_MARKERS):
-        strong.append("article_body_marker")
-    if any(marker in lowered for marker in HTML_STRUCTURE_MARKERS):
-        soft.append("article_body_structure_marker")
-    if "<article" in lowered:
-        soft.append("article_tag_present")
-    return dedupe_signals(strong), dedupe_signals(soft), []
-
-
-evaluate_datalayer_positive_signals = _evaluate_datalayer_positive_signal_set
-evaluate_text_marker_positive_signals = _evaluate_text_marker_positive_signal_set
-apply_availability_overrides = _apply_availability_override_rules
-default_positive_signals = _default_positive_signal_values
 
 
 def looks_like_abstract_redirect(

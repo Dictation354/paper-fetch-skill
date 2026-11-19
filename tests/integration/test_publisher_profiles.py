@@ -1,26 +1,23 @@
 """Real native persistence and directory lease concurrency contracts."""
 
 from __future__ import annotations
-from dataclasses import replace
-
 
 import json
 import os
-from pathlib import Path
 import subprocess
 import sys
 import threading
 import time
+from dataclasses import replace
+from pathlib import Path
 
-from filelock import FileLock
 import pytest
-
-from paper_fetch.providers.browser_runtime.backends.camoufox import (
-    DEFAULT_CAMOUFOX_BACKEND,
-)
+from filelock import FileLock
 
 from paper_fetch.providers.browser_runtime import profile
-
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    DEFAULT_BYPARR_BACKEND,
+)
 from paper_fetch.providers.browser_runtime.context import (
     browser_context,
     open_browser_context,
@@ -29,8 +26,7 @@ from paper_fetch.providers.browser_runtime.types import BrowserRuntimeFailure
 from paper_fetch.runtime import RuntimeContext
 from tests.support.publisher_profiles import NativeProfileDouble
 
-
-load_runtime_config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config
+load_runtime_config = DEFAULT_BYPARR_BACKEND.load_runtime_config
 
 
 @pytest.fixture
@@ -132,8 +128,8 @@ def native_config(config, monkeypatch):
         pytest.skip(
             "managed macOS bundle persistence is exercised by the existing native bundle gate"
         )
-    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
     from paper_fetch.providers.browser_runtime import byparr_engine
+    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 
     monkeypatch.setattr(byparr_engine, "engine_name", lambda: "camoufox")
 
@@ -173,9 +169,9 @@ def native_config(config, monkeypatch):
 
 @pytest.fixture
 def offline_assets():
-    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     import struct
     import zlib
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     def chunk(kind, body):
         return (
@@ -233,12 +229,9 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
     native_config,
     offline_assets,
 ):
-    from paper_fetch.providers._playwright_browser import fetch_html_with_playwright
+    from paper_fetch.providers._pdf_fallback import _open_pdf_browser_context
+    from paper_fetch.providers.browser_runtime.html_fetcher import fetch_browser_html
     from paper_fetch.providers.browser_runtime.types import BrowserHtmlReadiness
-    from paper_fetch.providers._pdf_fallback import (
-        _open_pdf_browser_context,
-        _PdfBrowserLaunch,
-    )
     from paper_fetch.providers.browser_workflow.fetchers.context import (
         BrowserDocumentFetcherOptions,
     )
@@ -277,7 +270,7 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
             ]
         )
         page.close()
-        html_result = fetch_html_with_playwright(
+        html_result = fetch_browser_html(
             [asset_root + "/body"],
             publisher="pnas",
             config=replace(
@@ -296,7 +289,7 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
         )
         with browser_context(config, runtime_context=runtime) as html:
             assert html.context is context
-        _, pdf = _open_pdf_browser_context(_PdfBrowserLaunch(runtime, config))
+        _, pdf = _open_pdf_browser_context(config, runtime=runtime)
         assert pdf is context
         response = pdf.request.get(asset_root + "/article.pdf")
         assert response.body() == assets["/article.pdf"][1]

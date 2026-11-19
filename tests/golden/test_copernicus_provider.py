@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import re
+import unittest
+
 from tests.golden_corpus import (
     build_article_from_fixture,
     golden_corpus_fixture_for_doi,
 )
-import unittest
-
 
 DOI = "10.5194/acp-24-1-2024"
 LANDING_URL = "https://acp.copernicus.org/articles/24/1/2024/"

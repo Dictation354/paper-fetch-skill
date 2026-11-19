@@ -1,12 +1,14 @@
 from __future__ import annotations
-from tests.support.camoufox_backend import _Context, _Page, _Response
+
 import json
-from types import SimpleNamespace
 import subprocess
 import sys
 import threading
+from types import SimpleNamespace
 from unittest import mock
+
 import pytest
+
 from paper_fetch.config import (
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_HEADLESS_ENV_VAR,
@@ -15,38 +17,40 @@ from paper_fetch.config import (
     BROWSER_USER_AGENT_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
 )
-from paper_fetch.providers import _playwright_browser, browser_runtime
-from paper_fetch.providers.browser_runtime.backends.camoufox import (
-    CamoufoxBackend,
+from paper_fetch.providers import browser_runtime
+from paper_fetch.providers.browser_runtime import (
+    camoufox_options,
+    html_fetcher,
+    preparation,
+    telemetry,
+)
+from paper_fetch.providers.browser_runtime import (
+    context as browser_runtime_context,
+)
+from paper_fetch.providers.browser_runtime import (
+    readiness as browser_readiness,
+)
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    ByparrBackend,
     _dependency_details,
 )
-from paper_fetch.providers.browser_runtime.camoufox_manager import (
-    CamoufoxBrowserManager,
-    CamoufoxPersistentContextManager,
+from paper_fetch.providers.browser_runtime.preparation import (
+    CamoufoxRuntimeProbe,
     _launch_executable_path,
-    _launch_firefox_major_version,
 )
-from paper_fetch.providers.browser_runtime import preparation
-from paper_fetch.providers.browser_runtime import camoufox_options
-from paper_fetch.providers.browser_runtime.preparation import CamoufoxRuntimeProbe
-from paper_fetch.providers.browser_runtime.context import context_options_for_config
-from paper_fetch.providers.browser_runtime import context as browser_runtime_context
 from paper_fetch.providers.browser_runtime.types import (
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
 )
 from paper_fetch.runtime import RuntimeContext
+from tests.support.camoufox_backend import _Context, _Page, _Response
 
 
 @pytest.fixture(autouse=True)
 def mock_custom_fingerprint_preparation(monkeypatch):
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.macos_proxy_preferences",
-        lambda: {},
-    )
     prepare = mock.Mock()
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_fingerprint_model",
+        "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_fingerprint_model",
         prepare,
     )
     return prepare
@@ -139,17 +143,13 @@ def test_other_platforms_do_not_query_macos_proxy(monkeypatch):
 def test_camoufox_context_failure_closes_at_backend_boundary(
     monkeypatch, tmp_path
 ) -> None:
-    camoufox_manager = mock.Mock()
-    camoufox_manager.return_value.new_context.side_effect = RuntimeError(
+    profile_manager = mock.Mock()
+    profile_manager.return_value.new_context.side_effect = RuntimeError(
         "camoufox failed"
     )
     monkeypatch.setattr(
-        __import__(
-            "paper_fetch.providers.browser_runtime.profile",
-            fromlist=["PublisherProfileManager"],
-        ),
-        "PublisherProfileManager",
-        camoufox_manager,
+        "paper_fetch.providers.browser_runtime.backends.byparr.PublisherProfileManager",
+        profile_manager,
     )
     config = BrowserRuntimeConfig(
         provider="ieee",
@@ -162,7 +162,8 @@ def test_camoufox_context_failure_closes_at_backend_boundary(
     with pytest.raises(RuntimeError, match="camoufox failed"):
         browser_runtime_context.open_browser_context(config)
 
-    camoufox_manager.assert_called_once()
+    profile_manager.assert_called_once()
+    profile_manager.return_value.close.assert_called_once_with()
 
 
 def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) -> None:
@@ -199,7 +200,7 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
 
 def test_camoufox_generic_profile_override(tmp_path) -> None:
     profile = tmp_path / "profile"
-    config = CamoufoxBackend().load_runtime_config(
+    config = ByparrBackend().load_runtime_config(
         {
             BROWSER_PROFILE_DIR_ENV_VAR: str(profile),
             XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
@@ -209,23 +210,6 @@ def test_camoufox_generic_profile_override(tmp_path) -> None:
     )
     assert config.profile_dir == profile
     assert config.user_data_dir is None
-
-
-def test_camoufox_context_options_do_not_override_fingerprint(tmp_path) -> None:
-    config = BrowserRuntimeConfig(
-        provider="wiley",
-        doi="10.1000/example",
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent="must-not-be-used",
-    )
-
-    options = context_options_for_config(config)
-
-    assert options == {"accept_downloads": True}
-    assert "user_agent" not in options
-    assert "viewport" not in options
-    assert "locale" not in options
 
 
 def test_open_context_delegates_native_profile_without_injecting_json(tmp_path) -> None:
@@ -310,389 +294,10 @@ def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
     assert not list(tmp_path.rglob("storage-state.json"))
 
 
-def test_camoufox_manager_reuses_browser_and_creates_fresh_contexts(
-    monkeypatch,
-) -> None:
-    browser = object()
-    contexts = [object(), object()]
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-    sync_playwright = mock.Mock(return_value=playwright_manager)
-    new_browser = mock.Mock(return_value=browser)
-    new_context = mock.Mock(side_effect=contexts)
-
-    def import_module(name: str):
-        if name == "playwright.sync_api":
-            return SimpleNamespace(sync_playwright=sync_playwright)
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=new_browser, NewContext=new_context)
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_firefox_major_version",
-        lambda _path: 152,
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-    manager = CamoufoxBrowserManager(binary_path="/runtime/camoufox", headless=True)
-
-    assert manager.new_context(accept_downloads=True) is contexts[0]
-    assert manager.new_context(accept_downloads=True) is contexts[1]
-    assert new_browser.call_count == 1
-    assert new_context.call_count == 2
-    new_browser.assert_called_once_with(
-        playwright,
-        persistent_context=False,
-        headless=True,
-        executable_path="/runtime/camoufox",
-        ff_version=152,
-        i_know_what_im_doing=True,
-    )
-    assert new_context.call_args_list == [
-        mock.call(browser, accept_downloads=True, ff_version="152"),
-        mock.call(browser, accept_downloads=True, ff_version="152"),
-    ]
-
-
-def test_camoufox_startup_output_is_kept_off_protocol_stdout(
-    monkeypatch, capsys
-) -> None:
-    browser = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-
-    def new_browser(*_args, **_kwargs):
-        print("Extracting addon (UBO): Complete")
-        return browser
-
-    def import_module(name: str):
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=new_browser)
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_firefox_major_version",
-        lambda _path: None,
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-    manager = CamoufoxBrowserManager(
-        binary_path="/runtime/camoufox",
-        headless=True,
-    )
-
-    assert manager.browser() is browser
-    captured = capsys.readouterr()
-    assert captured.out == ""
-    assert "Extracting addon (UBO): Complete" in captured.err
-    manager.close()
-
-
-def test_camoufox_official_runtime_path_is_resolved_by_package(monkeypatch) -> None:
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
-        prepare,
-    )
-    runtime_path = object()
-    pkgman = SimpleNamespace(
-        camoufox_path=mock.Mock(return_value=runtime_path),
-        launch_path=mock.Mock(
-            return_value="/runtime/Camoufox.app/Contents/MacOS/camoufox"
-        ),
-    )
-    browser = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-    new_browser = mock.Mock(return_value=browser)
-
-    def import_module(name: str):
-        if name == "camoufox.pkgman":
-            return pkgman
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=new_browser)
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-
-    manager = CamoufoxBrowserManager(headless=True)
-    assert manager.browser() is browser
-    assert manager.browser() is browser
-    manager.close()
-
-    prepare.assert_called_once_with()
-    pkgman.camoufox_path.assert_not_called()
-    pkgman.launch_path.assert_not_called()
-    new_browser.assert_called_once_with(
-        playwright,
-        persistent_context=False,
-        headless=True,
-    )
-
-
-def test_camoufox_manager_prepares_once_per_browser_lifecycle(
-    monkeypatch,
-) -> None:
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
-        prepare,
-    )
-    order: list[str] = []
-    browser = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-    pkgman = SimpleNamespace(
-        camoufox_path=mock.Mock(side_effect=lambda **_kwargs: order.append("resolve"))
-    )
-
-    def import_module(name: str):
-        if name == "camoufox.pkgman":
-            return pkgman
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=mock.Mock(return_value=browser))
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-
-    manager = CamoufoxBrowserManager(headless=True)
-    assert manager.browser() is browser
-    assert manager.browser() is browser
-    manager.close()
-
-    assert order == []
-    prepare.assert_called_once_with()
-    pkgman.camoufox_path.assert_not_called()
-
-
-def test_camoufox_persistent_official_runtime_path_is_resolved_by_package(
-    monkeypatch, tmp_path
-) -> None:
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
-        prepare,
-    )
-    runtime_path = object()
-    pkgman = SimpleNamespace(
-        camoufox_path=mock.Mock(return_value=runtime_path),
-        launch_path=mock.Mock(
-            return_value="/runtime/Camoufox.app/Contents/MacOS/camoufox"
-        ),
-    )
-    context = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-    new_browser = mock.Mock(return_value=context)
-
-    def import_module(name: str):
-        if name == "camoufox.pkgman":
-            return pkgman
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=new_browser)
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-
-    manager = CamoufoxPersistentContextManager(
-        user_data_dir=str(tmp_path / "profile"),
-        headless=False,
-    )
-    assert manager.new_context() is context
-    assert manager.new_context() is context
-    manager.close()
-
-    prepare.assert_called_once_with()
-    pkgman.camoufox_path.assert_not_called()
-    pkgman.launch_path.assert_not_called()
-    new_browser.assert_called_once_with(
-        playwright,
-        persistent_context=True,
-        headless=False,
-        user_data_dir=str(tmp_path / "profile"),
-    )
-
-
-def test_camoufox_persistent_explicit_binary_path_is_forwarded(
-    monkeypatch, tmp_path
-) -> None:
-    version_type = SimpleNamespace(
-        from_path=mock.Mock(side_effect=OSError("no adjacent metadata"))
-    )
-    pkgman = SimpleNamespace(Version=version_type)
-    context = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-    new_browser = mock.Mock(return_value=context)
-
-    def import_module(name: str):
-        if name == "camoufox.pkgman":
-            return pkgman
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=new_browser)
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-
-    manager = CamoufoxPersistentContextManager(
-        user_data_dir=str(tmp_path / "profile"),
-        binary_path="/custom/camoufox",
-        headless=False,
-    )
-    assert manager.new_context() is context
-    manager.close()
-
-    new_browser.assert_called_once_with(
-        playwright,
-        persistent_context=True,
-        headless=False,
-        user_data_dir=str(tmp_path / "profile"),
-        executable_path="/custom/camoufox",
-    )
-    assert version_type.from_path.call_count == 2
-
-
-@pytest.mark.parametrize("persistent", [False, True])
-@pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
-def test_camoufox_preparation_failure_never_starts_playwright(
-    monkeypatch,
-    persistent,
-    binary_path,
-) -> None:
-    playwright = SimpleNamespace(stop=mock.Mock())
-    playwright_manager = SimpleNamespace(start=mock.Mock(return_value=playwright))
-
-    def import_module(name: str):
-        if name == "playwright.sync_api":
-            return SimpleNamespace(
-                sync_playwright=mock.Mock(return_value=playwright_manager)
-            )
-        if name == "camoufox.sync_api":
-            return SimpleNamespace(NewBrowser=mock.Mock())
-        raise AssertionError(name)
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager."
-        + (
-            "prepare_camoufox_fingerprint_model"
-            if binary_path
-            else "prepare_camoufox_managed_runtime"
-        ),
-        mock.Mock(side_effect=RuntimeError("runtime not prepared")),
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        import_module,
-    )
-
-    manager = (
-        CamoufoxPersistentContextManager(
-            user_data_dir="/profile", binary_path=binary_path
-        )
-        if persistent
-        else CamoufoxBrowserManager(binary_path=binary_path)
-    )
-    with pytest.raises(RuntimeError, match="runtime not prepared"):
-        manager.new_context() if persistent else manager.browser()
-    manager.close()
-
-    playwright_manager.start.assert_not_called()
-    playwright.stop.assert_not_called()
-
-
-@pytest.mark.parametrize("persistent", [False, True])
-@pytest.mark.parametrize("binary_path", [None, "/custom/camoufox"])
-def test_camoufox_prepares_before_playwright_and_reuses_session(
-    monkeypatch,
-    persistent,
-    binary_path,
-):
-    from paper_fetch.providers.browser_runtime import camoufox_manager
-
-    order = []
-
-    def prepare():
-        order.append("prepare")
-
-    monkeypatch.setattr(camoufox_manager, "prepare_camoufox_managed_runtime", prepare)
-    monkeypatch.setattr(camoufox_manager, "prepare_camoufox_fingerprint_model", prepare)
-    monkeypatch.setattr(
-        camoufox_manager, "_launch_firefox_major_version", lambda _: 152
-    )
-    browser = SimpleNamespace(close=mock.Mock())
-    playwright = SimpleNamespace(stop=mock.Mock())
-
-    def start():
-        order.append("start")
-        return playwright
-
-    def launch(*_args, **_kwargs):
-        order.append("launch")
-        return browser
-
-    modules = {
-        "playwright.sync_api": SimpleNamespace(
-            sync_playwright=lambda: SimpleNamespace(start=start)
-        ),
-        "camoufox.sync_api": SimpleNamespace(NewBrowser=launch),
-    }
-    monkeypatch.setattr(
-        camoufox_manager.importlib, "import_module", modules.__getitem__
-    )
-    manager = (
-        CamoufoxPersistentContextManager(
-            user_data_dir="/profile", binary_path=binary_path
-        )
-        if persistent
-        else CamoufoxBrowserManager(binary_path=binary_path)
-    )
-    open_browser = manager.new_context if persistent else manager.browser
-    assert open_browser() is open_browser() is browser
-    assert order == ["prepare", "start", "launch"]
-    manager.close()
-    playwright.stop.assert_called_once()
-
-
 def test_camoufox_first_launch_prepares_official_runtime(monkeypatch) -> None:
     prepare = mock.Mock()
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
+        "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_managed_runtime",
         prepare,
     )
     runtime_path = object()
@@ -701,7 +306,7 @@ def test_camoufox_first_launch_prepares_official_runtime(monkeypatch) -> None:
         launch_path=mock.Mock(return_value="/runtime/camoufox"),
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
+        "paper_fetch.providers.browser_runtime.preparation.import_module",
         lambda name: (
             pkgman
             if name == "camoufox.pkgman"
@@ -715,28 +320,6 @@ def test_camoufox_first_launch_prepares_official_runtime(monkeypatch) -> None:
     pkgman.launch_path.assert_not_called()
 
 
-def test_explicit_camoufox_executable_reuses_adjacent_version_metadata(
-    tmp_path, monkeypatch
-) -> None:
-    runtime_dir = tmp_path / "camoufox-runtime"
-    runtime_dir.mkdir()
-    executable = runtime_dir / "camoufox-bin"
-    executable.touch()
-    version = SimpleNamespace(version="152.0.4")
-    version_type = SimpleNamespace(from_path=mock.Mock(return_value=version))
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.importlib.import_module",
-        lambda name: (
-            SimpleNamespace(Version=version_type)
-            if name == "camoufox.pkgman"
-            else pytest.fail(f"unexpected module import: {name}")
-        ),
-    )
-
-    assert _launch_firefox_major_version(str(executable)) == 152
-    version_type.from_path.assert_called_once_with(runtime_dir)
-
-
 def test_camoufox_static_probe_reads_runtime_without_fetching(
     monkeypatch, tmp_path
 ) -> None:
@@ -747,15 +330,19 @@ def test_camoufox_static_probe_reads_runtime_without_fetching(
     executable.touch()
 
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.importlib_util.find_spec",
+        "paper_fetch.providers.browser_runtime.backends.byparr.byparr_engine.engine_name",
+        lambda: "camoufox",
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.byparr.importlib_util.find_spec",
         lambda _name: object(),
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.importlib_metadata.version",
-        lambda _name: "test-version",
+        "paper_fetch.providers.browser_runtime.backends.byparr.importlib_metadata.version",
+        lambda name: {"playwright": "1.62.0", "camoufox": "0.5.9"}[name],
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox.probe_camoufox_managed_runtime",
+        "paper_fetch.providers.browser_runtime.backends.byparr.probe_camoufox_managed_runtime",
         lambda: CamoufoxRuntimeProbe(
             state="ready",
             installed=True,
@@ -871,7 +458,7 @@ def test_camoufox_probe_rejects_parent_traversal(tmp_path) -> None:
 def test_camoufox_runtime_readiness_allows_missing_runtime_for_launch_preparation(
     monkeypatch, tmp_path
 ) -> None:
-    backend = CamoufoxBackend()
+    backend = ByparrBackend()
     config = BrowserRuntimeConfig(
         provider="science",
         doi="10.1126/example",
@@ -880,7 +467,7 @@ def test_camoufox_runtime_readiness_allows_missing_runtime_for_launch_preparatio
         user_agent=None,
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
         lambda: {
             "runtime_valid": False,
             "packages": {"playwright": True, "camoufox": True},
@@ -902,7 +489,7 @@ def test_camoufox_status_distinguishes_package_and_runtime_readiness(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
         lambda: {
             "runtime_valid": False,
             "packages": {"playwright": True, "camoufox": True},
@@ -913,7 +500,7 @@ def test_camoufox_status_distinguishes_package_and_runtime_readiness(
         },
     )
 
-    result = CamoufoxBackend().probe_runtime_status({}, provider="science")
+    result = ByparrBackend().probe_runtime_status({}, provider="science")
     checks = {check.name: check for check in result.checks}
 
     assert result.status == "not_configured"
@@ -926,12 +513,12 @@ def test_runtime_context_closes_camoufox_on_owning_worker_thread() -> None:
     runtime = RuntimeContext(env={})
     manager = SimpleNamespace(close=mock.Mock())
     key = (threading.get_ident(), True, "/runtime/camoufox")
-    runtime._camoufox_browser_managers[key] = manager
+    runtime._browser_sessions.managers[key] = manager
 
-    runtime.close_camoufox_for_current_thread()
+    runtime.close_browser_for_current_thread()
 
     manager.close.assert_called_once_with()
-    assert key not in runtime._camoufox_browser_managers
+    assert key not in runtime._browser_sessions.managers
 
 
 def _wiley_review_html(
@@ -977,9 +564,9 @@ def test_browser_candidate_uses_native_navigation_without_context_guard(
         user_agent=None,
     )
     open_context = mock.Mock(return_value=(None, context))
-    monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
+    monkeypatch.setattr(html_fetcher, "open_browser_context", open_context)
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["http://127.0.0.1:8080/internal"],
         publisher="annualreviews",
         config=config,
@@ -1003,17 +590,17 @@ def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://pubs.aip.org/aip/adv/article/1/1/example"],
         publisher="aip",
         config=config,
@@ -1066,13 +653,13 @@ def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
     with pytest.raises(browser_runtime.BrowserRuntimeFailure) as captured:
-        _playwright_browser.fetch_html_with_playwright(
+        html_fetcher.fetch_browser_html(
             ["https://pubs.aip.org/aip/adv/article/1/1/example"],
             publisher="aip",
             config=config,
@@ -1113,17 +700,17 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://example.test/article"],
         publisher="annualreviews",
         config=config,
@@ -1205,10 +792,7 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
             return self._html
 
         def evaluate(self, script: str, *_args):
-            if (
-                script
-                == _playwright_browser._MAIN_DOCUMENT_NAVIGATION_DIAGNOSTIC_SCRIPT
-            ):
+            if script == telemetry._MAIN_DOCUMENT_NAVIGATION_DIAGNOSTIC_SCRIPT:
                 return self._navigation_timing
             return "Mozilla/5.0 Firefox/152.0"
 
@@ -1223,11 +807,11 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
             user_agent=None,
         )
         monkeypatch.setattr(
-            _playwright_browser,
+            html_fetcher,
             "open_browser_context",
             lambda *_args, **_kwargs: (None, context),
         )
-        return _playwright_browser.fetch_html_with_playwright(
+        return html_fetcher.fetch_browser_html(
             ["https://pubs.aip.org/doi/full/10.1063/example"],
             publisher="aip",
             config=config,
@@ -1235,7 +819,7 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
         )
 
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(
             attempted=True,
@@ -1365,17 +949,17 @@ def test_camoufox_trace_does_not_report_unimported_json_as_used(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://example.test/article"],
         publisher="annualreviews",
         config=config,
@@ -1410,17 +994,17 @@ def test_wiley_body_readiness_defers_login_navigation_paywall_text(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: _stable_wiley_readiness(),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://onlinelibrary.wiley.com/doi/full/10.1111/example"],
         publisher="wiley",
         config=config,
@@ -1480,17 +1064,17 @@ def test_wiley_403_confirmed_body_and_identity_preserves_status(
         user_data_dir=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: _stable_wiley_readiness(),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://onlinelibrary.wiley.com/doi/10.1111/example"],
         publisher="wiley",
         config=config,
@@ -1520,7 +1104,6 @@ def test_wiley_403_confirmed_body_and_identity_preserves_status(
         "accepted": False,
         "reason": "pending_fulltext_acceptance",
     }
-    assert "storage_state_load" not in trace and "storage_state_save" not in trace
     assert "storage_state_load" not in trace and "storage_state_save" not in trace
     assert not list(tmp_path.rglob("storage-state.json"))
 
@@ -1648,18 +1231,18 @@ def test_wiley_403_review_rejects_unconfirmed_candidate(
         )
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: readiness_result,
     )
 
     with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
-        _playwright_browser.fetch_html_with_playwright(
+        html_fetcher.fetch_browser_html(
             ["https://onlinelibrary.wiley.com/doi/10.1111/example"],
             publisher="wiley",
             config=config,
@@ -1708,17 +1291,17 @@ def test_wiley_403_failure_advances_to_next_candidate(monkeypatch, tmp_path) -> 
     )
     readiness = mock.Mock(return_value=_stable_wiley_readiness())
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         readiness,
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         [
             "https://onlinelibrary.wiley.com/doi/10.1111/example",
             "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
@@ -1767,18 +1350,18 @@ def test_wiley_all_http_status_candidates_fail_with_reviews(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: _stable_wiley_readiness(),
     )
 
     with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
-        _playwright_browser.fetch_html_with_playwright(
+        html_fetcher.fetch_browser_html(
             [
                 "https://onlinelibrary.wiley.com/doi/10.1111/example",
                 "https://onlinelibrary.wiley.com/doi/full/10.1111/example",
@@ -1813,17 +1396,17 @@ def test_provider_resource_policy_blocks_only_configured_heavy_types(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         lambda *_args, **_kwargs: SimpleNamespace(attempted=True, ready=True),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://example.test/article"],
         publisher="pnas",
         config=config,
@@ -1867,16 +1450,17 @@ def test_exact_script_response_policy_fulfills_only_matching_script(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://pubs.aip.org/article"],
         publisher="aip",
         config=config,
         wait_seconds=0,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=False),
         options=browser_runtime.BrowserHtmlFetchOptions(
             empty_script_response_urls=frozenset({"https://static.adzerk.net/ados.js"})
         ),
@@ -1942,17 +1526,17 @@ def test_body_readiness_uses_bounded_budget_and_keeps_final_html(
         return SimpleNamespace(attempted=True, ready=False)
 
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         body_readiness,
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://www.pnas.org/doi/10.1073/example"],
         publisher=publisher,
         config=config,
@@ -1982,17 +1566,18 @@ def test_unconfigured_science_fast_policy_keeps_legacy_media_only_blocking(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    _playwright_browser.fetch_html_with_playwright(
+    html_fetcher.fetch_browser_html(
         ["https://example.test/article"],
         publisher="science",
         config=config,
         wait_seconds=0,
         disable_media=True,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=False),
     )
 
     routes = {}
@@ -2013,7 +1598,7 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
 ) -> None:
     browser_context = _Context()
     open_context = mock.Mock(return_value=(None, browser_context))
-    monkeypatch.setattr(_playwright_browser, "open_browser_context", open_context)
+    monkeypatch.setattr(html_fetcher, "open_browser_context", open_context)
     config = BrowserRuntimeConfig(
         provider="royalsocietypublishing",
         doi="10.1098/example",
@@ -2024,7 +1609,7 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
     runtime_context = RuntimeContext(env={})
     readiness = browser_runtime.BrowserHtmlReadiness(wait_for_article_body=False)
     try:
-        first = _playwright_browser.fetch_html_with_playwright(
+        first = html_fetcher.fetch_browser_html(
             ["https://example.test/figure/1"],
             publisher="royalsocietypublishing",
             config=config,
@@ -2033,7 +1618,7 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
             runtime_context=runtime_context,
             options=browser_runtime.BrowserHtmlFetchOptions(reuse_runtime_page=True),
         )
-        second = _playwright_browser.fetch_html_with_playwright(
+        second = html_fetcher.fetch_browser_html(
             ["https://example.test/figure/2"],
             publisher="royalsocietypublishing",
             config=config,
@@ -2080,17 +1665,17 @@ def test_camoufox_provider_page_preparation_runs_before_html_capture(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "publisher_profile",
         lambda _publisher: SimpleNamespace(prepare_browser_page=prepare_browser_page),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://example.test/article"],
         publisher="example",
         config=config,
@@ -2130,18 +1715,18 @@ def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser.time,
+        html_fetcher.time,
         "monotonic",
         lambda: 1.0 if deadline_expired else 0.0,
     )
 
     with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
-        _playwright_browser.fetch_html_with_playwright(
+        html_fetcher.fetch_browser_html(
             [
                 "https://onlinelibrary.wiley.com/doi/full/10.1002/example",
                 "https://onlinelibrary.wiley.com/doi/10.1002/example",
@@ -2193,13 +1778,13 @@ def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
     with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
-        _playwright_browser.fetch_html_with_playwright(
+        html_fetcher.fetch_browser_html(
             [
                 "https://onlinelibrary.wiley.com/doi/full/10.1002/example",
                 "https://onlinelibrary.wiley.com/doi/10.1002/example",
@@ -2285,12 +1870,12 @@ def test_lightweight_warm_rejects_unusable_navigation(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    result = _playwright_browser.warm_browser_context_with_playwright(
+    result = html_fetcher.warm_browser_html_context(
         ["https://example.test/doi/full/10.1000/example"],
         publisher="example",
         config=config,
@@ -2313,12 +1898,12 @@ def test_lightweight_warm_reports_no_cookie_change(monkeypatch, tmp_path) -> Non
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    result = _playwright_browser.warm_browser_context_with_playwright(
+    result = html_fetcher.warm_browser_html_context(
         ["https://example.test/article"],
         publisher="example",
         config=config,
@@ -2344,17 +1929,17 @@ def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
     )
     readiness = mock.Mock()
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         readiness,
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://pubs.acs.org/view-large/figure/123/example.tif"],
         publisher="acs",
         config=config,
@@ -2392,12 +1977,12 @@ def test_camoufox_figure_page_selector_timeout_is_best_effort(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://royalsocietypublishing.org/view-large/figure/123/example.tif"],
         publisher="royalsocietypublishing",
         config=config,
@@ -2429,17 +2014,17 @@ def test_camoufox_figure_page_without_selector_uses_fixed_wait(
     )
     body_readiness = mock.Mock()
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        browser_readiness,
         "wait_for_atypon_body_dom_ready",
         body_readiness,
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://example.test/view-large/figure/123/example.tif"],
         publisher="example",
         config=config,
@@ -2494,12 +2079,12 @@ def test_ieee_required_selector_waits_for_matching_article_number(
         user_agent=None,
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, context),
     )
 
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://ieeexplore.ieee.org/document/10772041/"],
         publisher="ieee",
         config=config,
@@ -2558,13 +2143,13 @@ def test_ieee_required_selector_preserves_aws_waf_timeout_diagnostic(
         artifact_mode="all",
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         lambda *_args, **_kwargs: (None, browser_context),
     )
     try:
         with pytest.raises(browser_runtime.BrowserRuntimeFailure) as raised:
-            _playwright_browser.fetch_html_with_playwright(
+            html_fetcher.fetch_browser_html(
                 ["https://ieeexplore.ieee.org/document/10772041/"],
                 publisher="ieee",
                 config=config,
@@ -2595,10 +2180,10 @@ def test_aip_normal_load_does_not_register_routes(monkeypatch, tmp_path):
 
     context = _Context()
     monkeypatch.setattr(
-        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+        html_fetcher, "open_browser_context", lambda *a, **k: (None, context)
     )
     profile = AIP_BROWSER_PROFILE
-    _playwright_browser.fetch_html_with_playwright(
+    html_fetcher.fetch_browser_html(
         ["https://pubs.aip.org/doi/10.1063/example"],
         publisher="aip",
         config=BrowserRuntimeConfig(
@@ -2609,10 +2194,11 @@ def test_aip_normal_load_does_not_register_routes(monkeypatch, tmp_path):
             user_agent=None,
         ),
         wait_seconds=0,
-        disable_media=profile.fast_html_attempt,
+        disable_media=profile.policy.fast_html_attempt,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=False),
         options=browser_runtime.BrowserHtmlFetchOptions(
-            blocked_resource_types=profile.blocked_resource_types or None,
-            empty_script_response_urls=profile.empty_script_response_urls,
+            blocked_resource_types=profile.policy.blocked_resource_types or None,
+            empty_script_response_urls=profile.policy.empty_script_response_urls,
         ),
     )
     assert context.page.route_handler is None
@@ -2625,9 +2211,9 @@ def test_pnas_sidebar_route_is_exact_and_provider_local(
 ):
     context = _Context()
     monkeypatch.setattr(
-        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+        html_fetcher, "open_browser_context", lambda *a, **k: (None, context)
     )
-    result = _playwright_browser.fetch_html_with_playwright(
+    result = html_fetcher.fetch_browser_html(
         ["https://www.pnas.org/doi/10.1073/example"],
         publisher=provider,
         config=BrowserRuntimeConfig(
@@ -2639,6 +2225,7 @@ def test_pnas_sidebar_route_is_exact_and_provider_local(
         ),
         wait_seconds=0,
         disable_media=True,
+        readiness=BrowserHtmlReadiness(wait_for_article_body=False),
     )
     target = "https://www.pnas.org/pb/widgets/fullSideBarMetric/getResponse"
     for url, resource_type, blocked in (
@@ -2737,11 +2324,9 @@ def test_science_final_document_response_ownership(
             200, target, main=scenario != "iframe", finished=scenario != "unfinished"
         )
 
+    monkeypatch.setattr(html_fetcher, "wait_for_browser_html_readiness", readiness)
     monkeypatch.setattr(
-        _playwright_browser, "_wait_for_browser_html_readiness", readiness
-    )
-    monkeypatch.setattr(
-        _playwright_browser, "open_browser_context", lambda *a, **k: (None, context)
+        html_fetcher, "open_browser_context", lambda *a, **k: (None, context)
     )
     if scenario == "isolation":
         page.title = lambda: "Just a moment..." if count == 1 else "Article"
@@ -2762,7 +2347,7 @@ def test_science_final_document_response_ownership(
         wait_seconds=0,
     )
     if scenario == "replaced":
-        result = _playwright_browser.fetch_html_with_playwright([url], **kwargs)
+        result = html_fetcher.fetch_browser_html([url], **kwargs)
         assert result.response_status == 200
         assert result.response_headers["x-document-status"] == "200"
         trace = result.diagnostics["browser_runtime_trace"]
@@ -2772,7 +2357,7 @@ def test_science_final_document_response_ownership(
         assert trace["navigation_count"] == 1
     else:
         with pytest.raises(browser_runtime.BrowserRuntimeFailure):
-            _playwright_browser.fetch_html_with_playwright(
+            html_fetcher.fetch_browser_html(
                 [url, url] if scenario == "isolation" else [url], **kwargs
             )
         if scenario == "isolation":

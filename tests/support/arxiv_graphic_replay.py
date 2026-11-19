@@ -1,11 +1,8 @@
 """Offline arXiv graphic extraction/assembly from the seven captured articles."""
 
-from paper_fetch.models import Quality
-
-
 from pathlib import Path
 
-from paper_fetch.models import FetchEnvelope
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.providers._arxiv_html import _extract_arxiv_html_markdown
 from paper_fetch.providers.arxiv import ArxivClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload

@@ -1,11 +1,10 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
 
-from dataclasses import fields
 import unittest
 import urllib.parse
+from dataclasses import fields, replace
 
+from paper_fetch.provider_catalog import PROVIDER_CATALOG
 from paper_fetch.providers import (
     _ams_assets,
     _ams_dom,
@@ -21,27 +20,25 @@ from paper_fetch.providers._atypon_browser_workflow_profiles import (
     build_pdf_candidates,
     extract_pdf_url_from_crossref,
     preferred_html_candidate_from_landing_page,
-    site_rule_for_publisher,
     publisher_profile,
+    site_rule_for_publisher,
 )
 from paper_fetch.providers._pdf_candidates import extract_pdf_candidate_urls_from_html
-from paper_fetch.provider_catalog import PROVIDER_CATALOG
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.ams import AmsClient
-from paper_fetch.providers.pnas import PnasClient
-from paper_fetch.providers.mdpi import MdpiClient
-from paper_fetch.providers.mdpi import MDPI_BROWSER_PROFILE
-from paper_fetch.providers.iop import IOP_BROWSER_PROFILE
 from paper_fetch.providers.annualreviews import ANNUALREVIEWS_BROWSER_PROFILE
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.iop import IOP_BROWSER_PROFILE
+from paper_fetch.providers.mdpi import MDPI_BROWSER_PROFILE, MdpiClient
+from paper_fetch.providers.pnas import PnasClient
 from paper_fetch.providers.royalsocietypublishing import (
     ROYAL_SOCIETY_BROWSER_PROFILE,
 )
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.wiley import WileyClient
+from paper_fetch.tracing import trace_event
 from tests.provider_benchmark_samples import provider_benchmark_sample
-
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
@@ -275,9 +272,11 @@ class AtyponBrowserWorkflowCandidateTests(unittest.TestCase):
         assert pnas_readiness is not None
         self.assertTrue(pnas_readiness.wait_for_article_body)
         self.assertIsNone(pnas_readiness.selector)
-        self.assertFalse(PnasClient(None, {}).require_profile().fast_html_attempt)
+        self.assertFalse(
+            PnasClient(None, {}).require_profile().policy.fast_html_attempt
+        )
         self.assertEqual(
-            PnasClient(None, {}).require_profile().html_readiness_budget_seconds,
+            PnasClient(None, {}).require_profile().policy.html_readiness_budget_seconds,
             8.0,
         )
 

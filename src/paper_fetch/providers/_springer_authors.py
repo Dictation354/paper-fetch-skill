@@ -8,14 +8,20 @@ from bs4 import Tag
 
 from ..utils import dedupe_authors, normalize_text
 from ._html_authors import (
+    GENERIC_AUTHOR_NOISE_TEXT,
     AuthorExtractionPipeline,
     AuthorStep,
-    GENERIC_AUTHOR_NOISE_TEXT,
-    extract_jsonld_authors as extract_common_jsonld_authors,
-    extract_meta_authors as extract_common_meta_authors,
-    extract_selector_authors as extract_common_selector_authors,
     looks_like_author_name,
     looks_like_collective_author_text,
+)
+from ._html_authors import (
+    extract_jsonld_authors as extract_common_jsonld_authors,
+)
+from ._html_authors import (
+    extract_meta_authors as extract_common_meta_authors,
+)
+from ._html_authors import (
+    extract_selector_authors as extract_common_selector_authors,
 )
 
 SPRINGER_ARTICLE_JSONLD_TYPES = frozenset(

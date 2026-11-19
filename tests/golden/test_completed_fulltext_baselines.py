@@ -1,27 +1,24 @@
 """New full-paper baselines use original captures and complete persisted output."""
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from paper_fetch.providers import _springer_dom
-from paper_fetch.models import Quality
-
-
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 import pytest
 
 from paper_fetch.artifacts import ArtifactStore
-from paper_fetch.models import FetchEnvelope
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.models.markdown import iter_markdown_images
+from paper_fetch.providers import _springer_dom
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.golden_corpus import (
-    iter_golden_corpus_fixtures,
     golden_corpus_fixture_for_doi,
+    iter_golden_corpus_fixtures,
     replay_springer_pdf_fallback,
 )
 from tests.golden_criteria import golden_criteria_asset
 from tests.support.replay import build_article_from_fixture, persisted_fixture_markdown
+from tests.support.trace import trace_facts
 
 FIXTURES = [
     f
@@ -142,6 +139,7 @@ def test_arxiv_complete_auxiliary_pages_discover_same_version_links_without_down
 
 def test_arxiv_original_extended_data_panel_captions_are_complete_and_ordered():
     from bs4 import BeautifulSoup
+
     from tests.support.canonical_content import source_caption_runs
     from tests.support.scientific_content import scientific_text_key
 

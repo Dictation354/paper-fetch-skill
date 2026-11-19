@@ -6,9 +6,10 @@ import subprocess
 import sys
 
 import pytest
-from tests.paths import REPO_ROOT
-from tests.golden_criteria import golden_criteria_manifest
+
 from tests.fixture_catalog import fixture_catalog
+from tests.golden_criteria import golden_criteria_manifest
+from tests.paths import REPO_ROOT
 
 
 def _probe(

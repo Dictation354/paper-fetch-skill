@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-from ..publication_dates import normalize_publication_dates
-
 from collections.abc import Mapping, Sequence
 from dataclasses import asdict
 from typing import Any, cast
+
+from ..publication_dates import normalize_publication_dates
+from ..tracing import TraceEvent
+from ..utils import normalize_text
 from . import (
     ArticleModel,
     Asset,
@@ -15,12 +17,11 @@ from . import (
     Quality,
     Reference,
     Section,
+    coerce_acquisition_provenance,
     coerce_asset_provenance,
     coerce_asset_timing,
-    coerce_acquisition_provenance,
 )
-from ..tracing import TraceEvent
-from ..utils import normalize_text
+from .schema import SourceKind, SupplementaryResult
 
 
 def metadata_from_payload(value: Mapping[str, Any] | None) -> Metadata | None:
@@ -109,7 +110,6 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
     quality = quality_from_payload(
         value.get("quality") if isinstance(value.get("quality"), Mapping) else None
     )
-    from .schema import SourceKind
 
     return ArticleModel(
         doi=normalize_text(value.get("doi")) or None,
@@ -159,8 +159,6 @@ def article_from_payload(value: Mapping[str, Any] | None) -> ArticleModel | None
 
 
 def envelope_from_payload(payload: Mapping[str, Any]) -> FetchEnvelope:
-    from .schema import SupplementaryResult
-
     forbidden = {
         "has_fulltext",
         "content_kind",

@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
+from bs4 import BeautifulSoup
+
 from ..extraction.html.parsing import choose_parser
 from ..quality.html_signals import (
     AMS_TEXT_MARKER_SIGNAL_SET,
     evaluate_text_marker_blocking_signals,
 )
 from ..utils import normalize_text
-from ._reference_doi import reference_doi
 from ._html_references import extract_numbered_references_from_html
-
-from bs4 import BeautifulSoup
+from ._reference_doi import reference_doi
 
 
 def extract_references(html_text: str) -> list[dict[str, str | None]]:

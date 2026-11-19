@@ -2,22 +2,22 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Mapping
 
 from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..http import redact_url_for_diagnostics
 from ..http.headers import header_value
 from ..page_diagnostics import PageDiagnosticRequest, capture_page_diagnostic
-from ..runtime import RuntimeContext
 from ..reason_codes import ERROR
+from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from . import _ieee_html as ieee_html
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_url as ieee_url
-from .browser_runtime import BrowserRuntimeConfig, BrowserRuntimeFailure
 from .base import ProviderFailure
+from .browser_runtime import BrowserRuntimeConfig, BrowserRuntimeFailure
 
 
 def _playwright_timeout_error(runtime_config: BrowserRuntimeConfig) -> type[Exception]:

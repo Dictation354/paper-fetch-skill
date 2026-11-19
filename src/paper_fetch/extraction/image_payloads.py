@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import re
+import urllib.parse
 from io import BytesIO
 from pathlib import Path
-import re
 from typing import Any, Final
-import urllib.parse
 
 import filetype
 import imagesize

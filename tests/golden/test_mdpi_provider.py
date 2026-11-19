@@ -1,17 +1,18 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from tests.support.test_evidence import evidence_cache as cache
+
 import unittest
+
 from paper_fetch.models import article_from_markdown
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers import _mdpi_assets, _mdpi_markdown
 from paper_fetch.providers.mdpi import MdpiClient
+from paper_fetch.tracing import trace_event
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support._atypon_browser_workflow_provider_support import (
     AtyponBrowserWorkflowProviderTestCase,
     _typed_raw_payload,
 )
-
+from tests.support.test_evidence import evidence_cache as cache
 
 MDPI_STRUCTURE_DOI = "10.3390/membranes15030093"
 MDPI_TABLE_DOI = "10.3390/su12072826"

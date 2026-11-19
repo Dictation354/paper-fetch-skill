@@ -2,36 +2,38 @@
 
 from __future__ import annotations
 
+import json
+import math
+import os
+import shutil
+import stat
+import sys
+import threading
+import time
+from collections.abc import Callable, Iterator, Mapping
+from concurrent.futures import Future
 from contextlib import contextmanager, redirect_stdout, suppress
 from contextvars import ContextVar
-from concurrent.futures import Future
 from dataclasses import dataclass, field, replace
 from importlib import import_module
 from importlib.metadata import version as distribution_version
 from importlib.util import find_spec
 from io import BytesIO
-from collections.abc import Callable, Iterator, Mapping
-import json
-import math
-import os
 from pathlib import Path
-import stat
-import shutil
-import sys
-import threading
-import time
 from typing import Any
 from urllib.parse import quote
 from zipfile import ZipFile
 
-from filelock import FileLock, Timeout as LockTimeout
+from filelock import FileLock
+from filelock import Timeout as LockTimeout
 
-from ...utils import normalize_text
 from ...browser_runtime_policy import (
     UPDATE_CHECK_INTERVAL_SECONDS as UPDATE_CHECK_INTERVAL_SECONDS,
 )
-from ...config import BROWSER_BINARY_PATH_ENV_VAR, browser_env_value
+from ...config import BROWSER_BINARY_PATH_ENV_VAR
 from ...http import RequestCancelledError
+from ...utils import normalize_text
+from . import byparr_engine
 from .paths import _atomic_write_json
 
 DEFAULT_CHANNEL = "official/prerelease"
@@ -98,12 +100,10 @@ class FetchBrowserPreparation:
         return future.result()
 
     def prepare(self, env: Mapping[str, str], cancel_check: Callable[[], None]) -> None:
-        from .byparr_engine import engine_name
-
-        if engine_name() == "invisible":
+        if byparr_engine.engine_name() == "invisible":
             cancel_check()
             return
-        if not browser_env_value(env, BROWSER_BINARY_PATH_ENV_VAR) and all(
+        if not str(env.get(BROWSER_BINARY_PATH_ENV_VAR, "")).strip() and all(
             find_spec(name) is not None for name in ("camoufox", "playwright")
         ):
             self.run(
@@ -705,8 +705,24 @@ def prepare_camoufox_managed_runtime() -> CamoufoxRuntimeProbe:
                 ) from exc
 
 
+def _launch_executable_path(binary_path: str | None) -> str | None:
+    if binary_path:
+        prepare_camoufox_fingerprint_model()
+        return binary_path
+    prepared = fetch_browser_preparation.get()
+    if prepared is None:
+        prepare_camoufox_managed_runtime()
+    else:
+        prepared.require()
+    # Let Camoufox resolve its prepared managed bundle.
+    # On macOS, passing Contents/MacOS/camoufox as a custom executable makes
+    # Camoufox look beside it for metadata stored under Contents/Resources.
+    return None
+
+
 __all__ = [
     "CamoufoxRuntimeProbe",
+    "_launch_executable_path",
     "prepare_camoufox_managed_runtime",
     "probe_camoufox_managed_runtime",
 ]

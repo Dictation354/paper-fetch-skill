@@ -1,7 +1,5 @@
 """Real Camoufox contracts for Wiley's serial image navigation."""
 
-from tests.support.transport import configure_stream_transport
-
 import json
 import os
 from pathlib import Path
@@ -10,14 +8,15 @@ from unittest.mock import Mock
 import pytest
 
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers._wiley_page_assets import WileyPageAssetFetcher
 from paper_fetch.runtime import RuntimeContext
 from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+from tests.support.transport import configure_stream_transport
 from tests.support.wiley_page_assets import figure, formula, png_bytes
 
 ROOT = "https://example.test"
@@ -281,8 +280,8 @@ def test_cancellation_during_challenge_closes_owned_page_and_releases_budget(
 
 @pytest.mark.browser
 def test_local_server_challenge_redirect_preserves_original_bytes(browser, monkeypatch):
-    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     requests = []
     body = png_bytes(640, 480)
@@ -330,7 +329,7 @@ def test_local_server_challenge_redirect_preserves_original_bytes(browser, monke
         assert response and response["body"] == body
         assert response["url"].endswith("/actual.png")
         assert fetcher.failure_for(url) is None
-        assert response["_paper_fetch_recovery_attempts"][-1]["reason"] == "recovered"
+        assert response.recovery_attempts[-1]["reason"] == "recovered"
         assert requests.count("/image.png") == 2
         assert requests.count("/actual.png") == 1
         assert fetcher.navigation_count == 1

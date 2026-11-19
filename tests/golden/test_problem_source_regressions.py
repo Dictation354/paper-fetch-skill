@@ -1,11 +1,11 @@
 """Problem-list regressions checked against captured originals."""
 
+import re
 from copy import deepcopy
 from pathlib import Path
-import re
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.providers._arxiv_graphics import (
     INLINE_SVG_PREFIX,
@@ -15,8 +15,7 @@ from paper_fetch.providers._arxiv_html import _extract_arxiv_html_markdown
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.support.replay import build_article_from_fixture
-from tests.support.scientific_content import scientific_text_key
-from tests.support.scientific_content import preserve_dom_scripts
+from tests.support.scientific_content import preserve_dom_scripts, scientific_text_key
 
 
 def source_article(doi):

@@ -1,21 +1,22 @@
 from __future__ import annotations
-from paper_fetch.providers import _springer_markdown
-from paper_fetch.extraction.html.formula_rules import (
-    looks_like_formula_image,
-)
+
 import unittest
+
 from bs4 import BeautifulSoup
+
+import paper_fetch.providers._wiley_html as wiley_html
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.html.formula_rules import (
     formula_image_url_from_node,
     is_display_formula_node,
+    looks_like_formula_image,
 )
-import paper_fetch.providers._wiley_html as wiley_html
+from paper_fetch.providers import _springer_markdown
 from paper_fetch.providers.atypon_browser_workflow import (
     asset_scopes as atypon_browser_workflow_asset_scopes,
 )
-from tests.golden_criteria import golden_criteria_asset
 from tests.block_fixtures import block_asset
+from tests.golden_criteria import golden_criteria_asset
 
 
 class SharedHtmlHelperTests(unittest.TestCase):

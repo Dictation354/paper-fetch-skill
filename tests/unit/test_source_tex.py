@@ -3,13 +3,13 @@
 import html
 import xml.etree.ElementTree as ET
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
-from paper_fetch.formula import convert
 from paper_fetch.extraction.markdown_render.formulas import (
     render_html_formula_container,
 )
+from paper_fetch.formula import convert
 from paper_fetch.models import article_from_markdown, normalize_markdown_text
 from paper_fetch.providers._article_markdown_common import render_inline_text
 from paper_fetch.providers._article_markdown_math import (

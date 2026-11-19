@@ -1,10 +1,12 @@
 from __future__ import annotations
-import pytest
+
 from unittest import mock
+
+import pytest
+
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
 from paper_fetch.providers.browser_workflow.fetchers import image as image_fetchers
-
 
 TEST_CDP_ENDPOINT = "ws://127.0.0.1:9222/devtools/browser/test"
 

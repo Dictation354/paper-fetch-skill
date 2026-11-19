@@ -1,11 +1,13 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
+
+import json
 from dataclasses import replace
 from functools import cache
-import json
 from pathlib import Path
 from unittest import mock
+
 import pytest
+
 from paper_fetch import auth, browser_preflight, publisher_identity
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.provider_catalog import (
@@ -29,7 +31,7 @@ from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
 from paper_fetch.providers.tandf import TandfClient
-
+from paper_fetch.tracing import trace_event
 
 STRUCTURE_DOI = "10.1080/15481603.2026.2667034"
 TABLE_DOI = "10.1080/10942912.2019.1597882"

@@ -7,8 +7,8 @@ import subprocess
 
 import pytest
 
-from tests.paths import REPO_ROOT
 from tests.golden_corpus import golden_corpus_fixture_for_doi
+from tests.paths import REPO_ROOT
 from tests.support.replay import build_article_from_fixture
 
 CONTRACTS = json.loads(

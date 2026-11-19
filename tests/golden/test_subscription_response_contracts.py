@@ -8,10 +8,10 @@ import pytest
 from paper_fetch.providers import browser_runtime, royalsocietypublishing
 from paper_fetch.quality.access_boundary import html_paywall_diagnostics
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-from tests.support.acquired_article_assets import CLIENTS
-from tests.support.acquired_publisher_inputs import _record
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.acquired_article_assets import CLIENTS
+from tests.support.acquired_publisher_inputs import _record
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
 from tests.support.subscription_scenarios import SUBSCRIPTION_RESPONSES
 
@@ -108,6 +108,7 @@ def test_captured_response_has_independent_access_expectation(
 @pytest.mark.parametrize("entry", ["http", "browser"])
 def test_oup_received_subscription_entity_and_dom_stop_before_pdf(entry, tmp_path):
     import json
+
     from paper_fetch.providers import oxfordacademic
     from tests.block_fixtures import iter_block_samples
     from tests.support._paper_fetch_support import FixtureHtmlTransport

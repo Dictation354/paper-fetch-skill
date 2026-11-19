@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from paper_fetch.providers import _ieee_html, _ieee_metadata, _ieee_supplementary
 from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from tests.support._ieee_provider_support import *
+
 # ruff: noqa: F403,F405
 
 

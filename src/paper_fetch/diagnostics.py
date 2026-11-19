@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Callable, Mapping
 
 from .browser_preflight import static_browser_capabilities
 from .config import (
@@ -12,12 +12,11 @@ from .config import (
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
-    BROWSER_USER_DATA_DIR_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
+    BROWSER_USER_DATA_DIR_ENV_VAR,
     DOWNLOAD_DIR_ENV_VAR,
     ENV_FILE_ENV_VAR,
     USER_AGENT_ENV_VAR,
-    WILEY_PROFILE_DIR_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
     build_runtime_env,
     runtime_configuration_report,
@@ -26,8 +25,8 @@ from .http import HttpTransport
 from .image_tools import probe_image_conversion_backends
 from .image_tools.paths import (
     GHOSTSCRIPT_BIN_ENV_VAR,
-    IMAGE_TOOLS_DIR_ENV_VAR,
     IMAGE_TOOL_TIMEOUT_SECONDS_ENV_VAR,
+    IMAGE_TOOLS_DIR_ENV_VAR,
     VIPS_BIN_ENV_VAR,
 )
 from .provider_catalog import (
@@ -35,16 +34,16 @@ from .provider_catalog import (
     ProviderSpec,
     is_official_provider,
     provider_has_browser_route,
-    provider_supports_browser_preflight,
     provider_status_order,
+    provider_supports_browser_preflight,
 )
 from .providers.base import (
     ProviderStatusResult,
     build_provider_status_check,
 )
 from .providers.registry import build_clients
-from .redaction import is_sensitive_configuration_name
 from .reason_codes import ERROR, NOT_CONFIGURED, PARTIAL, READY
+from .redaction import is_sensitive_configuration_name
 from .utils import normalize_text
 
 ProviderStatusDetail = Literal["full", "compact"]
@@ -77,7 +76,6 @@ _GLOBAL_CONFIGURATION_NAMES = {
     VIPS_BIN_ENV_VAR,
     "WILEY_TDM_CLIENT_TOKEN",
     "ELSEVIER_API_KEY",
-    WILEY_PROFILE_DIR_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
 }
 _DEFAULT_CONFIGURATION_NAMES = {

@@ -2,22 +2,22 @@
 
 import hashlib
 import json
-from pathlib import Path
-from urllib.parse import urljoin
 import re
 from collections import Counter
+from pathlib import Path
+from urllib.parse import urljoin
 
+import pytest
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
-import pytest
 
-from tests.paths import REPO_ROOT
 from tests.golden_corpus import GoldenCorpusFixture
 from tests.golden_criteria import iter_manifest_samples
-from tests.support.replay import build_article_from_fixture
-from tests.support.full_read_assertions import assert_source_list_items
-from tests.support.reviewed_publisher_content import _words
+from tests.paths import REPO_ROOT
 from tests.support.canonical_content import BODY_SELECTORS, source_references
+from tests.support.full_read_assertions import assert_source_list_items
+from tests.support.replay import build_article_from_fixture
+from tests.support.reviewed_publisher_content import _words
 
 CASES = json.loads(
     (

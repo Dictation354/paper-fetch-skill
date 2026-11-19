@@ -5,14 +5,15 @@ route-aware provider assembly and service rendering are the current code.
 """
 
 from unittest import mock
+
 import pytest
+
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
-
 
 CASES = [
     ("10.1146/annurev-med-120811-171056", "annualreviews"),

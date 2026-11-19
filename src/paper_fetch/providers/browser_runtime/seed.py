@@ -2,15 +2,14 @@
 
 from __future__ import annotations
 
-from ...browser_runtime_policy import engine_name
-
-from typing import Any
-from collections.abc import Mapping
+import contextlib
 import urllib.parse
+from collections.abc import Mapping
+from typing import Any
 
+from ...browser_runtime_policy import engine_name
 from ...utils import normalize_text
 from .types import BrowserContextSeed
-import contextlib
 
 CLOUDFLARE_COOKIE_NAMES = frozenset(
     {

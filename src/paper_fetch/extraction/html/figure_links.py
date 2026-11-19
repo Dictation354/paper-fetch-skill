@@ -5,8 +5,8 @@ from __future__ import annotations
 import os
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Callable, Mapping, Sequence
+from typing import Any
 
 from ...common_patterns import (
     FIGURE_BASENAME_PATTERN,

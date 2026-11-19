@@ -1,10 +1,11 @@
 from __future__ import annotations
-from tests.golden_criteria import golden_criteria_asset
-from paper_fetch.runtime import RuntimeContext
-from paper_fetch.providers import springer
-from paper_fetch.http import HttpTransport
+
 from unittest import mock
 
+from paper_fetch.http import HttpTransport
+from paper_fetch.providers import springer
+from paper_fetch.runtime import RuntimeContext
+from tests.golden_criteria import golden_criteria_asset
 
 BRIEFING_DOI = "10.1038/s41561-022-00983-6"
 

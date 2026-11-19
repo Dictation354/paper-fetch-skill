@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import importlib
 from collections.abc import Callable, Iterable, Iterator, Mapping
 from dataclasses import dataclass, replace
 from threading import RLock
@@ -17,8 +18,8 @@ from ..provider_contracts import (
 if TYPE_CHECKING:
     from ..extraction.html.provider_rules import ProviderHtmlRules
     from ..http import HttpTransport
-    from .base import ProviderClient
     from ._asset_retry import AssetRetryPolicy
+    from .base import ProviderClient
 
 
 class ProviderClientFactory(Protocol):
@@ -362,7 +363,6 @@ _BUNDLE_LOCK = RLock()
 
 
 def provider_bundle(name: str) -> ProviderBundle:
-    from importlib import import_module
     from ._definitions import PROVIDER_DEFINITIONS
 
     normalized = str(name or "").strip().lower()
@@ -373,7 +373,7 @@ def provider_bundle(name: str) -> ProviderBundle:
     with _BUNDLE_LOCK:
         if normalized not in _BUNDLE_CACHE:
             module_name, attribute = definition.implementation.split(":")
-            bundle = getattr(import_module(module_name), attribute)
+            bundle = getattr(importlib.import_module(module_name), attribute)
             if (
                 bundle.catalog != definition.catalog
                 or bundle.sources != definition.sources

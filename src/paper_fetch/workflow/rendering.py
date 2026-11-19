@@ -2,19 +2,14 @@
 
 from __future__ import annotations
 
-from ..publication_dates import citation_date
-
-from ..tracing import extend_trace
-
-from ..models.markdown import replace_markdown_image_url
-
 import os
 import re
 import urllib.parse
+from collections.abc import Callable, Mapping
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable, Mapping
 
+from ..acquisition import is_pdf_article
 from ..artifacts import ArtifactStore
 from ..extraction.html.asset_fields import MARKDOWN_ASSET_REFERENCE_FIELDS
 from ..markdown.images import render_markdown_image, short_image_alt
@@ -22,12 +17,15 @@ from ..models import ArticleModel, FetchEnvelope, OutputMode, RenderOptions
 from ..models.markdown import (
     image_reference_basename,
     image_reference_candidates,
+    replace_markdown_image_url,
     replace_markdown_images,
 )
+from ..publication_dates import citation_date
 from ..reason_codes import FULLTEXT, METADATA_ONLY
 from ..tracing import (
     TraceEvent,
     download_event,
+    extend_trace,
     fallback_event,
     merge_trace,
 )
@@ -46,11 +44,10 @@ def finalize_article(
     article: ArticleModel,
     *,
     warnings: list[str] | None = None,
-    events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
     extend_unique(article.quality.warnings, list(warnings or []))
-    article.trace = merge_trace(article.trace, events, trace)
+    article.trace = merge_trace(article.trace, trace)
     return article
 
 
@@ -217,8 +214,6 @@ def rewrite_markdown_asset_links(
     article = envelope.article
     if not markdown or article is None:
         return markdown
-
-    from ..acquisition import is_pdf_article
 
     preserve_pdf = is_pdf_article(envelope.article)
     local_assets_by_basename = _local_asset_lookup_by_basename(

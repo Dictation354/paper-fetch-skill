@@ -2,14 +2,12 @@
 
 from __future__ import annotations
 
-
 from collections.abc import Iterable
 from pathlib import Path
 from urllib.parse import unquote, urlsplit
 
 from markdown_it import MarkdownIt
 from markdown_it.token import Token
-
 
 REQUIRED_REFERENCE_FILES = frozenset(
     {

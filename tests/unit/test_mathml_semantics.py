@@ -1,9 +1,7 @@
 """Minimal dimensions and source-error structure at the MathML boundary."""
 
-from dataclasses import replace
-
-
 import xml.etree.ElementTree as ET
+from dataclasses import replace
 
 import pytest
 
@@ -57,6 +55,7 @@ def test_mathml_node_boundaries_terminate_control_words_without_splitting_source
 )
 def test_source_operator_check_rejects_command_glue(symbol, good, bad):
     from bs4 import BeautifulSoup
+
     from tests.support.scientific_content import mathml_control_words_preserved
 
     source = BeautifulSoup(f"<math><mo>{symbol}</mo><mi>x</mi></math>", "xml").math

@@ -7,14 +7,14 @@ from typing import Any
 
 from bs4 import BeautifulSoup
 
-from ..runtime import RuntimeContext
-from ..quality.html_availability import HtmlQualityAssessor
-from ..publisher_identity import extract_doi, extract_doi_from_url, normalize_doi
-from ..utils import normalize_text
 from ..extraction.html.parsing import choose_parser
+from ..publisher_identity import extract_doi, extract_doi_from_url, normalize_doi
+from ..quality.html_availability import HtmlQualityAssessor
+from ..runtime import RuntimeContext
+from ..utils import normalize_text
 from .browser_runtime import BrowserFetchedHtml
-from .browser_workflow.shared import normalize_browser_url
 from .browser_workflow.html_extraction import _browser_runtime_trace
+from .browser_workflow.shared import normalize_browser_url
 
 _HTTP_ACCESS_STATUS_REVIEW_KEY = "http_access_status_review"
 _WILEY_REVIEWABLE_HTTP_STATUSES = frozenset({401, 403})
@@ -70,7 +70,6 @@ def _wiley_document_doi_evidence(html_text: str) -> list[tuple[str, str]]:
 
 def _wiley_http_access_status_review(
     *,
-    return_image_payload: bool,
     status: int | None,
     requested_doi: str,
     requested_url: str,
@@ -80,7 +79,7 @@ def _wiley_http_access_status_review(
     body_ready: bool,
     runtime_context: RuntimeContext | None = None,
 ) -> dict[str, Any] | None:
-    if status not in _WILEY_REVIEWABLE_HTTP_STATUSES or return_image_payload:
+    if status not in _WILEY_REVIEWABLE_HTTP_STATUSES:
         return None
 
     expected_doi = normalize_doi(requested_doi)

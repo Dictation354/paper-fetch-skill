@@ -51,6 +51,7 @@ from .errors import (
     iter_network_error_causes,
 )
 from .json_payload import decode_json_object_response
+from .provider_policy import provider_allowed_hosts, provider_request_policy
 from .retry import (
     DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
     DEFAULT_TRANSIENT_RETRIES,
@@ -71,6 +72,7 @@ from .transport import (
     HttpTransportOptions,
     _PreparedRequest,
     logger,
+    request_cancel_check,
 )
 from .url_policy import (
     DEFAULT_REMOTE_PORTS,
@@ -78,7 +80,6 @@ from .url_policy import (
     SafeRemoteUrlPolicy,
     ValidatedRemoteUrl,
 )
-from .provider_policy import provider_allowed_hosts, provider_request_policy
 
 __all__ = [
     "CACHE_KEY_HEADER_NAMES",
@@ -143,5 +144,6 @@ __all__ = [
     "redact_text_for_diagnostics",
     "redact_url_for_cache",
     "redact_url_for_diagnostics",
+    "request_cancel_check",
     "time",
 ]

@@ -1,8 +1,11 @@
 from __future__ import annotations
-from tests.support.transport import configure_stream_transport
-from paper_fetch.providers import _ieee_asset_identity
-from paper_fetch.providers import _ieee_asset_recovery
-from paper_fetch.providers import _ieee_supplementary
+
+from paper_fetch.providers import (
+    _ieee_asset_identity,
+    _ieee_asset_recovery,
+    _ieee_supplementary,
+)
+from paper_fetch.providers.browser_runtime import html_fetcher as _browser_html_fetcher
 from paper_fetch.providers.browser_workflow.asset_download import (
     BrowserAssetDownloadPlan,
     BrowserAssetRecoveryContext,
@@ -11,6 +14,8 @@ from paper_fetch.providers.browser_workflow.asset_download import (
 from tests.support._atypon_browser_workflow_provider_support import png_header
 from tests.support._browser_workflow_deps import browser_workflow_deps
 from tests.support._ieee_provider_support import *
+from tests.support.transport import configure_stream_transport
+
 # ruff: noqa: F403,F405
 
 
@@ -466,22 +471,16 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 )
 
         self.assertEqual(result, {"assets": [], "asset_failures": []})
-        self.assertEqual(mocked_download.call_count, 2)
-        self.assertTrue(
-            all(
-                call.args[0] is _ieee_supplementary.FIGURE_KIND
-                for call in mocked_download.call_args_list
-            )
+        self.assertEqual(mocked_download.call_count, 1)
+        self.assertIs(
+            mocked_download.call_args.args[0],
+            _ieee_supplementary.FIGURE_KIND,
         )
         self.assertEqual(
-            mocked_download.call_args_list[0].kwargs["options"].headers["Referer"],
+            mocked_download.call_args.kwargs["options"].headers["Referer"],
             landing_url,
         )
-        passed_assets = [
-            asset
-            for call in mocked_download.call_args_list
-            for asset in call.kwargs["assets"]
-        ]
+        passed_assets = list(mocked_download.call_args.kwargs["assets"])
         self.assertEqual(
             [item["kind"] for item in passed_assets],
             ["figure", "table", "formula"],
@@ -722,8 +721,9 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             all(asset.download_tier == "full_size" for asset in body_article_assets)
         )
 
-    @mock.patch(
-        "paper_fetch.providers._playwright_browser.open_browser_context",
+    @mock.patch.object(
+        _browser_html_fetcher,
+        "open_browser_context",
         side_effect=RuntimeError("Mock browser unavailable"),
     )
     def test_ieee_supplementary_download_failure_does_not_discard_body_assets(

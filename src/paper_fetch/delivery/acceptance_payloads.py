@@ -13,8 +13,10 @@ __all__ = ["compact_acceptance_payload", "expected_doi_from_query"]
 def compact_acceptance_payload(
     report: FetchAcceptanceReport,
 ) -> dict[str, Any]:
-    """Project the canonical report into the bounded acceptance contract."""
+    """Project the canonical report into the CLI receipt v1 contract."""
 
+    asset = report.asset
+    body = asset.body_assets
     return {
         **(
             {"target": report.target, "content_requested": report.content.requested}
@@ -32,18 +34,20 @@ def compact_acceptance_payload(
         "has_abstract": report.content.has_abstract,
         "token_estimate": report.content.token_estimate,
         "asset_summary": (
-            report.asset.model_dump(mode="json")
-            if report.asset.requested
+            {
+                **asset.model_dump(mode="json", exclude={"body_assets"}),
+                "total": asset.discovered,
+                "preview": asset.preview,
+                **{f"body_{key}": value for key, value in body.model_dump().items()},
+                "has_local_body_assets": body.local > 0,
+                "all_body_assets_local": body.all_local,
+                "all_body_assets_full_size": body.all_full_size,
+                "remote_links_preserved": asset.remote_only_count > 0,
+            }
+            if asset.requested
             else {
                 "requested": False,
-                "profile": report.asset.profile,
+                "profile": asset.profile,
             }
         ),
-    }
-
-
-def acceptance_reason_codes(report: FetchAcceptanceReport) -> dict[str, Any]:
-    return {
-        name: list(getattr(report.provenance, name))
-        for name in ("fallback_codes", "warning_codes", "failure_codes")
     }

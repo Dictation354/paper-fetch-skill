@@ -1,14 +1,16 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.providers import _springer_markdown
+
 import re
 import unittest
+
 from bs4 import BeautifulSoup
-from paper_fetch.providers import springer as springer_provider
+
 from paper_fetch.extraction.html.tables import render_table_markdown
+from paper_fetch.providers import _springer_markdown
+from paper_fetch.providers import springer as springer_provider
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
-
+from tests.support.transport import RecordedStreamTransport
 
 SPRINGER_CLASSIC_DOI = "10.1007/s10584-011-0143-4"
 SPRINGER_CLASSIC_TITLE = "Hydrological response to climate change in a glacierized catchment in the Himalayas"

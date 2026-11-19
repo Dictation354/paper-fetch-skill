@@ -5,14 +5,15 @@ from __future__ import annotations
 import platform
 import sys
 import tempfile
+from dataclasses import replace
 from pathlib import Path
 from typing import TYPE_CHECKING
 
+from .browser_runtime_policy import supported_platform
 from .config import resolve_user_data_dir
 from .providers.browser_runtime import byparr_preparation as preparation
 from .providers.browser_runtime.backends.byparr import DEFAULT_BYPARR_BACKEND
 from .providers.browser_runtime.byparr_manager import ByparrManager
-from .providers.browser_runtime.platforms import supported_platform
 from .providers.browser_runtime.types import BrowserRuntimeFailure
 
 if TYPE_CHECKING:
@@ -24,8 +25,6 @@ def local_check(env, runtime: Path):
         config = DEFAULT_BYPARR_BACKEND.load_runtime_config(
             env, provider="pnas", doi="probe://byparr/install"
         )
-        from dataclasses import replace
-
         config = replace(
             config,
             timeout_ms=120000,

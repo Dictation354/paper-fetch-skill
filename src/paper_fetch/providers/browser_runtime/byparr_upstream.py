@@ -7,8 +7,8 @@ the embedded controller only needs its timer and logger, on CPython 3.11+.
 from __future__ import annotations
 
 import logging
-from pathlib import Path
 import time
+from pathlib import Path
 from types import ModuleType
 
 from byparr_engine import playwright_api

@@ -21,7 +21,6 @@ from .signals import (
 )
 from .ui_tokens import DOWNLOAD_PDF_LABEL
 
-
 HTML_DROP_SELECTORS = (
     "nav",
     "aside",

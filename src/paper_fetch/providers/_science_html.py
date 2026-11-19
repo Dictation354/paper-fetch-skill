@@ -3,15 +3,19 @@
 from __future__ import annotations
 
 import re
-import urllib.parse
 import time
-from typing import Any
+import urllib.parse
 from collections.abc import Callable, Mapping, Sequence
+from contextlib import suppress
+from copy import deepcopy
+from typing import Any
 
 from bs4 import BeautifulSoup, Tag
+
+from ..extraction.html.figure_links import canonical_figure_label_from_asset
+from ..extraction.html.object_links import resolve_retained_object_links
 from ..extraction.html.parsing import choose_parser
-
-
+from ..extraction.html.tables import render_table_markdown
 from ..quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
     SCIENCE_SIGNAL_SET,
@@ -20,8 +24,8 @@ from ..quality.html_signals import (
 )
 from ..utils import dedupe_authors, normalize_text
 from ._html_authors import (
-    ATYPON_AUTHOR_COUNT_PATTERN,
     ATYPON_AUTHOR_COLLAPSE_UI_TEXT,
+    ATYPON_AUTHOR_COUNT_PATTERN,
     ATYPON_AUTHOR_NOISE_TEXT,
     AuthorExtractionPipeline,
     AuthorStep,
@@ -31,12 +35,21 @@ from ._html_authors import (
 from ._html_references import (
     NUMBERED_BIBLIOGRAPHY_SELECTORS,
     _candidate_reference_nodes,
-    _reference_text,
     _reference_doi,
+    _reference_text,
     extract_numbered_references_from_soup,
 )
-from ..extraction.html.object_links import resolve_retained_object_links
+from ._html_section_markdown import (
+    render_container_markdown,
+    render_heading_text_from_html,
+)
 from ._script_json import extract_assignment_json
+from .atypon_browser_workflow.asset_scopes import (
+    _atypon_browser_workflow_supplementary_sections,
+    extract_body_and_supplementary_html,
+    extract_scoped_html_assets,
+)
+from .atypon_browser_workflow.normalization import _is_front_matter_teaser_figure
 
 SCIENCE_AUTHOR_COUNT_PATTERN = ATYPON_AUTHOR_COUNT_PATTERN
 SCIENCE_STRUCTURED_SUBHEADING_PATTERN = re.compile(
@@ -117,7 +130,6 @@ def prepare_browser_page(
     cancel_check: Callable[[], None] | None = None,
 ) -> Mapping[str, Any]:
     """Wait for extractable references and expand only visible publisher controls."""
-    from contextlib import suppress
     from playwright.sync_api import TimeoutError as PlaywrightTimeoutError
 
     started = time.monotonic()
@@ -380,8 +392,6 @@ def positive_signals(html_text: str) -> tuple[list[str], list[str], list[str]]:
 def is_front_matter_teaser_figure(
     node: Any, *, abstract_anchor: Any | None = None
 ) -> bool:
-    from .atypon_browser_workflow.normalization import _is_front_matter_teaser_figure
-
     return _is_front_matter_teaser_figure(node, abstract_anchor=abstract_anchor)
 
 
@@ -439,7 +449,6 @@ def science_before_block_normalization(container: Any) -> None:
         ):
             heading = BeautifulSoup("<h2>Main Text</h2>", "html.parser").h2
             root.insert(0, heading)
-    from ._html_section_markdown import render_heading_text_from_html
 
     for heading in container.select("h2, h3, h4, h5, h6"):
         if heading.find(["sup", "sub"]) is not None:
@@ -498,9 +507,6 @@ def render_table_with_missing_trailing_cells(
     node: Tag, *, label: str, caption: str
 ) -> str | None:
     """Preserve browser column positions for unspanned, short source rows."""
-    import copy
-    from ..extraction.html.tables import render_table_markdown
-
     table = node if node.name == "table" else node.find("table")
     if not isinstance(table, Tag) or table.find("table") is not None:
         return None
@@ -526,7 +532,7 @@ def render_table_with_missing_trailing_cells(
     ]
     if not missing:
         return None
-    clone = copy.deepcopy(node)
+    clone = deepcopy(node)
     cloned_table = clone if clone.name == "table" else clone.find("table")
     cloned_rows = cloned_table.find_all("tr")
     for index, count in missing:
@@ -563,8 +569,6 @@ def science_classify_heading(heading: str, title: str | None = None) -> str | No
 
 def _promote_science_availability(container: Tag) -> None:
     """Retain explicitly labelled data/code/material statements through the next peer label."""
-    from copy import deepcopy
-
     factory = BeautifulSoup("", "html.parser")
     peer_labels = {
         "funding",
@@ -626,9 +630,6 @@ def _promote_science_availability(container: Tag) -> None:
 def science_body_container(container: Any) -> None:
     if not isinstance(container, Tag):
         return
-    from .atypon_browser_workflow.asset_scopes import (
-        _atypon_browser_workflow_supplementary_sections,
-    )
 
     for section in _atypon_browser_workflow_supplementary_sections(container):
         section.decompose()
@@ -657,8 +658,6 @@ def science_keep_leading_auxiliary_block(
     publisher: str,
     figure_assets: Sequence[Mapping[str, Any]] | None,
 ) -> bool:
-    from ..extraction.html.figure_links import canonical_figure_label_from_asset
-
     # Perspectives can start with a manuscript photograph whose body asset
     # survived the teaser filter; retain its caption before the first prose.
     leading_figure = re.match(r"^\*\*(Figure\s+\d+)\.\*\*", block, re.I)
@@ -688,10 +687,6 @@ def extract_asset_html_scopes(
     atypon_browser_workflow_supplementary_sections,
 ) -> tuple[str, str]:
     del source_url, raw_body_container
-    from .atypon_browser_workflow.asset_scopes import (
-        extract_body_and_supplementary_html,
-    )
-
     return extract_body_and_supplementary_html(
         body_container,
         supplementary_container,
@@ -770,10 +765,6 @@ def finalize_extraction(
             + ", ".join(missing),
         ]
         finalized["missing_reference_targets"] = missing
-    from .atypon_browser_workflow.asset_scopes import (
-        _atypon_browser_workflow_supplementary_sections,
-    )
-    from ._html_section_markdown import render_container_markdown
 
     if not re.search(
         r"(?im)^#{2,6} supplementary (?:materials?|information)\s*$", markdown_text
@@ -803,6 +794,4 @@ def finalize_extraction(
 
 
 def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, str]]:
-    from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
-
     return extract_scoped_html_assets(*args, **kwargs)

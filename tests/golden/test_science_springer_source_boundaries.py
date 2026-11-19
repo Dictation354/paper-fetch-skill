@@ -1,10 +1,10 @@
 """Independent complete captures verify Science cells and Springer Methods ethics."""
 
-from pathlib import Path
 import re
+from pathlib import Path
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from tests.paths import REPO_ROOT
 from tests.support.verified_source_inputs import (

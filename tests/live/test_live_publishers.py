@@ -1,15 +1,13 @@
 from __future__ import annotations
-from dataclasses import asdict
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
 
 import json
 import os
-from pathlib import Path
 import tempfile
 import time
 import unittest
 import warnings
+from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 
@@ -23,22 +21,17 @@ from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper
-from paper_fetch.workflow.types import PaperFetchFailure
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import (
     AssetAcceptanceStatus,
     ContentAcceptanceStatus,
     FetchAcceptanceStatus,
     IdentityAcceptanceStatus,
-    OverallAcceptanceStatus,
     OutputAcceptanceStatus,
+    OverallAcceptanceStatus,
     evaluate_fetch_acceptance,
 )
-from tests.support.live_acceptance import (
-    catalog_acceptance_report,
-    fetch_browser_diagnostics,
-    _asset_performance_summary,
-    preserve_terminal_record,
-)
+from paper_fetch.workflow.types import PaperFetchFailure
 from tests.live._runtime_env import (
     build_isolated_live_env,
     require_local_browser_or_skip,
@@ -47,7 +40,13 @@ from tests.provider_benchmark_samples import (
     iter_provider_benchmark_samples,
     provider_benchmark_sample,
 )
-
+from tests.support.live_acceptance import (
+    _asset_performance_summary,
+    catalog_acceptance_report,
+    fetch_browser_diagnostics,
+    preserve_terminal_record,
+)
+from tests.support.trace import trace_facts
 
 RUN_LIVE = os.environ.get("PAPER_FETCH_RUN_LIVE") == "1"
 RUN_AIP_COLD_STABILITY = os.environ.get("PAPER_FETCH_RUN_AIP_COLD_STABILITY") == "1"
@@ -179,7 +178,7 @@ def test_catalog_provider_sample_live_body_acceptance(
     catalog_live_report,
     record_property,
 ) -> None:
-    from paper_fetch.providers.browser_runtime.selection import selected_backend
+    from paper_fetch.browser_runtime_policy import selected_backend
 
     catalog_live_env = type(catalog_live_env)(catalog_live_env)
     catalog_live_env[f"PAPER_FETCH_{sample.provider.upper()}_BROWSER_BACKEND"] = backend

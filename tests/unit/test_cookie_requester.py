@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from email.message import Message
 import io
 import urllib.request
+from email.message import Message
 
 import pytest
 

@@ -1,51 +1,162 @@
 from __future__ import annotations
-from dataclasses import replace
+
 import json
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
+
+import paper_fetch.delivery.fetch_cache as fetch_cache_module
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
     CapabilityScopeBuilder,
     capability_scopes_for_query,
 )
-from paper_fetch.delivery.fetch_cache import FetchCache, PUBLIC_CREDENTIAL_SCOPE
-from paper_fetch.delivery.cache_inspection import list_cached_payload
+from paper_fetch.delivery.fetch_cache import (
+    FETCH_ENVELOPE_SIDECAR_VERSION,
+    PUBLIC_CREDENTIAL_SCOPE,
+    FetchCache,
+)
 from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import sample_envelope
 
-
 DOI = "10.1000/variant-selection"
 
 
-def _request(mode: str) -> FetchPaperRequest:
-    return FetchPaperRequest(query=DOI, modes=[mode], prefer_cache=True)
+def _request(*modes: str) -> FetchPaperRequest:
+    return FetchPaperRequest(
+        query=DOI, modes=list(modes or ("markdown",)), prefer_cache=True
+    )
 
 
-def test_inspector_and_loader_select_compatible_rich_variant(tmp_path: Path) -> None:
+def test_modern_nature_url_reuses_doi_cache_without_a_resolver(tmp_path: Path) -> None:
+    doi = "10.1038/s41586-026-12345-x"
     cache = FetchCache(tmp_path)
-    markdown_request = _request("markdown")
-    metadata_request = _request("metadata")
-    markdown = sample_envelope(modes={"markdown"}, doi=DOI)
-    markdown.markdown = "# Older rich body\n"
-    metadata = sample_envelope(modes={"metadata"}, doi=DOI)
-    cache.write_fetch_envelope(markdown, markdown_request)
-    cache.write_fetch_envelope(metadata, metadata_request)
+    request = FetchPaperRequest(query=doi, modes=["markdown"], prefer_cache=True)
+    cache.write_fetch_envelope(sample_envelope(modes={"markdown"}, doi=doi), request)
     resolver = mock.Mock(side_effect=AssertionError("known DOI must stay offline"))
-
-    inspection = cache.get_payload(DOI, request=markdown_request, detail="compact")
+    url_request = request.model_copy(
+        update={"query": "https://nature.com/articles/s41586-026-12345-x"}
+    )
     with RuntimeContext(env={}, download_dir=tmp_path) as context:
         loaded = cache.load_fetch_envelope(
-            markdown_request,
+            url_request, resolve_paper_fn=resolver, context=context
+        )
+    assert loaded is not None and loaded.doi == doi
+    resolver.assert_not_called()
+
+
+def test_single_sidecar_write_without_index_or_canonical_duplicate(
+    tmp_path: Path,
+) -> None:
+    cache = FetchCache(tmp_path)
+    request = _request("markdown")
+    cache.write_fetch_envelope(sample_envelope(modes={"markdown"}, doi=DOI), request)
+
+    sidecars = list(tmp_path.glob("*.fetch-envelope.json"))
+    assert len(sidecars) == 1
+    assert not (tmp_path / "10.1000_variant-selection.fetch-envelope.json").exists()
+    assert not (tmp_path / ".paper-fetch-cache.json").exists()
+    stored = json.loads(sidecars[0].read_text(encoding="utf-8"))
+    assert stored["version"] == FETCH_ENVELOPE_SIDECAR_VERSION == 8
+    assert "schema_version" not in stored["payload"]
+
+
+def test_loader_reuses_superset_variant_and_projects_requested_modes(
+    tmp_path: Path,
+) -> None:
+    cache = FetchCache(tmp_path)
+    rich_request = _request("article", "markdown", "metadata")
+    rich = sample_envelope(modes={"article", "markdown", "metadata"}, doi=DOI)
+    rich.markdown = "# Superset body\n"
+    cache.write_fetch_envelope(rich, rich_request)
+    cache.write_fetch_envelope(
+        sample_envelope(modes={"metadata"}, doi=DOI), _request("metadata")
+    )
+    resolver = mock.Mock(side_effect=AssertionError("known DOI must stay offline"))
+
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        loaded = cache.load_fetch_envelope(
+            _request("markdown"),
             resolve_paper_fn=resolver,
             context=context,
         )
 
-    assert inspection["request_satisfied"] is True
-    assert inspection["content_kind"] == "fulltext"
     assert loaded is not None
-    assert loaded.markdown == "# Older rich body\n"
+    assert loaded.markdown == "# Superset body\n"
+    assert loaded.article is None
+    assert loaded.metadata is None
     resolver.assert_not_called()
+
+
+def test_malformed_exact_sidecar_does_not_hide_valid_superset(tmp_path: Path) -> None:
+    cache = FetchCache(tmp_path)
+    request = _request("markdown")
+    cache.write_fetch_envelope(sample_envelope(modes={"markdown"}, doi=DOI), request)
+    (exact_path,) = tmp_path.glob("*.fetch-envelope.json")
+    payload = json.loads(exact_path.read_text(encoding="utf-8"))
+    payload["payload"]["quality"]["content_kind"] = []
+    exact_path.write_text(json.dumps(payload), encoding="utf-8")
+
+    rich = sample_envelope(modes={"article", "markdown"}, doi=DOI)
+    rich.markdown = "# Verified fallback\n"
+    cache.write_fetch_envelope(rich, _request("article", "markdown"))
+    resolver = mock.Mock(side_effect=AssertionError("known DOI must stay offline"))
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        loaded = cache.load_fetch_envelope(
+            request, resolve_paper_fn=resolver, context=context
+        )
+
+    assert loaded is not None and loaded.markdown == rich.markdown
+    resolver.assert_not_called()
+
+
+def test_lightweight_header_filter_skips_envelope_deserialization(
+    tmp_path: Path,
+    monkeypatch,
+) -> None:
+    cache = FetchCache(tmp_path)
+    private_scope = "credential:" + ("9" * 64)
+    # Write incompatible variants (wrong mode, wrong scope, and stale version)
+    # with deliberately broken payload bodies that would fail deserialization.
+    FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
+        sample_envelope(modes={"markdown"}, doi=DOI), _request("markdown")
+    )
+    cache.write_fetch_envelope(
+        sample_envelope(modes={"metadata"}, doi=DOI), _request("metadata")
+    )
+    for bad_path in tmp_path.glob("*.fetch-envelope.json"):
+        raw = json.loads(bad_path.read_text(encoding="utf-8"))
+        raw["payload"] = {"broken": True}
+        bad_path.write_text(json.dumps(raw), encoding="utf-8")
+
+    stale = tmp_path / f"10.1000_variant-selection.{'f' * 64}.fetch-envelope.json"
+    stale.write_text(
+        json.dumps(
+            {
+                "version": 7,
+                "extraction_revision": 12,
+                "credential_scope": "public",
+                "request_fingerprint": "f" * 64,
+                "request": {},
+                "payload": {"broken": True},
+            }
+        ),
+        encoding="utf-8",
+    )
+
+    decode_spy = mock.Mock(wraps=fetch_cache_module.envelope_from_payload)
+    monkeypatch.setattr(fetch_cache_module, "envelope_from_payload", decode_spy)
+
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        loaded = cache.load_fetch_envelope(
+            _request("markdown"),
+            resolve_paper_fn=mock.Mock(),
+            context=context,
+        )
+
+    assert loaded is None
+    decode_spy.assert_not_called()
 
 
 def test_private_loader_falls_back_to_public_but_never_another_private(
@@ -95,7 +206,7 @@ def test_private_loader_falls_back_to_public_but_never_another_private(
     assert public_reader is None
 
 
-def test_private_reader_uses_exact_public_fallback_without_variant_search(
+def test_private_reader_prefers_exact_public_match_before_superset_scan(
     tmp_path: Path,
 ) -> None:
     private_scope = "credential:" + ("1" * 64)
@@ -109,11 +220,7 @@ def test_private_reader_uses_exact_public_fallback_without_variant_search(
     )
     FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
         private_envelope,
-        FetchPaperRequest(
-            query=DOI,
-            modes=["article", "markdown"],
-            prefer_cache=True,
-        ),
+        _request("article", "markdown"),
     )
 
     with RuntimeContext(env={}, download_dir=tmp_path) as context:
@@ -128,61 +235,6 @@ def test_private_reader_uses_exact_public_fallback_without_variant_search(
 
     assert loaded is not None
     assert loaded.markdown == "# Public exact\n"
-
-
-def test_private_index_entries_are_hidden_from_public_get_and_list(
-    tmp_path: Path,
-) -> None:
-    env = {"ELSEVIER_API_KEY": "private-index-secret"}
-    private_scope = CapabilityScopeBuilder(env).build()
-    request = _request("markdown")
-    FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
-        sample_envelope(modes={"markdown"}, doi=DOI), request
-    )
-
-    public_get = FetchCache(tmp_path).get_payload(DOI, request=request)
-    private_get = FetchCache(
-        tmp_path,
-        credential_scope=private_scope,
-    ).get_payload(DOI, request=request)
-    public_list = list_cached_payload(env={}, download_dir=tmp_path)
-    private_list = list_cached_payload(env=env, download_dir=tmp_path)
-
-    assert public_get["status"] == "miss"
-    assert public_get["entries"] == []
-    assert public_get["sidecar"]["reason_code"] == (
-        "cache_sidecar_credential_scope_mismatch"
-    )
-    assert private_get["status"] == "hit"
-    assert private_get["entries"]
-    assert public_list["entries"] == []
-    assert private_list["entries"]
-    assert all(
-        entry["credential_scope"] == private_scope for entry in private_list["entries"]
-    )
-
-
-def test_index_entry_without_scope_fails_closed(
-    tmp_path: Path,
-) -> None:
-    env = {"ELSEVIER_API_KEY": "private-secret"}
-    private_scope = CapabilityScopeBuilder(env).build()
-    request = _request("markdown")
-    FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
-        sample_envelope(modes={"markdown"}, doi=DOI), request
-    )
-    index_path = tmp_path / ".paper-fetch-cache.json"
-    index = json.loads(index_path.read_text(encoding="utf-8"))
-    for entry in index["entries"]:
-        entry.pop("credential_scope", None)
-    index_path.write_text(json.dumps(index), encoding="utf-8")
-
-    listed = list_cached_payload(env={}, download_dir=tmp_path)
-    refreshed = FetchCache(tmp_path).get_payload(DOI, request=request)
-
-    assert listed["entries"] == []
-    assert refreshed["entries"] == []
-    assert refreshed["status"] == "miss"
 
 
 def test_constructor_cannot_widen_public_or_private_reader_scopes() -> None:

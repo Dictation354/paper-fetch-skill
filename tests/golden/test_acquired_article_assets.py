@@ -4,18 +4,19 @@ One captured figure is selected per article. Other candidate responses are
 injected as missing; this is neither an all-assets nor a live-browser claim.
 """
 
-from tests.support.acquired_article_assets import CLIENTS
 import hashlib
 import re
 from pathlib import Path
+
 import pytest
+
+from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
-from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.providers import _annualreviews_html, _mdpi_assets
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow.asset_download import (
@@ -24,9 +25,9 @@ from paper_fetch.providers.browser_workflow.asset_download import (
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
+from tests.support.acquired_article_assets import CLIENTS
 from tests.support.acquired_publisher_inputs import _record, _response
-from tests.support.representative_asset_bytes import OLD, NEW
-
+from tests.support.representative_asset_bytes import NEW, OLD
 
 CASES = [row for row in OLD + NEW if row[0] in CLIENTS] + [
     ("mdpi", "10.3390/math11030657", "figure-1.png")

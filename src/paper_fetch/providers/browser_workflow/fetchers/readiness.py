@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, replace
-import time
-from typing import Any
-from collections.abc import Mapping
-
-from ....provider_catalog import provider_body_text_thresholds
-from ....http import RequestCancelledError
-from ....utils import normalize_text
 import contextlib
+import time
+from collections.abc import Mapping
+from dataclasses import dataclass, replace
+from typing import Any
+
+from ....http import RequestCancelledError
+from ....provider_catalog import provider_body_text_thresholds
+from ....utils import normalize_text
 
 ATYPON_BODY_READY_SELECTORS: Mapping[str, tuple[str, ...]] = {
     "elsevier": ("#body",),

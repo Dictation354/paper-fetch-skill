@@ -8,10 +8,8 @@ from pathlib import Path
 
 import pytest
 
-from paper_fetch.providers.browser_runtime.camoufox_manager import (
-    CamoufoxBrowserManager,
-)
-
+from paper_fetch.providers.browser_runtime.byparr_manager import ByparrManager
+from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
 
 NATIVE_CAMOUFOX_TEST_ENV = "PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST"
 
@@ -125,7 +123,18 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     assert executable_path.parent.name == "MacOS"
     assert properties_path.parent.name == "Resources"
 
-    browser_manager = CamoufoxBrowserManager(headless=True)
+    component_cache_dir = Path(os.environ["PAPER_FETCH_BROWSER_COMPONENT_CACHE"])
+    browser_manager = ByparrManager(
+        BrowserRuntimeConfig(
+            provider="pnas",
+            doi="offline-ephemeral",
+            artifact_dir=tmp_path,
+            headless=True,
+            user_agent=None,
+            component_cache_dir=component_cache_dir,
+        ),
+        local_check=True,
+    )
     browser_context = browser_manager.new_context()
     try:
         page = browser_context.new_page()
@@ -137,7 +146,6 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # The existing native bundle gate also proves the publisher profile owner,
     # native OS-lock handling and cross-restart state, without JSON replay.
     from paper_fetch.providers.browser_runtime.profile import PublisherProfileManager
-    from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
 
     config = BrowserRuntimeConfig(
         provider="pnas",
@@ -146,7 +154,7 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
         user_data_dir=tmp_path / "camoufox-profile",
         headless=True,
         user_agent=None,
-        component_cache_dir=Path(os.environ["PAPER_FETCH_BROWSER_COMPONENT_CACHE"]),
+        component_cache_dir=component_cache_dir,
     )
     for attempt in range(2):
         persistent_manager = PublisherProfileManager(config)

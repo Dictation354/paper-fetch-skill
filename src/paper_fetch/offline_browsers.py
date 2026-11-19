@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import shlex
 import sys
 from typing import TYPE_CHECKING
 
@@ -22,8 +23,6 @@ def prepare(setup: Setup, *, interactive: bool) -> None:
         for name in missing:
             setup.report(name, "missing")
         if missing and wizard.apt_supported():
-            import shlex
-
             packages = [
                 wizard.apt_package(candidates) for candidates in missing.values()
             ]

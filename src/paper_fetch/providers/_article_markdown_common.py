@@ -6,18 +6,10 @@ import os
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
 
-from ._article_markdown_xml import (
-    child_text,
-    first_child,
-    first_descendant,
-    normalize_compact_text,
-    xml_local_name,
-)
-from ..extraction.table_grid import TableConversionStatus
 from ..extraction.markdown_render.figures import add_figure_once, render_figure_block
 from ..extraction.markdown_render.tables import (
     add_table_once,
@@ -26,8 +18,16 @@ from ..extraction.markdown_render.tables import (
     render_structured_table_block,
     render_table_block,
 )
-from ..utils import format_paper_stem, normalize_text
+from ..extraction.table_grid import TableConversionStatus
 from ..markdown.math import protect_markdown_math, restore_markdown_math
+from ..utils import format_paper_stem, normalize_text
+from ._article_markdown_xml import (
+    child_text,
+    first_child,
+    first_descendant,
+    normalize_compact_text,
+    xml_local_name,
+)
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 XLINK_TITLE = "{http://www.w3.org/1999/xlink}title"

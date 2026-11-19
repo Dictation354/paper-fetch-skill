@@ -1,15 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import dataclass
-from functools import lru_cache
 import hashlib
 import json
+from dataclasses import dataclass
+from functools import lru_cache
 from pathlib import Path
 from typing import Literal
 
 from tests.golden_criteria import golden_criteria_manifest
 from tests.paths import REPO_ROOT
-
 
 OriginKind = Literal[
     "real_replay", "real_excerpt", "contract_scenario", "synthetic", "unverified"

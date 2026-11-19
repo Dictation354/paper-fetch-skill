@@ -7,19 +7,19 @@ from bs4 import BeautifulSoup
 from paper_fetch.extraction.html.inline import render_html_inline_node
 from paper_fetch.extraction.markdown_render import MarkdownList, render_list
 from paper_fetch.models.sections import section_kind_for_heading
+from paper_fetch.providers._ams_dom import _normalize_ams_dom
 from paper_fetch.providers._article_markdown_common import render_inline_text
-from paper_fetch.providers._article_markdown_math import render_mathml_expression
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_elsevier import render_elsevier_blocks
+from paper_fetch.providers._article_markdown_math import render_mathml_expression
 from paper_fetch.providers._arxiv_authors import _normalize_official_html_latexml_notes
 from paper_fetch.providers._arxiv_graphics import (
-    prepare_arxiv_graphics,
     INLINE_SVG_PREFIX,
+    prepare_arxiv_graphics,
 )
 from paper_fetch.providers._html_section_markdown import render_container_markdown
 from paper_fetch.providers._science_html import science_before_block_normalization
 from paper_fetch.providers._wiley_html import wiley_before_block_normalization
-from paper_fetch.providers._ams_dom import _normalize_ams_dom
 
 
 def test_citation_cleanup_keeps_formula_and_code_character_data():
@@ -420,9 +420,7 @@ def test_extended_data_controls_and_availability_merge_preserve_distinct_prose()
     assert full.count("## Data availability") == 1
     assert "First author statement." in full and "Second author statement." in full
     assert "## Extended Data" in full and "Source caption." in full
-    assert "Source caption." not in article.to_ai_markdown(
-        asset_profile="all", include_supplementary=False
-    )
+    assert "Source caption." not in article.to_ai_markdown(asset_profile="none")
     assert "Source caption." not in article.to_ai_markdown(asset_profile="body")
     assert (
         next(s for s in article.sections if s.heading == "Extended Data").kind
@@ -506,7 +504,7 @@ def test_extended_data_figure_and_table_assets_follow_supplementary_controls():
     assert "](https://example.org/table.png)" in full
     for kwargs in (
         {"asset_profile": "body"},
-        {"asset_profile": "all", "include_supplementary": False},
+        {"asset_profile": "none"},
     ):
         hidden = article.to_ai_markdown(**kwargs)
         assert "Extended Data" not in hidden

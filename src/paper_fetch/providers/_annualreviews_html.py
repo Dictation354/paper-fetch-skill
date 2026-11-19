@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import copy
 import re
+from collections.abc import Mapping
 from dataclasses import dataclass, replace
 from typing import Any
-from collections.abc import Mapping
 from urllib.parse import parse_qs, quote, urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Comment, Tag
@@ -47,7 +47,6 @@ from ._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
 )
-
 
 ANNUALREVIEWS_ARTICLE_SELECTORS = (
     "#itemFullTextId",

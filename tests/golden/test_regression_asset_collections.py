@@ -7,21 +7,20 @@ from pathlib import Path
 import pytest
 
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_mime_type_from_bytes,
 )
-from paper_fetch.providers import frontiers, ieee, _ieee_html
+from paper_fetch.providers import _ieee_html, frontiers, ieee
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
-from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support._paper_fetch_support import FixtureHtmlTransport
-
+from tests.support.acquired_publisher_inputs import _record, _response
 
 PREFIX = "acquisition/regression-2026-09-16/"
 

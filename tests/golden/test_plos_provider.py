@@ -1,21 +1,22 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from tests.support.markdown_presentation import visible_markdown
-from pathlib import Path
+
 import re
+from dataclasses import replace
+from pathlib import Path
+
 from paper_fetch.providers.plos import (
     PlosClient,
 )
 from paper_fetch.reason_codes import PDF_FALLBACK
+from paper_fetch.tracing import trace_event
 from tests.golden_corpus import (
     build_article_from_fixture,
     golden_corpus_fixture_for_doi,
 )
 from tests.support._atypon_browser_workflow_provider_support import png_header
 from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
-
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.trace import trace_facts
 
 STRUCTURE_DOI = "10.1371/journal.pone.0263725"
 TABLE_DOI = "10.1371/journal.pone.0304873"

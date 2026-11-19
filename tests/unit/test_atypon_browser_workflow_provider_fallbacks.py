@@ -1,9 +1,11 @@
 from __future__ import annotations
-from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import *
+from tests.support.trace import trace_facts
+
 # ruff: noqa: F403,F405
 
 
@@ -316,7 +318,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
                 fetch_seeded_browser_pdf_payload=mock.Mock(
-                    side_effect=browser_workflow.PdfFallbackFailure(
+                    side_effect=browser_workflow.PdfFetchFailure(
                         "pdf_download_failed", "Wiley PDF fallback failed."
                     )
                 ),
@@ -445,7 +447,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                     )
                 ),
                 fetch_seeded_browser_pdf_payload=mock.Mock(
-                    side_effect=browser_workflow.PdfFallbackFailure(
+                    side_effect=browser_workflow.PdfFetchFailure(
                         "pdf_download_failed",
                         "Wiley PDF fallback failed.",
                     )

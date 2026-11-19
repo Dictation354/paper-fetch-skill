@@ -12,9 +12,8 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import TYPE_CHECKING, Any, cast
 
-from .asset_budget import AssetBudget
-from .providers.browser_runtime.sessions import BrowserSessions as BrowserSessions
 from .artifacts import DEFAULT_ARTIFACT_MODE, ArtifactMode, ArtifactStore
+from .asset_budget import AssetBudget
 from .config import (
     HTTP_PER_HOST_CONCURRENCY_ENV_VAR,
     HTTP_POOL_MAXSIZE_ENV_VAR,
@@ -29,6 +28,7 @@ from .http import (
     HttpTransport,
     RequestCancelledError,
 )
+from .providers.browser_runtime.sessions import BrowserSessions as BrowserSessions
 
 if TYPE_CHECKING:
     from .providers.browser_runtime.preparation import FetchBrowserPreparation
@@ -150,15 +150,6 @@ class RuntimeContext:
         default_factory=BrowserSessions, init=False, repr=False
     )
     _resources: SharedRuntimeResources = field(init=False, repr=False)
-
-    @property
-    def _browser_context_manager_lock(self) -> threading.RLock:
-        return self._browser_sessions.lock
-
-    @property
-    def _camoufox_browser_managers(self) -> dict[tuple[int, bool, str], Any]:
-        return self._browser_sessions.managers
-
     _owns_transport: bool = field(default=False, init=False, repr=False)
     _closed: bool = field(default=False, init=False, repr=False)
     _commit_guard: RuntimeCommitGuard = field(init=False, repr=False)
@@ -430,8 +421,8 @@ class RuntimeContext:
     def close_browser(self) -> None:
         self._browser_sessions.close_browser(self)
 
-    def close_camoufox_for_current_thread(self) -> None:
-        self._browser_sessions.close_camoufox_for_current_thread(self)
+    def close_browser_for_current_thread(self) -> None:
+        self._browser_sessions.close_browser_for_current_thread(self)
 
     def close(self) -> None:
         if self._closed:
@@ -439,8 +430,8 @@ class RuntimeContext:
         # Foreign workers retain their session handles until their finally block.
         # Cancelling/fencing is thread-safe; Playwright close is owner-thread only.
         self.close_browser()
-        with self._browser_context_manager_lock:
-            if self._camoufox_browser_managers:
+        with self._browser_sessions.lock:
+            if self._browser_sessions.managers:
                 self.fence_commits()
                 return
         self._closed = True

@@ -2,10 +2,11 @@
 
 import json
 from unittest import mock
+
 import pytest
+
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import _pdf_common
-
 
 RAW = "\n# A  title\n\n\n**Abstract**\nAn abstract.\n\n# Running header\n\nA hyphen-\nated line. [ 1 ]\n\n![](missing.png)\n\n## **REFERENCES**\n\n2M. A reference\ncontinued.\n\n1M. Another reference.\n  \n"
 

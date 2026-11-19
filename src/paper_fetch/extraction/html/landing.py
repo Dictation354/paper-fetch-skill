@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import urllib.parse
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Callable, Mapping
 
 from ...http import DEFAULT_TIMEOUT_SECONDS, HttpRequestPolicy, HttpTransport
 from ...metadata.types import HtmlMetadata
@@ -39,7 +39,7 @@ class LandingRedirectLimitExceeded(Exception):
         self.max_redirects = max_redirects
 
 
-def _response_url(response: Mapping[str, Any], current_url: str) -> str:
+def landing_response_url(response: Mapping[str, Any], current_url: str) -> str:
     return urllib.parse.urljoin(
         current_url, str(response.get("url") or "").strip() or current_url
     )
@@ -65,7 +65,7 @@ def build_landing_html_result(
     decoder: HtmlDecoder,
     metadata_parser: HtmlMetadataParser,
 ) -> LandingHtmlFetchResult:
-    final_url = _response_url(response, current_url)
+    final_url = landing_response_url(response, current_url)
     html_text = decoder(response["body"])
     metadata = metadata_parser(html_text, final_url)
     return LandingHtmlFetchResult(
@@ -78,7 +78,7 @@ def build_landing_html_result(
     )
 
 
-def fetch_landing_html(
+def fetch_landing_response(
     landing_url: str,
     *,
     transport: HttpTransport,
@@ -88,10 +88,8 @@ def fetch_landing_html(
     max_redirects: int = 0,
     raise_on_redirect_limit: bool = False,
     request_policy: HttpRequestPolicy | None = None,
-    decoder: HtmlDecoder = decode_html,
-    metadata_parser: HtmlMetadataParser = parse_html_metadata,
-) -> LandingHtmlFetchResult:
-    """Fetch a landing HTML page and parse provider-neutral metadata."""
+) -> tuple[Mapping[str, Any], str]:
+    """Fetch the response and return the request URL of its final hop."""
 
     current_url = landing_url
     request_headers = dict(headers or {})
@@ -111,12 +109,7 @@ def fetch_landing_html(
         status_code = _status_code(response)
         redirect_location = _redirect_location(response)
         if status_code not in REDIRECT_STATUS_CODES or not redirect_location:
-            return build_landing_html_result(
-                response,
-                current_url=current_url,
-                decoder=decoder,
-                metadata_parser=metadata_parser,
-            )
+            return response, current_url
         current_url = urllib.parse.urljoin(current_url, redirect_location)
         response = transport.request(
             "GET",
@@ -128,6 +121,34 @@ def fetch_landing_html(
     if raise_on_redirect_limit:
         raise LandingRedirectLimitExceeded(landing_url, max(0, int(max_redirects)))
 
+    return response, current_url
+
+
+def fetch_landing_html(
+    landing_url: str,
+    *,
+    transport: HttpTransport,
+    headers: Mapping[str, str] | None = None,
+    timeout: int = DEFAULT_TIMEOUT_SECONDS,
+    retry_on_transient: bool = True,
+    max_redirects: int = 0,
+    raise_on_redirect_limit: bool = False,
+    request_policy: HttpRequestPolicy | None = None,
+    decoder: HtmlDecoder = decode_html,
+    metadata_parser: HtmlMetadataParser = parse_html_metadata,
+) -> LandingHtmlFetchResult:
+    """Fetch a landing HTML page and parse provider-neutral metadata."""
+
+    response, current_url = fetch_landing_response(
+        landing_url,
+        transport=transport,
+        headers=headers,
+        timeout=timeout,
+        retry_on_transient=retry_on_transient,
+        max_redirects=max_redirects,
+        raise_on_redirect_limit=raise_on_redirect_limit,
+        request_policy=request_policy,
+    )
     return build_landing_html_result(
         response,
         current_url=current_url,

@@ -1,4 +1,4 @@
-param(
+﻿param(
     [string]$OutputDir,
     [string]$PackageName,
     [string]$PythonBin = "python",
@@ -169,7 +169,6 @@ function Copy-RuntimeAssets {
     Copy-Item -LiteralPath $InstallerManifestPath -Destination (Join-Path $installerDir "manifest.json")
     Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "windows-installer-helper.ps1") -Destination (Join-Path $scriptsDir "windows-installer-helper.ps1")
     Copy-Item -LiteralPath (Join-Path (Join-Path $RepoDir "scripts") "skill_integrity.py") -Destination (Join-Path $scriptsDir "skill_integrity.py")
-    Copy-Item -LiteralPath (Join-Path $RepoDir "src/paper_fetch/legacy_cleanup.py") -Destination (Join-Path $scriptsDir "cleanup_legacy_mcp.py")
 
     $sourceSkill = Join-Path (Join-Path $RepoDir "skills") $SkillName
     if (-not (Test-Path -LiteralPath (Join-Path $sourceSkill "SKILL.md") -PathType Leaf)) {
@@ -603,8 +602,7 @@ function Assert-RuntimeOnlyStaging {
         "skills/$SkillName/SKILL.md",
         "installer/manifest.json",
         "scripts/windows-installer-helper.ps1",
-        "scripts/skill_integrity.py",
-        "scripts/cleanup_legacy_mcp.py"
+        "scripts/skill_integrity.py"
     )) {
         if (-not (Test-Path -LiteralPath (Join-Path $Staging $relative))) {
             throw "Windows runtime staging is missing required path: $relative"

@@ -1,25 +1,27 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
-from tests.support.markdown_presentation import visible_markdown
-from paper_fetch.providers import springer as springer_provider
-from tests.block_fixtures import block_asset
+
 import re
 import tempfile
-from tests.support.captured_images import download_captured_images
 import unittest
+from dataclasses import replace
 from pathlib import Path
+
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.http import HttpTransport
-from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
+from paper_fetch.providers import springer as springer_provider
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.tracing import trace_event
 from paper_fetch.utils import normalize_text
+from tests.block_fixtures import block_asset
 from tests.golden_criteria import (
     golden_criteria_asset,
     golden_criteria_sample_for_doi,
 )
+from tests.support.captured_images import download_captured_images
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.trace import trace_facts
 
 
 class SpringerHtmlRegressionTests(unittest.TestCase):

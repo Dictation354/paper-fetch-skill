@@ -1,8 +1,5 @@
 """Historical signed bodies with separately captured publisher image bytes."""
 
-from paper_fetch.models import Quality
-
-
 import hashlib
 import json
 from pathlib import Path
@@ -11,18 +8,18 @@ from urllib.parse import urlsplit
 import pytest
 
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
-from paper_fetch.models import FetchEnvelope
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
+from tests.paths import REPO_ROOT
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support.signed_image_replay import extract_signed_fixture_payload
-from tests.paths import REPO_ROOT
 
 
 @pytest.mark.parametrize(
@@ -120,7 +117,7 @@ def test_historical_body_uses_captured_current_assets(provider, doi, count, tmp_
         envelope, asset_profile="body", require_local_body_assets=True
     )
     assert acceptance.asset.status == "complete"
-    assert acceptance.asset.body_local == count
+    assert acceptance.asset.local == count
     assert acceptance.asset.local_body_assets_satisfied
 
 
@@ -153,7 +150,7 @@ def test_royal_historical_body_uses_both_captured_viewers_and_keeps_missing_scop
     acceptance = evaluate_fetch_acceptance(
         envelope, asset_profile="body", require_local_body_assets=True
     )
-    assert acceptance.asset.body_local == 2
-    assert acceptance.asset.body_discovered == 5
+    assert acceptance.asset.local == 2
+    assert acceptance.asset.discovered == 5
     assert acceptance.asset.status == "degraded"
     assert not acceptance.asset.local_body_assets_satisfied

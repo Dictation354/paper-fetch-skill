@@ -2,39 +2,35 @@
 
 from __future__ import annotations
 
-from ..models.markdown import replace_markdown_image_url
-
-
-from ..quality.access_boundary import raise_for_paywall
-from ..acquisition import PDF_RENDER_REVISION
-
+import contextlib
 import functools
+import hashlib
+import json
+import logging
 import os
 import re
 import subprocess
 import sys
-import json
-import logging
 import tempfile
 import threading
-import contextlib
+import unicodedata
+import urllib.parse
+from collections.abc import Mapping, Sequence
 from contextlib import nullcontext
 from dataclasses import dataclass, field, replace
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Mapping, Sequence
-import hashlib
-import urllib.parse
-import unicodedata
 
 from cachetools import LRUCache
 from rapidfuzz.fuzz import partial_ratio
 
+from ..acquisition import PDF_RENDER_REVISION
 from ..common_patterns import WORD_TOKEN_PATTERN
 from ..http import PDF_ACCEPT_HEADER, is_pdf_content_type
-from ..models.markdown import replace_markdown_images
+from ..models.markdown import replace_markdown_image_url, replace_markdown_images
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import extract_doi, validate_extracted_identity
+from ..quality.access_boundary import raise_for_paywall
 from ..utils import normalize_text, sanitize_filename
 from ._pdf_document import non_article_pdf_reason
 

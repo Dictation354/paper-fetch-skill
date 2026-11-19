@@ -2,21 +2,18 @@
 
 from __future__ import annotations
 
-from ..quality.access_boundary import propagate_paywall
-
-from ..quality.access_boundary import raise_for_paywall
-
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
-from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.assets import browser_asset_recovery_allowed
+from ..extraction.html.landing import LandingRedirectLimitExceeded, fetch_landing_html
 from ..extraction.html.signals import detect_html_block, summarize_html
 from ..failure import FailureDiagnostics
-from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure, HttpRequestPolicy
+from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpRequestPolicy, RequestFailure
 from ..http.headers import header_value
 from ..publisher_identity import normalize_doi
+from ..quality.access_boundary import propagate_paywall, raise_for_paywall
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
 from ..runtime import RuntimeContext
 from ..utils import choose_public_landing_page_url, normalize_text

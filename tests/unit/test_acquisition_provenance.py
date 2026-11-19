@@ -8,7 +8,6 @@ from paper_fetch.acquisition import (
     AcquisitionProvenance,
     coerce_acquisition_provenance,
 )
-from paper_fetch.delivery.markdown_frontmatter import parse_markdown_front_matter
 from paper_fetch.models import ArticleModel, FetchEnvelope, Metadata, Quality, Section
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
@@ -197,40 +196,13 @@ def test_waterfall_success_trace_prefers_payload_route_over_step_default() -> No
     )
 
 
-def test_markdown_front_matter_requires_current_acquisition() -> None:
+def test_rendered_markdown_header_includes_exact_acquisition() -> None:
     article = _wiley_article()
-    front_matter = parse_markdown_front_matter(article.to_ai_markdown())
+    markdown = article.to_ai_markdown()
 
-    assert front_matter is not None
-    assert front_matter.source == "wiley_browser"
-    assert front_matter.acquisition == article.acquisition
-
-    missing_acquisition = parse_markdown_front_matter(
-        """---
-doi: "10.1029/98wr02522"
-source: "wiley_browser"
-has_fulltext: true
-content_kind: "fulltext"
----
-
-# Incomplete cache
-"""
-    )
-    assert missing_acquisition is None
-
-    invalid = parse_markdown_front_matter(
-        """---
-doi: "10.1029/98wr02522"
-source: "wiley_browser"
-acquisition:
-  provider: "wiley"
-  route: "tdm_pdf"
-  representation: "pdf"
-  transport: "api"
-  fallback_used: "true"
-has_fulltext: true
-content_kind: "fulltext"
----
-"""
-    )
-    assert invalid is None
+    assert 'source: "wiley_browser"' in markdown
+    assert '  provider: "wiley"' in markdown
+    assert '  route: "tdm_pdf"' in markdown
+    assert '  representation: "pdf"' in markdown
+    assert '  transport: "api"' in markdown
+    assert "  fallback_used: true" in markdown

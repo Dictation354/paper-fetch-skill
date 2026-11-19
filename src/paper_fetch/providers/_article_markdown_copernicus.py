@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import replace
-from copy import deepcopy
-from typing import Any
-from collections.abc import Mapping
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import replace
+from typing import Any
 
+from bs4 import BeautifulSoup
+
+from ..extraction.html.object_links import resolve_retained_object_links
 from ..reason_codes import OFFICIAL_FULL_SIZE_NOT_EXPOSED
 from ..utils import normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import child_text, iter_descendants
-from ..extraction.html.object_links import resolve_retained_object_links
-
 from ._article_markdown_jats import (
     JatsExtraction,
     parse_jats_xml,
@@ -25,7 +26,6 @@ CopernicusExtraction = JatsExtraction
 
 def _restore_embedded_inline_html(root: ET.Element) -> None:
     """Copernicus encodes a second layer of inline HTML in XML character data."""
-    from bs4 import BeautifulSoup
     from ._html_section_markdown import render_clean_text_from_html
 
     def fragment(text: str | None) -> ET.Element | None:

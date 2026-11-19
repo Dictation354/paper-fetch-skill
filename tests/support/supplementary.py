@@ -1,10 +1,7 @@
 """Small deterministic supplementary task fixtures shared across test layers."""
 
-from paper_fetch.models import Quality
-
-
 from paper_fetch.acquisition import AcquisitionProvenance
-from paper_fetch.models import FetchEnvelope, Metadata, SupplementaryResult
+from paper_fetch.models import FetchEnvelope, Metadata, Quality, SupplementaryResult
 from paper_fetch.tracing import trace_event
 
 DOI = "10.1371/journal.pone.0000001"

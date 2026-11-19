@@ -1,11 +1,9 @@
 """Real-thread contracts for the request-local browser session owner."""
 
-from dataclasses import replace
-
-
-from concurrent.futures import ThreadPoolExecutor
-from types import SimpleNamespace
 import threading
+from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
+from types import SimpleNamespace
 
 import pytest
 
@@ -116,7 +114,7 @@ def test_batch_children_own_sessions_and_borrow_only_transport(monkeypatch, tmp_
             )
             assert first_context is not second_context
             assert first._browser_sessions is not second._browser_sessions
-            assert not parent._camoufox_browser_managers
+            assert not parent._browser_sessions.managers
             first.close()
             assert (
                 second.new_browser_context_for_runtime_config(config_for(tmp_path))
@@ -156,7 +154,7 @@ def test_foreign_close_fences_and_retains_handles_until_owner_cleanup(
         )
         ready.set()
         assert release.wait(5)
-        runtime.close_camoufox_for_current_thread()
+        runtime.close_browser_for_current_thread()
         runtime.close()
         return threading.get_ident()
 
@@ -165,13 +163,13 @@ def test_foreign_close_fences_and_retains_handles_until_owner_cleanup(
         try:
             assert ready.wait(5)
             runtime.close()
-            assert runtime._camoufox_browser_managers and runtime.parse_cache
+            assert runtime._browser_sessions.managers and runtime.parse_cache
             with pytest.raises(RequestCancelledError):
                 runtime.commit_guard()
             release.set()
             assert close_started.wait(5)
             runtime.close()
-            assert runtime._camoufox_browser_managers
+            assert runtime._browser_sessions.managers
             assert not any(kind == "transport" for kind, *_ in events)
         finally:
             release.set()

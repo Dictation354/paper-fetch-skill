@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
@@ -20,13 +18,12 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text
 from . import _mdpi_assets, _mdpi_authors, _mdpi_dom, _mdpi_markdown, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
+from ._mdpi_supplement_click import reveal_supplement
 from ._registry import BrowserAssetPolicy, ProviderBundle, ProviderRenderPolicy
 from .base import RawFulltextPayload
 from .browser_runtime import BrowserHtmlReadiness
 from .browser_workflow.shared import extract_pdf_url_from_crossref
-
-
-from ._mdpi_supplement_click import reveal_supplement
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["mdpi"]
 

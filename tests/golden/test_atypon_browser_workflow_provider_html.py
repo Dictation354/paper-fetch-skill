@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from tests.support._atypon_browser_workflow_provider_support import *
 
 # ruff: noqa: F403,F405

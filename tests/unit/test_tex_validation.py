@@ -2,19 +2,19 @@
 
 from xml.etree import ElementTree as ET
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
+from paper_fetch.extraction.html.formula_rules import mathml_element_from_html_node
 from paper_fetch.formula import convert
 from paper_fetch.formula.validation import (
     TexValidation,
     TexValidationSession,
+    capture_formula_diagnostics,
     conversion_mathml,
     formula_validation_session,
     select_formula_latex,
-    capture_formula_diagnostics,
 )
-from paper_fetch.extraction.html.formula_rules import mathml_element_from_html_node
 
 
 def test_valid_source_tex_is_verbatim_and_never_converted(monkeypatch):

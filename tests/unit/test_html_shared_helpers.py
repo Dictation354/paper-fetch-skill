@@ -1,42 +1,38 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.providers import _springer_assets
-import pytest
-from tests.golden_criteria import golden_criteria_asset
-from paper_fetch.providers.atypon_browser_workflow import (
-    asset_scopes as atypon_browser_workflow_asset_scopes,
-)
-import paper_fetch.providers._wiley_html as wiley_html
-from paper_fetch.http import HttpTransport
-from paper_fetch.extraction.html import assets as html_assets
-from bs4 import BeautifulSoup
-from pathlib import Path
-import unittest
+
 import tempfile
-from tests.golden_criteria import golden_criteria_scenario_asset
-from paper_fetch.extraction.html.formula_rules import (
-    looks_like_formula_image,
-)
-from paper_fetch.extraction.html import _metadata as html_metadata
 import threading
 import time
+import unittest
+from pathlib import Path
 from unittest import mock
+
+import pytest
+from bs4 import BeautifulSoup
+
+import paper_fetch.providers._wiley_html as wiley_html
 from paper_fetch.common_patterns import (
     FIGURE_LABEL_PATTERN,
     TABLE_LABEL_PATTERN,
     is_extended_data_prefix,
     table_label_prefix_for_match,
 )
+from paper_fetch.extraction.html import _metadata as html_metadata
 from paper_fetch.extraction.html import _runtime as html_runtime
+from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.html import shared as html_shared
 from paper_fetch.extraction.html.assets.figures import _tag_class_tokens
 from paper_fetch.extraction.html.cleanup_policy import classify_markdown_cleanup_line
 from paper_fetch.extraction.html.formula_rules import (
-    GENERIC_FORMULA_CONTAINER_TOKENS,
     GENERIC_DISPLAY_FORMULA_SELECTORS,
-    _class_tokens as _formula_class_tokens,
+    GENERIC_FORMULA_CONTAINER_TOKENS,
     formula_heading_for_image,
+    looks_like_formula_image,
 )
+from paper_fetch.extraction.html.formula_rules import (
+    _class_tokens as _formula_class_tokens,
+)
+from paper_fetch.extraction.html.inline import normalize_html_inline_text
 from paper_fetch.extraction.html.provider_rules import (
     availability_rules_for_provider,
     cleanup_policy_for_profile,
@@ -50,21 +46,29 @@ from paper_fetch.extraction.html.provider_rules import (
     provider_html_rules,
     provider_supplementary_text_tokens,
 )
-from paper_fetch.extraction.html.inline import normalize_html_inline_text
+from paper_fetch.extraction.html.tables import render_table_markdown
 from paper_fetch.extraction.markdown_render.figures import (
     _html_class_tokens as _markdown_figure_class_tokens,
+)
+from paper_fetch.extraction.markdown_render.figures import (
     is_html_figure_container,
 )
-from paper_fetch.extraction.html.tables import render_table_markdown
+from paper_fetch.http import HttpTransport
 from paper_fetch.image_tools import ImageConversionFailure, SourceImagePathConversion
+from paper_fetch.providers import _springer_assets
 from paper_fetch.providers._html_section_markdown import (
     render_clean_text_from_html,
     render_container_markdown,
     render_heading_text_from_html,
 )
 from paper_fetch.providers.atypon_browser_workflow import (
+    asset_scopes as atypon_browser_workflow_asset_scopes,
+)
+from paper_fetch.providers.atypon_browser_workflow import (
     profile as atypon_browser_workflow_profile,
 )
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
+from tests.support.transport import RecordedStreamTransport
 
 
 class _DelayedAssetTransport(RecordedStreamTransport, HttpTransport):

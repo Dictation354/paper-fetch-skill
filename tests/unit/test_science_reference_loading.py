@@ -1,7 +1,7 @@
 """Science preparation contracts using only DOM snapshots and boundary mocks."""
 
-from unittest.mock import Mock
 from types import SimpleNamespace
+from unittest.mock import Mock
 
 import pytest
 

@@ -1,7 +1,8 @@
 from __future__ import annotations
-import pytest
-from tests.block_fixtures import BlockFixture, execute_block_fixture, iter_block_samples
 
+import pytest
+
+from tests.block_fixtures import BlockFixture, execute_block_fixture, iter_block_samples
 
 BLOCK_FIXTURES = iter_block_samples()
 

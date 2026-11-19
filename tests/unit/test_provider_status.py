@@ -8,6 +8,7 @@ from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.ams import AmsClient
 from paper_fetch.providers.arxiv import ArxivClient
+from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient
 from paper_fetch.providers.ieee import IeeeClient
@@ -16,7 +17,6 @@ from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingC
 from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WILEY_TDM_CLIENT_TOKEN_ENV_VAR, WileyClient
-from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 
 CAMOUFOX_ENV = {}
 CAMOUFOX_DEPENDENCIES_READY = {
@@ -123,7 +123,7 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_wiley_browser_runtime_ready_with_camoufox(self) -> None:
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_READY,
         ):
@@ -141,7 +141,7 @@ class ProviderStatusTests(unittest.TestCase):
         self,
     ) -> None:
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_MISSING,
         ):
@@ -157,7 +157,7 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_wiley_status_is_partial_when_only_tdm_token_is_configured(self) -> None:
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_MISSING,
         ):
@@ -178,7 +178,7 @@ class ProviderStatusTests(unittest.TestCase):
     ) -> None:
         env = {**CAMOUFOX_ENV, WILEY_TDM_CLIENT_TOKEN_ENV_VAR: "secret"}
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_READY,
         ):
@@ -201,7 +201,7 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    camoufox_backend,
+                    byparr_backend,
                     "_dependency_details",
                     return_value=CAMOUFOX_DEPENDENCIES_READY,
                 ),
@@ -219,7 +219,7 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_ams_status_reports_browser_runtime_requirement(self) -> None:
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_READY,
         ) as dependency:
@@ -247,7 +247,7 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    camoufox_backend,
+                    byparr_backend,
                     "_dependency_details",
                     return_value=CAMOUFOX_DEPENDENCIES_MISSING,
                 ),
@@ -269,7 +269,7 @@ class ProviderStatusTests(unittest.TestCase):
             config.BROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/camoufox",
         }
         with mock.patch.object(
-            camoufox_backend,
+            byparr_backend,
             "_dependency_details",
             return_value=CAMOUFOX_DEPENDENCIES_READY,
         ):
@@ -291,7 +291,7 @@ class ProviderStatusTests(unittest.TestCase):
                 }
 
                 with mock.patch.object(
-                    camoufox_backend,
+                    byparr_backend,
                     "_dependency_details",
                     return_value=CAMOUFOX_DEPENDENCIES_READY,
                 ):
@@ -307,7 +307,7 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    camoufox_backend,
+                    byparr_backend,
                     "_dependency_details",
                     return_value=CAMOUFOX_DEPENDENCIES_READY,
                 ),

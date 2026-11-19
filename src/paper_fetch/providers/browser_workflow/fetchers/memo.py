@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import logging
 import threading
-from concurrent.futures import Future
 from collections.abc import Callable, Mapping
+from concurrent.futures import Future
 from typing import Any
 
 from ....logging_utils import emit_structured_log

@@ -6,6 +6,8 @@ import re
 from collections.abc import Mapping
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
+from bs4 import Tag
+
 
 def resolve_retained_object_links(
     markdown: str, source_url: str, targets: Mapping[str, str]
@@ -42,8 +44,6 @@ def prepare_retained_object_links(
     Run before publisher cleanup removes dialogs, bibliography or formula owners.
     Source-page links remain usable when the output omits an object by budget.
     """
-    from bs4 import Tag
-
     if not isinstance(root, Tag):
         return
     targets: dict[str, str] = {}

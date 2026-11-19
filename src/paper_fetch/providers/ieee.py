@@ -2,16 +2,10 @@
 
 from __future__ import annotations
 
-from ..tracing import TraceEvent
-
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall, raise_for_paywall
-
-from pathlib import Path
 import tempfile
-from typing import Any
 from collections.abc import Mapping
+from pathlib import Path
+from typing import Any
 
 from ..config import build_browser_user_agent, build_publisher_user_agent
 from ..extraction.html import decode_html
@@ -27,9 +21,9 @@ from ..extraction.html.provider_rules import (
 )
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
-    HttpRequestPolicy,
     PDF_MIME_TYPE,
+    HttpRequestPolicy,
+    HttpTransport,
     RequestFailure,
     redact_url_for_diagnostics,
 )
@@ -37,6 +31,7 @@ from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
+from ..quality.access_boundary import propagate_paywall, raise_for_paywall
 from ..quality.html_availability import (
     HtmlQualityAssessor,
     availability_failure_message,
@@ -53,17 +48,27 @@ from ..reason_codes import (
     PDF_FALLBACK,
 )
 from ..runtime import RuntimeContext
-from ..tracing import download_event, fulltext_event
+from ..tracing import TraceEvent, download_event, fulltext_event
 from ..utils import normalize_text
 from . import _ieee_browser_html as ieee_browser_html
 from . import _ieee_html as ieee_html
 from . import _ieee_landing as ieee_landing
 from . import _ieee_metadata as ieee_metadata
 from . import _ieee_recovery_policy as ieee_recovery_policy
-from ._ieee_routes import landing_route_name
 from . import _ieee_supplementary as ieee_supplementary
 from . import _ieee_url as ieee_url
 from . import browser_runtime
+from ._definitions import PROVIDER_DEFINITIONS
+from ._ieee_asset_identity import IEEE_ASSET_RETRY_POLICY
+from ._ieee_asset_recovery import annotate_ieee_preview
+from ._ieee_routes import landing_route_name
+from ._ieee_supplement_click import find_ieee_missing_link
+from ._payloads import (
+    build_provider_payload,
+)
+from ._payloads import (
+    provider_failure_diagnostics as _provider_failure_diagnostics,
+)
 from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
@@ -77,10 +82,6 @@ from ._pdf_fallback import (
     fetch_pdf_over_http,
     fetch_pdf_with_browser,
 )
-from ._payloads import (
-    build_provider_payload,
-    provider_failure_diagnostics as _provider_failure_diagnostics,
-)
 from ._registry import BrowserAssetPolicy, ProviderBundle
 from ._waterfall import (
     DEFAULT_WATERFALL_CONTINUE_CODES,
@@ -93,17 +94,14 @@ from .base import (
     ProviderClient,
     ProviderFailure,
     ProviderStatusResult,
-    RawFulltextPayload as _RawFulltextPayload,
     build_provider_status_check,
     combine_provider_failures,
     map_request_failure,
     summarize_capability_status,
 )
-
-from ._ieee_asset_recovery import annotate_ieee_preview
-from ._ieee_asset_identity import IEEE_ASSET_RETRY_POLICY
-
-from ._ieee_supplement_click import find_ieee_missing_link
+from .base import (
+    RawFulltextPayload as _RawFulltextPayload,
+)
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["ieee"]
 

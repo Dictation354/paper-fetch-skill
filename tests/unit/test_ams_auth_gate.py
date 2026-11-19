@@ -1,10 +1,9 @@
 """AMS authentication requirements at acquisition and CLI boundaries."""
 
-from pathlib import Path
-from types import SimpleNamespace
-from unittest.mock import Mock
 import json
 import threading
+from pathlib import Path
+from unittest.mock import Mock
 
 import pytest
 
@@ -20,13 +19,12 @@ from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from paper_fetch.workflow.fulltext import (
-    _try_official_provider,
     _ProviderAttemptOutputs,
+    _try_official_provider,
 )
 from paper_fetch.workflow.types import FetchStrategy, PaperFetchFailure
 from tests.support.fetch_fixtures import sample_envelope
 from tests.support.publisher_profiles import write_verified_ams_profile
-
 
 DOI = "10.1175/jcli-d-23-0738.1"
 URL = auth.AUTH_TARGETS["ams"].url
@@ -161,7 +159,9 @@ def test_control_stdin_never_prompts(environment, monkeypatch, controlled):
     monkeypatch.setattr(cli, "authenticate_provider_profile", authenticate)
     with RuntimeContext(env=environment) as runtime:
         with pytest.raises(ProviderFailure, match="paper-fetch auth ams"):
-            cli._ensure_cli_ams_auth(SimpleNamespace(control_stdin=controlled), runtime)
+            cli._ensure_cli_ams_auth(
+                cli.FetchExecutionOptions(control_stdin=controlled), runtime
+            )
     authenticate.assert_not_called()
 
 

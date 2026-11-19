@@ -1,24 +1,24 @@
 """Opt-in serial publisher audit; only fresh accepted clicks count as success."""
 
-from dataclasses import asdict
-from collections import deque
 import contextlib
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import time
+from collections import deque
+from dataclasses import asdict
+from pathlib import Path
 
 import pytest
 
 from paper_fetch.browser_preflight import static_browser_capabilities
 from paper_fetch.http import HttpTransport
 from paper_fetch.http.cache import redact_url_for_cache, redact_url_for_diagnostics
-from paper_fetch.providers.browser_workflow.client import BrowserWorkflowClient
 from paper_fetch.providers.browser_workflow.asset_download import (
     _CLICK_SUPPLEMENT_PROVIDERS,
 )
+from paper_fetch.providers.browser_workflow.client import BrowserWorkflowClient
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper, resolve_paper
@@ -190,7 +190,7 @@ def test_live_supplement_click(provider, monkeypatch):
         if response is not None:
             body = bytes(response["body"])
             row.update(
-                route=response.get("_paper_fetch_asset_route_diagnostics"),
+                route=response.route_diagnostics,
                 size=len(body),
                 sha256=hashlib.sha256(body).hexdigest(),
                 content_type=response["headers"].get("content-type"),

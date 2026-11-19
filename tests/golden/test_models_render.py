@@ -1,9 +1,11 @@
 from __future__ import annotations
-from paper_fetch.providers import _springer_markdown
+
+import unittest
+
 from paper_fetch.models import (
     article_from_markdown,
 )
-import unittest
+from paper_fetch.providers import _springer_markdown
 from tests.golden_criteria import golden_criteria_asset
 
 

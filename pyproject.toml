@@ -123,32 +123,8 @@ target-version = "py311"
 src = ["src", "tests"]
 
 [tool.ruff.lint]
-select = ["E4", "E7", "E9", "F", "TID251", "UP", "RUF022", "SIM105", "B"]
+select = ["E4", "E7", "E9", "F", "I", "UP", "RUF022", "SIM105", "B"]
 ignore = ["B008"]
-
-[tool.ruff.lint.flake8-tidy-imports.banned-api]
-"paper_fetch.providers._springer_html".msg = "Removed compatibility module; import the canonical Springer DOM, markdown, or asset owner instead."
-"paper_fetch.quality.reason_codes".msg = "Removed compatibility module; import paper_fetch.reason_codes instead."
-"paper_fetch.providers._article_markdown".msg = "Removed compatibility module; import the canonical provider or extraction owner instead."
-"paper_fetch.providers._ams_html".msg = "Removed compatibility module; import the matching canonical AMS owner (_ams_dom, _ams_markdown, _ams_assets, _ams_authors, or _ams_references) instead."
-"paper_fetch.providers._html_access_signals".msg = "Removed compatibility module; import paper_fetch.extraction.html.signals or paper_fetch.quality owners instead."
-"paper_fetch.providers._html_availability".msg = "Removed compatibility module; import paper_fetch.quality.html_availability instead."
-"paper_fetch.providers._html_citations".msg = "Removed compatibility module; import paper_fetch.markdown.citations or provider reference owners instead."
-"paper_fetch.providers._html_semantics".msg = "Removed compatibility module; import paper_fetch.extraction.html.semantics instead."
-"paper_fetch.providers._html_tables".msg = "Removed compatibility module; import paper_fetch.extraction.html.tables instead."
-"paper_fetch.providers._html_text".msg = "Removed compatibility module; import paper_fetch.extraction.html shared/runtime owners instead."
-"paper_fetch.providers._language_filter".msg = "Removed compatibility module; import paper_fetch.extraction.html.language instead."
-"paper_fetch.providers._mdpi_html".msg = "Removed compatibility module; import the matching canonical MDPI owner (_mdpi_dom, _mdpi_markdown, _mdpi_assets, _mdpi_authors, or _mdpi_references) instead."
-"paper_fetch.providers._springer_references".msg = "Removed compatibility module; import paper_fetch.providers._html_references instead."
-"paper_fetch.providers._atypon_browser_workflow".msg = "Removed compatibility module; import paper_fetch.providers.browser_workflow instead."
-"paper_fetch.providers._atypon_browser_workflow_html".msg = "Removed compatibility module; import paper_fetch.providers.browser_workflow.html_extraction instead."
-"paper_fetch.providers.html_assets".msg = "Removed compatibility module; import paper_fetch.extraction.html.assets instead."
-"paper_fetch.providers.pnas_html".msg = "Removed compatibility module; import paper_fetch.providers._pnas_html instead."
-"paper_fetch.providers.science_html".msg = "Removed compatibility module; import paper_fetch.providers._science_html instead."
-"paper_fetch.providers.springer_html".msg = "Removed compatibility module; import the matching canonical Springer owner (_springer_dom, _springer_markdown, _springer_assets, _springer_authors, or _html_references) instead."
-"paper_fetch.providers.wiley_html".msg = "Removed compatibility module; import paper_fetch.providers._wiley_html instead."
-"paper_fetch.extraction.html._assets".msg = "Removed compatibility module; import paper_fetch.extraction.html.assets instead."
-"paper_fetch.resolve.crossref".msg = "Removed compatibility module; import paper_fetch.metadata.crossref instead."
 
 [tool.mypy]
 python_version = "3.11"
@@ -158,12 +134,6 @@ check_untyped_defs = true
 ignore_missing_imports = true
 no_site_packages = true
 warn_unused_ignores = true
-
-[tool.ruff.lint.mccabe]
-max-complexity = 25
-
-[tool.ruff.lint.pylint]
-max-args = 10
 
 [tool.pytest.ini_options]
 addopts = "-n auto --disable-socket --allow-unix-socket --allow-hosts=127.0.0.1,localhost,::1"

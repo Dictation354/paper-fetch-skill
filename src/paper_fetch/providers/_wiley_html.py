@@ -4,16 +4,21 @@ from __future__ import annotations
 
 import re
 import urllib.parse
+from collections.abc import Mapping
 from functools import partial
 from typing import Any
-from collections.abc import Mapping
+
+from bs4 import BeautifulSoup, NavigableString, Tag
 
 from ..common_patterns import HEADING_TAG_PATTERN
-from ..extraction.html.parsing import choose_parser
+from ..extraction.html.assets import (
+    extract_formula_assets as extract_generic_formula_assets,
+)
 from ..extraction.html.formula_rules import (
     FORMULA_IMAGE_ATTRS,
     looks_like_formula_image,
 )
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import provider_html_rules
 from ..extraction.html.semantics import (
     BACK_MATTER_TOKENS,
@@ -23,14 +28,19 @@ from ..extraction.html.semantics import (
 )
 from ..extraction.html.shared import (
     append_text_block as _append_text_block,
-    short_text as _short_text,
-    soup_root as _soup_root,
 )
-from ..extraction.html.assets import (
-    extract_formula_assets as extract_generic_formula_assets,
+from ..extraction.html.shared import (
+    short_text as _short_text,
+)
+from ..extraction.html.shared import (
+    soup_root as _soup_root,
 )
 from ..quality.html_signals import WILEY_SIGNAL_SET, evaluate_datalayer_blocking_signals
 from ..utils import normalize_text
+from ._html_asset_engine import (
+    HtmlAssetExtractionPolicy,
+    extract_scoped_assets_with_policy,
+)
 from ._html_authors import (
     ATYPON_AUTHOR_NOISE_TEXT,
     AuthorExtractionPipeline,
@@ -39,13 +49,7 @@ from ._html_authors import (
     extract_meta_authors,
     extract_selector_authors,
 )
-from ._html_asset_engine import (
-    HtmlAssetExtractionPolicy,
-    extract_scoped_assets_with_policy,
-)
 from ._html_references import extract_numbered_references_from_html
-
-from bs4 import BeautifulSoup, NavigableString, Tag
 
 
 def prepare_source_images(container: Any, source_url: str) -> None:

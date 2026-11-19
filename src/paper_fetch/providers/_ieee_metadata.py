@@ -2,20 +2,18 @@
 
 from __future__ import annotations
 
-from ..publication_dates import publication_date
-
-from collections.abc import Callable
-from dataclasses import dataclass, field
 import html as html_lib
 import json
 import re
 import time
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field
 from typing import Any
-from collections.abc import Mapping
 
 from ..http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS
 from ..metadata.types import MetadataMergeRule, merge_metadata_layers
 from ..models import SourceKind, article_from_markdown, metadata_only_article
+from ..publication_dates import publication_date
 from ..publisher_identity import normalize_doi
 from ..reason_codes import PDF_FALLBACK
 from ..tracing import fulltext_event

@@ -7,16 +7,16 @@ import argparse
 import hashlib
 import json
 import os
-from pathlib import Path
 import shutil
 import sys
 import tempfile
+from pathlib import Path
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1] / "src"))
 
 
 def build(destination: Path, *, frozen: Path | None = None) -> None:
-    from paper_fetch.providers.browser_runtime.platforms import supported_platform
+    from paper_fetch.browser_runtime_policy import supported_platform
     from paper_fetch.providers.browser_runtime.byparr_preparation import (
         PreparationBudget,
         prepare_source,

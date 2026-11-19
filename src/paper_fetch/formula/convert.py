@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-import os
 import atexit
-from contextlib import contextmanager, suppress
-from contextvars import ContextVar
 import json
+import os
+import queue
 import re
 import select
 import shutil
@@ -15,20 +14,24 @@ import tempfile
 import threading
 import time
 import xml.etree.ElementTree as ET
+from collections.abc import Iterable, Iterator, Mapping
+from contextlib import contextmanager, suppress
+from contextvars import ContextVar
 from copy import deepcopy
 from dataclasses import dataclass, field, replace
 from functools import lru_cache
 from pathlib import Path
-from collections.abc import Iterable, Iterator, Mapping
 
 from cachetools import LRUCache
 
+from ..xml_security import XmlParseFailure
 from .paths import (
     formula_tools_subpaths,
     mathml_to_latex_script_candidates,
     mathml_to_latex_worker_script_candidates,
     texmath_binary_candidates,
 )
+from .semantics import prepare_mathml_semantics, restore_mathml_spacing
 
 BACKEND_AUTO = "auto"
 BACKEND_TEXMATH = "texmath"
@@ -93,7 +96,6 @@ class FormulaConversionResult:
 @dataclass(frozen=True, slots=True)
 class FormulaBackendStrategy:
     name: str
-    aliases: tuple[str, ...] = ()
     converter_name: str | None = None
     fallback_backends: tuple[str, ...] = ()
     fallback_failure_labels: Mapping[str, str] = field(default_factory=dict)
@@ -209,18 +211,12 @@ FORMULA_BACKEND_REGISTRY: dict[str, FormulaBackendStrategy] = {
     ),
     BACKEND_MATHML_TO_LATEX: FormulaBackendStrategy(
         name=BACKEND_MATHML_TO_LATEX,
-        aliases=("mathml_to_latex",),
         converter_name="convert_with_mathml_to_latex",
     ),
     BACKEND_MML2TEX: FormulaBackendStrategy(
         name=BACKEND_MML2TEX,
         converter_name="convert_with_mml2tex",
     ),
-}
-FORMULA_BACKEND_ALIASES = {
-    alias: strategy.name
-    for strategy in FORMULA_BACKEND_REGISTRY.values()
-    for alias in strategy.aliases
 }
 SUPPORTED_BACKENDS = set(FORMULA_BACKEND_REGISTRY)
 AUTO_BACKENDS = FORMULA_BACKEND_REGISTRY[BACKEND_AUTO].fallback_backends
@@ -427,7 +423,6 @@ def resolve_backend(
         .strip()
         .lower()
     )
-    selected = FORMULA_BACKEND_ALIASES.get(selected, selected)
     if selected not in SUPPORTED_BACKENDS:
         raise ValueError(f"Unsupported formula backend: {selected}")
     return selected
@@ -609,8 +604,6 @@ class MathMLToLatexWorker:
             if os.name == "nt":
                 # Windows select() accepts sockets only. Retain the same persistent
                 # process and bound each pipe read with a daemon thread instead.
-                import queue
-
                 lines: queue.Queue[str] = queue.Queue()
                 output_pipe = process.stdout
                 assert output_pipe is not None
@@ -1114,8 +1107,6 @@ def _convert_mathml_string_uncached(
 ) -> FormulaConversionResult:
     runtime_env = dict(env)
     selected_backend = resolve_backend(env=runtime_env, backend=backend)
-    from .semantics import prepare_mathml_semantics, restore_mathml_spacing
-    from ..xml_security import XmlParseFailure
 
     try:
         prepared, spaces = prepare_mathml_semantics(raw_mathml)

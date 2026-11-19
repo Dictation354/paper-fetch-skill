@@ -2,19 +2,17 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
 from urllib.parse import urlsplit
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
-    DomHooks,
-    MarkdownHooks,
     PNAS_FRONT_MATTER_EXACT_TEXTS,
     PNAS_FRONT_MATTER_PUBLICATION_KEYWORDS,
     PNAS_MARKDOWN_PROMO_TOKENS,
     PNAS_SITE_RULE_OVERRIDES,
+    DomHooks,
+    MarkdownHooks,
     ProviderCleanupRules,
     ProviderFrontMatterRules,
     ProviderHtmlRules,
@@ -22,9 +20,9 @@ from ..extraction.html.provider_rules import (
 from ..publisher_identity import normalize_doi
 from ..quality.html_signals import PNAS_SIGNAL_SET
 from . import _pnas_html, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
 from .browser_runtime import BrowserHtmlReadiness
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["pnas"]
 

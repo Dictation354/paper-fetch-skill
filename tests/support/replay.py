@@ -5,19 +5,18 @@ Only unmodified canonical adapter builds opt in. Cache/retry/isolation tests use
 independent copy; the shared pickle is a trusted, session-local test artifact.
 """
 
-from paper_fetch.models import Quality
-
-
-from copy import deepcopy
-from functools import cache
 import hashlib
 import json
-from pathlib import Path
 import pickle
+from copy import deepcopy
+from functools import cache
+from pathlib import Path
+
 from filelock import FileLock
+
+from paper_fetch.models import Quality
 from tests.support.layer_policy import reject
 from tests.support.test_evidence import capture_reads, observe
-
 
 ROOT: Path | None = None
 

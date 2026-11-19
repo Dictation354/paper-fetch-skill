@@ -5,39 +5,43 @@ from __future__ import annotations
 import contextlib
 import time
 import urllib.parse
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, replace
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable, Mapping
+
+from filelock import FileLock, Timeout
 
 from .config import (
     BROWSER_HEADLESS_ENV_VAR,
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     build_runtime_env,
-    browser_env_value,
 )
 from .extraction.html.signals import detect_html_block, summarize_html
-from .provider_catalog import (
-    ordered_provider_specs,
-    provider_supports_auth,
-    provider_domain_matches,
-    provider_domains,
-)
-from .providers.browser_runtime.api import ensure_runtime_ready, load_runtime_config
-from .providers.browser_runtime.types import BrowserRuntimeConfig
-from .providers.browser_runtime.paths import (
-    runtime_with_default_profile,
-)
-from .providers.browser_runtime.profile import PublisherProfileManager, profile_path
-from .providers.base import ProviderFailure
 from .failure import FailureDiagnostics
 from .http import RequestCancelledError
+from .provider_catalog import (
+    ordered_provider_specs,
+    provider_domain_matches,
+    provider_domains,
+    provider_supports_auth,
+)
+from .providers.base import ProviderFailure
+from .providers.browser_runtime.api import ensure_runtime_ready, load_runtime_config
+from .providers.browser_runtime.navigation import navigate_page
+from .providers.browser_runtime.paths import runtime_with_default_profile
+from .providers.browser_runtime.profile import (
+    PublisherProfileManager,
+    _metadata,
+    profile_path,
+)
+from .providers.browser_runtime.types import BrowserRuntimeConfig, BrowserRuntimeFailure
 from .reason_codes import (
     AUTH_FINAL_URL_INVALID,
     AUTH_REPLAY_FAILED,
-    AUTH_STATE_SAVE_FAILED,
     AUTH_REQUIRED,
+    AUTH_STATE_SAVE_FAILED,
     ERROR,
 )
 from .utils import normalize_text, provider_display_name
@@ -131,9 +135,6 @@ def ams_profile_path(env: Mapping[str, str]) -> Path:
 
 
 def has_verified_ams_profile(env: Mapping[str, str]) -> bool:
-    from .providers.browser_runtime.profile import _metadata
-    from .providers.browser_runtime.types import BrowserRuntimeFailure
-
     try:
         data = _metadata(ams_profile_path(env))
     except (OSError, BrowserRuntimeFailure):
@@ -167,8 +168,6 @@ def require_ams_auth(env: Mapping[str, str], *, provider: str) -> None:
 @contextlib.contextmanager
 def ams_auth_coordination(env: Mapping[str, str], *, cancel: Callable[[], None]):
     """Coordinate CLI authentication separately from the browser profile lease."""
-    from filelock import FileLock, Timeout
-
     path = ams_profile_path(env)
     path.mkdir(parents=True, exist_ok=True)
     lock = FileLock(str(path / ".paper-fetch-auth.lock"))
@@ -379,7 +378,7 @@ def authenticate_provider_profile(
 
     runtime_env = build_runtime_env() if env is None else build_runtime_env(env)
     fetch_headless = normalize_text(
-        browser_env_value(runtime_env, BROWSER_HEADLESS_ENV_VAR)
+        str(runtime_env.get(BROWSER_HEADLESS_ENV_VAR, "")).strip()
     ).lower() not in {
         "0",
         "false",
@@ -430,8 +429,6 @@ def authenticate_provider_profile(
             manager.metadata.pop("auth", None)
             manager.refresh()
         page = context.new_page()
-        from .providers.browser_runtime.navigation import navigate_page
-
         navigate_page(
             page,
             active_url,
@@ -495,8 +492,6 @@ def authenticate_provider_profile(
         manager = PublisherProfileManager(replay_runtime)
         context = manager.new_context()
         page = context.new_page()
-        from .providers.browser_runtime.navigation import navigate_page
-
         navigate_page(
             page,
             active_url,

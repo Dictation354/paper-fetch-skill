@@ -5,7 +5,6 @@ import os
 from pathlib import Path
 
 import pytest
-
 from scripts.skill_integrity import (
     SkillManifestError,
     build_skill_bundle_manifest,

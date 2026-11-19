@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import ctypes
-from contextlib import suppress
 import hashlib
 import json
 import re
-from pathlib import Path, PurePosixPath, PureWindowsPath
 import shutil
 import stat
 import subprocess
@@ -15,9 +13,11 @@ import sys
 import tempfile
 import urllib.request
 import zipfile
+from contextlib import suppress
+from pathlib import Path, PurePosixPath, PureWindowsPath
 
-from .offline_setup import atomic_write, protect, verify_image
 from .image_tools.convert import _tool_env
+from .offline_setup import atomic_write, protect, verify_image
 from .providers.browser_runtime.preparation import _path_chain_has_link
 
 INVENTORY = "optional-tools.json"

@@ -1,17 +1,19 @@
 from __future__ import annotations
-from dataclasses import replace
+
 import re
+from dataclasses import replace
 from pathlib import Path
+
 import pytest
+
 from paper_fetch.http import HttpTransport
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.provider_catalog import SOURCE_PROVIDER_MAP
 from paper_fetch.providers import _oxfordacademic_html
 from paper_fetch.providers._registry import provider_bundle
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from tests.support._atypon_browser_workflow_provider_support import png_header
 from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
-
 
 HTML_DOI = "10.1093/bioinformatics/btaa161"
 FIGURE_DOI = "10.1093/bioinformatics/btaa823"

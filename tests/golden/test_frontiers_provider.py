@@ -1,10 +1,11 @@
 from __future__ import annotations
+
+import re
+
 from tests.golden_corpus import (
     build_article_from_fixture,
     golden_corpus_fixture_for_doi,
 )
-import re
-
 
 DOI = "10.3389/fmars.2023.1101972"
 LEGACY_FULL_URL = f"https://www.frontiersin.org/articles/{DOI}/full"

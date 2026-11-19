@@ -2,37 +2,48 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from dataclasses import replace
 from pathlib import Path
-from collections.abc import Mapping
 from typing import Any
 
 from bs4 import BeautifulSoup
 
 from ..acquisition import AcquisitionProvenance
-from ..provider_catalog import provider_supports_supplementary
 from ..arxiv_id import arxiv_id_from_query, canonical_arxiv_abs_url
+from ..auth import require_ams_auth
 from ..config import resolve_asset_download_concurrency
 from ..extraction.html import decode_html
 from ..extraction.html._metadata import parse_html_metadata
 from ..extraction.html.assets import (
-    AssetDownloadOptions,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
+    html_asset_identity_key,
     split_body_and_supplementary_assets,
 )
 from ..extraction.html.assets.supplementary import extract_supplementary_assets
-from ..extraction.html.landing import fetch_landing_html
+from ..extraction.html.landing import build_landing_html_result, fetch_landing_html
+from ..extraction.html.parsing import choose_parser
+from ..extraction.html.signals import (
+    HtmlExtractionFailure,
+    detect_html_block,
+    summarize_html,
+)
 from ..failure import FailureDiagnostics
 from ..http import RequestFailure
 from ..http.headers import header_value
 from ..models.schema import SupplementaryResult
+from ..provider_catalog import (
+    provider_supports_supplementary,
+    provider_xml_path_templates,
+)
 from ..publisher_identity import validate_extracted_identity
 from ..reason_codes import ERROR, IDENTITY_MISMATCH, NO_ACCESS, NO_RESULT, NOT_SUPPORTED
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
-from .base import (
+from ._errors import (
     ProviderContent,
     ProviderFailure,
     RawFulltextPayload,
@@ -92,8 +103,8 @@ def _semantic_scope(html_text: str) -> str:
 
 
 def _html_assets(client, html_text, source_url, context):
-    from .browser_workflow.client import BrowserWorkflowClient
     from ._springer_assets import extract_html_assets as springer_assets
+    from .browser_workflow.client import BrowserWorkflowClient
 
     discovery_failures = []
     if client.name == "springer":
@@ -112,14 +123,12 @@ def _html_assets(client, html_text, source_url, context):
             ]
     elif client.name == "oxfordacademic":
         from ._oxfordacademic_html import _supplementary_assets
-        from ..extraction.html.parsing import choose_parser
 
         assets = _supplementary_assets(
             BeautifulSoup(html_text, choose_parser()), source_url
         )
     elif isinstance(client, BrowserWorkflowClient) and client.name != "elsevier":
         from .browser_workflow.assets import _cached_browser_workflow_assets
-        from ..extraction.html.signals import HtmlExtractionFailure
 
         try:
             assets = _cached_browser_workflow_assets(
@@ -166,27 +175,30 @@ def _html_assets(client, html_text, source_url, context):
 
 
 def _fetch_browser_index(client, doi, metadata, context, candidates=None):
-    from .browser_runtime import BrowserHtmlFetchOptions, BrowserHtmlReadiness
-    from .browser_workflow.client import BrowserWorkflowClient
     from . import browser_runtime
+    from .browser_runtime import (
+        BrowserHtmlFetchOptions,
+        BrowserHtmlReadiness,
+        BrowserRuntimeFailure,
+    )
+    from .browser_workflow.client import BrowserWorkflowClient
 
     if isinstance(client, BrowserWorkflowClient):
         deps: Any = client.deps
-        profile = client.require_profile()
+        policy = client.require_profile().policy
         runtime = deps.load_runtime_config(client.env, provider=client.name, doi=doi)
         candidates = client.html_candidates(doi, metadata)
         options = BrowserHtmlFetchOptions(
             supplementary_index=True,
-            blocked_resource_types=profile.blocked_resource_types or None,
-            empty_script_response_urls=profile.empty_script_response_urls,
-            readiness_budget_seconds=profile.html_readiness_budget_seconds,
+            blocked_resource_types=policy.blocked_resource_types or None,
+            empty_script_response_urls=policy.empty_script_response_urls,
+            readiness_budget_seconds=policy.html_readiness_budget_seconds,
         )
     else:
         deps = browser_runtime
         runtime = deps.load_runtime_config(client.env, provider=client.name, doi=doi)
         options = BrowserHtmlFetchOptions(supplementary_index=True)
     deps.ensure_runtime_ready(runtime)
-    from .browser_runtime import BrowserRuntimeFailure
 
     try:
         return deps.fetch_html_with_browser(
@@ -236,7 +248,6 @@ def _browser_index(client, doi, metadata, context):
 def _xml_candidates(client, doi, metadata):
     if client.name == "plos":
         from .plos import _candidate_url
-        from ..provider_catalog import provider_xml_path_templates
 
         journal_path, _ = client._resolve_journal_path(doi, metadata)
         return [
@@ -258,8 +269,9 @@ def _xml_candidates(client, doi, metadata):
 
 
 def _xml_index(client, doi, metadata, context):
-    from ._article_markdown_jats_blocks import _supplementary_entries
+    del context
     from ._article_markdown_jats import extract_jats_metadata
+    from ._article_markdown_jats_blocks import _supplementary_entries
 
     for url in _xml_candidates(client, doi, metadata):
         headers = (
@@ -376,8 +388,6 @@ def _http_index(client, doi, metadata, context):
             429,
         }:
             raise
-        from ..extraction.html.landing import build_landing_html_result
-
         browser_result = _fetch_browser_index(client, doi, metadata, context, [url])
         browser_seed = dict(browser_result.browser_context_seed or {})
         result = build_landing_html_result(
@@ -391,7 +401,6 @@ def _http_index(client, doi, metadata, context):
             decoder=decode_html,
             metadata_parser=parse_html_metadata,
         )
-    from ..extraction.html.signals import detect_html_block, summarize_html
 
     blocked = detect_html_block(
         "",
@@ -421,7 +430,7 @@ def _http_index(client, doi, metadata, context):
     if client.name == "ieee":
         from . import _ieee_metadata as ieee_metadata
         from ._ieee_supplementary import fetch_ieee_multimedia_assets
-        from ._ieee_url import _article_number_from_url, _article_number_from_metadata
+        from ._ieee_url import _article_number_from_metadata, _article_number_from_url
 
         landing_metadata = ieee_metadata._parse_landing_metadata(result.html_text)
         _verify_identity(
@@ -496,7 +505,6 @@ def fetch_provider_supplementary(
 ):
     """Return materials and index provenance; never construct an ArticleModel."""
     from .browser_workflow.client import BrowserWorkflowClient
-    from ..auth import require_ams_auth
 
     if client.name == "ams":
         require_ams_auth(client.env, provider=client.name)
@@ -670,8 +678,6 @@ def fetch_provider_supplementary(
             ),
         )
     # Preserve every discovered item, including individual download failures.
-    from ..extraction.html.assets import html_asset_identity_key
-
     local_by_key = {
         html_asset_identity_key(asset): asset for asset in downloaded.get("assets", [])
     }

@@ -6,6 +6,8 @@ import copy
 import re
 from typing import Any
 
+from bs4 import BeautifulSoup, NavigableString, Tag
+
 from ...extraction.html.formula_rules import (
     display_formula_nodes,
     formula_image_url_from_node,
@@ -14,22 +16,24 @@ from ...extraction.html.formula_rules import (
     looks_like_formula_image,
     mathml_element_from_html_node,
 )
+from ...extraction.html.shared import (
+    append_text_block as _append_text_block,
+)
+from ...extraction.html.shared import (
+    short_text as _short_text,
+)
+from ...extraction.html.shared import (
+    soup_root as _soup_root,
+)
 from ...extraction.markdown_render.formulas import (
     html_formula_latex_from_node,
     render_inline_latex_markdown,
 )
-from ...extraction.html.shared import (
-    append_text_block as _append_text_block,
-    short_text as _short_text,
-    soup_root as _soup_root,
-)
 from ...markdown.images import render_markdown_image
-from ...utils import normalize_text
 from ...models import SemanticLosses
+from ...utils import normalize_text
 from .._article_markdown_math import render_external_mathml_expression
 from .profile import _dedupe_top_level_nodes
-
-from bs4 import BeautifulSoup, NavigableString, Tag
 
 EQUATION_NUMBER_PATTERN = re.compile(r"(\d+[A-Za-z]?)")
 EQUATION_LABEL_ONLY_PATTERN = re.compile(

@@ -9,10 +9,12 @@ from __future__ import annotations
 
 import ast
 import contextlib
+import json
 import logging
 import os
-from pathlib import Path
+import secrets
 import time
+from pathlib import Path
 from types import ModuleType
 from urllib.parse import urlsplit
 
@@ -106,6 +108,7 @@ def start(owner, binary, runtime):
     owner._invisible_session = session
     if os.name != "nt":
         from invisible_core.juggler import connection
+
         from .byparr_posix import spawn
 
         connection._spawn_posix = spawn
@@ -156,8 +159,6 @@ def start(owner, binary, runtime):
 
 class Operation:
     def __init__(self, owner, page, timeout_ms, mode="html", action="navigate"):
-        import secrets
-
         self.owner, self.page = owner, page
         self.budget = PreparationBudget(timeout_ms / 1000, owner.runtime_context)
         self.operation = secrets.token_urlsafe(16)
@@ -377,8 +378,6 @@ class Operation:
         }
         self.owner.diagnostics.setdefault("byparr_navigations", []).append(record)
         if self.owner.work_dir is not None:
-            import json
-
             with (self.owner.work_dir / "operations.jsonl").open("a") as f:
                 f.write(json.dumps(record) + "\n")
 

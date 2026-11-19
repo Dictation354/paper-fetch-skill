@@ -3,7 +3,10 @@
 from __future__ import annotations
 
 import re
+from copy import deepcopy
 from typing import Any
+
+from bs4 import BeautifulSoup
 
 from ..common_patterns import FIGURE_LABEL_PATTERN, TABLE_LABEL_PATTERN
 from ..utils import normalize_text
@@ -249,8 +252,6 @@ def finalize_extraction(
     references = extract_references(html_text)
     if references:
         extraction["references"] = references
-    from bs4 import BeautifulSoup
-    from copy import deepcopy
     from ._html_section_markdown import render_clean_text_from_html
 
     original = BeautifulSoup(html_text, "lxml")

@@ -1,13 +1,13 @@
 from __future__ import annotations
 
 import hashlib
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import io
 import json
 import os
 import sys
 import tarfile
 import threading
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 from urllib.request import urlopen
 
 import pytest

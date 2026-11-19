@@ -2,14 +2,13 @@
 
 from __future__ import annotations
 
-from ..publication_dates import PublicationDate
-
 from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any, cast
 
 from typing_extensions import TypedDict
 
+from ..publication_dates import PublicationDate
 from ..utils import (
     canonical_author_key,
     choose_public_landing_page_url,

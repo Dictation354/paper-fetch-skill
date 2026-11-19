@@ -2,14 +2,17 @@
 
 from __future__ import annotations
 
-from typing import Any
+import contextlib
 import re
+from typing import Any
+
+from bs4 import Tag
 
 from ...extraction.html.formula_rules import (
     formula_image_url_from_node,
-    is_tex_formula_script_node,
     is_display_formula_node,
     is_formula_container,
+    is_tex_formula_script_node,
     looks_like_formula_image,
     mathml_element_from_html_node,
 )
@@ -21,9 +24,6 @@ from ...providers._article_markdown_math import (
 )
 from ...utils import normalize_text
 from ._ir import MarkdownFormula
-
-from bs4 import Tag
-import contextlib
 
 
 def render_formula(formula: MarkdownFormula) -> list[str]:

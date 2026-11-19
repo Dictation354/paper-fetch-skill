@@ -1,34 +1,32 @@
 """Seven captured LaTeXML articles: node identity, in-place figures and title."""
 
-from dataclasses import replace
-
-
 import base64
+from dataclasses import replace
 from pathlib import Path
 from types import SimpleNamespace
 from urllib.parse import urljoin
 from xml.etree import ElementTree as ET
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers._arxiv_graphics import INLINE_SVG_PREFIX
-from tests.support.markdown_presentation import visible_markdown
-from tests.support.canonical_content import source_prose_blocks
-from tests.support.object_content import (
-    assert_object_position,
-    assert_image_occurrences,
-    svg_content_signature,
-    assert_svg_content,
-)
 from tests.support.arxiv_graphic_replay import (
     GRAPHIC_IDS,
-    graphic_source,
-    graphic_payload,
-    graphic_article,
     graphic_acceptance,
+    graphic_article,
+    graphic_payload,
+    graphic_source,
+)
+from tests.support.canonical_content import source_prose_blocks
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.object_content import (
+    assert_image_occurrences,
+    assert_object_position,
+    assert_svg_content,
+    svg_content_signature,
 )
 
 
@@ -124,9 +122,7 @@ def test_captured_graphic_nodes_keep_source_identity_and_original_position(arxiv
                     runs,
                 )
     assert article.quality.has_fulltext
-    assert (
-        graphic_acceptance(article, markdown, require_local=True).asset.body_local == 0
-    )
+    assert graphic_acceptance(article, markdown, require_local=True).asset.local == 0
     assert (
         graphic_acceptance(article, markdown, require_local=True).asset.status
         == "degraded"
@@ -230,10 +226,14 @@ def test_captured_ddpm_all_five_inline_vectors_publish_and_assemble(tmp_path):
     )
     acceptance = graphic_acceptance(article, markdown, require_local=True)
     assert acceptance.asset.audited
-    assert acceptance.asset.body_local == 5
+    assert acceptance.asset.local == 5
     assert not acceptance.asset.local_body_assets_satisfied
-    assert acceptance.asset.body_discovered > 5
-    assert acceptance.asset.status == "degraded"
     assert (
-        graphic_acceptance(article, markdown, require_local=False).asset.body_local == 5
+        sum(
+            article.quality.asset_summary.by_kind[kind].requested
+            for kind in ("figure", "formula", "table")
+        )
+        > 5
     )
+    assert acceptance.asset.status == "degraded"
+    assert graphic_acceptance(article, markdown, require_local=False).asset.local == 5

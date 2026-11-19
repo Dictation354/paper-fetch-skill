@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 from ...publisher_identity import extract_doi as extract_doi_from_text
-from .assets import FIGURE_KIND, download_assets, extract_html_assets
 from ._metadata import merge_html_metadata, parse_html_metadata
 from ._runtime import clean_markdown, decode_html, extract_article_markdown
+from .assets import FIGURE_KIND, download_assets, extract_html_assets
 from .landing import LandingHtmlFetchResult, fetch_landing_html
 from .renderer import (
     HtmlMarkdownRenderer,
@@ -25,7 +25,6 @@ from .shared import (
     short_text,
     soup_root,
 )
-
 
 __all__ = [
     "FIGURE_KIND",

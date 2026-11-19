@@ -1,5 +1,4 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
 
 import json
 
@@ -8,6 +7,7 @@ import pytest
 from paper_fetch.metadata.crossref import CrossrefLookupClient
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.reason_codes import IDENTITY_MISMATCH
+from tests.support.transport import RecordedStreamTransport
 
 
 class _ResponseTransport(RecordedStreamTransport):

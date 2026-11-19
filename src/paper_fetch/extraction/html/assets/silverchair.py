@@ -9,8 +9,8 @@ from urllib.parse import unquote, urljoin, urlparse
 from bs4 import BeautifulSoup, Tag
 
 from ....utils import normalize_text
-from ..parsing import choose_parser
 from ..asset_fields import best_url_from_srcset
+from ..parsing import choose_parser
 
 
 def promote_silverchair_srcset_originals(html_text: str) -> str:

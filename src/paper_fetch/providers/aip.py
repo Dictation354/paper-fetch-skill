@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 from urllib.parse import urlparse
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -25,8 +23,8 @@ from ..provider_catalog import (
 from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
 from . import _aip_html, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import BrowserAssetPolicy, ProviderBundle
-
 
 # SITE_UI_COPY_REGRESSION_MARKER: AIP article navigation/action labels owned by provider cleanup policy.
 # STRUCTURAL_UI_COPY_HOOK: provider cleanup removes these only from AIP article chrome.

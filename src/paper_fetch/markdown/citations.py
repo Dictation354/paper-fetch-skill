@@ -8,8 +8,8 @@ from typing import Any
 
 from ..extraction.citation_anchors import looks_like_reference_href
 from ..utils import normalize_text
-from .math import DOLLAR_MATH_MARKDOWN_PATTERN
 from .inline_spacing import normalize_inline_sup_sub_tag_bodies
+from .math import DOLLAR_MATH_MARKDOWN_PATTERN
 
 NUMERIC_CITATION_SENTINEL_PREFIX = "@@PF_CITE:"
 NUMERIC_CITATION_SENTINEL_PATTERN = re.compile(r"@@PF_CITE:(?P<payload>[^@\n]+)@@")

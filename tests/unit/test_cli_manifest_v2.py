@@ -1,19 +1,25 @@
 from __future__ import annotations
-import argparse
-from contextlib import redirect_stderr, redirect_stdout
-from datetime import UTC, datetime
+
 import hashlib
 import io
 import json
-from pathlib import Path
 import shutil
+import threading
+import time
+from contextlib import redirect_stderr, redirect_stdout
+from datetime import UTC, datetime
+from pathlib import Path
 from types import SimpleNamespace
+from typing import Literal
 from unittest import mock
 from uuid import UUID
+
 import pytest
+
 from paper_fetch import cli
 from paper_fetch import runtime as runtime_module
 from paper_fetch.manifest import (
+    MANIFEST_RECORD_SCHEMA_VERSION,
     ManifestBuilderDependencies,
     ManifestRecordStatus,
     parse_manifest_record,
@@ -45,20 +51,46 @@ STARTED_AT = datetime(2026, 7, 10, 8, 0, tzinfo=UTC)
 COMPLETED_AT = datetime(2026, 7, 10, 8, 1, tzinfo=UTC)
 
 
-def _args(**overrides: object) -> argparse.Namespace:
-    values: dict[str, object] = {
-        "batch_results": None,
-        "batch_concurrency": 1,
-        "format": "markdown",
-        "asset_profile": "none",
-        "include_refs": "all",
-        "max_tokens": "full_text",
-        "no_download": True,
-        "save_markdown_to_disk": False,
-        "output": "-",
-    }
-    values.update(overrides)
-    return argparse.Namespace(**values)
+def _options(
+    *,
+    output_format: cli.OutputFormat = "markdown",
+    output: str = "-",
+    save_markdown_to_disk: bool = False,
+    artifact_mode: Literal["none", "markdown-assets", "all"] = "none",
+    asset_profile: cli.AssetProfile = "none",
+    include_refs: cli.IncludeRefsMode = "all",
+    max_tokens: int | Literal["full_text"] = "full_text",
+    require_local_body_assets: bool = False,
+    require_full_size_body_assets: bool = False,
+) -> cli.FetchExecutionOptions:
+    return cli.FetchExecutionOptions(
+        artifact_mode=artifact_mode,
+        asset_profile=asset_profile,
+        include_refs=include_refs,
+        max_tokens=max_tokens,
+        require_local_body_assets=require_local_body_assets,
+        require_full_size_body_assets=require_full_size_body_assets,
+        output_plan=cli.FetchOutputPlan(
+            output_format=output_format,
+            output=output,
+            save_markdown_to_disk=save_markdown_to_disk,
+        ),
+    )
+
+
+def _batch_command(
+    queries: list[str] | tuple[str, ...],
+    *,
+    batch_results: str | None = None,
+    batch_concurrency: int = 1,
+    options: cli.FetchExecutionOptions | None = None,
+) -> cli.BatchFetchCommand:
+    return cli.BatchFetchCommand(
+        queries=tuple(queries),
+        options=options or _options(),
+        batch_concurrency=batch_concurrency,
+        batch_results=batch_results,
+    )
 
 
 def _fixed_deps(
@@ -74,16 +106,15 @@ def _fixed_deps(
 def _build_record(
     tmp_path: Path,
     *,
-    args: argparse.Namespace | None = None,
+    options: cli.FetchExecutionOptions | None = None,
     result: cli.SingleFetchResult | None = None,
     error: Exception | None = None,
 ):
     deps = _fixed_deps()
     return cli._build_cli_manifest_record(
         cli.CliManifestBuildContext(
-            args=args or _args(),
+            options=options or _options(),
             output_dir=tmp_path,
-            artifact_mode="none",
             run_id=RUN_ID,
             tool_version="3.1.0",
             deps=deps,
@@ -149,16 +180,20 @@ def test_single_manifest_is_explicit_atomic_and_hashes_final_output(
     body = output_path.read_bytes()
     assert record.run_id == RUN_ID
     assert record.record_id == RECORD_ID
-    assert record.schema_version == 2
+    assert record.schema_version == MANIFEST_RECORD_SCHEMA_VERSION == 3
     assert record.tool_version == "3.1.0"
     assert record.started_at == STARTED_AT
     assert record.completed_at == COMPLETED_AT
     assert len(record.request_fingerprint) == 64
+    assert record.request.query == "10.1000/acceptance"
     assert record.request.parameters["format"] == "markdown"
+    assert "no_download" not in record.request.parameters
     assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
+    assert record.acceptance.identity.doi == "10.1000/acceptance"
+    assert record.acceptance.provenance.source == "elsevier_xml"
     assert [event.stage for event in record.trace[:2]] == ["resolve", "fulltext"]
-    assert record.fallback_codes == ()
+    assert record.acceptance.provenance.fallback_codes == ()
     assert primary.path == str(output_path)
     assert primary.size == len(body)
     assert primary.sha256 == hashlib.sha256(body).hexdigest()
@@ -205,6 +240,7 @@ def test_single_manifest_hashes_primary_and_saved_markdown_outputs(
         "primary_json",
         "saved_markdown",
         "reading_markdown",
+        "section_index",
         "image_index",
         "diagnostic",
     }
@@ -342,7 +378,7 @@ def test_failed_manifest_preserves_browser_runtime_stage_code_and_summary(
     assert record.trace[0].stage == "runtime_prepare"
     assert record.trace[0].code == BROWSER_CONTEXT_CREATE_FAILED
     assert record.trace[0].message == "Camoufox stderr: profile locked"
-    assert BROWSER_CONTEXT_CREATE_FAILED in record.failure_codes
+    assert BROWSER_CONTEXT_CREATE_FAILED in record.acceptance.provenance.failure_codes
 
 
 def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
@@ -368,42 +404,37 @@ def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
 
     assert record.error is None
     assert record.acceptance.overall == OverallAcceptanceStatus.DEGRADED
-    assert "browser_runtime_prepare_timeout" in record.failure_codes
-    assert "browser_runtime_prepare_timeout" in record.fallback_codes
+    assert (
+        "browser_runtime_prepare_timeout" in record.acceptance.provenance.failure_codes
+    )
+    assert (
+        "browser_runtime_prepare_timeout" in record.acceptance.provenance.fallback_codes
+    )
 
 
 @pytest.mark.parametrize(
-    ("envelope", "asset_profile", "overall", "asset_status"),
+    ("case", "asset_profile", "overall", "asset_status"),
     [
         (
-            _envelope(),
+            "complete",
             "none",
             OverallAcceptanceStatus.COMPLETE,
             AssetAcceptanceStatus.NOT_REQUESTED,
         ),
         (
-            _envelope("metadata_only"),
+            "metadata_only",
             "none",
             OverallAcceptanceStatus.LIMITED,
             AssetAcceptanceStatus.NOT_REQUESTED,
         ),
         (
-            _envelope(
-                assets=[
-                    Asset(
-                        kind="figure",
-                        heading="Figure 1",
-                        path="preview.jpg",
-                        download_tier="preview",
-                    )
-                ]
-            ),
+            "preview_degraded",
             "body",
             OverallAcceptanceStatus.DEGRADED,
             AssetAcceptanceStatus.DEGRADED,
         ),
         (
-            _envelope(asset_failures=[{"code": "asset_download_failed"}]),
+            "asset_failed",
             "body",
             OverallAcceptanceStatus.DEGRADED,
             AssetAcceptanceStatus.FAILED,
@@ -412,21 +443,49 @@ def test_successful_pdf_fallback_keeps_html_browser_failure_degraded(
 )
 def test_cli_adapter_exposes_fulltext_limited_and_asset_acceptance(
     tmp_path: Path,
-    envelope,
-    asset_profile: str,
+    case: str,
+    asset_profile: cli.AssetProfile,
     overall: OverallAcceptanceStatus,
     asset_status: AssetAcceptanceStatus,
 ) -> None:
-    args = _args(asset_profile=asset_profile)
+    if case == "complete":
+        envelope = _envelope()
+    elif case == "metadata_only":
+        envelope = _envelope("metadata_only")
+    elif case == "preview_degraded":
+        from tests.support.wiley_page_assets import png_bytes
+
+        preview_path = tmp_path / "preview.png"
+        preview_path.write_bytes(png_bytes(120, 90))
+        envelope = _envelope(
+            assets=[
+                Asset(
+                    kind="figure",
+                    heading="Figure 1",
+                    path=str(preview_path),
+                    download_tier="preview",
+                )
+            ]
+        )
+    else:
+        envelope = _envelope(
+            asset_failures=[
+                {
+                    "kind": "figure",
+                    "reason": "asset_download_failed",
+                    "source_url": "https://example.test/figure-1.png",
+                }
+            ]
+        )
     record = _build_record(
         tmp_path,
-        args=args,
+        options=_options(asset_profile=asset_profile),
         result=cli.SingleFetchResult(envelope),
     )
 
     assert record.error is None
     assert record.acceptance.overall == overall
-    assert record.asset_summary.status == asset_status
+    assert record.acceptance.asset.status == asset_status
 
 
 def test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags(
@@ -443,12 +502,12 @@ def test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags(
     )
     default = _build_record(
         tmp_path,
-        args=_args(asset_profile="body"),
+        options=_options(asset_profile="body"),
         result=cli.SingleFetchResult(envelope),
     )
     strict = _build_record(
         tmp_path,
-        args=_args(
+        options=_options(
             asset_profile="body",
             require_local_body_assets=False,
             require_full_size_body_assets=True,
@@ -463,9 +522,9 @@ def test_cli_manifest_fingerprint_and_acceptance_include_strict_asset_flags(
         "require_full_size_body_assets": True,
     }
     assert strict.request_fingerprint != default.request_fingerprint
-    assert strict.asset_summary.require_local_body_assets is True
-    assert strict.asset_summary.require_full_size_body_assets is True
-    assert strict.asset_summary.local_body_assets_satisfied is False
+    assert strict.acceptance.asset.require_local_body_assets is True
+    assert strict.acceptance.asset.require_full_size_body_assets is True
+    assert strict.acceptance.asset.local_body_assets_satisfied is False
     assert strict.acceptance.fetch.status.value == "ok"
     assert strict.acceptance.overall == OverallAcceptanceStatus.DEGRADED
 
@@ -577,13 +636,13 @@ def test_springer_formula_rendition_aliases_produce_complete_manifest(
     record = parse_manifest_record(json.loads(manifest_path.read_text("utf-8")))
     assert len(merged_assets) == 4
     assert record.acceptance.overall == OverallAcceptanceStatus.COMPLETE
-    assert record.asset_summary.status == AssetAcceptanceStatus.COMPLETE
-    assert record.asset_summary.total == 4
-    assert record.asset_summary.local == 4
-    assert record.asset_summary.full_size == 4
-    assert record.asset_summary.failed == 0
-    assert record.asset_summary.remote_only_count == 0
-    assert record.asset_summary.issue_codes == ()
+    assert record.acceptance.asset.status == AssetAcceptanceStatus.COMPLETE
+    assert record.acceptance.asset.discovered == 4
+    assert record.acceptance.asset.local == 4
+    assert record.acceptance.asset.full_size == 4
+    assert record.acceptance.asset.failed == 0
+    assert record.acceptance.asset.remote_only_count == 0
+    assert record.acceptance.asset.issue_codes == ()
 
 
 def test_cli_adapter_publishes_semantic_losses(tmp_path: Path) -> None:
@@ -600,20 +659,24 @@ def test_cli_adapter_publishes_semantic_losses(tmp_path: Path) -> None:
         result=cli.SingleFetchResult(envelope),
     )
 
-    assert record.semantic_losses.table_fallback_count == 2
-    assert record.semantic_losses.table_layout_degraded_count == 1
-    assert record.semantic_losses.table_semantic_loss_count == 1
-    assert record.semantic_losses.formula_missing_count == 3
+    losses = record.acceptance.content.semantic_losses
+    assert losses.table_fallback_count == 2
+    assert losses.table_layout_degraded_count == 1
+    assert losses.table_semantic_loss_count == 1
+    assert losses.formula_missing_count == 3
 
 
 def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
     tmp_path: Path,
 ) -> None:
     results_path = tmp_path / "results.jsonl"
-    args = _args(batch_results=str(results_path))
+    command = _batch_command(
+        ["10.1016/first", "10.1016/second", "10.1016/third"],
+        batch_results=str(results_path),
+    )
     calls: list[str] = []
 
-    def run_single(_args, *, query: str, **_kwargs):
+    def run_single(_options, *, query: str, **_kwargs):
         calls.append(query)
         raise ProviderFailure(
             RATE_LIMITED,
@@ -634,11 +697,9 @@ def test_batch_rate_limit_streams_one_terminal_record_per_input_and_aborts_lane(
         ),
     ):
         exit_code = cli.run_batch_fetch(
-            args,
-            queries=["10.1016/first", "10.1016/second", "10.1016/third"],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
             manifest_deps=_fixed_deps(record_ids=record_ids),
             run_id=RUN_ID,
             tool_version="3.1.0",
@@ -671,10 +732,17 @@ def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
     tmp_path: Path,
 ) -> None:
     results_path = tmp_path / "results.jsonl"
-    args = _args(batch_results=str(results_path))
+    command = _batch_command(
+        [
+            "10.1016/limited",
+            "10.1111/continues",
+            "10.1016/aborted",
+        ],
+        batch_results=str(results_path),
+    )
     calls: list[str] = []
 
-    def run_single(_args, *, query: str, **_kwargs):
+    def run_single(_options, *, query: str, **_kwargs):
         calls.append(query)
         if query == "10.1016/limited":
             raise ProviderFailure(RATE_LIMITED, "Slow down.")
@@ -692,15 +760,9 @@ def test_batch_rate_limit_keeps_an_unrelated_provider_lane_running(
         ),
     ):
         exit_code = cli.run_batch_fetch(
-            args,
-            queries=[
-                "10.1016/limited",
-                "10.1111/continues",
-                "10.1016/aborted",
-            ],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
             manifest_deps=_fixed_deps(
                 record_ids=(
                     UUID("30000000-0000-4000-8000-000000000001"),
@@ -729,9 +791,12 @@ def test_batch_generic_exception_is_failed_and_does_not_drop_later_input(
     tmp_path: Path,
 ) -> None:
     results_path = tmp_path / "results.jsonl"
-    args = _args(batch_results=str(results_path))
+    command = _batch_command(
+        ["broken title", "10.1000/acceptance"],
+        batch_results=str(results_path),
+    )
 
-    def run_single(_args, *, query: str, **_kwargs):
+    def run_single(_options, *, query: str, **_kwargs):
         if query == "broken title":
             raise RuntimeError("worker exploded")
         return cli.SingleFetchResult(_envelope())
@@ -744,11 +809,9 @@ def test_batch_generic_exception_is_failed_and_does_not_drop_later_input(
         ),
     ):
         exit_code = cli.run_batch_fetch(
-            args,
-            queries=["broken title", "10.1000/acceptance"],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
             manifest_deps=_fixed_deps(
                 record_ids=(
                     UUID("40000000-0000-4000-8000-000000000001"),
@@ -778,7 +841,10 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
     monkeypatch: pytest.MonkeyPatch,
 ) -> None:
     results_path = tmp_path / "results.jsonl"
-    args = _args(batch_results=str(results_path))
+    command = _batch_command(
+        ["First generic paper title", "Second generic paper title"],
+        batch_results=str(results_path),
+    )
     clock = [300.0]
     observed: list[dict[str, object]] = []
 
@@ -793,7 +859,7 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
             doi=f"10.1000/{query.split()[0].lower()}",
         )
 
-    def run_single(_args, *, query, context, **_kwargs):
+    def run_single(_options, *, query, context, **_kwargs):
         observed.append(
             {
                 "query": query,
@@ -816,11 +882,9 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
         ),
     ):
         exit_code = cli.run_batch_fetch(
-            args,
-            queries=["First generic paper title", "Second generic paper title"],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
             manifest_deps=_fixed_deps(
                 record_ids=(
                     RECORD_ID,
@@ -840,7 +904,10 @@ def test_batch_resolution_and_queue_time_do_not_consume_fetch_deadline(
 
 def test_metadata_only_batch_retains_results_with_nonzero_exit(tmp_path: Path) -> None:
     results_path = tmp_path / "results.jsonl"
-    args = _args(batch_results=str(results_path))
+    command = _batch_command(
+        ["10.1000/acceptance"],
+        batch_results=str(results_path),
+    )
     outcome = cli.SingleFetchResult(_envelope("metadata_only"))
 
     with (
@@ -851,11 +918,9 @@ def test_metadata_only_batch_retains_results_with_nonzero_exit(tmp_path: Path) -
         ),
     ):
         exit_code = cli.run_batch_fetch(
-            args,
-            queries=["10.1000/acceptance"],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
             manifest_deps=_fixed_deps(),
             run_id=RUN_ID,
             tool_version="3.1.0",
@@ -1095,9 +1160,6 @@ def test_batch_duplicate_cancellation_preserves_other_dependants(
 def test_batch_progress_reports_out_of_order_before_final_manifest(
     tmp_path, monkeypatch, capsys
 ):
-    import threading
-    import time
-
     second_finished = threading.Event()
     original_emit = cli.FetchProgress.emit
 
@@ -1172,8 +1234,6 @@ def test_text_progress_auto_and_asset_throttle(monkeypatch, capsys):
 def test_cancellation_during_identity_closes_browser_on_owning_worker(
     tmp_path, monkeypatch, capsys
 ):
-    import threading
-
     progress_ref = []
     owners = []
     closed = []
@@ -1188,11 +1248,13 @@ def test_cancellation_during_identity_closes_browser_on_owning_worker(
         owners.append(owner)
 
         class Browser:
+            context = None
+
             def close(self):
                 closed.append(threading.get_ident())
                 assert threading.get_ident() == owner
 
-        context._camoufox_browser_managers[(owner, True, "test")] = Browser()
+        context._browser_sessions.managers[(owner, True, "test")] = Browser()
         progress = progress_ref[0]
         progress.control(
             {

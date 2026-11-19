@@ -6,17 +6,18 @@ citation_reference metadata evidence. Fixed equations/rows were transcribed from
 MathML, IOP's embedded TeX and the original HTML table cells.
 """
 
-from tests.support.canonical_content import comparable_cell
-from tests.support.reviewed_html_publisher_content import _table_cell
 import re
 from copy import deepcopy
-from bs4 import BeautifulSoup
-import pytest
-from tests.golden_corpus import golden_corpus_fixture_for_doi
-from tests.support.replay import build_article_from_fixture
-from tests.golden_criteria import golden_criteria_asset
-from tests.support.reviewed_publisher_content import _words
 
+import pytest
+from bs4 import BeautifulSoup
+
+from tests.golden_corpus import golden_corpus_fixture_for_doi
+from tests.golden_criteria import golden_criteria_asset
+from tests.support.canonical_content import comparable_cell
+from tests.support.replay import build_article_from_fixture
+from tests.support.reviewed_html_publisher_content import _table_cell
+from tests.support.reviewed_publisher_content import _words
 
 CASES = [
     ("10.1021/acsomega.4c03987", ".article-body", ".ref-list .ref", 45),

@@ -2,26 +2,34 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Any
 from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.provider_rules import IEEE_EXTRACTION_CLEANUP_SELECTORS
 from ..extraction.html.renderer import clean_rendered_markdown
-from ..extraction.markdown_render.formulas import render_inline_latex_markdown
 from ..extraction.html.semantics import collect_html_section_hints
+from ..extraction.markdown_render.formulas import render_inline_latex_markdown
 from ..reason_codes import NO_RESULT
 from ..runtime import RuntimeContext
 from ..utils import normalize_text
 from ._html_section_markdown import render_container_markdown
 from ._ieee_asset_identity import (
     IEEE_ASSET_RETRY_POLICY as IEEE_ASSET_RETRY_POLICY,
+)
+from ._ieee_asset_identity import (
     IEEE_ASSET_URL_FIELDS,
-    IEEE_DOWNLOAD_MERGE_FIELDS as IEEE_DOWNLOAD_MERGE_FIELDS,
     _dedupe_ieee_assets_by_priority,
+)
+from ._ieee_asset_identity import (
+    IEEE_DOWNLOAD_MERGE_FIELDS as IEEE_DOWNLOAD_MERGE_FIELDS,
+)
+from ._ieee_asset_identity import (
     reconcile_ieee_downloaded_assets as reconcile_ieee_downloaded_assets,
 )
 from ._ieee_block_page import _looks_like_ieee_block_page
@@ -38,8 +46,6 @@ from ._ieee_url import (
     _is_ignored_ieee_asset_url,
 )
 from .base import ProviderFailure
-
-from bs4 import BeautifulSoup, Tag
 
 IEEE_SECTION_MARKER_PATTERN = re.compile(
     r"^SECTION\s+(?:[A-Z]+|\d+)\s*[.:]?$", flags=re.IGNORECASE

@@ -2,8 +2,8 @@
 
 import re
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.formula.convert import formula_runtime_env
 from tests.paths import REPO_ROOT

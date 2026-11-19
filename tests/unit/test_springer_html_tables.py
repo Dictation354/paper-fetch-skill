@@ -1,14 +1,15 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.providers import _springer_assets
+
 import tempfile
 import unittest
 from pathlib import Path
+
+from paper_fetch.providers import _springer_assets
 from paper_fetch.providers import springer as springer_provider
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 from tests.support._atypon_browser_workflow_provider_support import png_header
-
+from tests.support.transport import RecordedStreamTransport
 
 SPRINGER_CLASSIC_DOI = "10.1007/s10584-011-0143-4"
 SPRINGER_CLASSIC_TITLE = "Hydrological response to climate change in a glacierized catchment in the Himalayas"

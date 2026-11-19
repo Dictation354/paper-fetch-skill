@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup
 from paper_fetch.providers._atypon_browser_workflow_profiles import publisher_profile
 from paper_fetch.providers._springer_assets import extract_figure_assets
 from paper_fetch.providers._springer_dom import extract_html_extraction_sidecars
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.golden_corpus import build_article_from_fixture
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support.acquired_publisher_inputs import CapturedSourceFixture, _record
 
 

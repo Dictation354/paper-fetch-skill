@@ -1,14 +1,13 @@
 """P06: independently registered bibliography/table identities from originals."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from tests.golden_criteria import source_selections
 from tests.paths import REPO_ROOT
 from tests.support.object_content import assert_source_object_link
 from tests.support.test_evidence import evidence_cache
 from tests.support.verified_source_inputs import build_verified_source_article
-
 
 # Reviewed source objects, not values inferred from renderer output.
 OBJECTS = {

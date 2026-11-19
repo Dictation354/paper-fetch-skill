@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import re
+import xml.etree.ElementTree as ET
 from dataclasses import dataclass
 from io import BytesIO
 from pathlib import Path
-import re
-import xml.etree.ElementTree as ET
 
 from defusedxml import ElementTree as DefusedElementTree
 from defusedxml.common import DefusedXmlException

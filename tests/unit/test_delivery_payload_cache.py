@@ -1,14 +1,11 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
+
 import json
 import tempfile
 import unittest
 from pathlib import Path
-from paper_fetch.delivery.cache_index import (
-    LOCK_DIRNAME,
-    cache_lock_dir,
-)
-from paper_fetch.delivery.cache_inspection import list_cached_payload
+
+from paper_fetch.delivery._scoped_fs import LOCK_DIRNAME, cache_lock_dir
 from paper_fetch.delivery.fetch_cache import (
     PUBLIC_CREDENTIAL_SCOPE,
     FetchCache,
@@ -19,16 +16,14 @@ from paper_fetch.delivery.fetch_cache import (
     request_cache_payload,
 )
 from paper_fetch.delivery.requests import FetchPaperRequest
-from paper_fetch.models import (
-    Asset,
-)
+from paper_fetch.models import Asset
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import TraceContext
+from paper_fetch.tracing import TraceContext, trace_event
 from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.support.fetch_fixtures import sample_envelope, sample_resolved_query
 
 
-class McpPayloadCacheTests(unittest.TestCase):
+class DeliveryPayloadCacheTests(unittest.TestCase):
     def test_strict_asset_strategy_is_normalized_and_changes_cache_fingerprint(
         self,
     ) -> None:
@@ -63,11 +58,11 @@ class McpPayloadCacheTests(unittest.TestCase):
             ),
         )
 
-    def test_v2_writer_has_one_top_level_trace_owner_and_preserves_retries(
+    def test_writer_has_one_top_level_trace_owner_and_preserves_retries(
         self,
     ) -> None:
         request = FetchPaperRequest(
-            query="10.1000/trace-v2",
+            query="10.1000/trace-v8",
             modes=["article", "markdown"],
         )
         envelope = sample_envelope(
@@ -94,7 +89,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         payload = payload_from_envelope(envelope, request)
         round_trip = envelope_from_payload(payload)
 
-        self.assertEqual(payload["schema_version"], 4)
+        self.assertNotIn("schema_version", payload)
         self.assertEqual(len(payload["trace"]), 2)
         self.assertNotIn("trace", payload["quality"])
         self.assertNotIn("quality", payload["article"])
@@ -188,6 +183,7 @@ class McpPayloadCacheTests(unittest.TestCase):
         )
         self.assertIsNotNone(round_trip)
         assert round_trip is not None
+        assert round_trip.article is not None
         self.assertEqual(
             round_trip.quality.asset_failures[0]["title_snippet"], "Just a moment..."
         )
@@ -204,22 +200,23 @@ class McpPayloadCacheTests(unittest.TestCase):
             round_trip.article.assets[0].recovery_attempts[0]["status"], 403
         )
 
-    def test_fetch_cache_write_refreshes_index_with_scoped_entries(self) -> None:
+    def test_fetch_cache_write_creates_only_lock_and_fingerprinted_sidecar(
+        self,
+    ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
             download_dir = Path(tmpdir)
             request = FetchPaperRequest(query="10.1000/example", modes=["markdown"])
             envelope = sample_envelope(modes={"markdown"}, doi="10.1000/example")
 
             FetchCache(download_dir).write_fetch_envelope(envelope, request)
-            entries = list_cached_payload(download_dir=download_dir)["entries"]
+            files = sorted(item.name for item in download_dir.iterdir())
             lock_dir_exists = cache_lock_dir(download_dir).is_dir()
 
-        self.assertEqual([entry["kind"] for entry in entries], ["fetch_envelope"])
-        self.assertEqual(entries[0]["doi"], "10.1000/example")
         self.assertTrue(lock_dir_exists)
-        self.assertFalse(
-            any(LOCK_DIRNAME in str(entry.get("path") or "") for entry in entries)
-        )
+        self.assertEqual(len(files), 2)
+        self.assertIn(LOCK_DIRNAME, files)
+        self.assertNotIn(".paper-fetch-cache.json", files)
+        self.assertNotIn("10.1000_example.fetch-envelope.json", files)
 
     def test_fetch_cache_keeps_request_variants_and_credential_scopes_separate(
         self,
@@ -288,6 +285,11 @@ class McpPayloadCacheTests(unittest.TestCase):
                 )
 
         self.assertEqual(len(variant_paths), 3)
+        assert public_markdown_hit is not None
+        assert (
+            public_metadata_hit is not None and public_metadata_hit.metadata is not None
+        )
+        assert credential_hit is not None
         self.assertEqual(public_markdown_hit.markdown, "# Public markdown\n")
         self.assertEqual(public_metadata_hit.metadata.title, "Public metadata")
         self.assertEqual(credential_hit.markdown, "# Credential markdown\n")

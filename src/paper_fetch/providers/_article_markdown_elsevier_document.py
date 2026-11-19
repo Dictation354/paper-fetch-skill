@@ -2,20 +2,19 @@
 
 from __future__ import annotations
 
-from ..publication_dates import citation_date
-
-from dataclasses import dataclass
-from copy import deepcopy
-from pathlib import Path
-from typing import Any
-from collections.abc import Mapping
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import dataclass
+from pathlib import Path
+from typing import Any
 
+from ..formula.validation import capture_formula_diagnostics, formula_document
 from ..models import Reference, SemanticLosses
-from ..formula.validation import formula_document, capture_formula_diagnostics
+from ..publication_dates import citation_date
 from ..publisher_identity import extract_doi, normalize_doi
-from ..utils import _extract_year
+from ..utils import _extract_year, dedupe_authors
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
     child_text,
@@ -26,8 +25,8 @@ from ._article_markdown_common import (
     normalize_lines,
     normalize_text,
     path_relative_to,
-    render_inline_text,
     render_figure_block,
+    render_inline_text,
     render_table_block,
     table_entry_semantic_count,
     xml_local_name,
@@ -40,7 +39,6 @@ from ._article_markdown_elsevier import (
     render_elsevier_blocks,
 )
 from ._article_markdown_math import FormulaRenderResult
-from ..utils import dedupe_authors
 from ._elsevier_xml_rules import (
     ELSEVIER_DECLARATION_ELEMENTS,
     format_elsevier_reference,

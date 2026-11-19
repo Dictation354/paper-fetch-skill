@@ -1,12 +1,12 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from tests.support.markdown_presentation import visible_markdown
-import pytest
-from tests.support.test_evidence import evidence_cache as cache
-from pathlib import Path
+
 import re
+from dataclasses import replace
+from pathlib import Path
+
+import pytest
 from bs4 import BeautifulSoup, NavigableString, Tag
+
 from paper_fetch.providers import _tandf_html
 from paper_fetch.providers._atypon_browser_workflow_profiles import (
     publisher_profile,
@@ -17,7 +17,9 @@ from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
 )
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.tandf import TandfClient
-
+from paper_fetch.tracing import trace_event
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.test_evidence import evidence_cache as cache
 
 STRUCTURE_DOI = "10.1080/15481603.2026.2667034"
 TABLE_DOI = "10.1080/10942912.2019.1597882"
@@ -410,8 +412,10 @@ def test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts() 
     ],
 )
 def test_original_isi_linkout_is_not_a_cited_work_doi(doi, identifier):
-    from bs4 import BeautifulSoup
     from urllib.parse import unquote
+
+    from bs4 import BeautifulSoup
+
     from paper_fetch.providers._tandf_html import extract_references
     from tests.golden_criteria import golden_criteria_asset
 

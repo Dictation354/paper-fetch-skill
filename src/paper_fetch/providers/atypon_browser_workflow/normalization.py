@@ -2,12 +2,14 @@
 
 from __future__ import annotations
 
-import re
 import copy
 import os
+import re
 import urllib.parse
-from typing import Any
 from collections.abc import Callable
+from typing import Any
+
+from bs4 import Tag
 
 from ...common_patterns import (
     FIGURE_BASENAME_PATTERN,
@@ -15,13 +17,15 @@ from ...common_patterns import (
     SHORT_FIGURE_BASENAME_PATTERN,
     TABLE_LABEL_PATTERN,
 )
+from ...extraction.html.assets.figures import SILVERCHAIR_FIGURE_CONTAINER_SELECTORS
 from ...extraction.html.inline import (
     normalize_html_inline_text,
     render_html_inline_node,
 )
-from ...extraction.html.assets.figures import SILVERCHAIR_FIGURE_CONTAINER_SELECTORS
 from ...extraction.html.semantics import (
     ABSTRACT_ATTR_TOKENS as ABSTRACT_TOKENS,
+)
+from ...extraction.html.semantics import (
     ANCILLARY_TOKENS,
     BACK_MATTER_TOKENS,
     BODY_CONTAINER_TOKENS,
@@ -30,8 +34,14 @@ from ...extraction.html.semantics import (
 )
 from ...extraction.html.shared import (
     attr_text,
+)
+from ...extraction.html.shared import (
     direct_child_tags as _direct_child_tags,
+)
+from ...extraction.html.shared import (
     short_text as _short_text,
+)
+from ...extraction.html.shared import (
     soup_root as _soup_root,
 )
 from ...extraction.html.tables import (
@@ -73,8 +83,6 @@ from .profile import (
     _dedupe_top_level_nodes,
     _is_descendant,
 )
-
-from bs4 import Tag
 
 
 def _numeric_citation_payload_from_inline_node(node: Any) -> str | None:
@@ -133,9 +141,7 @@ def _non_table_raw_markdown_from_node(node: Any) -> str | None:
         and node.get("href")
         and not str(node["href"]).startswith("javascript:")
     ):
-        from copy import deepcopy
-
-        content = deepcopy(node)
+        content = copy.deepcopy(node)
         content.name = "span"
         label = _render_non_table_inline_node(content)
         return label if node["href"] == "#" else f"[{label}]({node['href']})"

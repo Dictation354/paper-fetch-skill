@@ -1,9 +1,9 @@
 from __future__ import annotations
+
 import json
 import re
 import unittest
 from pathlib import Path
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILD_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "build-offline-package.sh"
@@ -146,6 +146,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("-m compileall", script)
         self.assertNotIn("copy_source_snapshot", script)
         self.assertNotIn("source_snapshot", script)
+        self.assertNotIn("cleanup_legacy_mcp.py", script)
+        self.assertNotIn("legacy_cleanup.py", script)
         self.assertNotIn("$bin/python", script)
         self.assertNotIn("--exclude='./legacy'", script)
         self.assertNotIn("-m playwright install chromium", script)
@@ -366,6 +368,8 @@ class OfflinePackageBuildTests(unittest.TestCase):
         self.assertIn("skill_integrity.py", script)
         self.assertIn("skill_bundle = $skillBundle", script)
         self.assertNotIn("Copy-SourceSnapshot", script)
+        self.assertNotIn("cleanup_legacy_mcp.py", script)
+        self.assertNotIn("legacy_cleanup.py", script)
         self.assertNotIn("robocopy", script)
         self.assertNotIn('Join-Path $RepoDir "legacy"', script)
         self.assertNotIn('Join-Path $Staging "wheelhouse"', script)

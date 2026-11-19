@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from .browser_runtime.navigation import navigate_page
-
 import contextlib
 import hashlib
 import logging
@@ -14,15 +12,17 @@ from typing import Any
 from urllib.parse import urldefrag
 
 from ..asset_budget import AssetBudget, AssetBudgetExceeded, current_asset_budget
+from ..extraction.html.assets.state import AssetBinaryPayload, AssetFetchResponse
+from ..extraction.html.signals import CHALLENGE_PATTERNS
 from ..extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_mime_type_from_bytes,
 )
-from ..extraction.html.signals import CHALLENGE_PATTERNS
 from ..http import (
     RequestCancelledError,
     redact_text_for_diagnostics,
 )
+from .browser_runtime.navigation import navigate_page
 from .browser_workflow.fetchers.context import _BaseBrowserDocumentFetcher
 
 _FAILURE_BODY_LIMIT = 64 * 1024
@@ -73,7 +73,7 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
         self.requires_caller_thread = True
         self._owner = threading.get_ident()
         self._allowed = {url for asset in assets for url in asset_urls(asset)}
-        self._responses: dict[str, tuple[dict[str, Any], Any]] = {}
+        self._responses: dict[str, tuple[AssetFetchResponse, Any]] = {}
         self._attempted: set[str] = set()
         self._deadlines: dict[tuple[str, ...], float] = {}
         self._opened = False
@@ -167,17 +167,22 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
                 return
             reservation.validate_pixels(*dimensions)
             self._responses[url] = (
-                {
-                    "url": response.url,
-                    "status_code": response.status,
-                    "headers": {
-                        **headers,
-                        "content-type": mime,
-                        "content-length": str(len(body)),
+                AssetFetchResponse(
+                    payload=AssetBinaryPayload(
+                        body=body,
+                        downloaded_bytes=len(body),
+                    ),
+                    final_fetcher="camoufox",
+                    diagnostics={
+                        "url": response.url,
+                        "status_code": response.status,
+                        "headers": {
+                            **headers,
+                            "content-type": mime,
+                            "content-length": str(len(body)),
+                        },
                     },
-                    "body": body,
-                    "_paper_fetch_final_fetcher": "camoufox",
-                },
+                ),
                 reservation,
             )
             reservation = None
@@ -298,7 +303,7 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
         self._ready_at = time.monotonic()
         return True
 
-    def _loaded_response(self, url: str) -> dict[str, Any] | None:
+    def _loaded_response(self, url: str) -> AssetFetchResponse | None:
         if url not in self._responses:
             return None
         response, reservation = self._responses[url]
@@ -324,12 +329,12 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
                     "elapsed_seconds": round(self._last_image_at - self._started_at, 3),
                 }
             )
-            response["_paper_fetch_recovery_attempts"] = list(attempts)
+            response.recovery_attempts = list(attempts)
         return response
 
     def __call__(
         self, source_url: str, asset: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
+    ) -> AssetFetchResponse | None:
         if threading.get_ident() != self._owner:
             raise RuntimeError("Wiley asset page must stay on its owning thread")
         url = urldefrag(source_url)[0]
@@ -411,9 +416,9 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
                             if failure:
                                 prior.append({"stage": "full_size", **failure})
                         if prior:
-                            response["_paper_fetch_recovery_attempts"] = [
+                            response.recovery_attempts = [
                                 *prior,
-                                *response.get("_paper_fetch_recovery_attempts", []),
+                                *response.recovery_attempts,
                             ]
                         return response
                 except (RequestCancelledError, AssetBudgetExceeded):

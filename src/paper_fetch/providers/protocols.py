@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
+from collections.abc import Mapping
 from pathlib import Path
 from typing import Any, Protocol, runtime_checkable
-from collections.abc import Mapping
 
 from ..artifacts import ArtifactStore
 from ..http import RequestFailure
-from ..models import AssetProfile
 from ..metadata.types import ProviderMetadata
+from ..models import AssetProfile
 from ..runtime import RuntimeContext
 from .base import (
     ProviderFailure,

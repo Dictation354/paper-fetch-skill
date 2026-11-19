@@ -3,8 +3,8 @@
 import html
 import json
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models import SemanticLosses
 from paper_fetch.models.markdown import iter_markdown_images

@@ -3,16 +3,16 @@
 from __future__ import annotations
 
 from .types import (
+    PRIMARY_SECONDARY_METADATA_MERGE_RULE,
     CrossrefMetadata,
     FulltextLink,
     HtmlLookupHints,
     HtmlMetadata,
     MetadataMergeRule,
-    PRIMARY_SECONDARY_METADATA_MERGE_RULE,
     ProviderMetadata,
     ReferenceMetadata,
-    merge_primary_secondary_metadata,
     merge_metadata_layers,
+    merge_primary_secondary_metadata,
 )
 
 

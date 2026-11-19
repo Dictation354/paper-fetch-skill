@@ -1,9 +1,11 @@
 from __future__ import annotations
+
 import csv
 import hashlib
 import json
-from pathlib import Path
 import sys
+from pathlib import Path
+
 from scripts.generate_offline_evidence import generate_evidence
 
 

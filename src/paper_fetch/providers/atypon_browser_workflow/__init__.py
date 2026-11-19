@@ -2,14 +2,14 @@
 
 from __future__ import annotations
 
-from .markdown import (
-    extract_browser_workflow_markdown,
-    extract_atypon_browser_workflow_markdown,
-)
 from .asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
     extract_scoped_html_assets,
     extract_supplementary_assets,
+)
+from .markdown import (
+    extract_atypon_browser_workflow_markdown,
+    extract_browser_workflow_markdown,
 )
 from .postprocess import rewrite_inline_figure_links
 

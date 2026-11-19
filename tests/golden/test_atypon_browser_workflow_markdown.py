@@ -1,20 +1,22 @@
 from __future__ import annotations
-from tests.support.canonical_content import comparable_cell
-from tests.support.markdown_presentation import visible_markdown
+
 import re
 import unittest
 from urllib.parse import urljoin
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html._runtime import body_metrics
-from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
+from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
 from tests.golden_criteria import golden_criteria_asset
-from tests.provider_benchmark_samples import provider_benchmark_sample
 from tests.paths import FIXTURE_DIR
-
+from tests.provider_benchmark_samples import provider_benchmark_sample
+from tests.support.canonical_content import comparable_cell
+from tests.support.markdown_presentation import visible_markdown
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")

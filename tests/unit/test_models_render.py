@@ -1,34 +1,34 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-import unittest
-from tests.golden_criteria import golden_criteria_scenario_asset
-from paper_fetch.models import (
-    SectionHint,
-    article_from_markdown,
-)
-from types import SimpleNamespace
+
 import json
+import unittest
+from types import SimpleNamespace
 from unittest import mock
+
 from paper_fetch import service as paper_fetch
+from paper_fetch.markdown.images import render_markdown_image, short_image_alt
 from paper_fetch.models import (
-    Asset,
-    ArticleModel,
     EXTRACTION_REVISION,
-    Metadata,
-    Quality,
     QUALITY_FLAG_ACCESS_GATE_DETECTED,
     QUALITY_FLAG_WEAK_BODY_STRUCTURE,
+    ArticleModel,
+    Asset,
+    Metadata,
+    Quality,
     Reference,
     RenderOptions,
     Section,
+    SectionHint,
     TokenEstimateBreakdown,
+    article_from_markdown,
     article_from_structure,
     estimate_tokens,
     metadata_only_article,
     normalize_markdown_text,
 )
 from paper_fetch.models.render import is_table_like_figure_asset
-from paper_fetch.markdown.images import render_markdown_image, short_image_alt
+from paper_fetch.tracing import trace_event
+from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.support._paper_fetch_support import sample_article
 
 
@@ -342,7 +342,7 @@ class ModelsRenderTests(unittest.TestCase):
             Asset(kind="figure", heading="Figure 1", caption="Overview figure."),
         ]
 
-        markdown = article.to_ai_markdown(include_figures="inline", max_tokens=600)
+        markdown = article.to_ai_markdown(asset_profile="body", max_tokens=600)
 
         self.assertIn("## Figures", markdown)
         self.assertIn("- Figure 1: Overview figure.", markdown)

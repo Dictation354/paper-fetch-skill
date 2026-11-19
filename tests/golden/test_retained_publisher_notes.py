@@ -1,11 +1,11 @@
 """Independent original-source assertions before exact baseline updates."""
 
-from paper_fetch.extraction.html.inline import escape_markdown_text
-from tests.support.markdown_presentation import visible_markdown
-
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
+
+from paper_fetch.extraction.html.inline import escape_markdown_text
 from tests.golden_corpus import golden_corpus_fixture_for_doi
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.replay import build_article_from_fixture
 from tests.support.reviewed_publisher_content import _words
 

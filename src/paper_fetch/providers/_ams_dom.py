@@ -3,30 +3,29 @@
 from __future__ import annotations
 
 import re
-from urllib.parse import urljoin
 from typing import Any
+from urllib.parse import urljoin
 
-from ..extraction.html.parsing import choose_parser
+from bs4 import BeautifulSoup, NavigableString, Tag
+
 from ..extraction.html.formula_rules import (
     MATHML_SCRIPT_TYPES,
     is_display_formula_node,
     mathml_element_from_html_node,
 )
-from ..extraction.html.provider_rules import cleanup_policy_for_profile
 from ..extraction.html.inline import render_html_inline_node
+from ..extraction.html.parsing import choose_parser
+from ..extraction.html.provider_rules import cleanup_policy_for_profile
+from ..extraction.html.shared import soup_root as _soup_root
 from ..extraction.markdown_render.formulas import (
     html_formula_latex_from_node,
     render_inline_latex_markdown,
 )
-from ..extraction.html.shared import soup_root as _soup_root
 from ..utils import normalize_text
+from ._ams_markdown import _normalize_ams_label_text
 from ._article_markdown_math import (
     render_external_mathml_expression,
 )
-from ._ams_markdown import _normalize_ams_label_text
-
-from bs4 import BeautifulSoup, NavigableString, Tag
-
 
 # AMS Atypon XSL emits display equation ids as E1/E02/E2a and unnumbered
 # equation ids as UE1/UE02. Keep this provider-owned because it is DOM-source

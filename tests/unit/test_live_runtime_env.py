@@ -1,36 +1,35 @@
 from __future__ import annotations
-from dataclasses import asdict
-from paper_fetch.tracing import trace_event
 
 import os
-from pathlib import Path
 import unittest
+from dataclasses import asdict
+from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from paper_fetch.browser_preflight import BrowserPreflightResult
-from paper_fetch.config import BROWSER_BINARY_PATH_ENV_VAR
 from paper_fetch.config import (
+    BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
-    WILEY_PROFILE_DIR_ENV_VAR,
 )
+from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
 from paper_fetch.providers.browser_runtime import (
     load_runtime_config,
 )
-from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
+from paper_fetch.tracing import trace_event
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
 from tests.live import _runtime_env
-from tests.support.live_acceptance import catalog_acceptance_report
 from tests.provider_benchmark_samples import (
     iter_provider_benchmark_samples,
     provider_benchmark_sample,
 )
+from tests.support.live_acceptance import catalog_acceptance_report
 
 
 def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
@@ -47,7 +46,8 @@ def test_isolated_live_env_reuses_prepared_camoufox_executable(
     monkeypatch,
 ) -> None:
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
+        _runtime_env,
+        "engine_name",
         lambda: "camoufox",
     )
     executable = tmp_path / "byparr"
@@ -73,7 +73,6 @@ def test_isolated_live_env_derives_unique_provider_storage_paths() -> None:
     overridden = {
         BROWSER_PROFILE_DIR_ENV_VAR: "/real/shared-profile",
         BROWSER_USER_DATA_DIR_ENV_VAR: "/real/shared-user-data",
-        WILEY_PROFILE_DIR_ENV_VAR: "/real/wiley-profile",
     }
     env, tempdir = _runtime_env.build_isolated_live_env(overridden)
     try:
@@ -314,6 +313,7 @@ def test_live_preflight_rejects_malformed_static_capability_report() -> None:
 def test_live_report_keeps_actual_data_after_assertion_or_skip(tmp_path, skip):
     import json
     import time
+
     from tests.support.live_acceptance import preserve_terminal_record
 
     record = {
@@ -358,6 +358,7 @@ def test_catalog_summary_requires_assertions_to_pass():
 def test_live_report_redaction_keeps_json_quoting_valid(tmp_path):
     import json
     import time
+
     from tests.support.live_acceptance import preserve_terminal_record
 
     record = {
@@ -392,6 +393,7 @@ def test_live_local_browser_check_never_visits_publisher(monkeypatch):
 
 def test_live_fetch_diagnostics_come_from_own_saved_artifact(tmp_path):
     import json
+
     from tests.support.live_acceptance import fetch_browser_diagnostics
 
     path = tmp_path / "diagnostics" / "pnas" / "10.1073_test" / "byparr.json"
@@ -432,10 +434,11 @@ def test_live_fetch_diagnostics_come_from_own_saved_artifact(tmp_path):
 def test_catalog_fetch_never_preflights_and_preserves_actual_failure(
     monkeypatch, tmp_path, status
 ):
-    from tests.live import test_live_publishers as live
-    from paper_fetch.workflow.types import PaperFetchFailure
-    from paper_fetch.failure import FailureDiagnostics
     import json
+
+    from paper_fetch.failure import FailureDiagnostics
+    from paper_fetch.workflow.types import PaperFetchFailure
+    from tests.live import test_live_publishers as live
 
     sample = provider_benchmark_sample("pnas")
     records = []

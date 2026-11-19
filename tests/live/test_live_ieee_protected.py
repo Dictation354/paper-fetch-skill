@@ -1,11 +1,11 @@
 from __future__ import annotations
 
-from hashlib import sha256
 import json
 import os
-from pathlib import Path
 import tempfile
 import unittest
+from hashlib import sha256
+from pathlib import Path
 
 from paper_fetch.http import HttpTransport
 from paper_fetch.runtime import RuntimeContext
@@ -18,7 +18,6 @@ from tests.live._runtime_env import (
     build_isolated_live_env,
     preflight_selected_browser_or_skip,
 )
-
 
 RUN_IEEE_BROWSER_LIVE = os.environ.get("PAPER_FETCH_RUN_IEEE_BROWSER_LIVE") == "1"
 IEEE_BROWSER_ASSET_DOI = "10.1109/TIM.2024.3509573"

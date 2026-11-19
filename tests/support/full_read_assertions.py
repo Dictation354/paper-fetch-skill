@@ -2,9 +2,11 @@
 
 import re
 from collections import Counter
+
 from bs4 import BeautifulSoup
-from tests.support.reviewed_publisher_content import _words
+
 from tests.support.canonical_content import BODY_SELECTORS
+from tests.support.reviewed_publisher_content import _words
 
 
 def assert_source_list_items(body, rendered):
@@ -208,6 +210,7 @@ def assert_equation_rows(source, markdown):
 def assert_explicit_source_breaks(source, rendered, *, tables_only=False):
     """Match source processing instructions to visible breaks in the same block."""
     from bs4 import NavigableString, ProcessingInstruction, Tag
+
     from tests.support.reviewed_publisher_content import _words
 
     checked = 0
@@ -266,8 +269,8 @@ def assert_explicit_source_breaks(source, rendered, *, tables_only=False):
 
 def assert_source_declarations(fixture, source, article):
     """Read retained scientific declaration headings/prose from original sources."""
-    from tests.support.reviewed_publisher_content import _words
     from tests.support.markdown_presentation import visible_markdown
+    from tests.support.reviewed_publisher_content import _words
 
     roots = source.select(BODY_SELECTORS[fixture.provider]) + source.select(
         "back, ack, acknowledgment, .html-back, #acknowledgments, #acknowledgements"

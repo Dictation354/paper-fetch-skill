@@ -6,20 +6,20 @@ import re
 import xml.etree.ElementTree as ET
 from typing import Any
 
+from bs4 import Tag
+
+from ...utils import normalize_text
+from ...xml_security import XmlParseFailure, parse_mathml_fragment
 from .asset_fields import (
     FULL_SIZE_IMAGE_ATTRS,
     PREVIEW_IMAGE_ATTRS,
     best_url_from_srcset,
 )
-from ...utils import normalize_text
-from ...xml_security import XmlParseFailure, parse_mathml_fragment
 from .provider_rules import (
     provider_display_formula_selectors,
     provider_formula_container_tokens,
 )
 from .shared import class_tokens as _class_tokens
-
-from bs4 import Tag
 
 FORMULA_IMAGE_URL_PATTERN = re.compile(
     r"(?:^|[-_/])(?:math|ieq|equ)[-_]?\d|_(?:IEq|Equ)\d|math-\d|equation",

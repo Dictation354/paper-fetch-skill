@@ -1,8 +1,6 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
 
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest import mock
 
@@ -10,10 +8,20 @@ import pytest
 
 from paper_fetch.providers import (
     copernicus as copernicus_provider,
+)
+from paper_fetch.providers import (
     elsevier as elsevier_provider,
+)
+from paper_fetch.providers import (
     frontiers as frontiers_provider,
+)
+from paper_fetch.providers import (
     oxfordacademic as oxford_provider,
+)
+from paper_fetch.providers import (
     plos as plos_provider,
+)
+from paper_fetch.providers import (
     springer as springer_provider,
 )
 from paper_fetch.providers.base import (
@@ -28,7 +36,8 @@ from paper_fetch.reason_codes import (
     PDF_FALLBACK,
     RATE_LIMITED,
 )
-
+from paper_fetch.tracing import trace_event
+from tests.support.trace import trace_facts
 
 DOI = "10.1000/example"
 PDF_FAILURE_CODES = (NO_RESULT, NO_ACCESS, RATE_LIMITED, ERROR)

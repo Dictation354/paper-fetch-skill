@@ -9,6 +9,7 @@ from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
 
+from .browser_runtime_policy import selected_backend, supported_platform
 from .provider_catalog import ordered_provider_specs, provider_has_browser_route
 from .providers.browser_runtime import paths as browser_paths
 from .publisher_identity import (
@@ -215,9 +216,6 @@ def capability_scopes_for_query(
         for spec in ordered_provider_specs()
         if provider_has_browser_route(spec.name)
     )
-    from .providers.browser_runtime.selection import selected_backend
-    from .providers.browser_runtime.platforms import supported_platform
-
     browser_supported = inferred_provider != "elsevier" or supported_platform()
     if inferred_provider in browser_providers and browser_supported:
         backend = selected_backend(runtime_env, provider=inferred_provider)

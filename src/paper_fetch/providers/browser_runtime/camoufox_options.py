@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import importlib
-from functools import wraps
 import re
 import subprocess
 import sys
+from functools import wraps
 
 
 def macos_proxy_preferences() -> dict[str, int]:

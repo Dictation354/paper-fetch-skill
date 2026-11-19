@@ -4,11 +4,11 @@ from bs4 import BeautifulSoup
 
 from paper_fetch.extraction.html.object_links import prepare_retained_object_links
 from paper_fetch.markdown.images import short_image_alt
-from paper_fetch.providers._article_markdown_jats import parse_jats_xml
 from paper_fetch.providers._acs_html import (
     acs_before_block_normalization,
     render_acs_table,
 )
+from paper_fetch.providers._article_markdown_jats import parse_jats_xml
 from paper_fetch.providers._html_section_markdown import render_container_markdown
 
 

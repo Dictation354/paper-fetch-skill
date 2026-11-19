@@ -2,17 +2,11 @@
 
 from __future__ import annotations
 
-
-from ._definitions import PROVIDER_DEFINITIONS
-
 import contextlib
-from typing import Any
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 from ..extraction.html import decode_html
-from ..extraction.html.signals import HtmlExtractionFailure
-from ..http import redact_url_for_cache
-from ..http.headers import header_value
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     DomHooks,
@@ -22,21 +16,24 @@ from ..extraction.html.provider_rules import (
     ProviderFrontMatterRules,
     ProviderHtmlRules,
 )
+from ..extraction.html.signals import HtmlExtractionFailure
+from ..http import redact_url_for_cache
+from ..http.headers import header_value
 from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _iop_html, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
+from ._iop_asset_scheduler import _download_iop_body_assets
 from ._registry import BrowserAssetPolicy, ProviderBundle
 from .base import (
     ProviderFailure,
     RawFulltextPayload,
 )
 from .browser_runtime import BrowserRuntimeFailure
-from .browser_workflow.shared import normalize_browser_url
 from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
-
-from ._iop_asset_scheduler import _download_iop_body_assets
+from .browser_workflow.shared import normalize_browser_url
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["iop"]
 

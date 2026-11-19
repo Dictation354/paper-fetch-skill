@@ -1,9 +1,9 @@
 """Real wrong-document/preview and synthetic supplement rejection regressions."""
 
 import pytest
+
 from paper_fetch.providers import _pdf_common
 from tests.support._paper_fetch_support import build_pdf_bytes
-
 
 PREFIX = "acquisition/subscription-2026-09-15/"
 BAD_DOWNLOADS = [

@@ -4,8 +4,8 @@ import hashlib
 import json
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers.browser_workflow.assets import (

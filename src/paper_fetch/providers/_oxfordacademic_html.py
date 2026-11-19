@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from collections import defaultdict, deque
-from copy import deepcopy
 import re
-from typing import Any
+from collections import defaultdict, deque
 from collections.abc import Mapping
+from copy import deepcopy
+from dataclasses import dataclass
+from typing import Any
 from urllib.parse import parse_qsl, unquote, urlencode, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -23,19 +23,18 @@ from ..models import AssetProfile
 from ..provider_catalog import host_matches_domain
 from ..publisher_identity import normalize_doi
 from ..utils import extend_unique, normalize_text
+from ._html_references import extract_numbered_references_from_html
 from ._html_section_markdown import (
     render_clean_text_from_html,
-    render_retained_text_from_html,
     render_container_markdown,
     render_heading_text_from_html,
+    render_retained_text_from_html,
 )
-from ._html_references import extract_numbered_references_from_html
 from ._oxfordacademic_assets import extract_inline_figures
 from ._pdf_candidates import (
     extract_pdf_candidate_urls_from_html,
     extract_pdf_url_from_metadata_links,
 )
-
 
 OXFORDACADEMIC_NOISE_PROFILE = "oxfordacademic"
 # SITE_UI_COPY_REGRESSION_MARKER: Oxford Academic action and metrics labels;

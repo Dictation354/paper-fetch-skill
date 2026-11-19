@@ -1,12 +1,14 @@
 from __future__ import annotations
+
 import json
 from pathlib import Path
 from urllib.parse import quote
-import yaml
-from paper_fetch.redaction import is_sensitive_configuration_name
-from scripts.scan_artifacts_for_secrets import scan_artifacts
-from tests.live._runtime_env import SecretSafeEnvironment
 
+import yaml
+from scripts.scan_artifacts_for_secrets import scan_artifacts
+
+from paper_fetch.redaction import is_sensitive_configuration_name
+from tests.live._runtime_env import SecretSafeEnvironment
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

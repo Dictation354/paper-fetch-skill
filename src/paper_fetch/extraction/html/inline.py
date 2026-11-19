@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
-from typing import Any, Literal
 from collections.abc import Callable, Sequence
+from dataclasses import dataclass
+from typing import Any, Literal
 
 from bs4 import Comment
 
 from ...markdown.citations import (
     NUMERIC_CITATION_SENTINEL_PREFIX,
 )
-from ...markdown.math import protect_markdown_math
 from ...markdown.inline_spacing import normalize_inline_sup_sub_tag_bodies
+from ...markdown.math import protect_markdown_math
 
 InlineTextPolicy = Literal["body", "heading", "table_cell"]
 SupSubTag = Literal["sub", "sup"]

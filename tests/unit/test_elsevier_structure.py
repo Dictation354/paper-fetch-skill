@@ -1,16 +1,17 @@
 """Small XML structural contracts, independent of article text or ids."""
 
 from pathlib import Path
+
 import pytest
 
+from paper_fetch.models.markdown import normalize_markdown_text
+from paper_fetch.providers._article_markdown_elsevier import render_elsevier_blocks
 from paper_fetch.providers._article_markdown_elsevier_document import (
     build_article_structure,
 )
 from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers.elsevier import ElsevierClient
-from paper_fetch.providers._article_markdown_elsevier import render_elsevier_blocks
 from paper_fetch.xml_security import parse_xml
-from paper_fetch.models.markdown import normalize_markdown_text
 from tests.support.markdown_lists import ancestor, inline_text, markdown_tree
 
 

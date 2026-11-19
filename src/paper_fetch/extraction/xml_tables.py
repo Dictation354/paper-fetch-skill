@@ -2,17 +2,16 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import xml.etree.ElementTree as ET
 from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 
+from ..utils import normalize_text
 from .table_grid import (
     TableCell,
     TableConversionReason,
     TableRow,
 )
-from ..utils import normalize_text
-
 
 RenderXmlCellText = Callable[[ET.Element], str]
 

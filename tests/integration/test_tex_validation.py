@@ -2,18 +2,18 @@
 
 import shutil
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
-from paper_fetch.formula.validation import (
-    TexValidationSession,
-    formula_validation_session,
-    formula_document,
-    select_formula_latex,
-)
-from paper_fetch.formula.convert import formula_runtime_env
 from paper_fetch.extraction.markdown_render.formulas import (
     render_html_formula_container,
+)
+from paper_fetch.formula.convert import formula_runtime_env
+from paper_fetch.formula.validation import (
+    TexValidationSession,
+    formula_document,
+    formula_validation_session,
+    select_formula_latex,
 )
 from tests.paths import REPO_ROOT
 

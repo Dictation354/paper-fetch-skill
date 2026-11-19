@@ -5,6 +5,7 @@ from __future__ import annotations
 from collections.abc import Mapping
 from types import SimpleNamespace
 from unittest import mock
+
 from tests.support._browser_workflow_deps import browser_workflow_deps
 
 

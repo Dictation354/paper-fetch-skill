@@ -1,7 +1,9 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
+
 from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import *
+from tests.support.trace import trace_facts
+
 # ruff: noqa: F403,F405
 
 

@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
 import re
 import urllib.parse
 from collections.abc import Mapping
@@ -29,8 +27,8 @@ from ..publisher_identity import normalize_doi
 from ..quality.html_signals import AMS_TEXT_MARKER_SIGNAL_SET
 from ..utils import extend_unique, normalize_text
 from . import _ams_authors, _ams_dom, _ams_markdown, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import BrowserAssetPolicy, ProviderBundle
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["ams"]
 

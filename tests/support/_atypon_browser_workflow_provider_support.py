@@ -1,32 +1,42 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.tracing import TraceEvent, trace_event
-from dataclasses import replace
+
 import json
 import tempfile
-import urllib.parse
 import unittest
-from pathlib import Path
+import urllib.parse
 from collections.abc import Mapping
+from dataclasses import replace
+from pathlib import Path
 from unittest import mock
-from paper_fetch.http import RequestFailure
+
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
+from paper_fetch.http import RequestFailure
 from paper_fetch.providers import (
     acs as acs_provider,
-    browser_runtime,
+)
+from paper_fetch.providers import (
     ams as ams_provider,
+)
+from paper_fetch.providers import (
+    browser_runtime,
     browser_workflow,
+)
+from paper_fetch.providers import (
     pnas as pnas_provider,
+)
+from paper_fetch.providers import (
     science as science_provider,
+)
+from paper_fetch.providers import (
     wiley as wiley_provider,
 )
 from paper_fetch.providers.atypon_browser_workflow import (
     asset_scopes as atypon_browser_workflow_asset_scopes,
 )
-from paper_fetch.quality.html_availability import assess_html_fulltext_availability
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.tracing import merge_trace
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.tracing import TraceEvent, merge_trace, trace_event
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -39,6 +49,8 @@ from tests.support._browser_workflow_deps import (
     install_browser_workflow_deps,
 )
 from tests.support._paper_fetch_support import fulltext_pdf_bytes
+from tests.support.transport import RecordedStreamTransport
+
 # ruff: noqa: F401
 
 

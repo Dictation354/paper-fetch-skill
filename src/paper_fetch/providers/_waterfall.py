@@ -2,22 +2,12 @@
 
 from __future__ import annotations
 
-from ..tracing import extend_trace
+import time
+from collections.abc import Callable, Mapping
+from dataclasses import dataclass, field, replace
+from typing import Any
 
 from ..quality.access_boundary import propagate_paywall
-
-from dataclasses import dataclass, field, replace
-import time
-from typing import Any
-from collections.abc import Callable, Mapping
-
-from ..tracing import (
-    TraceContext,
-    TraceEvent,
-    merge_trace,
-    trace_event,
-)
-from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
 from ..reason_codes import (
     ERROR,
     IDENTITY_MISMATCH,
@@ -27,6 +17,14 @@ from ..reason_codes import (
     NOT_SUPPORTED,
     RATE_LIMITED,
 )
+from ..tracing import (
+    TraceContext,
+    TraceEvent,
+    extend_trace,
+    merge_trace,
+    trace_event,
+)
+from .base import ProviderFailure, RawFulltextPayload, combine_provider_failures
 
 DEFAULT_WATERFALL_CONTINUE_CODES = (
     NO_RESULT,

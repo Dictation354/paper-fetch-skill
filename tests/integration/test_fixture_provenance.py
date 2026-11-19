@@ -1,18 +1,17 @@
 from __future__ import annotations
-from dataclasses import replace
 
-import json
 import hashlib
+import json
 import unittest
+from dataclasses import replace
 from unittest import mock
 
 from jsonschema import Draft202012Validator
 
+from tests.block_fixtures import BLOCK_FIXTURE_ROOT
 from tests.fixture_catalog import fixture_catalog
 from tests.golden_criteria import GOLDEN_CRITERIA_ROOT, golden_criteria_manifest
 from tests.paths import REPO_ROOT
-from tests.block_fixtures import BLOCK_FIXTURE_ROOT
-
 
 CANONICAL_FIXTURE_PREFIXES = (
     "tests/fixtures/golden_criteria/",

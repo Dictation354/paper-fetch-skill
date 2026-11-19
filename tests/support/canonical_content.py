@@ -4,18 +4,18 @@ Only original publisher DOM/XML and captured metadata are read here. This
 module does not call provider parsers to construct expected content.
 """
 
-from copy import deepcopy
-import html
 import hashlib
+import html
 import json
 import re
+from copy import deepcopy
 from urllib.parse import parse_qs, unquote, urlsplit
 
 from bs4 import BeautifulSoup, Tag
 from markdown_it import MarkdownIt
 
-from tests.support.test_evidence import evidence_cache
 from tests.support.scientific_content import preserve_dom_scripts
+from tests.support.test_evidence import evidence_cache
 
 _INLINE_MARKDOWN = MarkdownIt()
 
@@ -636,8 +636,8 @@ def comparable_cell(value):
     """Normalize only mathematical/Markdown presentation, retaining all symbols."""
     from tests.support.reviewed_html_publisher_content import _table_cell
     from tests.support.scientific_content import (
-        script_markup,
         math_semantic_key,
+        script_markup,
         without_latex_spacing,
     )
 

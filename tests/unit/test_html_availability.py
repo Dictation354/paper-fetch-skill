@@ -1,30 +1,37 @@
 from __future__ import annotations
+
 import unittest
 from types import SimpleNamespace
 from unittest.mock import patch
+
+import paper_fetch.providers as providers_package
 from paper_fetch import reason_codes as canonical_reason_codes
+from paper_fetch import reason_codes as quality_reason_codes
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.providers import browser_workflow
 from paper_fetch.quality import html_availability as html_availability_module
-from paper_fetch import reason_codes as quality_reason_codes
 from paper_fetch.quality.html_availability import (
     HTML_CONTAINER_SCOPE_PAGE,
+    FulltextAvailabilityDiagnostics,
     HtmlContainerEvidence,
     HtmlQualityAssessor,
     assess_html_fulltext_availability,
     assess_plain_text_fulltext_availability,
     assess_structured_article_fulltext_availability,
+    availability_failure_message,
 )
 from paper_fetch.reason_codes import (
     ABSTRACT_ONLY,
     CITATION_ABSTRACT_HTML_URL,
     DATA_ARTICLE_ACCESS_NO,
     FULLTEXT,
+    INSUFFICIENT_BODY,
+    STRUCTURED_ARTICLE_NOT_FULLTEXT,
+    STRUCTURED_MISSING_BODY_SECTIONS,
 )
 from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset
-
 
 SCIENCE_ENTITLED_FIXTURE = golden_criteria_asset(
     "10.1126/science.aeg3511", "original.html"
@@ -1134,6 +1141,38 @@ class HtmlAvailabilityTests(unittest.TestCase):
 
         self.assertTrue(diagnostics.accepted)
         self.assertEqual(diagnostics.reason, "structured_body_sections")
+
+    def test_availability_failure_message_formats_structured_and_html_reasons(
+        self,
+    ) -> None:
+        for reason in (
+            INSUFFICIENT_BODY,
+            STRUCTURED_MISSING_BODY_SECTIONS,
+            STRUCTURED_ARTICLE_NOT_FULLTEXT,
+        ):
+            diagnostics = FulltextAvailabilityDiagnostics(
+                accepted=False,
+                reason=reason,
+                content_kind="metadata_only",
+            )
+            self.assertTrue(availability_failure_message(diagnostics))
+
+    def test_providers_package_does_not_reexport_elsevier_private_helpers(
+        self,
+    ) -> None:
+        removed_helpers = (
+            "build_elsevier_object_url",
+            "download_elsevier_related_assets",
+            "elsevier_asset_priority",
+            "extract_elsevier_asset_references",
+            "first_xml_child_text",
+            "infer_elsevier_asset_group_key",
+            "xml_local_name",
+        )
+        for name in removed_helpers:
+            self.assertNotIn(name, providers_package.__all__)
+            with self.assertRaises(AttributeError):
+                getattr(providers_package, name)
 
 
 if __name__ == "__main__":

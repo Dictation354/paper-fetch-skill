@@ -1,10 +1,11 @@
 """Legacy inline equation GIFs remain discoverable alongside display equations."""
 
 from urllib.parse import urljoin
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.providers import _annualreviews_html
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-
 
 DOI = "10.1146/annurev-control-090419-075625"
 

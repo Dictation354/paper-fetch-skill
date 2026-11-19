@@ -1,6 +1,7 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
+
 from pathlib import Path
+
 from paper_fetch import service as paper_fetch
 from paper_fetch.http import (
     DEFAULT_TIMEOUT_SECONDS,
@@ -21,6 +22,7 @@ from paper_fetch.providers.base import (
     ProviderClient,
 )
 from paper_fetch.utils import empty_asset_results
+from tests.support.transport import RecordedStreamTransport
 
 
 class FixtureProvider(ProviderClient):

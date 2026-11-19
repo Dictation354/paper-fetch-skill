@@ -2,7 +2,8 @@
 
 from __future__ import annotations
 
-from ..utils import normalize_text as normalize_text, safe_text as safe_text
+from ..utils import normalize_text as normalize_text
+from ..utils import safe_text as safe_text
 from . import builders as _builders
 from . import markdown as _markdown
 from . import quality as _quality

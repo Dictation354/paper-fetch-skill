@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 
-from ...utils import normalize_text
 from ...markdown.math import normalize_prose_preserving_math
+from ...utils import normalize_text
 
 TABLE_CELL_LINE_BREAK_PATTERN = re.compile(r"\s*\n+\s*")
 

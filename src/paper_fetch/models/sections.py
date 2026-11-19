@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from difflib import SequenceMatcher
 from typing import Any
-from collections.abc import Mapping
 
 from ..extraction.section_hints import (
     SECTION_HINT_KINDS,
@@ -15,9 +14,9 @@ from ..extraction.section_hints import (
     normalize_section_hint_heading,
 )
 from ..markdown.citations import normalize_inline_citation_markdown
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..section_vocab import SIGNIFICANCE_ABSTRACT_HEADINGS
 from ..utils import normalize_text
-from ..markdown.math import protect_markdown_math, restore_markdown_math
 from .markdown import (
     INLINE_MARKDOWN_ABSTRACT_PREFIX_PATTERN,
     _canonical_match_text,

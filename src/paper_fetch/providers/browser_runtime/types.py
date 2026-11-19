@@ -7,6 +7,10 @@ from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any, TypedDict
 
+DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS = 120000
+DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS = 8
+DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS = 1
+
 
 @dataclass(frozen=True)
 class BrowserRuntimeConfig:
@@ -15,7 +19,7 @@ class BrowserRuntimeConfig:
     artifact_dir: Path
     headless: bool
     user_agent: str | None
-    timeout_ms: int = 120000
+    timeout_ms: int = DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS
     binary_path: str | None = None
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
@@ -47,8 +51,6 @@ class BrowserHtmlFetchOptions:
     """Select specialized HTML-fetch result modes without widening the facade."""
 
     supplementary_index: bool = False
-    return_image_payload: bool = False
-    return_screenshot: bool = False
     lightweight_seed_only: bool = False
     blocked_resource_types: frozenset[str] | tuple[str, ...] | None = None
     empty_script_response_urls: frozenset[str] | tuple[str, ...] = frozenset()
@@ -80,7 +82,6 @@ class BrowserFetchedHtml:
     title: str | None
     summary: str
     browser_context_seed: Mapping[str, Any]
-    screenshot_b64: str | None = None
     image_payload: Mapping[str, Any] | None = None
     diagnostics: Mapping[str, Any] | None = None
 
@@ -99,15 +100,6 @@ class BrowserRuntimeFailure(Exception):
         self.message = message
         self.browser_context_seed = dict(browser_context_seed or {})
         self.details = dict(details or {})
-
-
-class BrowserImagePayload(TypedDict, total=False):
-    bodyB64: str
-    contentType: str
-    url: str
-    status: int
-    width: int
-    height: int
 
 
 class BrowserContextSeed(TypedDict, total=False):

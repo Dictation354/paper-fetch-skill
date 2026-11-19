@@ -2,19 +2,22 @@
 
 from __future__ import annotations
 
+import copy
 from collections.abc import Mapping
 from dataclasses import asdict
-import copy
-
-from ...models import SemanticLosses
-from ...formula.validation import formula_document, capture_formula_diagnostics
 from typing import Any
+from urllib.parse import urljoin
 
-from ...metadata.types import ProviderMetadata
+from bs4 import BeautifulSoup, Tag
+
 from ...extraction.html.parsing import choose_parser
 from ...extraction.html.renderer import clean_rendered_markdown, render_html_markdown
 from ...extraction.html.semantics import collect_html_section_hints
 from ...extraction.html.signals import HtmlExtractionFailure
+from ...formula.validation import capture_formula_diagnostics, formula_document
+from ...metadata.types import ProviderMetadata
+from ...models import SemanticLosses
+from ...publisher_identity import normalize_doi
 from ...quality.html_availability import (
     HTML_CONTAINER_DROP_BROWSER_WORKFLOW,
     HtmlQualityAssessor,
@@ -23,9 +26,9 @@ from ...quality.html_availability import (
     html_container_evidence,
     select_best_container,
 )
-from ...publisher_identity import normalize_doi
 from ...utils import normalize_text
 from .._atypon_browser_workflow_profiles import publisher_profile as _publisher_profile
+from .._html_section_markdown import render_html_fragment_markdown
 from .normalization import (
     _drop_table_blocks,
     _normalize_abstract_blocks,
@@ -40,15 +43,12 @@ from .postprocess import (
     _postprocess_browser_workflow_markdown,
 )
 from .profile import (
-    extract_page_title,
     _container_selection_policy,
     _content_fragment_html,
     _node_language_hint,
     _noise_profile_for_publisher,
+    extract_page_title,
 )
-
-from bs4 import BeautifulSoup, Tag
-from .._html_section_markdown import render_html_fragment_markdown
 
 
 @formula_document(new_document=True)
@@ -108,8 +108,6 @@ def extract_browser_workflow_markdown(
     figure_assets = extract_figure_assets(
         _content_fragment_html(asset_container, publisher=publisher), source_url
     )
-
-    from urllib.parse import urljoin
 
     for anchor in container.select("a[href]"):
         if not str(anchor["href"]).startswith(("#", "javascript:")):

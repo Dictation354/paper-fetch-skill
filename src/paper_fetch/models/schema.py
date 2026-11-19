@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from ..publication_dates import PublicationDate
-
 import json
 from dataclasses import dataclass, field
 from typing import Any, Literal
@@ -13,7 +11,9 @@ from ..acquisition import (
     AcquisitionRepresentation,
     AcquisitionTransport,
     coerce_acquisition_provenance,
+    is_pdf_article,
 )
+from ..publication_dates import PublicationDate
 from ..tracing import TraceEvent
 from ..utils import normalize_text
 
@@ -203,13 +203,16 @@ class AssetKindSummary:
     total: int = 0
     requested: int = 0
     full_size: int = 0
-    preview: int = 0
     accepted_preview: int = 0
     fallback_preview: int = 0
     failed: int = 0
     placeholder_suspected: int = 0
     not_requested: int = 0
     not_archived: int = 0
+
+    @property
+    def preview(self) -> int:
+        return self.accepted_preview + self.fallback_preview
 
 
 def _empty_asset_kind_summaries() -> dict[AssetLogicalKind, AssetKindSummary]:
@@ -232,10 +235,8 @@ class AssetQualitySummary:
     expected: int | None = None
     discovered: int = 0
     attempted: int = 0
-    total: int = 0
     local: int = 0
     full_size: int = 0
-    preview: int = 0
     accepted_preview: int = 0
     fallback_preview: int = 0
     failed: int = 0
@@ -250,6 +251,10 @@ class AssetQualitySummary:
         default_factory=_empty_asset_kind_summaries
     )
     diagnostics: list[AssetDiagnostic] = field(default_factory=list)
+
+    @property
+    def preview(self) -> int:
+        return self.accepted_preview + self.fallback_preview
 
 
 @dataclass
@@ -509,11 +514,10 @@ class ArticleModel:
         self,
         *,
         include_refs: str | None = None,
-        include_figures: str | None = None,
-        include_supplementary: bool | None = None,
         asset_profile: AssetProfile = "none",
         max_tokens: MaxTokensMode = "full_text",
     ) -> str:
+        from ..provider_catalog import provider_render_policy_for_source
         from .render import (
             _append_abstract_with_budget,
             _append_sections_with_budget,
@@ -527,15 +531,11 @@ class ArticleModel:
             render_table_asset_groups,
         )
 
-        from ..acquisition import is_pdf_article
-
         preserve_pdf = is_pdf_article(self)
         warnings = list(self.quality.warnings)
         render_plan = _build_markdown_render_plan(
             self,
             include_refs=include_refs,
-            include_figures=include_figures,
-            include_supplementary=include_supplementary,
             asset_profile=asset_profile,
             max_tokens=max_tokens,
         )
@@ -618,8 +618,6 @@ class ArticleModel:
         if preserve_pdf:
             return "\n".join(lines) + "\n"
         markdown = "\n".join(lines).strip() + "\n"
-        from ..provider_catalog import provider_render_policy_for_source
-
         policy = provider_render_policy_for_source(self.source)
         if policy is not None and policy.finalize_markdown is not None:
             markdown = policy.finalize_markdown(markdown)

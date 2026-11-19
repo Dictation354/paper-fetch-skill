@@ -1,13 +1,11 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
+
 from dataclasses import replace
-from tests.support.iop_provider import (
-    _FakeIopSupplementaryIndexFetcher,
-    _iop_supplementary_test_deps,
-)
 from pathlib import Path
 from unittest import mock
+
 import pytest
+
 from paper_fetch import publisher_identity
 from paper_fetch.extraction.html.signals import (
     HtmlExtractionFailure,
@@ -21,13 +19,17 @@ from paper_fetch.provider_catalog import (
     provider_html_path_templates,
     provider_pdf_path_templates,
 )
-from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers import _iop_html
+from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
 from paper_fetch.quality.html_availability import HtmlQualityAssessor
 from paper_fetch.runtime import RuntimeContext
-
+from paper_fetch.tracing import trace_event
+from tests.support.iop_provider import (
+    _FakeIopSupplementaryIndexFetcher,
+    _iop_supplementary_test_deps,
+)
 
 IOP_SAMPLE_DOI = "10.1088/1748-9326/ab7d02"
 IOP_SAMPLE_LANDING = f"https://iopscience.iop.org/article/{IOP_SAMPLE_DOI}"

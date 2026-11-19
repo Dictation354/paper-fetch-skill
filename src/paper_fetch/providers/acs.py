@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
@@ -14,8 +12,8 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from . import _acs_html, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import BrowserAssetPolicy, ProviderBundle
-
 
 # SITE_UI_COPY_REGRESSION_MARKER: ACS Publications site UI copy owned by the
 # provider cleanup policy; rerun extraction-rules validation when this list changes.

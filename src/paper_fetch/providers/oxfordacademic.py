@@ -2,18 +2,10 @@
 
 from __future__ import annotations
 
-from ..tracing import TraceEvent
-
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
-from ..quality.access_boundary import raise_for_paywall
-
+from collections.abc import Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
 from urllib.parse import parse_qsl, quote, urljoin, urlparse
 
 from ..config import (
@@ -38,13 +30,13 @@ from ..extraction.html.provider_rules import (
     ProviderHtmlRules,
 )
 from ..http import (
+    PDF_MIME_TYPE,
     HttpRequestPolicy,
     HttpTransport,
-    PDF_MIME_TYPE,
     RequestFailure,
 )
-from ..http.provider_policy import provider_request_policy
 from ..http.headers import header_value
+from ..http.provider_policy import provider_request_policy
 from ..models import (
     AssetProfile,
     SourceKind,
@@ -54,15 +46,17 @@ from ..models import (
 from ..models.render import rewrite_markdown_asset_links
 from ..pdf_limits import pdf_max_bytes
 from ..publisher_identity import normalize_doi
-from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
-from ..runtime import RuntimeContext
-from ..tracing import download_event, fulltext_event
-from ..utils import empty_asset_results, extend_unique, normalize_text
+from ..quality.access_boundary import propagate_paywall, raise_for_paywall
 from ..quality.html_availability import (
     HtmlQualityAssessor,
     availability_failure_message,
 )
+from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
+from ..runtime import RuntimeContext
+from ..tracing import TraceEvent, download_event, fulltext_event
+from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _oxfordacademic_html as oxford_html
+from ._definitions import PROVIDER_DEFINITIONS
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     PdfFetchFailure,
@@ -70,8 +64,8 @@ from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
-    pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
+    pdf_fetch_result_warnings,
 )
 from ._registry import ProviderBundle
 from ._waterfall import (
@@ -91,7 +85,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["oxfordacademic"]
 

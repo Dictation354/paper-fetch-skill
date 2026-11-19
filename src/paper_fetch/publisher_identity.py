@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
+import functools
 import html
 import importlib
-import functools
 import re
-import urllib.parse
 import unicodedata
+import urllib.parse
+from collections.abc import Mapping
 from dataclasses import asdict, dataclass
 from typing import Any
-from collections.abc import Mapping
 
 from rapidfuzz.fuzz import ratio
 
@@ -54,6 +54,9 @@ _AMS_ARTICLE_PATH_PATTERN = re.compile(
     r"(?:[0-9]+/[0-9]+|aop/(?P<aop_id>[a-z][a-z0-9]*-d-[0-9]{2}-[0-9]+\.[0-9]+))/"
     r"(?P<article_id>[a-z][a-z0-9]*-d-[0-9]{2}-[0-9]+\.[0-9]+)\.(?:xml|pdf)",
     flags=re.IGNORECASE,
+)
+_NATURE_ARTICLE_PATH_PATTERN = re.compile(
+    r"/articles/(s[0-9]{5}-[0-9]{3}-[0-9]{4,5}-[a-zA-Z0-9])"
 )
 
 
@@ -224,12 +227,25 @@ def _strip_url_doi_route_suffixes(doi: str, provider: str | None) -> str:
     return normalize_doi(value)
 
 
+def nature_doi_from_article_url(url: str) -> str | None:
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.scheme not in {"http", "https"} or parsed.hostname not in {
+        "nature.com",
+        "www.nature.com",
+    }:
+        return None
+    match = _NATURE_ARTICLE_PATH_PATTERN.fullmatch(parsed.path)
+    return f"10.1038/{match[1].lower()}" if match else None
+
+
 def extract_doi_from_url(url: str | None) -> str | None:
     if not url:
         return None
     parsed = urllib.parse.urlparse(url)
     if parsed.scheme not in {"http", "https"} or not parsed.netloc:
         return extract_doi(url)
+    if doi := nature_doi_from_article_url(url):
+        return doi
     provider = infer_provider_from_url(url)
     for _, value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=False):
         query_doi = extract_doi(value)

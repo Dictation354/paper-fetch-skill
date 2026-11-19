@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import contextlib
 import threading
-from dataclasses import dataclass, field
+from dataclasses import dataclass, field, replace
 from typing import TYPE_CHECKING, Any
+
+from .types import BrowserRuntimeFailure
 
 if TYPE_CHECKING:
     from ...runtime import RuntimeContext
@@ -24,12 +26,9 @@ class BrowserSessions:
         **context_kwargs: Any,
     ) -> Any:
         """Borrow the publisher's thread-affine persistent context."""
-
-        from .profile import (
-            profile_path,
-        )
-
-        from dataclasses import replace
+        del context_kwargs
+        from .api import _backend
+        from .profile import profile_path
 
         config = replace(config, backend="byparr")
         path = profile_path(config)
@@ -37,8 +36,6 @@ class BrowserSessions:
         with self.lock:
             manager = self.managers.get(key)
             if manager is not None and manager.config.provider != config.provider:
-                from .types import BrowserRuntimeFailure
-
                 raise BrowserRuntimeFailure(
                     "browser_profile_provider_conflict",
                     f"Publisher profile {path} belongs to {manager.config.provider}; cannot use it for {config.provider}.",
@@ -53,9 +50,7 @@ class BrowserSessions:
             if manager is None:
                 # Release the prior publisher before waiting for another directory.
                 # This prevents two requests from holding opposite profile leases.
-                self.close_camoufox_for_current_thread(runtime_context)
-                from .api import _backend
-
+                self.close_browser_for_current_thread(runtime_context)
                 manager = _backend(config.backend).create_manager(
                     config, runtime_context=runtime_context
                 )
@@ -80,14 +75,12 @@ class BrowserSessions:
         return {}
 
     def close_browser(self, runtime_context: RuntimeContext) -> None:
-        """Close Camoufox managers owned by this runtime context."""
+        """Close browser managers owned by this runtime context."""
 
-        self.close_camoufox_for_current_thread(runtime_context)
+        self.close_browser_for_current_thread(runtime_context)
 
-    def close_camoufox_for_current_thread(
-        self, runtime_context: RuntimeContext
-    ) -> None:
-        """Close Camoufox managers while still on their owning worker thread."""
+    def close_browser_for_current_thread(self, runtime_context: RuntimeContext) -> None:
+        """Close browser managers while still on their owning worker thread."""
 
         owner_thread_id = threading.get_ident()
         with self.lock:

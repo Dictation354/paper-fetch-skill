@@ -4,8 +4,8 @@ from __future__ import annotations
 
 import re
 import unicodedata
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from ...utils import normalize_text
 from .semantics import ABSTRACT_ATTR_TOKENS, ABSTRACT_HEADINGS, node_source_selector

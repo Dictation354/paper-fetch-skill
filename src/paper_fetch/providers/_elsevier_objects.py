@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import urllib.parse
+import xml.etree.ElementTree as ET
 from collections.abc import Iterable
 from pathlib import Path
 from typing import Any
-import urllib.parse
-import xml.etree.ElementTree as ET
 
 from ..extraction.xml_tables import _local_name
 from ..utils import normalize_text
@@ -15,7 +15,6 @@ from ._elsevier_xml_rules import (
     classify_elsevier_asset_kind,
     infer_elsevier_asset_group_key,
 )
-
 
 XLINK_HREF = "{http://www.w3.org/1999/xlink}href"
 

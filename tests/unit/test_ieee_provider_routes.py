@@ -1,13 +1,8 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from tests.support.ieee_provider_routes import (
-    _FakeIeeeBrowserContext,
-    _FakeIeeeBrowserPage,
-    _FakeIeeeBrowserResponse,
-)
+
 import json
+
+from paper_fetch.extraction.html.html_tags import HTML_DROP_TAGS
 from paper_fetch.providers import (
     _ieee_block_page,
     _ieee_browser_html,
@@ -17,8 +12,16 @@ from paper_fetch.providers import (
     _ieee_url,
     browser_runtime,
 )
-from paper_fetch.extraction.html.html_tags import HTML_DROP_TAGS
+from paper_fetch.tracing import trace_event
 from tests.support._ieee_provider_support import *
+from tests.support.ieee_provider_routes import (
+    _FakeIeeeBrowserContext,
+    _FakeIeeeBrowserPage,
+    _FakeIeeeBrowserResponse,
+)
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
+
 # ruff: noqa: F403,F405
 
 

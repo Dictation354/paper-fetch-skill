@@ -1,21 +1,21 @@
 """P08/P26 source-object identities, occurrence counts, content and positions."""
 
-from collections import Counter
 import re
+from collections import Counter
+from types import SimpleNamespace
 from urllib.parse import urljoin
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models.markdown import iter_markdown_images
-from tests.golden_criteria import golden_criteria_sample_for_doi
-from tests.golden_criteria import source_selections
+from tests.golden_criteria import golden_criteria_sample_for_doi, source_selections
 from tests.paths import REPO_ROOT
 from tests.support.canonical_content import source_prose_blocks
 from tests.support.object_content import (
+    assert_image_occurrences,
     assert_object_position,
     assert_source_tables,
-    assert_image_occurrences,
 )
 from tests.support.reviewed_publisher_content import _words
 from tests.support.test_evidence import evidence_cache
@@ -23,8 +23,6 @@ from tests.support.verified_source_inputs import (
     build_verified_source_article,
     inspect_original,
 )
-from types import SimpleNamespace
-
 
 CONTROL = "10.1146/annurev-control-090419-075625"
 CASES = {

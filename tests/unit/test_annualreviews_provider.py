@@ -1,10 +1,13 @@
 from __future__ import annotations
+
 import tempfile
 from pathlib import Path
 from unittest import mock
+
 from bs4 import BeautifulSoup
-from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
+
 from paper_fetch.http import RequestFailure
+from paper_fetch.provider_catalog import PROVIDER_CATALOG, SOURCE_PROVIDER_MAP
 from paper_fetch.providers import _annualreviews_html, browser_runtime
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.annualreviews import AnnualreviewsClient
@@ -17,7 +20,6 @@ from tests.support._atypon_browser_workflow_provider_support import (
     png_header,
 )
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
-
 
 HTML_DOI = "10.1146/annurev-control-030123-013355"
 REFERENCES_DOI = "10.1146/annurev-environ-102511-084654"

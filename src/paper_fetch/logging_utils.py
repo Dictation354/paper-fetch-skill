@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import json
 import logging
+from collections.abc import Mapping
 from functools import cache
 from typing import Any
-from collections.abc import Mapping
 
 _REDACTED_LOG_VALUE = "***"
 _HEADER_CONTAINER_KEYS = frozenset(

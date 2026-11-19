@@ -1,8 +1,17 @@
 """Shared test support; contains no collected tests."""
 
-from paper_fetch.providers import acs, aip, annualreviews, mdpi, science, tandf, wiley
-from paper_fetch.providers import ams, iop, pnas
-
+from paper_fetch.providers import (
+    acs,
+    aip,
+    ams,
+    annualreviews,
+    iop,
+    mdpi,
+    pnas,
+    science,
+    tandf,
+    wiley,
+)
 
 CLIENTS = {
     "ams": ams.AmsClient,

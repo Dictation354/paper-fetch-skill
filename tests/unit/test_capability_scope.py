@@ -1,28 +1,31 @@
 from __future__ import annotations
-from paper_fetch.capability_scope import CapabilityScopeBuilder
+
 import hashlib
 import json
 from pathlib import Path
+
 import pytest
+
 from paper_fetch.capability_scope import (
-    BrowserStateCapabilityUse,
     UNCACHEABLE_CAPABILITY_SCOPE,
+    BrowserStateCapabilityUse,
+    CapabilityScopeBuilder,
     capability_scope_from_runtime_context,
     capability_scopes_for_query,
 )
 from paper_fetch.delivery.fetch_cache import (
     PUBLIC_CREDENTIAL_SCOPE,
 )
-from paper_fetch.runtime import RuntimeContext
 from paper_fetch.providers.browser_runtime.profile import trusted_profile_digest
+from paper_fetch.runtime import RuntimeContext
 
 
 def _write_state(
     path: Path, *, value: str = "session", provider: str = "wiley"
 ) -> Path:
     from paper_fetch.providers.browser_runtime.profile import (
-        _native_stamp,
         METADATA_FILENAME,
+        _native_stamp,
     )
 
     path.mkdir(parents=True, exist_ok=True)
@@ -172,8 +175,8 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
 ) -> None:
     root = tmp_path / "runtime"
     from paper_fetch.providers.browser_runtime.profile import (
-        _native_stamp,
         METADATA_FILENAME,
+        _native_stamp,
     )
 
     for provider in ("wiley", "science"):

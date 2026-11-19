@@ -6,18 +6,22 @@ Evidence travels in existing provider/availability diagnostics.
 
 from __future__ import annotations
 
+import json
+import re
 from collections.abc import Mapping
 from contextlib import contextmanager
 from contextvars import ContextVar
-import re
-import json
 from typing import TYPE_CHECKING, Any
 from urllib.parse import unquote, urlsplit
 
 from bs4 import BeautifulSoup
 
+from ..failure import FailureDiagnostics
+from ..providers._errors import ProviderFailure
 from ..publisher_identity import extract_doi_from_url, normalize_doi
 from ..utils import normalize_text
+from ..xml_security import parse_xml
+from .html_signals import evaluate_datalayer_blocking_signals
 
 if TYPE_CHECKING:
     from ..runtime import RuntimeContext
@@ -161,6 +165,7 @@ def _html_paywall_diagnostics(
     metadata = metadata or {}
     soup = BeautifulSoup(html, "html.parser")
     from ..extraction.html._metadata import extract_doi_from_meta, parse_html_metadata
+    from ..extraction.html.provider_rules import availability_rules_for_provider
 
     meta: dict[str, list[str]] = {}
     for node in soup.find_all("meta"):
@@ -211,7 +216,7 @@ def _html_paywall_diagnostics(
                 if key in {"title", "abstract", "authors", "doi"} and value
             }
         )
-    for field, selector in (
+    for field_name, selector in (
         ("title", "meta[name='citation_title'], meta[property='og:title']"),
         (
             "abstract",
@@ -220,8 +225,7 @@ def _html_paywall_diagnostics(
     ):
         node = soup.select_one(selector)
         if node is not None:
-            received[field] = normalize_text(node.get("content"))
-    from ..extraction.html.provider_rules import availability_rules_for_provider
+            received[field_name] = normalize_text(node.get("content"))
 
     rules = availability_rules_for_provider(provider)
     visible = _visible_soup(html)
@@ -278,7 +282,6 @@ def _html_paywall_diagnostics(
             re.I,
         ):
             matches.append((gate, match))
-    from .html_signals import evaluate_datalayer_blocking_signals
 
     signal_set = rules.datalayer_signal_set
     signal_html = (
@@ -381,10 +384,9 @@ def raise_for_paywall(
         raise paywall_failure(diagnostics, body=body)
 
 
-def paywall_failure(diagnostics: Mapping[str, Any], *, body: str | bytes = b""):
-    from ..failure import FailureDiagnostics
-    from ..providers.base import ProviderFailure
-
+def paywall_failure(
+    diagnostics: Mapping[str, Any], *, body: str | bytes = b""
+) -> ProviderFailure:
     evidence = diagnostics[CONFIRMED_PAYWALL]
     return ProviderFailure(
         "no_access",
@@ -450,8 +452,6 @@ def raise_for_api_entitlement(
                 if payload.get(key)
             )
     elif text.lstrip().startswith("<"):
-        from ..xml_security import parse_xml
-
         try:
             root = parse_xml(text)
         except ValueError:
@@ -523,8 +523,6 @@ def check_payload_paywall(
         details = diagnostics if confirmed_paywall(diagnostics) else availability
         observed_doi = normalize_doi(str(details[CONFIRMED_PAYWALL].get("doi") or ""))
         if expected_doi and observed_doi and expected_doi != observed_doi:
-            from ..providers.base import ProviderFailure
-
             raise ProviderFailure(
                 "identity_mismatch", "Access evidence belongs to a different article."
             )

@@ -3,10 +3,9 @@
 from __future__ import annotations
 
 from dataclasses import dataclass
-from typing import Any
+from typing import TYPE_CHECKING, Any
 
 from ..failure import FailureDiagnostics
-from typing import TYPE_CHECKING
 
 if TYPE_CHECKING:
     from ..providers.base import ProviderFailure

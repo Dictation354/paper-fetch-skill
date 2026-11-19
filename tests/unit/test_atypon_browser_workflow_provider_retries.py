@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from tests.support._atypon_browser_workflow_provider_support import *
+
 # ruff: noqa: F403,F405
 
 
@@ -264,7 +266,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             "url": "https://example.test/supplement.docx",
             "section": "supplementary",
         }
-        probe_body_result = {
+        initial_body_result = {
             "assets": [
                 {
                     "kind": "figure",
@@ -275,10 +277,6 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                     "section": "body",
                 }
             ],
-            "asset_failures": [],
-        }
-        initial_body_result = {
-            "assets": [],
             "asset_failures": [
                 {
                     "kind": "figure",
@@ -328,9 +326,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                     reason="refreshed",
                 )
             )
-            body_results = iter(
-                [probe_body_result, initial_body_result, retry_body_result]
-            )
+            body_results = iter([initial_body_result, retry_body_result])
             mocked_download_assets = mock.Mock(
                 side_effect=lambda kind, *_args, **_kwargs: (
                     next(body_results)
@@ -374,7 +370,7 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
                 asset_profile="all",
             )
 
-        mocked_warm.assert_not_called()
+        mocked_warm.assert_called_once()
         figure_calls = [
             call
             for call in mocked_download_assets.call_args_list
@@ -385,10 +381,11 @@ class AtyponBrowserWorkflowProviderRetryTests(AtyponBrowserWorkflowProviderTestC
             for call in mocked_download_assets.call_args_list
             if call.args[0] is html_assets.SUPPLEMENTARY_KIND
         ]
-        self.assertEqual(len(figure_calls), 3)
-        self.assertEqual(figure_calls[0].kwargs["assets"], [first_figure])
+        self.assertEqual(len(figure_calls), 2)
+        self.assertEqual(
+            figure_calls[0].kwargs["assets"], [first_figure, second_figure]
+        )
         self.assertEqual(figure_calls[1].kwargs["assets"], [second_figure])
-        self.assertEqual(figure_calls[2].kwargs["assets"], [second_figure])
         self.assertEqual(len(supplementary_calls), 1)
         self.assertEqual(supplementary_calls[0].kwargs["assets"], [supplementary_asset])
         self.assertEqual(

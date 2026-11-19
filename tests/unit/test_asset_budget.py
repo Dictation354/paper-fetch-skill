@@ -1,38 +1,41 @@
 from __future__ import annotations
-from dataclasses import replace
-from tests.support.asset_budget import _FakeStreamResponse
-from io import BytesIO
-from pathlib import Path
+
 import gzip
 import sys
 import threading
 import types
-import zlib
 import zipfile
+import zlib
+from dataclasses import replace
+from io import BytesIO
+from pathlib import Path
+
 import pytest
-from paper_fetch.extraction.html.assets import download as asset_download_module
+
 from paper_fetch.asset_budget import (
-    AssetBudget,
-    AssetBudgetExceeded,
     DEFAULT_ASSET_MAX_BYTES_PER_ASSET,
     DEFAULT_ASSET_MAX_BYTES_TOTAL,
     DEFAULT_ASSET_MAX_CONCURRENCY,
     DEFAULT_ASSET_MAX_FILES,
     DEFAULT_ASSET_MAX_PIXELS,
+    AssetBudget,
+    AssetBudgetExceeded,
 )
-from paper_fetch.http import HttpRequestPolicy, HttpStreamOptions, HttpTransport
-from paper_fetch.http.errors import RequestFailure
-from paper_fetch.image_tools import SourceImagePathConversion
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
     AssetDownloadOptions,
     download_assets,
 )
+from paper_fetch.extraction.html.assets import download as asset_download_module
 from paper_fetch.extraction.html.assets.state import (
     AssetDownloadResolution,
     resolve_and_collect_downloads_as_completed,
 )
+from paper_fetch.http import HttpRequestPolicy, HttpStreamOptions, HttpTransport
+from paper_fetch.http.errors import RequestFailure
+from paper_fetch.image_tools import SourceImagePathConversion
+from paper_fetch.providers import _arxiv_assets
 from paper_fetch.reason_codes import (
     ASSET_BYTES_PER_ASSET_EXCEEDED,
     ASSET_BYTES_TOTAL_EXCEEDED,
@@ -41,8 +44,8 @@ from paper_fetch.reason_codes import (
     ASSET_FILE_LIMIT_EXCEEDED,
     ASSET_PIXEL_LIMIT_EXCEEDED,
 )
-from paper_fetch.providers import _arxiv_assets
 from paper_fetch.runtime import RuntimeContext
+from tests.support.asset_budget import _FakeStreamResponse
 
 
 def _transport_with_response(
@@ -548,7 +551,10 @@ def test_stream_retry_count_is_not_multiplied_by_transport_layer(
         raise TimeoutError("timed out")
 
     monkeypatch.setattr(transport, "_perform_request", fail)
-    monkeypatch.setattr(transport, "_cancellable_sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "paper_fetch.extraction.html.assets.streaming._cancellable_retry_sleep",
+        lambda _seconds, **_kwargs: 0.0,
+    )
 
     result = _download_one_streamed_supplementary(
         transport,
@@ -604,7 +610,10 @@ def test_partial_body_retry_uses_fresh_staging_and_rolls_back_bytes(
 
     monkeypatch.setattr(transport, "_perform_request", perform)
     monkeypatch.setattr(transport, "stream_to_file", record_stream)
-    monkeypatch.setattr(transport, "_cancellable_sleep", lambda _seconds: None)
+    monkeypatch.setattr(
+        "paper_fetch.extraction.html.assets.streaming._cancellable_retry_sleep",
+        lambda _seconds, **_kwargs: 0.0,
+    )
     budget = AssetBudget(max_files=2, max_bytes_per_asset=16, max_bytes_total=16)
 
     result = _download_one_streamed_supplementary(
@@ -1578,9 +1587,9 @@ def test_typed_conversion_resources_share_ownership_and_rollback_on_save_error(
 ):
     from paper_fetch.extraction.html.assets.state import (
         AssetBinaryPayload,
-        AssetFetchResponse,
         AssetDownloadAttempt,
         AssetDownloadCandidate,
+        AssetFetchResponse,
         resolution_from_attempt,
     )
 
@@ -1627,29 +1636,21 @@ def test_typed_conversion_resources_share_ownership_and_rollback_on_save_error(
     assert budget.snapshot()["reserved_bytes"] == 0
 
 
-def test_memory_conversion_keeps_source_and_counts_output_bytes(monkeypatch, tmp_path):
-    from paper_fetch.extraction.html.assets.state import AssetFetchResponse
-    from paper_fetch.image_tools import SourceImageConversion
+def test_unstaged_conversion_and_save_require_staged_payload(tmp_path):
+    from paper_fetch.extraction.html.assets.state import (
+        AssetDownloadFailure,
+        AssetFetchResponse,
+    )
 
     source = b"%!PS-Adobe-3.0 EPSF-3.0\nsource"
     response = AssetFetchResponse.from_mapping(
         {"body": source, "headers": {"content-type": "application/postscript"}}
     )
-    monkeypatch.setattr(
-        asset_download_module,
-        "convert_source_image_response_to_png",
-        lambda *args, **kwargs: SourceImageConversion(
-            body=_SMALL_PNG,
-            content_type="image/png",
-            source_format="eps",
-            tool="mock-converter",
-        ),
-    )
-    converted, _ = asset_download_module._converted_figure_response(
+    converted, source_format = asset_download_module._converted_figure_response(
         response, source_url="https://example.test/figure.eps"
     )
-    assert converted.original_payload is response.payload
-    assert converted.payload.downloaded_bytes == len(_SMALL_PNG)
+    assert source_format == ""
+    assert converted.original_payload is None
     saved = asset_download_module.save_asset_resolution(
         FIGURE_KIND,
         AssetDownloadResolution(
@@ -1660,6 +1661,5 @@ def test_memory_conversion_keeps_source_and_counts_output_bytes(monkeypatch, tmp
         asset_dir=tmp_path,
         used_names_by_dir={},
     )
-    assert saved["downloaded_bytes"] == len(_SMALL_PNG)
-    assert Path(saved["path"]).read_bytes() == _SMALL_PNG
-    assert Path(saved["original_source_path"]).read_bytes() == source
+    assert isinstance(saved, AssetDownloadFailure)
+    assert saved.diagnostic["reason"] == "empty_response_body"

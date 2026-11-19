@@ -1,18 +1,17 @@
 from __future__ import annotations
-from dataclasses import replace
 
 import json
-from dataclasses import asdict
+from dataclasses import asdict, replace
 from unittest import mock
 
 from paper_fetch import provider_catalog as runtime_catalog
-from paper_fetch.config import DEFAULT_USER_AGENT
-from paper_fetch.provider_catalog import provider_supports_supplementary
 from paper_fetch.catalog_payload import (
     PROVIDER_CATALOG_ID,
     PROVIDER_CATALOG_SCHEMA_VERSION,
     provider_catalog_payload,
 )
+from paper_fetch.config import DEFAULT_USER_AGENT
+from paper_fetch.provider_catalog import provider_supports_supplementary
 
 
 def _expected_routes(

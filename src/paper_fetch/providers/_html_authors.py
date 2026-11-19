@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Callable, Collection, Mapping
 from contextvars import ContextVar
 from dataclasses import dataclass
-import re
-from typing import Any
 from re import Pattern
-from collections.abc import Callable, Collection, Mapping
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..utils import dedupe_authors, normalize_text
 from ._script_json import extract_script_json
-
-from bs4 import BeautifulSoup, Tag
 
 COMMON_COLLECTIVE_AUTHOR_TOKENS = frozenset(
     {

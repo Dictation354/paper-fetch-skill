@@ -10,7 +10,6 @@ from paper_fetch.provider_catalog import (
 )
 from paper_fetch.providers.copernicus import _candidate_urls
 
-
 DOI = "10.5194/acp-24-1-2024"
 LANDING_URL = "https://acp.copernicus.org/articles/24/1/2024/"
 XML_URL = "https://acp.copernicus.org/articles/24/1/2024/acp-24-1-2024.xml"

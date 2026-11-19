@@ -1,26 +1,30 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
+
+import unittest
 import urllib.parse
+from dataclasses import replace
+from pathlib import Path
+from unittest import mock
+
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import (
     browser_runtime,
+)
+from paper_fetch.providers import (
     elsevier as elsevier_provider,
 )
 from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_event
 from tests.paths import FIXTURE_DIR
-from tests.support._paper_fetch_support import RecordingTransport
-import unittest
-from pathlib import Path
-from unittest import mock
 from tests.provider_benchmark_samples import (
     WILEY_PDF_FALLBACK_SAMPLE,
     provider_benchmark_sample,
 )
+from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.trace import trace_facts
 
 
 def _payload_route(raw_payload: RawFulltextPayload) -> str | None:

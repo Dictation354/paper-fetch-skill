@@ -1,11 +1,7 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from paper_fetch.providers.base import ProviderContent
 
 import tempfile
-from dataclasses import asdict, fields
+from dataclasses import asdict, fields, replace
 from pathlib import Path
 
 from paper_fetch.artifacts import ArtifactStore
@@ -13,9 +9,12 @@ from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers._waterfall import ProviderWaterfallState
 from paper_fetch.providers.base import (
     ProviderArtifacts,
+    ProviderContent,
     ProviderFailure,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_event
+from tests.support.trace import trace_facts
 
 
 def test_build_provider_payload_populates_typed_content_and_trace() -> None:

@@ -6,17 +6,18 @@ transcriptions. Whitespace and typographic punctuation are ignored; words,
 numbers and their order are preserved. No expected text comes from the renderer.
 """
 
-from tests.support.reviewed_publisher_content import _words
-from tests.support.canonical_content import source_reference_text
-from types import SimpleNamespace
 import re
+from types import SimpleNamespace
 from urllib.parse import urlsplit
-from bs4 import BeautifulSoup
-import pytest
-from tests.golden_corpus import golden_corpus_fixture_for_doi
-from tests.support.replay import build_article_from_fixture
-from tests.golden_criteria import golden_criteria_asset
 
+import pytest
+from bs4 import BeautifulSoup
+
+from tests.golden_corpus import golden_corpus_fixture_for_doi
+from tests.golden_criteria import golden_criteria_asset
+from tests.support.canonical_content import source_reference_text
+from tests.support.replay import build_article_from_fixture
+from tests.support.reviewed_publisher_content import _words
 
 CASES = [
     ("10.1371/journal.pone.0263725", "xml", 60),

@@ -124,9 +124,7 @@ def test_ieee_stamp_captures_subframe_response_without_download(
         monkeypatch.setattr(
             _pdf_fallback,
             "fetch_pdf_over_http",
-            mock.Mock(
-                side_effect=_pdf_fallback.PdfFallbackFailure("not_pdf", "wrapper")
-            ),
+            mock.Mock(side_effect=_pdf_fallback.PdfFetchFailure("not_pdf", "wrapper")),
         )
         # Conversion is opaque to this browser contract; real byte/DOI checks run.
         monkeypatch.setattr(
@@ -179,7 +177,7 @@ def test_ieee_stamp_captures_subframe_response_without_download(
             assert result.diagnostics["identity"]["status"] == "match"
             assert list(tmp_path.glob("*.pdf"))
         else:
-            with pytest.raises(_pdf_fallback.PdfFallbackFailure) as error:
+            with pytest.raises(_pdf_fallback.PdfFetchFailure) as error:
                 _pdf_fallback.fetch_pdf_with_browser([stamp], **kwargs)
             assert error.value.kind == (
                 "identity_mismatch"

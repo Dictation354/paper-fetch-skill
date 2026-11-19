@@ -6,8 +6,8 @@ from unittest import mock
 import pytest
 
 from paper_fetch.providers.acs import AcsClient
-from paper_fetch.providers.pnas import PnasClient
 from paper_fetch.providers.browser_runtime import BrowserRuntimeConfig
+from paper_fetch.providers.pnas import PnasClient
 from paper_fetch.runtime import RuntimeContext
 from tests.support._atypon_browser_workflow_provider_support import (
     AssetTransport,

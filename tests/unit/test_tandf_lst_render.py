@@ -1,7 +1,8 @@
 """Local formula classification and hidden MathML contracts."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.formula_rules import (
     display_formula_nodes,
     is_display_formula_node,

@@ -1,16 +1,13 @@
 """Small scenarios for the N1–N6 refetch findings."""
 
-from paper_fetch.models import Quality
-
-
 from pathlib import Path
 
-from markdown_it import MarkdownIt
 import pytest
+from markdown_it import MarkdownIt
 
-from paper_fetch.models import FetchEnvelope, article_from_markdown
-from paper_fetch.providers._arxiv_metadata import _merge_arxiv_metadata_layers
+from paper_fetch.models import FetchEnvelope, Quality, article_from_markdown
 from paper_fetch.providers._acs_html import scoped_asset_extractor
+from paper_fetch.providers._arxiv_metadata import _merge_arxiv_metadata_layers
 from paper_fetch.providers._springer_markdown import extract_html_payload
 from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
@@ -203,8 +200,8 @@ def test_acs_distinct_table_downloads_survive_merging_and_strict_acceptance(
         asset_profile="body",
         require_local_body_assets=True,
     )
-    assert acceptance.asset.body_discovered == 2
-    assert acceptance.asset.body_local == (1 if missing_table else 2)
+    assert acceptance.asset.discovered == 2
+    assert acceptance.asset.local == (1 if missing_table else 2)
     assert acceptance.asset.local_body_assets_satisfied is (not missing_table)
     if missing_table:
         assert acceptance.overall != "complete"
@@ -212,9 +209,10 @@ def test_acs_distinct_table_downloads_survive_merging_and_strict_acceptance(
 
 @pytest.mark.parametrize("number", ["5526567", "4038993"])
 def test_ieee_bad_gateway_reaches_existing_browser_pdf_route(monkeypatch, number):
-    from paper_fetch.providers import ieee, _ieee_metadata
-    from paper_fetch.providers._pdf_fallback import PdfFetchFailure, PdfFetchResult
     from unittest.mock import Mock
+
+    from paper_fetch.providers import _ieee_metadata, ieee
+    from paper_fetch.providers._pdf_fallback import PdfFetchFailure, PdfFetchResult
 
     doi = "10.1109/example." + number
     url = "https://ieeexplore.ieee.org/document/" + number + "/"

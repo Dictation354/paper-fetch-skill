@@ -1,8 +1,8 @@
 from __future__ import annotations
+
 from unittest import mock
+
 from paper_fetch import publisher_identity
-from paper_fetch.providers import _acs_html
-from paper_fetch.providers.browser_runtime.backends import camoufox as camoufox_backend
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
     default_asset_profile_for_provider,
@@ -10,6 +10,7 @@ from paper_fetch.provider_catalog import (
     provider_html_path_templates,
     provider_pdf_path_templates,
 )
+from paper_fetch.providers import _acs_html
 from paper_fetch.providers._atypon_browser_workflow_profiles import (
     build_html_candidates,
     build_pdf_candidates,
@@ -23,11 +24,11 @@ from paper_fetch.providers.atypon_browser_workflow import (
 from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
 )
+from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
 from paper_fetch.providers.browser_workflow.fetchers.readiness import (
     atypon_body_ready_selectors,
 )
-
 
 ACS_SAMPLE_DOI = "10.1021/acsomega.4c03987"
 ACS_SAMPLE_LANDING = f"https://pubs.acs.org/doi/{ACS_SAMPLE_DOI}"
@@ -390,7 +391,7 @@ def test_acs_silverchair_missing_original_retains_preview_and_viewer_reference()
 
 def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
     with mock.patch.object(
-        camoufox_backend,
+        byparr_backend,
         "_dependency_details",
         return_value={
             "runtime_valid": True,

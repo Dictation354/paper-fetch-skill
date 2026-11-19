@@ -1,7 +1,9 @@
 """Identity acceptance mechanism with bounded evidence and converter boundary mocks."""
 
 from unittest import mock
+
 import pytest
+
 from paper_fetch.providers import _pdf_common
 from tests.support._paper_fetch_support import build_pdf_bytes
 

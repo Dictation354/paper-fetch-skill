@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import re
 from collections.abc import Mapping
 from typing import Any, TypedDict
 
@@ -43,8 +44,6 @@ def citation_date(value: Any) -> str | None:
 
 
 def publication_years(value: Any) -> set[int]:
-    import re
-
     years = set()
     for item in normalize_publication_dates(value):
         if item["kind"] == "created":

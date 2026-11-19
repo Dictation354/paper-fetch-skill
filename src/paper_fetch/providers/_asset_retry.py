@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Collection, Mapping, Sequence
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Callable, Collection, Mapping, Sequence
 
 from ..utils import normalize_text
 from ._retry_categories import (

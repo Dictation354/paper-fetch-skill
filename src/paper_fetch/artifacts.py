@@ -2,21 +2,15 @@
 
 from __future__ import annotations
 
-from .publication_dates import citation_date
-
-from .tracing import extend_trace
-
-from .tracing import TraceEvent
-
 import contextlib
-from dataclasses import dataclass, field
 import hashlib
 import json
 import os
-from pathlib import Path
 import tempfile
-from typing import Any, Literal
 from collections.abc import Callable, Iterator, Mapping, Sequence
+from dataclasses import dataclass, field
+from pathlib import Path
+from typing import Any, Literal
 
 from filelock import FileLock
 from platformdirs import user_runtime_path
@@ -24,13 +18,14 @@ from platformdirs import user_runtime_path
 from .config import APP_NAME
 from .extraction.html.assets.dom import preview_dimensions_are_acceptable
 from .models import ArticleModel, AssetProfile, AssetQualitySummary
+from .publication_dates import citation_date
 from .reason_codes import PDF_FALLBACK
-from .tracing import download_event
+from .tracing import TraceEvent, download_event, extend_trace
 from .utils import (
     _extract_year,
     build_output_path,
-    extension_from_content_type,
     extend_unique,
+    extension_from_content_type,
     format_paper_stem,
     normalize_text,
     provider_display_name,

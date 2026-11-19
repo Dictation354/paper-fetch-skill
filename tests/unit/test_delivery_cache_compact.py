@@ -1,118 +1,42 @@
 from __future__ import annotations
+
 import json
 import socket
 from pathlib import Path
 from unittest import mock
-import pytest
-from paper_fetch.delivery.cache_inspection import get_cached_payload
-from paper_fetch.utils import sanitize_filename
-from tests.support.fetch_fixtures import (
-    create_cached_downloads,
-    create_cached_fetch_envelope,
-)
 
+import pytest
+
+from paper_fetch.delivery.acceptance_payloads import compact_acceptance_payload
+from paper_fetch.delivery.fetch_cache import FetchCache, cache_request_fingerprint
+from paper_fetch.delivery.requests import FetchPaperRequest
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+from tests.support.fetch_fixtures import sample_envelope
+from tests.support.workflow_acceptance import _envelope
 
 DOI = "10.1000/cache-compact"
 
 
-def _sidecar_path(download_dir: Path, doi: str = DOI) -> Path:
-    return download_dir / f"{sanitize_filename(doi)}.fetch-envelope.json"
-
-
-def _prepared_cache(download_dir: Path) -> None:
-    create_cached_downloads(download_dir, DOI)
-    create_cached_fetch_envelope(download_dir, DOI)
-
-
-def test_get_cached_default_full_preserves_existing_fields(tmp_path: Path) -> None:
-    _prepared_cache(tmp_path)
-
-    default_payload = get_cached_payload(doi=DOI, download_dir=tmp_path)
-    explicit_payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="full",
-        preferred_only=False,
+def _write_sidecar(download_dir: Path, *, modes: list[str] | None = None) -> Path:
+    request = FetchPaperRequest(
+        query=DOI,
+        modes=list(modes or ["markdown"]),
+        prefer_cache=True,
     )
+    cache = FetchCache(download_dir)
+    cache.write_fetch_envelope(
+        sample_envelope(modes=set(request.modes), doi=DOI), request
+    )
+    return next(download_dir.glob("*.fetch-envelope.json"))
 
-    assert default_payload == explicit_payload
-    assert default_payload["status"] == "hit"
-    assert default_payload["doi"] == DOI
-    assert default_payload["download_dir"] == str(tmp_path)
-    assert {entry["kind"] for entry in default_payload["entries"]} == {
-        "asset",
-        "fetch_envelope",
-        "markdown",
-        "primary_payload",
+
+def test_compact_acceptance_payload_projects_unrequested_asset_summary() -> None:
+    unrequested = evaluate_fetch_acceptance(_envelope(), asset_profile="none")
+    assert compact_acceptance_payload(unrequested)["asset_summary"] == {
+        "requested": False,
+        "profile": "none",
     }
-    assert default_payload["preferred"]["markdown"] is not None
-    assert default_payload["preferred"]["primary_payload"] is not None
-    assert len(default_payload["preferred"]["assets"]) == 1
-
-
-def test_get_cached_compact_returns_request_sensitive_quality_summary(
-    tmp_path: Path,
-) -> None:
-    _prepared_cache(tmp_path)
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-    )
-
-    assert payload["status"] == "hit"
-    assert payload["detail"] == "compact"
-    assert "entries" not in payload
-    assert set(payload["preferred"]) == {"markdown", "primary_payload"}
-    assert "assets" not in payload["preferred"]
-    assert "payload" not in payload["sidecar"]
-    assert payload["entry_summary"] == {
-        "total": 4,
-        "by_kind": {
-            "asset": 1,
-            "fetch_envelope": 1,
-            "markdown": 1,
-            "primary_payload": 1,
-        },
-    }
-    assert payload["content_kind"] == "fulltext"
-    assert payload["has_fulltext"] is True
-    assert payload["confidence"] == "medium"
-    assert payload["acceptance"]["status"] == "evaluated"
-    assert payload["acceptance"]["content"] == "fulltext"
-    assert payload["asset_summary"]["status"] == "not_requested"
-    assert payload["warning_summary"]["warning_codes"] == ["weak_body_structure"]
-    assert payload["request_status"] == "satisfied"
-    assert payload["request_satisfied"] is True
-    assert payload["cached_request"] == payload["requested_request"]
-    assert (
-        payload["cached_request_fingerprint"]
-        == (payload["requested_request_fingerprint"])
-    )
-    assert len(payload["cached_request_fingerprint"]) == 64
-
-
-def test_get_cached_preferred_only_omits_nonpreferred_entry_arrays(
-    tmp_path: Path,
-) -> None:
-    _prepared_cache(tmp_path)
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        preferred_only=True,
-    )
-
-    assert payload["detail"] == "full"
-    assert payload["preferred_only"] is True
-    assert [entry["kind"] for entry in payload["entries"]] == [
-        "markdown",
-        "primary_payload",
-    ]
-    assert payload["preferred"]["assets"] == []
-    assert payload["entry_summary"]["total"] == 4
-    assert payload["entry_summary"]["by_kind"]["asset"] == 1
 
 
 @pytest.mark.parametrize(
@@ -124,45 +48,25 @@ def test_get_cached_preferred_only_omits_nonpreferred_entry_arrays(
         {"max_tokens": 512},
     ],
 )
-def test_get_cached_distinguishes_entries_from_request_mismatch(
+def test_cache_loader_rejects_mismatched_request_parameters(
     tmp_path: Path,
     request_overrides: dict[str, object],
 ) -> None:
-    _prepared_cache(tmp_path)
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-        **request_overrides,
+    _write_sidecar(tmp_path)
+    request = FetchPaperRequest.model_validate(
+        {
+            "query": DOI,
+            "prefer_cache": True,
+            **request_overrides,
+        }
     )
-
-    assert payload["status"] == "hit"
-    assert payload["has_entries"] is True
-    assert payload["request_status"] == "mismatch"
-    assert payload["request_satisfied"] is False
-    assert payload["sidecar"]["request_matches"] is False
-    assert payload["sidecar"]["reason_code"] == "cached_request_mismatch"
-
-
-def test_get_cached_reports_cached_payload_missing_requested_mode(
-    tmp_path: Path,
-) -> None:
-    _prepared_cache(tmp_path)
-    sidecar_path = _sidecar_path(tmp_path)
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["request"]["modes"] = ["article", "markdown", "metadata"]
-    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-        modes=["metadata"],
-    )
-
-    assert payload["status"] == "miss"
-    assert payload["request_satisfied"] is False
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        loaded = FetchCache(tmp_path).load_fetch_envelope(
+            request,
+            resolve_paper_fn=mock.Mock(),
+            context=context,
+        )
+    assert loaded is None
 
 
 @pytest.mark.parametrize(
@@ -173,156 +77,94 @@ def test_get_cached_reports_cached_payload_missing_requested_mode(
         (["metadata"], "metadata", {}),
     ],
 )
-def test_get_cached_rejects_semantically_empty_requested_outputs(
+def test_cache_loader_rejects_semantically_empty_requested_outputs(
     tmp_path: Path,
     modes: list[str],
     field: str,
     value: object,
 ) -> None:
-    create_cached_downloads(tmp_path, DOI)
-    create_cached_fetch_envelope(tmp_path, DOI, modes=modes)
-    sidecar_path = _sidecar_path(tmp_path)
+    sidecar_path = _write_sidecar(tmp_path, modes=modes)
     sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
     sidecar["payload"][field] = value
     sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-        modes=modes,
-    )
+    request = FetchPaperRequest(query=DOI, modes=modes, prefer_cache=True)
+    with RuntimeContext(env={}, download_dir=tmp_path) as context:
+        loaded = FetchCache(tmp_path).load_fetch_envelope(
+            request,
+            resolve_paper_fn=mock.Mock(),
+            context=context,
+        )
+    assert loaded is None
 
-    assert payload["request_satisfied"] is False
-    assert payload["sidecar"]["payload_satisfies_request"] is False
 
-
-def test_get_cached_rejects_sidecar_content_flag_schema_conflict(
+def test_cache_loader_rejects_old_corrupt_and_doi_mismatched_sidecars(
     tmp_path: Path,
 ) -> None:
-    _prepared_cache(tmp_path)
-    sidecar_path = _sidecar_path(tmp_path)
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["payload"]["has_fulltext"] = False
-    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
+    for case in (
+        "old_version",
+        "corrupt_json",
+        "doi_mismatch",
+        "content_flag_conflict",
+    ):
+        scope = tmp_path / case
+        sidecar_path = _write_sidecar(scope)
+        if case == "corrupt_json":
+            sidecar_path.write_text("{broken", encoding="utf-8")
+        else:
+            sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
+            if case == "old_version":
+                sidecar["version"] = 7
+            elif case == "doi_mismatch":
+                sidecar["payload"]["doi"] = "10.1000/other"
+            else:
+                sidecar["payload"]["quality"]["has_fulltext"] = False
+            sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
 
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-    )
-
-    assert payload["request_satisfied"] is False
-    assert payload["sidecar"]["status"] == "invalid"
-    assert payload["sidecar"]["reason_code"] == "cache_sidecar_schema_invalid"
-
-
-def test_get_cached_reports_old_and_corrupt_sidecars_without_false_reuse(
-    tmp_path: Path,
-) -> None:
-    old_scope = tmp_path / "old"
-    corrupt_scope = tmp_path / "corrupt"
-    _prepared_cache(old_scope)
-    _prepared_cache(corrupt_scope)
-
-    old_path = _sidecar_path(old_scope)
-    old_payload = json.loads(old_path.read_text(encoding="utf-8"))
-    old_payload["version"] = 4
-    old_path.write_text(json.dumps(old_payload), encoding="utf-8")
-    _sidecar_path(corrupt_scope).write_text("{broken", encoding="utf-8")
-
-    old = get_cached_payload(doi=DOI, download_dir=old_scope, detail="compact")
-    corrupt = get_cached_payload(doi=DOI, download_dir=corrupt_scope, detail="compact")
-
-    assert old["status"] == "miss"
-    assert old["sidecar"]["status"] == "version_mismatch"
-    assert old["sidecar"]["reason_code"] == "cache_sidecar_version_mismatch"
-    assert old["request_satisfied"] is False
-    assert corrupt["status"] == "miss"
-    assert corrupt["sidecar"]["status"] == "corrupt"
-    assert corrupt["sidecar"]["reason_code"] == "cache_sidecar_invalid_json"
-    assert corrupt["request_satisfied"] is False
+        request = FetchPaperRequest(query=DOI, modes=["markdown"], prefer_cache=True)
+        with RuntimeContext(env={}, download_dir=scope) as context:
+            loaded = FetchCache(scope).load_fetch_envelope(
+                request,
+                resolve_paper_fn=mock.Mock(),
+                context=context,
+            )
+        assert loaded is None
 
 
-def test_get_cached_wrong_scope_is_explicit_miss_and_never_uses_network(
-    tmp_path: Path,
-) -> None:
+def test_cache_wrong_scope_is_miss_and_never_uses_network(tmp_path: Path) -> None:
     correct_scope = tmp_path / "correct"
     wrong_scope = tmp_path / "wrong"
-    _prepared_cache(correct_scope)
+    wrong_scope.mkdir(parents=True)
+    _write_sidecar(correct_scope)
 
-    with mock.patch.object(
-        socket,
-        "create_connection",
-        side_effect=AssertionError("cache lookup must stay offline"),
-    ) as create_connection:
-        payload = get_cached_payload(
-            doi=DOI,
-            download_dir=wrong_scope,
-            detail="compact",
+    request = FetchPaperRequest(query=DOI, modes=["markdown"], prefer_cache=True)
+    with (
+        mock.patch.object(
+            socket,
+            "create_connection",
+            side_effect=AssertionError("cache lookup must stay offline"),
+        ) as create_connection,
+        RuntimeContext(env={}, download_dir=wrong_scope) as context,
+    ):
+        loaded = FetchCache(wrong_scope).load_fetch_envelope(
+            request,
+            resolve_paper_fn=mock.Mock(),
+            context=context,
         )
 
-    assert payload["status"] == "miss"
-    assert payload["scope_status"] == "available"
-    assert payload["identity_status"] == "no_proven_entries"
-    assert payload["sidecar"]["status"] == "missing"
-    assert payload["request_satisfied"] is False
-    assert str(correct_scope) not in json.dumps(payload)
+    assert loaded is None
     create_connection.assert_not_called()
 
 
-def test_get_cached_does_not_treat_unproven_markdown_as_doi_hit(
-    tmp_path: Path,
-) -> None:
-    tmp_path.mkdir(parents=True, exist_ok=True)
-    (tmp_path / "notes.md").write_text(
-        f"# Notes\n\nMentioned DOI: {DOI}\n",
-        encoding="utf-8",
+def test_cache_request_fingerprint_is_stable_across_json_key_order() -> None:
+    request = {
+        "target": "paper",
+        "modes": ["markdown"],
+        "strategy": {"asset_profile": "none"},
+        "include_refs": "all",
+        "max_tokens": "full_text",
+    }
+    reordered = dict(reversed(list(request.items())))
+    assert cache_request_fingerprint(DOI, request) == cache_request_fingerprint(
+        DOI, reordered
     )
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-    )
-
-    assert payload["status"] == "miss"
-    assert payload["has_entries"] is False
-    assert payload["identity_status"] == "no_proven_entries"
-    assert payload["entry_summary"] == {"total": 0, "by_kind": {}}
-    assert payload["sidecar"]["status"] == "missing"
-    assert payload["request_satisfied"] is False
-
-
-def test_get_cached_reports_sidecar_doi_mismatch(tmp_path: Path) -> None:
-    _prepared_cache(tmp_path)
-    sidecar_path = _sidecar_path(tmp_path)
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["payload"]["doi"] = "10.1000/other"
-    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
-
-    payload = get_cached_payload(
-        doi=DOI,
-        download_dir=tmp_path,
-        detail="compact",
-    )
-
-    assert payload["status"] == "miss"
-    assert payload["sidecar"]["status"] == "doi_mismatch"
-    assert payload["sidecar"]["reason_code"] == "cache_sidecar_doi_mismatch"
-    assert payload["request_satisfied"] is False
-
-
-def test_cache_request_fingerprint_is_stable_across_json_key_order(
-    tmp_path: Path,
-) -> None:
-    _prepared_cache(tmp_path)
-    first = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
-    sidecar_path = _sidecar_path(tmp_path)
-    sidecar = json.loads(sidecar_path.read_text(encoding="utf-8"))
-    sidecar["request"] = dict(reversed(list(sidecar["request"].items())))
-    sidecar_path.write_text(json.dumps(sidecar), encoding="utf-8")
-
-    second = get_cached_payload(doi=DOI, download_dir=tmp_path, detail="compact")
-
-    assert first["cached_request_fingerprint"] == second["cached_request_fingerprint"]

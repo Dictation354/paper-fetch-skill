@@ -1,12 +1,10 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
 
 import tempfile
 import unittest
-from pathlib import Path
 from collections.abc import Mapping
+from dataclasses import replace
+from pathlib import Path
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
@@ -16,13 +14,15 @@ from paper_fetch.providers._waterfall import (
     run_provider_waterfall,
 )
 from paper_fetch.providers.base import (
-    combine_provider_failures,
-    ProviderFailure,
     ProviderClient,
     ProviderContent,
+    ProviderFailure,
     RawFulltextPayload,
+    combine_provider_failures,
 )
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
+from tests.support.trace import trace_facts
 
 
 def _payload(

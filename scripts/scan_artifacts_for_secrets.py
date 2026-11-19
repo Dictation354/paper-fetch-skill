@@ -6,14 +6,13 @@ from __future__ import annotations
 import argparse
 import json
 import os
-from pathlib import Path
 import re
 import runpy
 import sys
 from collections.abc import Iterable, Mapping, Sequence
+from pathlib import Path
 from typing import Any
 from urllib.parse import quote, quote_plus
-
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 _REDACTION_RULES = runpy.run_path(

@@ -1,27 +1,29 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from tests.support.markdown_presentation import visible_markdown
-from paper_fetch.extraction.html.signals import HtmlExtractionFailure
-from tests.block_fixtures import block_asset
-from tests.support._atypon_browser_workflow_provider_support import (
-    AssetTransport,
-    _typed_raw_payload,
-)
+
 import re
-import pytest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
+
+import pytest
 from bs4 import BeautifulSoup
+
+from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import _annualreviews_html, browser_runtime
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers.annualreviews import AnnualreviewsClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from tests.support.captured_images import download_captured_images
+from paper_fetch.tracing import trace_event
+from tests.block_fixtures import block_asset
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
+from tests.support._atypon_browser_workflow_provider_support import (
+    AssetTransport,
+    _typed_raw_payload,
+)
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
-
+from tests.support.captured_images import download_captured_images
+from tests.support.markdown_presentation import visible_markdown
 
 HTML_DOI = "10.1146/annurev-control-030123-013355"
 REFERENCES_DOI = "10.1146/annurev-environ-102511-084654"

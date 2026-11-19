@@ -1,7 +1,7 @@
 """Wiley pairs each MathJax expression with its adjacent fallback image."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models import SemanticLosses
 from paper_fetch.providers._wiley_html import (

@@ -23,8 +23,6 @@ HOST_ARCH=""
 
 MANAGED_BEGIN="# BEGIN paper-fetch offline managed"
 MANAGED_END="# END paper-fetch offline managed"
-CODEX_MANAGED_BEGIN="# BEGIN paper-fetch installer managed"
-CODEX_MANAGED_END="# END paper-fetch installer managed"
 SKILL_NAME="paper-fetch-skill"
 RUNTIME_ENV_KEYS=(
   PYTHONUTF8
@@ -76,8 +74,6 @@ manifest = json.load(open(sys.argv[1], encoding="utf-8"))
 print("installer_manifest_values")
 print(manifest["managed_blocks"]["offline"]["begin"])
 print(manifest["managed_blocks"]["offline"]["end"])
-print(manifest["managed_blocks"]["codex"]["begin"])
-print(manifest["managed_blocks"]["codex"]["end"])
 print(manifest["skill"]["name"])
 print("[runtime.env_keys]")
 for key in manifest["runtime"]["env_keys"]:
@@ -87,12 +83,10 @@ for key in manifest["runtime"]["env_keys"]:
   [ "${values[0]:-}" = "installer_manifest_values" ] || die "Invalid installer manifest payload from $INSTALLER_MANIFEST_FILE"
   MANAGED_BEGIN="${values[1]:-}"
   MANAGED_END="${values[2]:-}"
-  CODEX_MANAGED_BEGIN="${values[3]:-}"
-  CODEX_MANAGED_END="${values[4]:-}"
-  SKILL_NAME="${values[5]:-}"
+  SKILL_NAME="${values[3]:-}"
   local section=""
   local loaded_runtime_env_keys=()
-  for value in "${values[@]:6}"; do
+  for value in "${values[@]:4}"; do
     case "$value" in
       "[runtime.env_keys]")
         section="$value"
@@ -111,8 +105,6 @@ for key in manifest["runtime"]["env_keys"]:
 
   [ -n "$MANAGED_BEGIN" ] || die "installer manifest is missing managed_blocks.offline.begin"
   [ -n "$MANAGED_END" ] || die "installer manifest is missing managed_blocks.offline.end"
-  [ -n "$CODEX_MANAGED_BEGIN" ] || die "installer manifest is missing managed_blocks.codex.begin"
-  [ -n "$CODEX_MANAGED_END" ] || die "installer manifest is missing managed_blocks.codex.end"
   [ -n "$SKILL_NAME" ] || die "installer manifest is missing skill.name"
   [ "${#RUNTIME_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest is missing runtime.env_keys"
   [ "${#OFFLINE_ENV_KEYS[@]}" -gt 0 ] || die "installer manifest runtime.env_keys does not provide offline environment keys"
@@ -310,14 +302,6 @@ quote_env_value() {
   value="${value//\`/\\\`}"
   printf '"%s"' "$value"
 }
-
-quote_toml_value() {
-  local value="$1"
-  value="${value//\\/\\\\}"
-  value="${value//\"/\\\"}"
-  printf '"%s"' "$value"
-}
-
 
 offline_manifest_value() {
   "$PYTHON_BIN" -I -c '
@@ -726,12 +710,6 @@ check_macos_quarantine() {
   fi
 }
 
-cleanup_legacy_integration() {
-  local migration_python="$PYTHON_BIN"
-  [ ! -x "$(runtime_python_bin)" ] || migration_python="$(runtime_python_bin)"
-  "$migration_python" "$INSTALL_ROOT/scripts/cleanup_legacy_mcp.py" --install-root "$INSTALL_ROOT"
-}
-
 runtime_python_bin() {
   printf '%s\n' "$INSTALL_ROOT/runtime/paper-fetch-python"
 }
@@ -894,15 +872,6 @@ write_shell_startup_file() {
   log "Updated shell startup file at $SHELL_STARTUP_TARGET"
 }
 
-codex_config_path() {
-  if [ -n "${CODEX_HOME:-}" ]; then
-    printf '%s/config.toml\n' "$CODEX_HOME"
-  else
-    [ -n "${HOME:-}" ] || die "HOME is required to locate Codex config."
-    printf '%s/.codex/config.toml\n' "$HOME"
-  fi
-}
-
 remove_managed_block_from_file() {
   local target="$1"
   local remove_if_empty="${2:-0}"
@@ -969,7 +938,6 @@ uninstall_user_integrations() {
   remove_installed_skills
   remove_shell_startup_blocks
   remove_user_config_blocks
-  cleanup_legacy_integration
 
   echo
   echo "Offline user-level integration removed."
@@ -1459,9 +1427,7 @@ main() {
     "$INSTALL_ROOT" \
     "$(antigravity_home)/skills/$SKILL_NAME" \
     "Antigravity post-install"
-  # Remove the previous Codex discovery entry only after all new bundles verify.
   write_shell_startup_file
-  cleanup_legacy_integration
 
   prepare_browsers
   run_optional_configuration

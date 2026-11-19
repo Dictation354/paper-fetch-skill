@@ -15,18 +15,17 @@ from __future__ import annotations
 
 import argparse
 import hashlib
-from importlib.metadata import Distribution, distributions
 import json
 import os
 import re
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
-from typing import Any
 from collections.abc import Iterable
+from importlib.metadata import Distribution, distributions
+from pathlib import Path
+from typing import Any
 from urllib.parse import quote
-
 
 DEPENDENCY_MANIFEST_NAME = "dependency-manifest.json"
 SBOM_NAME = "paper-fetch-sbom.cdx.json"

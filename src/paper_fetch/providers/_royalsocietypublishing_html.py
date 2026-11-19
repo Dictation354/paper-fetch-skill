@@ -3,15 +3,14 @@
 from __future__ import annotations
 
 import copy
-from dataclasses import dataclass, field as dataclass_field
 import re
-from typing import Any
 from collections.abc import Mapping
+from dataclasses import dataclass
+from dataclasses import field as dataclass_field
+from typing import Any
 from urllib.parse import quote, urljoin, urlparse
 
 from bs4 import BeautifulSoup, Tag
-from ..formula.validation import formula_document, capture_formula_diagnostics
-from ..models import SemanticLosses
 
 from ..extraction.html._metadata import (
     merge_html_metadata,
@@ -24,6 +23,9 @@ from ..extraction.html.assets.silverchair import (
     silverchair_download_image_url,
 )
 from ..extraction.html.figure_links import inject_inline_figure_links
+from ..extraction.html.inline import render_html_inline_node
+from ..extraction.html.language import collect_html_abstract_blocks
+from ..extraction.html.object_links import prepare_retained_object_links
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import (
     render_html_markdown,
@@ -31,15 +33,20 @@ from ..extraction.html.renderer import (
 )
 from ..extraction.markdown_render.formulas import (
     normalize_tex_formula_text,
-    render_html_mathml_node,
     render_html_formula_container,
+    render_html_mathml_node,
     render_inline_latex_markdown,
 )
 from ..formula.convert import normalize_latex
-from ..models import AssetProfile
+from ..formula.validation import capture_formula_diagnostics, formula_document
+from ..models import AssetProfile, SemanticLosses
 from ..publisher_identity import extract_doi, normalize_doi
 from ..utils import normalize_text
-
+from ._html_references import _reference_doi
+from ._html_section_markdown import (
+    render_clean_text_from_html,
+    render_html_fragment_markdown,
+)
 
 ARTICLE_BODY_SELECTORS = (
     ".article-body",
@@ -237,8 +244,6 @@ def _normalize_silverchair_dom(container: Tag) -> None:
 
 
 def _normalize_table_captions(container: Tag) -> None:
-    from ._html_section_markdown import render_clean_text_from_html
-
     for table_wrap in list(container.select(".table-wrap")):
         if not isinstance(table_wrap, Tag):
             continue
@@ -448,7 +453,6 @@ def _parse_html_reference_node(node: Tag) -> dict[str, Any] | None:
     for selector in (".label", ".citation-links", ".ref-links", ".cit-extra"):
         for item in list(ref.select(selector)):
             item.decompose()
-    from ..extraction.html.inline import render_html_inline_node
 
     raw = normalize_text(render_html_inline_node(ref))
     raw = re.sub(r"^\d+\s+", "", raw).strip()
@@ -456,7 +460,6 @@ def _parse_html_reference_node(node: Tag) -> dict[str, Any] | None:
         return None
     title_node = ref.select_one(".article-title, .source")
     year_node = ref.select_one(".year")
-    from ._html_references import _reference_doi
 
     doi = _reference_doi(node) or extract_doi(ref.get_text(" ", strip=True))
     return {
@@ -605,7 +608,6 @@ def _royal_society_figure_assets(
             continue
         label = _node_text(node.select_one(".fig-label")) or "Figure"
         label = label.rstrip(".")
-        from ._html_section_markdown import render_clean_text_from_html
 
         caption_node = node.select_one(".fig-caption")
         caption = (
@@ -783,8 +785,6 @@ def extract_markdown(
     asset_profile: AssetProfile = "body",
 ) -> RoyalSocietyHtmlExtraction:
     soup = BeautifulSoup(html_text, choose_parser())
-    from ..extraction.html.object_links import prepare_retained_object_links
-
     prepare_retained_object_links(soup, source_url)
     raw_article_body = _first_article_body(soup)
     raw_article_body_html = (
@@ -807,8 +807,6 @@ def extract_markdown(
             section_hints=[],
             extracted_assets=[],
         )
-
-    from ._html_section_markdown import render_html_fragment_markdown
 
     render_html = _markdown_render_html(cleaned_html, source_url)
     rendered = render_provider_html_fragment(
@@ -852,8 +850,6 @@ def extract_markdown(
     )
     if body_text_length and section_hints:
         section_hints[0].setdefault("container_text_length", body_text_length)
-    from ..extraction.html.language import collect_html_abstract_blocks
-    from ._html_section_markdown import render_clean_text_from_html
 
     abstract_source = BeautifulSoup(cleaned_html, choose_parser())
     abstract_sections = [

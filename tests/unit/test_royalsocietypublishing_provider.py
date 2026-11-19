@@ -1,12 +1,13 @@
 from __future__ import annotations
-from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
 import tempfile
 from pathlib import Path
 from unittest import mock
+
 import pytest
 from bs4 import BeautifulSoup
+
+from paper_fetch import service
 from paper_fetch.provider_catalog import PROVIDER_CATALOG
 from paper_fetch.providers import (
     _royalsocietypublishing_html,
@@ -19,7 +20,9 @@ from paper_fetch.providers._royalsocietypublishing_html import (
     royalsocietypublishing_normalize_markdown,
 )
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from paper_fetch.providers.royalsocietypublishing import RoyalsocietypublishingClient
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import (
     AssetTransport,
     _typed_raw_payload,
@@ -27,8 +30,11 @@ from tests.support._atypon_browser_workflow_provider_support import (
 )
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._paper_fetch_support import (
+    FixtureProvider,
+    fetch_paper_model,
     fulltext_pdf_bytes,
 )
+from tests.support.trace import trace_facts
 
 
 @pytest.mark.parametrize(
@@ -623,7 +629,7 @@ def test_pdf_fallback_rejects_html_wrapper_and_text_html_content() -> None:
                 )
             ),
             fetch_seeded_browser_pdf_payload=mock.Mock(
-                side_effect=browser_workflow.PdfFallbackFailure(
+                side_effect=browser_workflow.PdfFetchFailure(
                     "downloaded_file_not_pdf",
                     "Royal Society Publishing PDF fallback candidate returned an HTML wrapper or other non-PDF content.",
                 )
@@ -641,9 +647,6 @@ def test_metadata_only_route_contract_is_service_fallback_after_provider_failure
 ) -> None:
     # Mechanism evidence: real provider + service, injected HTML/PDF failures.
     # No original Royal Society rejection response is claimed by this test.
-    from paper_fetch import service
-    from tests.support._paper_fetch_support import FixtureProvider, fetch_paper_model
-
     doi = "10.1098/rsta.2020.0108"
     landing = f"https://royalsocietypublishing.org/doi/{doi}"
     client = RoyalsocietypublishingClient(AssetTransport({}), {})
@@ -653,7 +656,7 @@ def test_metadata_only_route_contract_is_service_fallback_after_provider_failure
         )
     )
     pdf = mock.Mock(
-        side_effect=browser_workflow.PdfFallbackFailure(
+        side_effect=browser_workflow.PdfFetchFailure(
             "downloaded_file_not_pdf",
             "Royal Society PDF candidate returned an HTML wrapper.",
         )

@@ -1,13 +1,12 @@
 from __future__ import annotations
 
-from functools import lru_cache
 import json
+from collections.abc import Iterable
+from functools import lru_cache
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterable
 
 from tests.paths import FIXTURE_DIR, REPO_ROOT
-
 
 GOLDEN_CRITERIA_ROOT = FIXTURE_DIR / "golden_criteria"
 GOLDEN_CRITERIA_MANIFEST = GOLDEN_CRITERIA_ROOT / "manifest.json"

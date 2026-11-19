@@ -1,15 +1,14 @@
 """Offline discovery of the fixed asset collection using existing provider owners."""
 
-from paper_fetch.providers import _springer_markdown
-
-
 import json
 from pathlib import Path
+
+import paper_fetch.providers.elsevier as elsevier
 from paper_fetch.providers import (
     _annualreviews_html,
     _mdpi_assets,
     _springer_assets,
-    elsevier,
+    _springer_markdown,
 )
 from tests.golden_criteria import golden_criteria_sample_for_doi
 
@@ -19,20 +18,20 @@ def discover_assets(row):
     raw = Path(row["source_input"]).read_text()
     source_url = row["source_url"]
     from paper_fetch.providers import (
+        _ieee_html,
+        _oxfordacademic_html,
+        _royalsocietypublishing_html,
         copernicus,
         frontiers,
         plos,
-        _oxfordacademic_html,
-        _royalsocietypublishing_html,
-        _ieee_html,
     )
     from paper_fetch.providers._article_markdown_jats import parse_jats_xml
     from paper_fetch.providers.browser_workflow.asset_download import (
         plan_browser_asset_download,
     )
     from paper_fetch.runtime import RuntimeContext
-    from tests.support.acquired_article_assets import CLIENTS
     from tests.support._paper_fetch_support import FixtureHtmlTransport
+    from tests.support.acquired_article_assets import CLIENTS
 
     s = golden_criteria_sample_for_doi(doi)
     provider = row["provider"]
@@ -129,16 +128,16 @@ def discover_assets(row):
 def source_markdown(row):
     """Use real source extraction; do not manufacture an asset-only article."""
     from paper_fetch.providers import (
-        copernicus,
-        frontiers,
+        _ieee_html,
         _oxfordacademic_html,
         _royalsocietypublishing_html,
-        _ieee_html,
+        copernicus,
+        frontiers,
     )
     from paper_fetch.providers._article_markdown_jats import parse_jats_xml
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-    from tests.support.acquired_article_assets import CLIENTS
     from tests.support._paper_fetch_support import FixtureHtmlTransport
+    from tests.support.acquired_article_assets import CLIENTS
 
     raw = Path(row["source_input"]).read_text()
     provider, doi, url = row["provider"], row["doi"], row["source_url"]

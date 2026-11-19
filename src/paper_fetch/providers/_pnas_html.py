@@ -2,16 +2,19 @@
 
 from __future__ import annotations
 
-from functools import partial
 import re
-from typing import Any
 from collections.abc import Mapping
+from functools import partial
+from typing import Any
+from urllib.parse import urljoin
+
+from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.semantics import normalize_heading, parse_markdown_heading
 from ..quality.html_signals import PNAS_SIGNAL_SET, evaluate_datalayer_blocking_signals
 from ._html_authors import (
-    ATYPON_AUTHOR_COUNT_PATTERN,
     ATYPON_AUTHOR_COLLAPSE_UI_TEXT,
+    ATYPON_AUTHOR_COUNT_PATTERN,
     ATYPON_AUTHOR_NOISE_TEXT,
     AuthorExtractionPipeline,
     AuthorStep,
@@ -19,6 +22,16 @@ from ._html_authors import (
     extract_property_authors,
 )
 from ._html_references import extract_numbered_references_from_html
+from ._html_section_markdown import render_container_markdown
+from .atypon_browser_workflow.asset_scopes import (
+    _atypon_browser_workflow_supplementary_sections,
+    extract_body_and_supplementary_html,
+    extract_scoped_html_assets,
+)
+from .atypon_browser_workflow.profile import (
+    _drop_promotional_blocks,
+    _promo_block_tokens,
+)
 
 PNAS_AUTHOR_COUNT_PATTERN = ATYPON_AUTHOR_COUNT_PATTERN
 PNAS_IGNORED_AUTHOR_TEXT = {
@@ -55,11 +68,6 @@ def extract_authors(html_text: str) -> list[str]:
 
 
 def pnas_before_block_normalization(container: Any) -> None:
-    from .atypon_browser_workflow.profile import (
-        _drop_promotional_blocks,
-        _promo_block_tokens,
-    )
-
     _drop_promotional_blocks(container, promo_block_tokens=_promo_block_tokens("pnas"))
     for listing in container.select('[role="list"]'):
         items = listing.find_all(attrs={"role": "listitem"}, recursive=False)
@@ -78,7 +86,6 @@ def pnas_before_block_normalization(container: Any) -> None:
                 assert label_match is not None
                 item["value"] = label_match[0]
                 label.decompose()
-    from bs4 import BeautifulSoup, Tag
 
     body = container.select_one("#bodymatter")
     if (
@@ -133,10 +140,6 @@ def extract_asset_html_scopes(
     atypon_browser_workflow_supplementary_sections,
 ) -> tuple[str, str]:
     del source_url, raw_body_container
-    from .atypon_browser_workflow.asset_scopes import (
-        extract_body_and_supplementary_html,
-    )
-
     return extract_body_and_supplementary_html(
         body_container,
         supplementary_container,
@@ -202,13 +205,6 @@ def finalize_extraction(
     metadata: Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
     del metadata
-    from bs4 import BeautifulSoup
-    from urllib.parse import urljoin
-    from .atypon_browser_workflow.asset_scopes import (
-        _atypon_browser_workflow_supplementary_sections,
-    )
-    from ._html_section_markdown import render_container_markdown
-
     soup = BeautifulSoup(html_text, "lxml")
     if not re.search(
         r"(?im)^#{2,6} (?:supporting information|supplementary materials?)\s*$",
@@ -239,6 +235,4 @@ def finalize_extraction(
 
 
 def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, str]]:
-    from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
-
     return extract_scoped_html_assets(*args, **kwargs)

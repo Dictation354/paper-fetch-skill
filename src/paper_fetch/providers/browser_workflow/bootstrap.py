@@ -2,27 +2,30 @@
 
 from __future__ import annotations
 
-from ...quality.access_boundary import propagate_paywall
-
 import logging
 from collections.abc import Mapping
+from functools import partial
 from typing import TYPE_CHECKING
 
 from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
 from ...publisher_identity import normalize_doi
+from ...quality.access_boundary import propagate_paywall
+from ...reason_codes import NOT_SUPPORTED
 from ...runtime import RuntimeContext
+from .._elsevier_html import browser_pdf_candidates as elsevier_pdf_extractor
+from .._pdf_candidates import extract_pdf_candidate_urls_from_html
+from ..base import ProviderFailure
+from ..browser_runtime.types import BrowserRuntimeFailure
 from . import html_extraction as _html_extraction
+from .profile import BrowserWorkflowBootstrapResult
 from .shared import (
     BrowserWorkflowDeps,
     default_browser_workflow_deps,
+)
+from .shared import (
     preferred_html_candidate_from_landing_page as _preferred_html_candidate_from_landing_page,
 )
-from .._pdf_candidates import extract_pdf_candidate_urls_from_html
-from ..browser_runtime.types import BrowserRuntimeFailure
-from ..base import ProviderFailure
-from ...reason_codes import NOT_SUPPORTED
-from .profile import BrowserWorkflowBootstrapResult
 
 if TYPE_CHECKING:
     from .client import BrowserWorkflowClient
@@ -164,16 +167,11 @@ def bootstrap_browser_workflow(
                 getattr(extraction_html_result, "browser_context_seed", None)
                 or result.browser_context_seed
             )
-            pdf_extractor = extract_pdf_candidate_urls_from_html
-            if client.name == "elsevier":
-                from functools import partial
-                from .._elsevier_html import (
-                    browser_pdf_candidates as elsevier_pdf_extractor,
-                )
-
-                pdf_extractor = partial(
-                    elsevier_pdf_extractor, expected_doi=normalized_doi
-                )
+            pdf_extractor = (
+                partial(elsevier_pdf_extractor, expected_doi=normalized_doi)
+                if client.name == "elsevier"
+                else extract_pdf_candidate_urls_from_html
+            )
             for pdf_candidate in reversed(
                 pdf_extractor(
                     getattr(extraction_html_result, "html", "") or "",

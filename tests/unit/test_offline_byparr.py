@@ -6,7 +6,8 @@ from unittest.mock import Mock
 
 import pytest
 
-from paper_fetch import offline_byparr as byparr, offline_setup as wizard
+from paper_fetch import offline_byparr as byparr
+from paper_fetch import offline_setup as wizard
 
 
 @pytest.fixture
@@ -18,7 +19,7 @@ def setup(tmp_path, monkeypatch):
         byparr.DEFAULT_BYPARR_BACKEND, "ensure_runtime_ready", lambda _: None
     )
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager._launch_executable_path",
+        "paper_fetch.providers.browser_runtime.preparation._launch_executable_path",
         lambda _: None,
     )
     return setup

@@ -16,7 +16,6 @@ import stat
 from collections.abc import Iterable
 from pathlib import Path
 
-
 TARGET_ARTIFACTS = (
     (
         "linux-x86_64-cp311",

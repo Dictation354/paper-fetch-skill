@@ -11,15 +11,15 @@ import subprocess
 import sys
 import tempfile
 import time
-from pathlib import Path
 from collections.abc import Sequence
+from pathlib import Path
 
 from .paths import (
     FORMULA_NODE_SCRIPT_NAME,
     FORMULA_NODE_WORKER_SCRIPT_NAME,
+    TEXMATH_EXECUTABLE_NAMES,
     bundled_formula_resources,
     default_user_formula_tools_dir,
-    TEXMATH_EXECUTABLE_NAMES,
 )
 
 TEXMATH_VERSION = "0.13.3"

@@ -1,16 +1,17 @@
 from __future__ import annotations
-from paper_fetch.tracing import TraceEvent
-from dataclasses import replace
+
 import logging
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
+
 from paper_fetch import service as paper_fetch
 from paper_fetch.artifacts import ArtifactStore
-from paper_fetch.runtime import RuntimeContext
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import _springer_markdown as springer_markdown_helper
-from paper_fetch.providers import pnas as pnas_provider, science as science_provider
+from paper_fetch.providers import pnas as pnas_provider
+from paper_fetch.providers import science as science_provider
 from paper_fetch.providers.base import (
     ProviderArtifacts,
     ProviderClient,
@@ -19,7 +20,8 @@ from paper_fetch.providers.base import (
     RawFulltextPayload,
 )
 from paper_fetch.providers.wiley import WileyClient
-from paper_fetch.tracing import merge_trace
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import TraceEvent, merge_trace
 from paper_fetch.utils import choose_public_landing_page_url
 from paper_fetch.workflow.fulltext import _provider_fetch_result
 from tests.support._logging_support import RecordCaptureHandler
@@ -30,6 +32,7 @@ from tests.support._paper_fetch_support import (
     fulltext_pdf_bytes,
     sample_article,
 )
+
 # ruff: noqa: F401
 
 

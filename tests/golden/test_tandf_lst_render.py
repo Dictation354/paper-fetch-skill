@@ -2,12 +2,11 @@
 
 from __future__ import annotations
 
-from tests.support.markdown_presentation import visible_markdown
-from tests.support.tandf_lst_render import DOI, URL, assert_formulas, source_html
-from tests.support.test_evidence import evidence_cache as cache
 import re
+
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
+
 from paper_fetch.models import SemanticLosses
 from paper_fetch.providers import _tandf_html
 from paper_fetch.providers.atypon_browser_workflow.normalization import (
@@ -15,8 +14,11 @@ from paper_fetch.providers.atypon_browser_workflow.normalization import (
 )
 from paper_fetch.providers.tandf import TandfClient
 from paper_fetch.utils import normalize_text
-from tests.golden_criteria import golden_criteria_sample_for_doi
 from tests.golden_corpus import GoldenCorpusFixture, build_article_from_fixture
+from tests.golden_criteria import golden_criteria_sample_for_doi
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.tandf_lst_render import DOI, URL, assert_formulas, source_html
+from tests.support.test_evidence import evidence_cache as cache
 
 
 @cache

@@ -5,17 +5,15 @@ from __future__ import annotations
 import json
 import os
 import tempfile
+from collections.abc import Mapping
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
 from urllib.parse import urlparse
-
 
 from ...config import (
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
-    WILEY_PROFILE_DIR_ENV_VAR,
-    browser_env_value,
     resolve_user_data_dir,
 )
 from ...provider_catalog import (
@@ -27,35 +25,23 @@ from ...utils import normalize_text, sanitize_filename
 from .seed import filter_browser_cookies_for_url
 from .types import BrowserRuntimeConfig
 
-PROVIDER_PROFILE_DIR_ENV_VARS = {
-    "wiley": WILEY_PROFILE_DIR_ENV_VAR,
-}
-
 
 def default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
     provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
     return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
 
 
-def provider_profile_env_var(provider: str) -> str | None:
-    return PROVIDER_PROFILE_DIR_ENV_VARS.get(normalize_text(provider).lower())
-
-
 def configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
-    value = browser_env_value(env, BROWSER_USER_DATA_DIR_ENV_VAR)
+    value = str(env.get(BROWSER_USER_DATA_DIR_ENV_VAR, "")).strip()
     return Path(value).expanduser() if value else None
 
 
-def configured_profile_dir(env: Mapping[str, str], *, provider: str) -> Path | None:
-    generic_value = browser_env_value(env, BROWSER_PROFILE_DIR_ENV_VAR)
-    if generic_value:
-        return Path(generic_value).expanduser()
-    provider_env_var = provider_profile_env_var(provider)
-    if provider_env_var is not None:
-        provider_value = env.get(provider_env_var, "").strip()
-        if provider_value:
-            return Path(provider_value).expanduser()
-    return None
+def configured_profile_dir(
+    env: Mapping[str, str], *, provider: str | None = None
+) -> Path | None:
+    del provider
+    generic_value = str(env.get(BROWSER_PROFILE_DIR_ENV_VAR, "")).strip()
+    return Path(generic_value).expanduser() if generic_value else None
 
 
 def runtime_with_default_profile(
@@ -66,8 +52,6 @@ def runtime_with_default_profile(
 ) -> BrowserRuntimeConfig:
     if runtime.profile_dir is not None or runtime.user_data_dir is not None:
         return runtime
-    from dataclasses import replace
-
     return replace(
         runtime,
         user_data_dir=default_provider_user_data_dir(

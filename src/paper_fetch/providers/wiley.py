@@ -2,64 +2,69 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
-import urllib.parse
 import math
-from typing import Any
+import urllib.parse
 from collections.abc import Mapping
+from typing import Any
 
-from ..failure import FailureDiagnostics
 from ..extraction.html.availability_policy import AvailabilityPolicy
+from ..extraction.html.landing import REDIRECT_STATUS_CODES
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
+    WILEY_FORMULA_CONTAINER_TOKENS,
+    WILEY_FRONT_MATTER_EXACT_TEXTS,
+    WILEY_SITE_RULE_OVERRIDES,
+    DomHooks,
     ProviderCleanupRules,
     ProviderFormulaRules,
     ProviderFrontMatterRules,
     ProviderHtmlRules,
-    DomHooks,
-    WILEY_FORMULA_CONTAINER_TOKENS,
-    WILEY_FRONT_MATTER_EXACT_TEXTS,
-    WILEY_SITE_RULE_OVERRIDES,
 )
+from ..failure import FailureDiagnostics
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpRequestPolicy,
     PDF_ACCEPT_HEADER,
     PDF_MIME_TYPE,
+    HttpRequestPolicy,
     RequestFailure,
     provider_request_policy,
 )
-from ..extraction.html.landing import REDIRECT_STATUS_CODES
-from ..provider_catalog import (
-    provider_api_url_template,
-)
-from ..pdf_limits import pdf_max_bytes
-from ..quality.html_signals import WILEY_SIGNAL_SET
-from ..runtime import RuntimeContext
 from ..models import AssetProfile
+from ..pdf_limits import pdf_max_bytes
+from ..provider_catalog import provider_api_url_template
+from ..quality.access_boundary import propagate_paywall
+from ..quality.html_signals import WILEY_SIGNAL_SET
+from ..reason_codes import NO_RESULT, NOT_CONFIGURED, OK, PDF_FALLBACK
+from ..runtime import RuntimeContext
 from ..tracing import fulltext_event, trace_event
 from ..utils import normalize_text
 from . import _wiley_html, browser_workflow
-from .browser_workflow.shared import BrowserWorkflowDeps, default_browser_workflow_deps
-from ._pdf_fallback import PdfFallbackFailure, PdfFallbackStrategy, fetch_pdf_over_http
+from ._definitions import PROVIDER_DEFINITIONS
 from ._pdf_common import (
+    PdfFetchFailure,
     PdfFetchResult,
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
-    pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
+    pdf_fetch_result_warnings,
 )
+from ._pdf_fallback import PdfFallbackStrategy, fetch_pdf_over_http
+from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
 from ._waterfall import (
-    ProviderWaterfallStep,
     ProviderWaterfallState,
+    ProviderWaterfallStep,
     run_provider_waterfall,
 )
-from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
-from ..reason_codes import NO_RESULT, NOT_CONFIGURED, OK, PDF_FALLBACK
+from ._wiley_asset_policy import (
+    _wiley_link,
+    activate_wiley_supplement,
+    annotate_wiley_preview,
+)
+from ._wiley_http_review import (
+    _remaining_wiley_review_candidates,
+    _wiley_http_access_status_review,
+)
 from .base import (
     ProviderContent,
     ProviderFailure,
@@ -68,14 +73,7 @@ from .base import (
     build_provider_status_check,
     summarize_capability_status,
 )
-
-from ._wiley_asset_policy import annotate_wiley_preview
-from ._wiley_http_review import (
-    _wiley_http_access_status_review,
-    _remaining_wiley_review_candidates,
-)
-
-from ._wiley_asset_policy import _wiley_link, activate_wiley_supplement
+from .browser_workflow.shared import BrowserWorkflowDeps, default_browser_workflow_deps
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["wiley"]
 
@@ -131,7 +129,7 @@ def _fetch_wiley_tdm_pdf_result(
             request_policy=route_policy,
         )
     except RequestFailure as exc:
-        raise PdfFallbackFailure(
+        raise PdfFetchFailure(
             "pdf_download_failed",
             f"Failed to download Wiley API PDF fallback candidate: {exc}",
             details={
@@ -346,7 +344,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     },
                     context=context,
                 )
-            except PdfFallbackFailure as exc:
+            except PdfFetchFailure as exc:
                 propagate_paywall(exc)
                 raise ProviderFailure(
                     NO_RESULT,
@@ -430,7 +428,7 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     context=context,
                     deps=self.deps,
                 )
-            except PdfFallbackFailure as exc:
+            except PdfFetchFailure as exc:
                 propagate_paywall(exc)
                 raise ProviderFailure(
                     NO_RESULT,

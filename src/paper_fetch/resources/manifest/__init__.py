@@ -1,1 +1,1 @@
-"""Packaged manifest JSON Schema resources."""
+"""Packaged manifest v3 JSON Schema resources."""

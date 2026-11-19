@@ -1,9 +1,10 @@
 """Minimal mechanism scenarios; publisher originals live in golden regressions."""
 
-from bs4 import BeautifulSoup
 import pytest
-from paper_fetch.providers import _science_html, _oxfordacademic_html
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.semantics import collect_html_section_hints
+from paper_fetch.providers import _oxfordacademic_html, _science_html
 
 
 @pytest.mark.parametrize(

@@ -2,11 +2,12 @@
 
 import hashlib
 import json
-from tests.golden_criteria import golden_criteria_asset
+from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
+
 from tests.golden_corpus import GoldenCorpusFixture
+from tests.golden_criteria import golden_criteria_asset
 from tests.paths import REPO_ROOT
 from tests.support.test_evidence import evidence_cache
-from urllib.parse import parse_qsl, urlencode, urlsplit, urlunsplit
 
 
 class CapturedSourceFixture(GoldenCorpusFixture):

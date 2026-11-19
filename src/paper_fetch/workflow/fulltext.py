@@ -2,21 +2,14 @@
 
 from __future__ import annotations
 
-from ..tracing import extend_trace
-
-from dataclasses import dataclass, field
 import logging
 import time
-from typing import Any
 from collections.abc import Mapping, Sequence
+from dataclasses import dataclass, field
+from typing import Any
 
 from ..artifacts import ArtifactStore
 from ..failure import FailureDiagnostics
-from ..providers.base import restricted_provider_result
-from ..quality.access_boundary import (
-    CONFIRMED_PAYWALL,
-    confirmed_paywall,
-)
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import (
@@ -25,16 +18,24 @@ from ..provider_catalog import (
     provider_emits_html_managed_marker,
     provider_managed_abstract_only_names,
 )
-from ..publisher_identity import validate_extracted_identity
-from ..providers.base import ProviderFailure, ProviderFetchResult
+from ..providers.base import (
+    ProviderFailure,
+    ProviderFetchResult,
+    restricted_provider_result,
+)
 from ..providers.protocols import FulltextProvider
+from ..publisher_identity import normalize_doi, validate_extracted_identity
+from ..quality.access_boundary import (
+    CONFIRMED_PAYWALL,
+    confirmed_paywall,
+)
 from ..reason_codes import (
     ABSTRACT_ONLY,
     AUTH_REQUIRED,
     ERROR,
     FULLTEXT,
-    METADATA_ONLY,
     IDENTITY_MISMATCH,
+    METADATA_ONLY,
     NO_ACCESS,
     NOT_CONFIGURED,
     PDF_FALLBACK,
@@ -44,6 +45,7 @@ from ..runtime import RuntimeContext
 from ..tracing import (
     TraceEvent,
     acquisition_fallback_used,
+    extend_trace,
     fallback_event,
     fulltext_event,
     merge_trace,
@@ -76,8 +78,6 @@ def build_metadata_only_result(
     events: list[TraceEvent] | None = None,
     trace: list[TraceEvent] | None = None,
 ) -> ArticleModel:
-    from ..publisher_identity import normalize_doi
-
     article = metadata_only_article(
         source="crossref_meta",
         metadata=metadata,
@@ -291,8 +291,7 @@ def _try_official_provider(
             return finalize_article(
                 article,
                 warnings=warnings,
-                events=events,
-                trace=workflow_trace,
+                trace=merge_trace(events, workflow_trace),
             )
         if article.quality.content_kind == FULLTEXT:
             emit_structured_log(
@@ -311,8 +310,7 @@ def _try_official_provider(
             return finalize_article(
                 article,
                 warnings=warnings,
-                events=events,
-                trace=workflow_trace,
+                trace=merge_trace(events, workflow_trace),
             )
         if article.quality.content_kind == ABSTRACT_ONLY:
             emit_structured_log(
@@ -335,8 +333,7 @@ def _try_official_provider(
                 return finalize_article(
                     article,
                     warnings=warnings,
-                    events=events,
-                    trace=workflow_trace,
+                    trace=merge_trace(events, workflow_trace),
                 )
             warnings.append(
                 "Official full text only contained abstract-level content; continuing to metadata-only fallback."
@@ -372,8 +369,7 @@ def _try_official_provider(
                 return finalize_article(
                     article,
                     warnings=warnings,
-                    events=events,
-                    trace=workflow_trace,
+                    trace=merge_trace(events, workflow_trace),
                 )
             emit_structured_log(
                 logger,
@@ -404,8 +400,10 @@ def _try_official_provider(
             return finalize_article(
                 result.article,
                 warnings=[*warnings, *result.warnings],
-                events=[*events, *result.article.trace],
-                trace=[*workflow_trace, *result.trace],
+                trace=merge_trace(
+                    [*events, *result.article.trace],
+                    [*workflow_trace, *result.trace],
+                ),
             )
         outputs.failures.append(exc)
         workflow_trace[:] = merge_trace(workflow_trace, exc.trace)
@@ -538,7 +536,11 @@ def fetch_article(
         resolver=resolver,
         context=runtime,
     )
-    events: list[TraceEvent] = [resolve_event(resolved.query_kind)]
+    events: list[TraceEvent] = [
+        resolve_event(
+            resolved.query_kind, duration_ms=getattr(resolved, "duration_ms", None)
+        )
+    ]
     if resolved.doi:
         events.append(resolve_event("doi_selected"))
     if resolved.candidates and not resolved.doi:
@@ -557,7 +559,6 @@ def fetch_article(
         context=runtime,
     )
     extend_trace(events, metadata_trail)
-    from ..publisher_identity import normalize_doi
 
     doi = normalize_doi(safe_text(metadata.get("doi") or resolved.doi)) or None
     warnings: list[str] = []
@@ -607,8 +608,7 @@ def fetch_article(
             article = finalize_article(
                 article,
                 warnings=warnings,
-                events=events,
-                trace=trace,
+                trace=merge_trace(events, trace),
             )
             runtime.fetch_trace = merge_trace(events, trace)
             break

@@ -1,4 +1,3 @@
-from paper_fetch.tracing import trace_event
 from dataclasses import replace
 from types import SimpleNamespace
 from unittest import mock
@@ -15,17 +14,18 @@ from paper_fetch.delivery.fetch_cache import (
     request_cache_payload,
 )
 from paper_fetch.delivery.requests import FetchPaperRequest
+from paper_fetch.models import RenderOptions
 from paper_fetch.providers.base import ProviderClient, ProviderFailure
-from paper_fetch.providers.supplementary import _xml_index
-from paper_fetch.providers.plos import PlosClient
-from paper_fetch.providers.springer import SpringerClient
-from paper_fetch.providers.science import ScienceClient
 from paper_fetch.providers.browser_runtime import BrowserFetchedHtml
 from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
+from paper_fetch.providers.plos import PlosClient
+from paper_fetch.providers.science import ScienceClient
+from paper_fetch.providers.springer import SpringerClient
+from paper_fetch.providers.supplementary import _xml_index
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from paper_fetch.workflow.rendering import save_markdown_to_disk
-from paper_fetch.models import RenderOptions
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.supplementary import DOI, META, URL, XML_URL, envelope, html_page
 
@@ -265,6 +265,7 @@ def test_arxiv_ancillary_is_independent_of_html_pdf_and_source_archive():
 @pytest.mark.parametrize("broken", [False, True])
 def test_ieee_multimedia_discovery_failure_is_not_an_empty_result(broken):
     import json
+
     from paper_fetch.providers.ieee import IeeeClient
 
     doi = "10.1109/test.123"

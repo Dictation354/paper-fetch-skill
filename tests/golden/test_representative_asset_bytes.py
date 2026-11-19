@@ -5,12 +5,13 @@ injected. Newly acquired images retain the recorded HTTP envelope. This isolated
 asset replay does not claim a successful browser/article fetch or full-size tier.
 """
 
-from tests.support.representative_asset_bytes import NEW, OLD
 import hashlib
 from pathlib import Path
 from urllib.parse import urljoin
-from bs4 import BeautifulSoup
+
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.assets import (
     FIGURE_KIND,
     AssetDownloadOptions,
@@ -23,6 +24,7 @@ from paper_fetch.providers.plos import _plos_figure_image_url
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support._paper_fetch_support import RecordingTransport, http_response
 from tests.support.acquired_publisher_inputs import _record, _response
+from tests.support.representative_asset_bytes import NEW, OLD
 
 
 def _download_and_render(provider, doi, url, response, tmp_path):

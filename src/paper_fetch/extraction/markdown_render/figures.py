@@ -2,21 +2,21 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
 import re
+from collections.abc import Callable, Mapping
 from typing import Any
+
+from bs4 import Tag
 
 from ...common_patterns import FIGURE_LABEL_CORE_PATTERN
 from ...extraction.html.ui_tokens import (
     FIGURE_FULL_SIZE_IMAGE_LABEL,
     FIGURE_POWERPOINT_SLIDE_LABEL,
 )
-from ..html.shared import class_tokens as _html_class_tokens
 from ...markdown.images import render_markdown_image
 from ...utils import normalize_text
+from ..html.shared import class_tokens as _html_class_tokens
 from ._ir import MarkdownFigure
-
-from bs4 import Tag
 
 FIGURE_LABEL_PATTERN = re.compile(
     rf"^\s*{FIGURE_LABEL_CORE_PATTERN}\s*[:.]?\s*(.*)$",

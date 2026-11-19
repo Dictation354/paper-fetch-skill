@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-from ...publication_dates import publication_date, normalize_publication_dates
-
 import html
 import re
 import urllib.parse
+from collections.abc import Mapping
 from html.parser import HTMLParser
 from typing import Any, cast
-from collections.abc import Mapping
 
 from ...html_lookup import is_usable_html_lookup_title
 from ...metadata.types import HtmlLookupHints, HtmlMetadata
-from ...utils import dedupe_authors
 from ...models import normalize_text
-from ...publisher_identity import normalize_doi
+from ...publication_dates import normalize_publication_dates, publication_date
 from ...publisher_identity import extract_doi as extract_doi_from_text
+from ...publisher_identity import normalize_doi
+from ...utils import dedupe_authors
 
 INPUT_TAG_PATTERN = re.compile(r"<input\b[^>]*>", flags=re.IGNORECASE)
 HTML_ATTRIBUTE_PATTERN = re.compile(

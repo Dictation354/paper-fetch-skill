@@ -2,19 +2,20 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from typing import Any
-from collections.abc import Callable
 import urllib.parse
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
+from dataclasses import dataclass
+from typing import Any
 
+from ..extraction.markdown_render import MarkdownList, render_list
 from ..extraction.table_grid import (
     TableConversionReason,
     TableConversionStatus,
     normalize_table,
 )
 from ..extraction.xml_tables import ParsedXmlTable, parse_xml_table_groups
-from ..extraction.markdown_render import MarkdownList, render_list
+from ..utils import normalize_text
 from ._article_markdown_common import (
     XLINK_HREF,
     XLINK_TITLE,
@@ -28,7 +29,6 @@ from ._article_markdown_common import (
     table_conversion_note,
     xml_local_name,
 )
-from ..utils import normalize_text
 
 JATS_BLOCK_LOCAL_NAMES = {
     "disp-formula",

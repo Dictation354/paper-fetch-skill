@@ -1,15 +1,14 @@
 """Reviewed Appendix A content, independent of the extractor's summary baseline."""
 
-from tests.support.markdown_presentation import visible_markdown
-
 import re
 
 import pytest
 from bs4 import BeautifulSoup
 
-from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.wiley import WileyClient
 from tests.golden_criteria import golden_criteria_asset
+from tests.support.markdown_presentation import visible_markdown
 
 DOI = "10.1029/2004gb002273"
 # Entire visible source paragraph, including its original paragraph number.

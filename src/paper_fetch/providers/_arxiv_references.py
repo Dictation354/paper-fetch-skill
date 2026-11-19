@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import copy
-from typing import Any
 import re
+from typing import Any
 
 from ..extraction.html.tables import render_table_markdown, table_placeholder
 from ..models.markdown import normalize_markdown_text

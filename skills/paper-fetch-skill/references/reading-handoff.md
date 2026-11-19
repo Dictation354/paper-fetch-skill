@@ -15,7 +15,7 @@ paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --kin
 
 ## 材料
 
-读取附件时沿用用户文件或现有结果，必要时使用 `paper-fetch fetch --target supplementary --query DOI` 获取。按格式交给合适的本地 reader，只报告实际读取的内容。
+读取附件时沿用用户文件或现有结果，必要时使用 `paper-fetch fetch --progress text --target supplementary --query DOI` 获取。按格式交给合适的本地 reader，只报告实际读取的内容。
 
 
 根据 `target_satisfied`、acceptance.asset_summary 及实际路径区分仅发现链接、部分下载和完整下载；生命周期 `status=completed` 不表示全部附件已归档。

@@ -4,9 +4,9 @@ from __future__ import annotations
 
 import hashlib
 import mimetypes
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any, cast
-from collections.abc import Mapping, Sequence
 
 from ..extraction.image_payloads import (
     image_dimensions_from_path,
@@ -134,7 +134,7 @@ def _is_remote(value: Any) -> bool:
     return normalize_text(str(value or "")).lower().startswith(_REMOTE_PREFIXES)
 
 
-def _has_remote_link(asset: AssetLike) -> bool:
+def asset_has_remote_link(asset: AssetLike) -> bool:
     return any(_is_remote(_field(asset, field)) for field in _REMOTE_FIELDS)
 
 
@@ -260,7 +260,7 @@ def _diagnose_asset(
     kind = logical_asset_kind(asset)
     requested = _asset_requested(kind, profile)
     raw_path, resolved_path = _local_path(asset, base_dir)
-    has_remote = _has_remote_link(asset)
+    has_remote = asset_has_remote_link(asset)
     suspected_reasons: list[str] = []
     if _placeholder_url_suspected(asset):
         suspected_reasons.append("blank_url")
@@ -433,7 +433,7 @@ def build_asset_quality_summary(
                 (
                     failure,
                     diagnostic,
-                    _has_remote_link(failure),
+                    asset_has_remote_link(failure),
                     False,
                     _identity_key(failure, failure_kind),
                 )
@@ -468,7 +468,6 @@ def build_asset_quality_summary(
             and diagnostic.download_tier == "preview"
             and diagnostic.status != "failed"
         ):
-            counts.preview += 1
             if diagnostic.preview_accepted:
                 counts.accepted_preview += 1
             else:
@@ -510,10 +509,8 @@ def build_asset_quality_summary(
         expected=None,
         discovered=len(diagnostics),
         attempted=attempted,
-        total=len(diagnostics),
         local=local,
         full_size=sum(item.full_size for item in by_kind.values()),
-        preview=accepted_preview + fallback_preview,
         accepted_preview=accepted_preview,
         fallback_preview=fallback_preview,
         failed=failed,
@@ -540,6 +537,7 @@ __all__ = [
     "PLACEHOLDER_SUSPECT_MAX_AREA",
     "PLACEHOLDER_SUSPECT_MAX_BYTES",
     "PLACEHOLDER_SUSPECT_MAX_DIMENSION",
+    "asset_has_remote_link",
     "build_asset_quality_summary",
     "logical_asset_kind",
     "preview_asset_is_accepted",

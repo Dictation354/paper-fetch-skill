@@ -1,13 +1,12 @@
-from tests.support.acquired_publisher_inputs import _record
-from tests.support._paper_fetch_support import build_pdf_bytes
-from paper_fetch.providers import _pdf_candidates, _pdf_common
-import pytest
 import json
 from unittest import mock
-from paper_fetch.providers import _pdf_fallback
-from tests.golden_criteria import golden_criteria_asset
-from tests.support._paper_fetch_support import RecordingTransport
 
+import pytest
+
+from paper_fetch.providers import _pdf_candidates, _pdf_common, _pdf_fallback
+from tests.golden_criteria import golden_criteria_asset
+from tests.support._paper_fetch_support import RecordingTransport, build_pdf_bytes
+from tests.support.acquired_publisher_inputs import _record
 
 """Real wrong-document/preview and synthetic supplement rejection regressions."""
 

@@ -5,6 +5,8 @@ from __future__ import annotations
 from functools import partial
 from typing import Any
 
+from bs4 import Tag
+
 from ..utils import normalize_text
 from ._html_authors import (
     ATYPON_AUTHOR_NOISE_TEXT,
@@ -14,8 +16,6 @@ from ._html_authors import (
     extract_property_authors,
     extract_selector_authors,
 )
-
-from bs4 import Tag
 
 
 def _ams_node_text(node: Any) -> str:

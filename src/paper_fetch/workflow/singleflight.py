@@ -3,9 +3,10 @@
 from __future__ import annotations
 
 import copy
-from concurrent.futures import Future, TimeoutError as FutureTimeoutError
-from collections.abc import Callable, Hashable
 import threading
+from collections.abc import Callable, Hashable
+from concurrent.futures import Future
+from concurrent.futures import TimeoutError as FutureTimeoutError
 from typing import Generic, TypeVar, cast
 
 from ..http import RequestCancelledError

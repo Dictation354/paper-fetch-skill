@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
-from decimal import Decimal
 import re
 import xml.etree.ElementTree as ET
+from decimal import Decimal
 
 from ..xml_security import parse_mathml_fragment
 

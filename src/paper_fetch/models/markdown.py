@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Iterator
-from dataclasses import dataclass
 import html
 import re
 import urllib.parse
+from collections.abc import Callable, Iterator
+from dataclasses import dataclass
 from typing import Any
 
-from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..common_patterns import EXTENDED_DATA_LABEL, INLINE_WHITESPACE_PATTERN
+from ..markdown.math import protect_markdown_math, restore_markdown_math
 from ..utils import normalize_text, safe_text, strip_html_tags
 
 MARKDOWN_FENCE_PATTERN = re.compile(r"^\s*(```+|~~~+)")

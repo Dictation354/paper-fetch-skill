@@ -147,7 +147,6 @@ pf_skill_main() {
         exit $?
     fi
 
-    PYTHONDONTWRITEBYTECODE=1 python3 "$PF_REPO_DIR/src/paper_fetch/legacy_cleanup.py" --project "$PF_REPO_DIR" --install-root "$PF_REPO_DIR"
     if [ "$PF_UNINSTALL" = "1" ]; then
         pf_skill_unregister_if_requested
         exit 0

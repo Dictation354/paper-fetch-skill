@@ -9,8 +9,8 @@ from paper_fetch.markdown.citations import (
     is_citation_link,
     is_citation_text,
     make_numeric_citation_sentinel,
-    numeric_citation_payload_from_html_node,
     normalize_inline_citation_markdown,
+    numeric_citation_payload_from_html_node,
 )
 from paper_fetch.providers.html_springer_nature import (
     SPRINGER_NATURE_CITATION_LABEL_PATTERNS,

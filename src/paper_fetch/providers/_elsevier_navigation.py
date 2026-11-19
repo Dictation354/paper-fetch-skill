@@ -3,6 +3,7 @@
 from __future__ import annotations
 
 import re
+import xml.etree.ElementTree as ET
 from urllib.parse import quote
 
 from ..markdown.math import MATH_MARKDOWN_PATTERN
@@ -100,8 +101,7 @@ def finalize_markdown(markdown: str) -> str:
 
 def prepare_xml_navigation(root):
     """Annotate a private XML tree using source refids, never citation positions."""
-    import xml.etree.ElementTree as ET
-    from ._article_markdown_common import xml_local_name, render_inline_text
+    from ._article_markdown_common import render_inline_text, xml_local_name
 
     targets = {node.get("id"): node for node in root.iter() if node.get("id")}
     linked_keys: set[str] = set()

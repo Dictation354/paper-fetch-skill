@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Iterable
 from dataclasses import dataclass, replace
 from types import MappingProxyType
-from collections.abc import Iterable
 
 from ..provider_contracts import (
     ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
@@ -13,12 +13,12 @@ from ..provider_contracts import (
     ProviderRouteSpec,
     ProviderSpec,
 )
+from ..timeouts import DEFAULT_FULLTEXT_TIMEOUT_SECONDS
+from ._ieee_routes import IEEE_ROUTES
 from ._registry import (
     _default_bundle_route_source,
     validate_provider_identity_conflicts,
 )
-from ._ieee_routes import IEEE_ROUTES
-from ..timeouts import DEFAULT_FULLTEXT_TIMEOUT_SECONDS
 
 
 def normalize_rule_key(value: str) -> str:
@@ -134,8 +134,6 @@ BUILTIN_PROVIDER_DEFINITIONS = (
     ProviderDefinition(
         catalog=ProviderSpec(
             name="elsevier",
-            browser_backends=("camoufox", "byparr"),
-            browser_default="byparr",
             browser_home_url="https://www.sciencedirect.com/",
             display_name="Elsevier",
             official=True,
@@ -413,8 +411,6 @@ BUILTIN_PROVIDER_DEFINITIONS = (
     ProviderDefinition(
         catalog=ProviderSpec(
             name="pnas",
-            browser_backends=("camoufox", "byparr"),
-            browser_default_x64="byparr",
             browser_home_url="https://www.pnas.org/",
             display_name="PNAS",
             official=True,

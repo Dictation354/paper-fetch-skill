@@ -1,10 +1,10 @@
 from __future__ import annotations
 
+from paper_fetch.providers import _html_authors as html_authors
 from paper_fetch.providers._html_authors import (
     AuthorExtractionPipeline,
     AuthorStep,
 )
-from paper_fetch.providers import _html_authors as html_authors
 
 
 def test_author_extraction_pipeline_accepts_callables_and_named_steps() -> None:

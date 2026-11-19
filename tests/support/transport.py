@@ -1,6 +1,7 @@
 """Streaming transport double using the test's recorded response source."""
 
 from pathlib import Path
+
 from paper_fetch.http import HttpStreamOptions, RequestFailure
 
 

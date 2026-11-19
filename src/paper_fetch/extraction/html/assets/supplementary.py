@@ -4,8 +4,10 @@ from __future__ import annotations
 
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ....models.schema import AssetProfile
 from ....utils import normalize_text
@@ -13,8 +15,6 @@ from ..parsing import choose_parser
 from ..provider_rules import provider_supplementary_text_tokens
 from .figures import extract_figure_assets
 from .formulas import extract_formula_assets
-
-from bs4 import BeautifulSoup, Tag
 
 GENERIC_SUPPLEMENTARY_TEXT_TOKENS = (
     "supplementary",

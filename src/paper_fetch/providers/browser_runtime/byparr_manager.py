@@ -6,7 +6,6 @@ import contextlib
 import hashlib
 import json
 import os
-from pathlib import Path
 import queue
 import secrets
 import shutil
@@ -16,18 +15,25 @@ import sys
 import tempfile
 import threading
 import time
-from typing import Any, cast
+import traceback
 import urllib.request
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+from typing import Any, cast
 
+from ...config import resolve_user_data_dir
+from ...http import RequestCancelledError
+from ...logging_utils import redact_log_value
+from ...provider_catalog import PROVIDER_CATALOG
+from ...utils import sanitize_filename
+from . import byparr_engine
 from .byparr_preparation import (
     PreparationBudget,
     cache_lock,
     prepare_components,
 )
-from .byparr_engine import engine_name
 from .paths import _filtered_storage_state_mapping
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
-from ...config import resolve_user_data_dir
 
 
 class ByparrManager:
@@ -40,8 +46,6 @@ class ByparrManager:
         native_profile: Path | None = None,
     ):
         self.config = config
-        from ...provider_catalog import PROVIDER_CATALOG
-
         self.home_url = PROVIDER_CATALOG[config.provider].browser_home_url
         self.runtime_context = runtime_context
         self.local_check = local_check
@@ -58,7 +62,7 @@ class ByparrManager:
         self.diagnostics: dict[str, Any] = {
             "provider": config.provider,
             "backend": "byparr",
-            "engine": engine_name(),
+            "engine": byparr_engine.engine_name(),
             "context_reused": False,
         }
         self.metadata: dict[str, Any] = {}
@@ -80,14 +84,12 @@ class ByparrManager:
                 self.refresh()
             return self.context
         try:
-            from .byparr_engine import prepare_executable, engine_name, playwright_api
-
             env = (
                 self.runtime_context.env
                 if self.runtime_context is not None
                 else os.environ
             )
-            binary = prepare_executable(self.config.binary_path)
+            binary = byparr_engine.prepare_executable(self.config.binary_path)
             self.budget.check()
             cache = (
                 self.config.component_cache_dir or resolve_user_data_dir(env) / "byparr"
@@ -106,13 +108,13 @@ class ByparrManager:
             self.work_dir = Path(
                 tempfile.mkdtemp(prefix=f"paper-fetch-{self.config.provider}-byparr-")
             )
-            if engine_name() == "invisible":
+            if byparr_engine.engine_name() == "invisible":
                 from .byparr_invisible import start
 
                 return start(self, binary, runtime)
             self.diagnostics.update(
                 byparr_version="3.1.1",
-                engine=engine_name(),
+                engine=byparr_engine.engine_name(),
                 camoufox_version="0.5.9",
                 playwright_captcha_version="0.1.5",
             )
@@ -168,7 +170,7 @@ class ByparrManager:
                     )
                 time.sleep(min(0.05, self.budget.remaining()))
             self.control = json.loads((self.work_dir / "ready.json").read_text())
-            self.playwright = playwright_api().sync_playwright().start()
+            self.playwright = byparr_engine.playwright_api().sync_playwright().start()
             self.browser = self.playwright.firefox.connect(
                 self.control["endpoint"], timeout=int(self.budget.remaining() * 1000)
             )
@@ -185,14 +187,10 @@ class ByparrManager:
             return self.context
         except BaseException as exc:
             if self.work_dir is not None:
-                import traceback
-
                 (self.work_dir / "service.log").write_text(
                     getattr(exc, "stack", None) or traceback.format_exc()
                 )
             self.close()
-            from ...http import RequestCancelledError
-
             if isinstance(exc, Exception) and not isinstance(
                 exc, (BrowserRuntimeFailure, RequestCancelledError)
             ):
@@ -229,7 +227,6 @@ class ByparrManager:
 
     def context_request_get(self, url, **kwargs):
         """Keep the host HTTP lane without moving browser objects off-owner."""
-        from concurrent.futures import ThreadPoolExecutor
         from .byparr_invisible import HttpResponse
 
         self._check_owner()
@@ -326,12 +323,10 @@ class ByparrManager:
                 records.append(entry)
         if value.get("status") != "ok":
             if value.get("error") in {"TimeoutError", "Error"}:
-                from .byparr_engine import playwright_api
-
-                Error = playwright_api().Error
-                TimeoutError = playwright_api().TimeoutError
-
-                error = TimeoutError if value["error"] == "TimeoutError" else Error
+                api = byparr_engine.playwright_api()
+                error = (
+                    api.TimeoutError if value["error"] == "TimeoutError" else api.Error
+                )
                 raise error(value.get("message") or "Publisher navigation timed out")
             raise BrowserRuntimeFailure(
                 "byparr_navigation_failed",
@@ -522,9 +517,6 @@ class ByparrManager:
             or not store.allows_auxiliary_artifacts
         ):
             return
-        from ...logging_utils import redact_log_value
-        from ...utils import sanitize_filename
-        from ...http import RequestCancelledError
 
         documents = []
         path = self.work_dir / "operations.jsonl"

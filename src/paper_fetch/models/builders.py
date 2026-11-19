@@ -2,18 +2,17 @@
 
 from __future__ import annotations
 
-from ..publication_dates import normalize_publication_dates
-
 import re
-
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
-from collections.abc import Mapping
+
+from bs4 import BeautifulSoup
 
 from ..markdown.citations import normalize_inline_citation_markdown
+from ..publication_dates import normalize_publication_dates
 from ..publisher_identity import normalize_doi
-from ..reason_codes import FULLTEXT
 from ..quality.access_boundary import confirmed_paywall, paywall_failure
+from ..reason_codes import FULLTEXT
 from ..tracing import TraceEvent
 from ..utils import normalize_text, safe_text
 from .markdown import (
@@ -177,8 +176,6 @@ def _apply_provider_render_policy(
 def _plain_metadata_abstract(value: Any) -> str:
     text = safe_text(value)
     if re.search(r"</?[a-z][^>]*>", text, re.I):
-        from bs4 import BeautifulSoup
-
         text = BeautifulSoup(text, "html.parser").get_text(" ", strip=True)
     return text
 

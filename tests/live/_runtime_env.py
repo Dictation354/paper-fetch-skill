@@ -3,26 +3,26 @@ from __future__ import annotations
 import importlib.util
 import os
 import tempfile
-from pathlib import Path
 from collections.abc import Mapping, Sequence
+from pathlib import Path
 
 from paper_fetch.browser_preflight import (
     BrowserPreflightResult,
     preflight_browser_provider,
     static_browser_capabilities,
 )
+from paper_fetch.browser_runtime_policy import engine_name, selected_backend
 from paper_fetch.config import (
     BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
-    WILEY_PROFILE_DIR_ENV_VAR,
     build_runtime_env,
+    resolve_user_data_dir,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
 from paper_fetch.providers.browser_workflow.shared import normalize_browser_url
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
-from paper_fetch.providers.browser_runtime.selection import selected_backend
 from tests._environment import (
     PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
     PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
@@ -45,8 +45,6 @@ def build_isolated_live_env(
 ) -> tuple[SecretSafeEnvironment, tempfile.TemporaryDirectory]:
     tempdir = tempfile.TemporaryDirectory(prefix="paper-fetch-live-xdg-")
     env = SecretSafeEnvironment(build_runtime_env(base_env))
-    from paper_fetch.config import resolve_user_data_dir
-
     env.setdefault(
         "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
         str(resolve_user_data_dir(env) / "byparr"),
@@ -58,14 +56,11 @@ def build_isolated_live_env(
     for name in (
         BROWSER_PROFILE_DIR_ENV_VAR,
         BROWSER_USER_DATA_DIR_ENV_VAR,
-        WILEY_PROFILE_DIR_ENV_VAR,
     ):
         env.pop(name, None)
     preserved_executable = os.environ.get(
         PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR, ""
     ).strip()
-    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
-
     if (
         engine_name() == "camoufox"
         and preserved_executable
@@ -99,8 +94,6 @@ def require_browser_or_skip(testcase, env: Mapping[str, str], *, provider: str) 
     if importlib.util.find_spec("playwright") is None:
         testcase.skipTest("Playwright Python package is not installed.")
     selected_backend(env, provider=provider)
-    from paper_fetch.browser_runtime_policy import engine_name
-
     packages = (
         ("invisible_playwright", "invisible_core")
         if engine_name() == "invisible"

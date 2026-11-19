@@ -7,14 +7,14 @@ import json
 import re
 import threading
 import time
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from pathlib import Path
 from typing import Any
-from collections.abc import Callable, Mapping
 
 from ..extraction.html import decode_html
-from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..extraction.html.assets.figures import figure_download_candidates
+from ..extraction.html.signals import detect_html_block, summarize_visible_html
 from ..http.headers import header_value
 from ..models import AssetProfile
 from ..publisher_identity import normalize_doi
@@ -24,28 +24,28 @@ from ._ieee_metadata import IeeeLandingAttempt, _landing_metadata_has_multimedia
 from ._ieee_url import IEEE_BASE_URL, IEEE_MULTIMEDIA_URL_TEMPLATE
 from .browser_runtime.types import BrowserRuntimeConfig
 from .browser_workflow.asset_download import (
-    _matching_failure,
-    _attempt_from_failure,
     BrowserAssetDownloadPlan,
     BrowserAssetRecoveryContext,
+    _attempt_from_failure,
+    _matching_failure,
     download_browser_backed_related_assets,
 )
 from .browser_workflow.fetchers import (
     BrowserDocumentFetcherOptions,
     _MemoizedImageDocumentFetcher,
-    _SharedBrowserPageSession,
     _replace_runtime_shared_page_session,
     _restore_runtime_shared_page_session,
-)
-from .browser_workflow.shared import default_browser_workflow_deps
-from .browser_workflow.fetchers.image import (
-    _ImageFetchBudget,
-    _looks_like_image_response_payload,
+    _SharedBrowserPageSession,
 )
 from .browser_workflow.fetchers.context import (
     _browser_response_headers,
     _browser_response_status,
 )
+from .browser_workflow.fetchers.image import (
+    _ImageFetchBudget,
+    _looks_like_image_response_payload,
+)
+from .browser_workflow.shared import default_browser_workflow_deps
 
 IEEE_ASSET_ARTICLE_READY_TIMEOUT_SECONDS = 15.0
 IEEE_ASSET_ARTICLE_READY_POLL_MS = 250

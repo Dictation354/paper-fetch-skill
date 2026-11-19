@@ -1,15 +1,107 @@
 """Reading paths survive CLI processes and completed batch items survive cancellation."""
 
-from pathlib import Path
 import json
 import os
 import signal
 import subprocess
 import sys
 import textwrap
+from pathlib import Path
+
 import pytest
 
 from tests.paths import REPO_ROOT
+
+
+def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
+    tmp_path, monkeypatch, capsys
+):
+    from paper_fetch import cli
+    from paper_fetch.models import TRUNCATION_WARNING
+    from tests.support.fetch_fixtures import sample_envelope, sample_resolved_query
+
+    doi = "10.1000/example"
+    project = tmp_path / "papers"
+    envelope = sample_envelope(modes={"article", "markdown"}, doi=doi)
+    monkeypatch.setattr(cli, "fetch_paper", lambda *a, **k: envelope)
+    monkeypatch.setattr(
+        cli, "resolve_paper", lambda query, **k: sample_resolved_query(query)
+    )
+    monkeypatch.setattr(cli, "build_runtime_env", lambda: {})
+
+    def fetch():
+        assert (
+            cli.main(
+                [
+                    "fetch",
+                    "--query",
+                    doi,
+                    "--output-dir",
+                    str(project),
+                    "--overwrite",
+                ]
+            )
+            == 0
+        )
+        return json.loads(capsys.readouterr().out)
+
+    def lookup(query=doi, directory=project):
+        return subprocess.run(
+            [
+                sys.executable,
+                "-m",
+                "paper_fetch.cli",
+                "lookup",
+                "--doi",
+                query,
+                "--output-dir",
+                str(directory),
+            ],
+            cwd=tmp_path,
+            env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+    without_sections = fetch()
+    no_sections_manifest_path = Path(without_sections["manifest_path"])
+    no_sections_manifest = json.loads(no_sections_manifest_path.read_text())
+    no_sections_manifest["output_artifacts"] = [
+        artifact
+        for artifact in no_sections_manifest["output_artifacts"]
+        if artifact["kind"] != "section_index"
+    ]
+    no_sections_manifest_path.write_text(json.dumps(no_sections_manifest))
+
+    previous = fetch()
+    current = fetch()
+    missing = fetch()
+    Path(missing["body_path"]).unlink()
+    envelope.quality.warnings.append(TRUNCATION_WARNING)
+    assert fetch()["truncated"] is True
+
+    hit = lookup(query="10.1000/EXAMPLE")
+    assert hit.returncode == 0, hit.stderr
+    assert json.loads(hit.stdout) == current
+    assert len(hit.stdout.splitlines()) == 1 and not hit.stderr
+
+    current_body = Path(current["body_path"])
+    original = current_body.read_bytes()
+    current_body.write_bytes(b"!" + original[1:])
+    fallback = lookup()
+    assert fallback.returncode == 0, fallback.stderr
+    assert json.loads(fallback.stdout) == previous
+
+    elsewhere = lookup(directory=tmp_path / "another-project")
+    assert elsewhere.returncode == 1
+    assert json.loads(elsewhere.stdout) == {"status": "not_found", "doi": doi}
+    Path(previous["body_path"]).unlink()
+    miss = lookup()
+    assert miss.returncode == 1
+    assert miss.stdout == elsewhere.stdout and len(miss.stdout.splitlines()) == 1
+    invalid = lookup(query="not-a-doi")
+    assert invalid.returncode == 2 and not invalid.stdout
 
 
 def _auth_process(script, path):
@@ -79,6 +171,7 @@ def test_concurrent_cli_auth_rechecks_actual_profile_and_opens_once(tmp_path):
 @pytest.mark.parametrize("waiting_for_human", [False, True])
 def test_cli_auth_wait_can_be_cancelled_without_fetching(tmp_path, waiting_for_human):
     from contextlib import nullcontext
+
     from paper_fetch.auth import ams_auth_coordination
     from paper_fetch.config import BROWSER_PROFILE_DIR_ENV_VAR
 
@@ -180,7 +273,7 @@ def test_batch_manifest_is_readable_before_completion_and_after_cancel(tmp_path)
         assert first["index"] == 1
         assert process.poll() is None
         manifest = Path(first["manifest_path"])
-        assert json.loads(manifest.read_text())["query"] == "10.1000/first"
+        assert json.loads(manifest.read_text())["request"]["query"] == "10.1000/first"
         assert Path(first["body_path"]).read_text()
         # The second logical input shares acquisition, while retaining its own identity/manifest.
         duplicate = json.loads(process.stdout.readline())

@@ -1,9 +1,12 @@
 from __future__ import annotations
-from concurrent.futures import ThreadPoolExecutor
+
 import contextlib
-from pathlib import Path
 import threading
+from concurrent.futures import ThreadPoolExecutor
+from pathlib import Path
+
 import pytest
+
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.runtime import RuntimeContext

@@ -15,18 +15,16 @@ x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的
 ```text
 provider/browser workflow
         ↓
-browser_runtime facade + BrowserRuntimeConfig
+browser_runtime facade (api / html_fetcher / readiness / telemetry) + BrowserRuntimeConfig
         ↓
-RuntimeContext.new_browser_context_for_runtime_config（兼容委托）
+backends.byparr.ByparrBackend
         ↓
-BrowserSessions（请求独立、线程归属）
+RuntimeContext.new_browser_context_for_runtime_config → BrowserSessions（请求独立、线程归属）
         ↓
 PublisherProfileManager / ByparrManager
 ```
 
-provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，
-也不直接导入 Camoufox 私有实现。缺少 `browser` extra 时，静态状态返回结构化
-缺失依赖；core import 和非 browser provider 仍可正常工作。
+浏览器 HTML 导航与原子 DOM 快照、就绪探测和页面遥测分别归位在 `providers.browser_runtime.{html_fetcher,readiness,telemetry}`，后端层拍平为单一 `ByparrBackend`。`RuntimeContext` 仅保留委托给 `BrowserSessions` 的会话方法。provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，也不直接导入引擎私有实现。缺少 `browser` extra 时，静态状态返回结构化缺失依赖；core import 和非 browser provider 仍可正常工作。
 
 ## 生命周期与线程边界
 
@@ -62,7 +60,7 @@ provider preparation 前的快照，之后重新捕获以保留展开的引用�
 
 ### 补充材料索引
 
-独立 `target=supplementary` 任务的浏览器索引模式复用同一受管浏览器 runtime 和页面附件下载路径，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。材料范围与逐项诊断见 [CLI 说明](cli.md#独立补充材料任务)。macOS 合同中的 `browser.supplementary_index_without_body` 同步记录此边界。
+独立 `target=supplementary` 任务的浏览器索引模式复用同一受管浏览器 runtime 和页面附件下载路径，不要求正文就绪，允许摘要页及正文付费页上的公开材料索引；附件自身仍遵守访问限制。材料范围与逐项诊断见 [CLI 说明](cli.md#独立补充材料任务)。
 
 ### PNAS 获取边界
 
@@ -170,6 +168,4 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 
 ### AMS 认证前置
 
-AMS 正文、附件发现／下载及定向补图联网前检查 provider 归属、原生状态摘要及人工认证重开验证标记。仅有目录、Cookie 或普通抓取状态不够；正常 Cookie 更新可刷新当前摘要，无需与初次认证摘要一致。已有认证标记无需迁移。CLI 在身份与缓存判断后，在交互终端先认证再继续；批量调度线程按实际 profile 集中认证，跨 CLI 用独立认证锁协调并在取得锁后复查，等待可取消。不预持后续抓取的 profile 租约。非交互及 control-stdin 返回 auth_required，提示写 stderr；Python 入口只报告要求。失败与取消不经 fallback 继续 AMS 获取，也不转换成元数据成功。兼容缓存及已存在的本地文件可复用；resolve/check 不自动认证。
-
-macOS 契约 `browser.ams_verified_auth_required` 与 `browser.auth_coordination_cancellable` 记录此原生认证边界；portable 检查不替代原生 macos-15 gate。
+AMS 正文、附件发现／下载及定向补图联网前检查 provider 归属、原生状态摘要及人工认证重开验证标记。仅有目录、Cookie 或普通抓取状态不够；正常 Cookie 更新可刷新当前摘要，无需与初次认证摘要一致。已有认证标记无需迁移。CLI 在身份与缓存判断后，在交互终端先认证再继续；批量调度线程按实际 profile 集中认证，跨 CLI 用独立认证锁协调并在取得锁后复查，等待可取消。不预持后续抓取的 profile 租约。非交互及 control-stdin 返回 auth_required，提示写 stderr；Python 入口只报告要求。失败与取消不经 fallback 继续 AMS 获取，也不转换成元数据成功。兼容缓存及已存在的本地文件可复用；resolve/check 不自动认证。portable 检查不替代原生 macos-15 gate。

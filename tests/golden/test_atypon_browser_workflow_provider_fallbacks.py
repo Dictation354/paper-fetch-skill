@@ -1,8 +1,10 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
 from paper_fetch.extraction.html._metadata import parse_html_metadata
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import *
+from tests.support.trace import trace_facts
+
 # ruff: noqa: F403,F405
 
 
@@ -210,7 +212,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         with tempfile.TemporaryDirectory() as tmpdir:
             runtime = self._runtime_config(tmpdir, "pnas", doi)
             mocked_pdf = mock.Mock(
-                side_effect=browser_workflow.PdfFallbackFailure(
+                side_effect=browser_workflow.PdfFetchFailure(
                     "pdf_download_failed", "PNAS PDF fallback failed."
                 )
             )
@@ -298,7 +300,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
                 load_runtime_config=mock.Mock(return_value=runtime),
                 ensure_runtime_ready=mock.Mock(),
                 fetch_seeded_browser_pdf_payload=mock.Mock(
-                    side_effect=browser_workflow.PdfFallbackFailure(
+                    side_effect=browser_workflow.PdfFetchFailure(
                         "pdf_download_failed", "Science PDF fallback failed."
                     )
                 ),

@@ -1,8 +1,8 @@
 """Object-scoped assertions against original publisher content."""
 
+import re
 from contextlib import nullcontext
 from dataclasses import dataclass
-import re
 
 from tests.support.canonical_content import (
     comparable_cell,
@@ -380,9 +380,9 @@ def image_matches_source(url, asset, original, provider):
 
 def assert_figure_bindings(fixture, soup, article, markdown):
     from tests.support.canonical_content import (
-        source_figures,
-        source_figure_markup,
         source_caption_runs,
+        source_figure_markup,
+        source_figures,
         source_prose_blocks,
     )
     from tests.support.scientific_content import scientific_text_key
@@ -547,6 +547,7 @@ def assert_figure_bindings(fixture, soup, article, markdown):
 def source_object_neighbors(node, prose_runs):
     """Nearest retained paragraph text on either side of a DOM object."""
     from bs4 import Tag
+
     from tests.support.scientific_content import scientific_text_key
 
     retained = set(prose_runs)
@@ -680,8 +681,9 @@ def svg_content_signature(node):
 
 def assert_svg_content(expected_signature, body):
     """Require complete vector geometry and foreignObject/MathML source contents."""
-    from bs4 import BeautifulSoup
     from xml.etree import ElementTree as ET
+
+    from bs4 import BeautifulSoup
 
     root = ET.fromstring(body)
     assert root.tag == "{http://www.w3.org/2000/svg}svg", "wrong vector representation"

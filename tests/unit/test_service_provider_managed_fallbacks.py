@@ -1,14 +1,16 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
+
 import tempfile
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
+
 from paper_fetch import service as paper_fetch
 from paper_fetch.providers import (
     elsevier as elsevier_provider,
+)
+from paper_fetch.providers import (
     springer as springer_provider,
 )
 from paper_fetch.providers.base import (
@@ -16,6 +18,7 @@ from paper_fetch.providers.base import (
     ProviderContent,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_event
 from tests.support._paper_fetch_support import (
     FixtureProvider,
     fetch_paper_model,
@@ -23,6 +26,7 @@ from tests.support._paper_fetch_support import (
     sample_article,
     sample_html_article,
 )
+from tests.support.trace import trace_facts
 
 
 def _article_factory_with_source(source: str):

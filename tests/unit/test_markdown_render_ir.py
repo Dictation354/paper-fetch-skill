@@ -1,7 +1,8 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import unittest
+from dataclasses import asdict
+
 import pytest
 
 from paper_fetch.extraction.markdown_render import (
@@ -17,11 +18,11 @@ from paper_fetch.extraction.markdown_render import (
     render_table,
     render_table_block,
 )
-from paper_fetch.extraction.markdown_render.table_format import (
-    render_aligned_markdown_table,
-)
 from paper_fetch.extraction.markdown_render.formulas import (
     render_inline_latex_markdown,
+)
+from paper_fetch.extraction.markdown_render.table_format import (
+    render_aligned_markdown_table,
 )
 
 

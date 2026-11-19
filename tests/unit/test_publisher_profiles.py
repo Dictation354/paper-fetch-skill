@@ -1,32 +1,30 @@
 from __future__ import annotations
-from dataclasses import replace
 
+from dataclasses import replace
 
 import pytest
 
 from paper_fetch.capability_scope import (
-    capability_scope_from_runtime_context,
     UNCACHEABLE_CAPABILITY_SCOPE,
+    capability_scope_from_runtime_context,
 )
 from paper_fetch.provider_catalog import (
     ordered_provider_specs,
     provider_has_browser_route,
 )
-from paper_fetch.providers.browser_runtime.backends.camoufox import (
-    DEFAULT_CAMOUFOX_BACKEND,
+from paper_fetch.providers.browser_runtime import profile
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    DEFAULT_BYPARR_BACKEND,
 )
-
 from paper_fetch.providers.browser_runtime.context import (
     browser_context,
     open_browser_context,
 )
-from paper_fetch.providers.browser_runtime import profile
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeFailure
 from paper_fetch.runtime import RuntimeContext
 from tests.support.publisher_profiles import NativeProfileDouble
 
-
-load_runtime_config = DEFAULT_CAMOUFOX_BACKEND.load_runtime_config
+load_runtime_config = DEFAULT_BYPARR_BACKEND.load_runtime_config
 
 
 @pytest.fixture

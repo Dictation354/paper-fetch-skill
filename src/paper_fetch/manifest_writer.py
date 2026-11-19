@@ -12,7 +12,7 @@ from .manifest import ManifestRecord
 def serialize_manifest_record(
     record: ManifestRecord, *, indent: int | None = None
 ) -> str:
-    """Serialize one schema-v2 record without duplicating its field projection."""
+    """Serialize one schema-v3 record without duplicating its field projection."""
 
     return record.model_dump_json(indent=indent)
 

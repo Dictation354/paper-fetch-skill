@@ -18,11 +18,13 @@ from .seed import (
     parse_optional_int,
 )
 from .types import (
+    DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS,
+    DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS,
+    DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS,
     BrowserContextSeed,
     BrowserFetchedHtml,
     BrowserHtmlFetchOptions,
     BrowserHtmlReadiness,
-    BrowserImagePayload,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
     BrowserRuntimeSession,
@@ -30,15 +32,15 @@ from .types import (
 )
 
 _API_EXPORTS = {
-    "DEFAULT_BROWSER_RUNTIME_MAX_TIMEOUT_MS",
-    "DEFAULT_BROWSER_RUNTIME_WAIT_SECONDS",
-    "DEFAULT_BROWSER_RUNTIME_WARM_WAIT_SECONDS",
     "ensure_runtime_ready",
     "fetch_html_with_browser",
     "load_runtime_config",
-    "probe_runtime_status",
     "prepare_runtime",
+    "probe_runtime_status",
     "warm_browser_context",
+}
+_TELEMETRY_EXPORTS = {
+    "browser_page_user_agent",
 }
 
 __all__ = [
@@ -51,7 +53,6 @@ __all__ = [
     "BrowserFetchedHtml",
     "BrowserHtmlFetchOptions",
     "BrowserHtmlReadiness",
-    "BrowserImagePayload",
     "BrowserRuntimeConfig",
     "BrowserRuntimeFailure",
     "BrowserRuntimeSession",
@@ -60,6 +61,7 @@ __all__ = [
     "browser_context_seed_from_mapping",
     "browser_context_seed_from_session",
     "browser_context_seed_to_mapping",
+    "browser_page_user_agent",
     "ensure_runtime_ready",
     "fetch_html_with_browser",
     "load_runtime_config",
@@ -74,10 +76,13 @@ __all__ = [
 
 
 def __getattr__(name: str) -> Any:
-    if name not in _API_EXPORTS:
+    if name in _API_EXPORTS:
+        target = import_module(f"{__name__}.api")
+    elif name in _TELEMETRY_EXPORTS:
+        target = import_module(f"{__name__}.telemetry")
+    else:
         raise AttributeError(f"module {__name__!r} has no attribute {name!r}")
-    api = import_module(f"{__name__}.api")
-    value = getattr(api, name)
+    value = getattr(target, name)
     globals()[name] = value
     return value
 

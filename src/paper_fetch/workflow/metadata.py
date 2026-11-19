@@ -2,24 +2,24 @@
 
 from __future__ import annotations
 
-from ..tracing import extend_trace
-
-from ..tracing import TraceEvent
-
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
+from dataclasses import replace
+from time import perf_counter
 from typing import Any, cast
-from collections.abc import Mapping
 
 from ..http import PDF_MIME_TYPE
 from ..metadata.types import (
     ProviderMetadata,
+)
+from ..metadata.types import (
     merge_primary_secondary_metadata as merge_metadata_layers_primary_secondary,
 )
 from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
-from ..tracing import metadata_event, route_event
+from ..tracing import TraceEvent, extend_trace, metadata_event, route_event
 from ..utils import (
     choose_public_landing_page_url,
     extend_unique,
@@ -31,8 +31,8 @@ from .routing import (
     crossref_allowed_as_source,
     fetch_crossref_metadata_with_session_cache,
     get_cached_landing_page_citation_pdf_probe,
-    provider_allowed,
     probe_official_provider,
+    provider_allowed,
     route_signal_events,
     select_route_probe,
 )
@@ -150,14 +150,20 @@ def fetch_metadata_for_resolved_query(
     )
     crossref_result: ProviderMetadata | None = None
     crossref_failure: ProviderFailure | None = None
+    crossref_duration_ms: float | None = None
     initial_probe_results: dict[str, Any] = {}
 
     def fetch_crossref_metadata() -> ProviderMetadata | None:
-        return fetch_crossref_metadata_with_session_cache(
-            resolved.doi,
-            crossref_client,
-            context=context,
-        )
+        nonlocal crossref_duration_ms
+        started = perf_counter()
+        try:
+            return fetch_crossref_metadata_with_session_cache(
+                resolved.doi,
+                crossref_client,
+                context=context,
+            )
+        finally:
+            crossref_duration_ms = round((perf_counter() - started) * 1000, 3)
 
     def run_probe(candidate_provider: str):
         assert resolved.doi is not None
@@ -194,12 +200,15 @@ def fetch_metadata_for_resolved_query(
     if crossref_result:
         routing_metadata = crossref_result
         crossref_metadata = routing_metadata
-        if crossref_is_public_source:
-            events.append(metadata_event("crossref", "ok"))
-        else:
-            events.append(route_event("crossref_signal", "ok"))
+        event = (
+            metadata_event("crossref", "ok")
+            if crossref_is_public_source
+            else route_event("crossref_signal", "ok")
+        )
+        events.append(replace(event, duration_ms=crossref_duration_ms))
     elif crossref_failure is not None and crossref_is_public_source:
-        events.append(events_for_failure("metadata", "crossref", crossref_failure))
+        event = events_for_failure("metadata", "crossref", crossref_failure)
+        events.append(replace(event, duration_ms=crossref_duration_ms))
 
     extend_trace(
         events,

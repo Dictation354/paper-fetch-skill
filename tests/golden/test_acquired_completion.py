@@ -6,11 +6,12 @@ the current implementation. This does not claim an unattended live fallback.
 
 import pymupdf
 import pytest
+
 from paper_fetch.models import RenderOptions
+from paper_fetch.providers._arxiv_assets import discover_arxiv_ancillary_assets
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.providers._arxiv_assets import discover_arxiv_ancillary_assets
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import build_fetch_envelope
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance

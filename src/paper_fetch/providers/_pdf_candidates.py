@@ -5,11 +5,13 @@ from __future__ import annotations
 import html
 import re
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
-from ..extraction.html.parsing import choose_parser
+from bs4 import BeautifulSoup
+
 from ..extraction.html._metadata import raw_html_meta_values
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.ui_tokens import DOWNLOAD_PDF_LABEL
 from ..http import is_pdf_content_type
 from ..provider_catalog import (
@@ -21,8 +23,6 @@ from ..provider_catalog import (
 )
 from ..utils import normalize_text
 from ._pdf_document import non_article_pdf_reason
-
-from bs4 import BeautifulSoup
 
 PDF_LINK_TEXT_TOKENS = ("pdf", DOWNLOAD_PDF_LABEL, "full text pdf", "view pdf")
 PDF_URL_COMMON_TOKENS = (".pdf", "download=true")

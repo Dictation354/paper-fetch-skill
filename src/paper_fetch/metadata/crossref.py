@@ -2,11 +2,9 @@
 
 from __future__ import annotations
 
-from ..publication_dates import publication_date
-
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 from ..config import build_user_agent
 from ..errors import ProviderFailure
@@ -17,8 +15,9 @@ from ..http import (
     provider_request_policy,
 )
 from ..metadata.types import CrossrefMetadata, FulltextLink, ReferenceMetadata
-from ..publisher_identity import normalize_doi
 from ..providers.base import map_request_failure
+from ..publication_dates import publication_date
+from ..publisher_identity import normalize_doi
 from ..reason_codes import IDENTITY_MISMATCH, NO_RESULT, NOT_SUPPORTED
 from ..utils import (
     date_parts_to_string,

@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import json
-
 import math
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from dataclasses import replace
 from typing import Any
-from collections.abc import Mapping
 
 from ..common_patterns import EXTENDED_DATA_FIGURE_LABEL
 from ..markdown.images import render_markdown_image, short_image_alt
@@ -27,9 +25,9 @@ from .markdown import (
     strip_markdown_images,
 )
 from .schema import (
+    ArticleModel,
     Asset,
     AssetProfile,
-    ArticleModel,
     MaxTokensMode,
     Reference,
     RenderContext,
@@ -134,19 +132,11 @@ def resolve_reference_mode(
     return "top10"
 
 
-def resolve_figure_mode(
-    include_figures: str | None, *, asset_profile: AssetProfile
-) -> str:
-    if include_figures is not None:
-        return include_figures
+def resolve_figure_mode(*, asset_profile: AssetProfile) -> str:
     return "captions_only" if asset_profile == "none" else "inline"
 
 
-def resolve_supplementary_mode(
-    include_supplementary: bool | None, *, asset_profile: AssetProfile
-) -> bool:
-    if include_supplementary is not None:
-        return include_supplementary
+def resolve_supplementary_mode(*, asset_profile: AssetProfile) -> bool:
     return asset_profile == "all"
 
 
@@ -205,8 +195,6 @@ def _build_markdown_render_plan(
     article: ArticleModel,
     *,
     include_refs: str | None,
-    include_figures: str | None,
-    include_supplementary: bool | None,
     asset_profile: AssetProfile,
     max_tokens: MaxTokensMode,
 ) -> _MarkdownRenderPlan:
@@ -214,12 +202,9 @@ def _build_markdown_render_plan(
     effective_include_refs = resolve_reference_mode(
         include_refs, full_text_requested=full_text_requested
     )
-    effective_include_figures = resolve_figure_mode(
-        include_figures, asset_profile=asset_profile
-    )
+    effective_include_figures = resolve_figure_mode(asset_profile=asset_profile)
     effective_include_supplementary = resolve_supplementary_mode(
-        include_supplementary,
-        asset_profile=asset_profile,
+        asset_profile=asset_profile
     )
     body_sections = tuple(renderable_body_sections(article.sections))
     # Explicit abstract sections can consist entirely of a graphical abstract.
@@ -286,7 +271,6 @@ def _build_markdown_render_plan(
     supplementary_assets = selected_supplementary_assets(
         article.assets,
         asset_profile=asset_profile,
-        include_supplementary=effective_include_supplementary,
     )
     rendered_text = "\n".join(section.text for section in source_ordered_main_sections)
     seen_supplementary = set()
@@ -701,16 +685,10 @@ def selected_supplementary_assets(
     assets: list[Asset],
     *,
     asset_profile: AssetProfile,
-    include_supplementary: bool,
 ) -> list[Asset]:
-    if not include_supplementary:
+    if asset_profile != "all":
         return []
-    supplementary_assets = [asset for asset in assets if asset.kind == "supplementary"]
-    if asset_profile == "body":
-        return [asset for asset in supplementary_assets if asset_in_body(asset)]
-    if asset_profile == "none":
-        return []
-    return supplementary_assets
+    return [asset for asset in assets if asset.kind == "supplementary"]
 
 
 def build_rendered_block(

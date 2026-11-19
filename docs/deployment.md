@@ -212,7 +212,7 @@ Preset 选项：
 
 Shell rc 写入策略：
 
-- Linux / macOS 安装脚本会把 payload 复制到固定安装目录，使用该目录下的 `bin/` 启动器和 `runtime/site-packages/` 已安装 Python 包，复制 Codex / Claude Code skill，并清理旧注册。
+- Linux / macOS 安装脚本会把 payload 复制到固定安装目录，使用该目录下的 `bin/` 启动器和 `runtime/site-packages/` 已安装 Python 包，并复制 Codex / Claude Code / Antigravity skill。
 - Bash 写 `~/.bashrc`，Zsh 写 `~/.zshrc`，Fish 写 `~/.config/fish/conf.d/paper-fetch-offline.fish`。
 - `~/.zshrc` 是符号链接时，安装和卸载修改链接目标并保留符号链接本身；不会用临时文件 `mv` 覆盖成普通文件。
 - 无法识别 `$SHELL` 时写 `~/.profile` 并打印提示。
@@ -222,15 +222,13 @@ Shell rc 写入策略：
 - 安装后新开 shell，或临时执行 `source ~/.local/share/paper-fetch-skill/activate-offline.sh`；自定义安装目录时使用该目录下的 `activate-offline.sh`。
 - `activate-offline.sh` 会用包内 Python 和 `python-dotenv` 按 dotenv 语法解析本安装目录的 `offline.env`，或安装时通过 `--reuse-env-file` 绑定的外部文件，再逐个导出合法 env key；不会 `source` 该文件或执行其中的命令替换、函数定义、普通 shell 命令。默认 activate 使用安装时绑定的配置，不受外层 `PAPER_FETCH_ENV_FILE` 覆盖。
 
-Windows 安装器复制 runtime 与 Skill，配置用户 PATH，并清理可确认归属本工具的旧注册及 wrapper；保留用户其他服务配置。
-
 Windows 目标机运行安装器即可：
 
 ```powershell
 .\paper-fetch-skill-windows-x86_64-setup.exe
 ```
 
-Windows 安装器复制 runtime 与 Skill，配置用户 PATH，并清理可确认归属本工具的旧注册及 wrapper；保留用户其他服务配置。
+Windows 安装器复制 runtime 与 Skill，配置用户 PATH，并保留用户其他服务配置。
 
 核心安装及 smoke 检查成功后，三平台提供可选配置向导。Linux/macOS 使用终端，`--non-interactive`、无可交互终端或 `--skip-smoke` 时跳过；Windows 使用 Inno 密码输入框和默认未选中的组件选项，`/SILENT`、`/VERYSILENT` 不进入可选阶段。可选配置只处理凭据和图片工具，图片工具下载、安装默认关闭，各组件独立选择；可选阶段断网、拒绝、取消、sudo/UAC 或功能验证失败不会回滚核心安装。
 
@@ -242,7 +240,7 @@ Windows 安装器复制 runtime 与 Skill，配置用户 PATH，并清理可确�
 - 图片工具必须完成真实 EPS/TIFF → PNG 转换、PNG 解码与像素检查，才将绝对路径保存到既有 `PAPER_FETCH_GHOSTSCRIPT_BIN` / `PAPER_FETCH_VIPS_BIN`。版本探测成功不等于转换就绪。Windows 用独立 `optional-tools.json` 记录版本、来源、目录、归属、文件摘要及验证状态，与 release payload 清单分开。
 自动浏览器准备以普通用户使用既有 channel/pin/cache 和成功检查记录；随后只启动本地 `about:blank` 验证，不访问出版社、不登录、不保存 provider state。浏览器结果单独保存到 `browser-setup-results.txt`，可选配置不会再次启动浏览器。
 
-Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主/旧协议 后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
+Windows 耗时步骤有进度窗口和控制台结果，可用 Ctrl+C 取消当前可选步骤；官方 Ghostscript 向导及 UAC 可直接取消。完成后显示汇总，并写入不含凭据的 `optional-setup-results.txt`。Unix 汇总输出到终端。重启已运行的宿主后配置生效。需要重试时可使用安装目录绝对运行时执行 `-m paper_fetch.offline_setup --install-root <install-dir>`（Unix）；Windows 重新运行 EXE 向导。
 
 离线更新：已安装官方包且命令支持 `update` 时，运行 `paper-fetch update`。命令通过 [GitHub latest release API](https://docs.github.com/en/rest/releases/releases#get-the-latest-release) 查询固定仓库 `Dictation354/paper-fetch-skill` 的最新正式 Release，仅升级到更高版本。按当前平台、架构和标准 CPython ABI 选择安装包，安装包与 `SHA256SUMS` 均取自本次 Release；流式下载至临时目录并核验 SHA256 后才执行。
 
@@ -253,7 +251,7 @@ Windows 下载校验后以 `/DIR=<当前安装目录>` 启动图形安装向导�
 手动下载安装包更新：
 
 - Windows：下载新版 `paper-fetch-skill-windows-x86_64-setup.exe` 并直接运行。安装路径和 `AppId` 固定；安装器先备份 `offline.env`，再通过固定版本与摘要的 UninsIS 1.7.0 静默运行同 `AppId` 的既有卸载器，并等待 Inno 的 TEMP 第二阶段删除原卸载器 EXE 后才覆盖新版 runtime-only payload。既有卸载器只移除自身管理的文件，不递归清空目录，因此 `offline.env`、`downloads/` 和其它用户自建文件会保留；UninsIS 的 LGPL 与 provenance notice 随安装器分发，新版 helper 只替换 managed runtime block，并重新写入 PATH、skill 和 Skill 安装。
-- Linux：下载与目标机 CPython ABI 匹配的新 `.sh` 后直接运行。默认安装目录固定为 `~/.local/share/paper-fetch-skill`，升级时先在目标文件系统的独立临时目录复制新版 payload，重新验证 checksum、精确 inventory、入口和 skill。随后备份并逐项替换受管组件；写入 runtime marker、验证已安装 skill，并执行原有开关控制的 smoke（含浏览器 Python 包检查）后才提交。提交前失败会恢复旧组件并保留原退出码；回滚失败会报告并保留备份目录。成功后清理备份、临时目录和源码/构建残留，再刷新配置及 shell / skill / 旧协议 managed block。论文目录、用户自建文件和环境文件不参与运行时替换。若希望更新时不改动外部 `offline.env`，用 `--reuse-env-file` 指向现有文件；安装脚本不会写入该文件，只会把 shell 启动文件和 Codex fallback config 中的 managed block 替换为新安装目录的 PATH / 旧协议 runtime 路径。
+- Linux：下载与目标机 CPython ABI 匹配的新 `.sh` 后直接运行。默认安装目录固定为 `~/.local/share/paper-fetch-skill`，升级时先在目标文件系统的独立临时目录复制新版 payload，重新验证 checksum、精确 inventory、入口和 skill。随后备份并逐项替换受管组件；写入 runtime marker、验证已安装 skill，并执行原有开关控制的 smoke（含浏览器 Python 包检查）后才提交。提交前失败会恢复旧组件并保留原退出码；回滚失败会报告并保留备份目录。成功后清理备份、临时目录和源码/构建残留，再刷新配置、已安装 skill 与 shell 启动文件中的 managed block。论文目录、用户自建文件和环境文件不参与运行时替换。若希望更新时不改动外部 `offline.env`，用 `--reuse-env-file` 指向现有文件；安装脚本不会写入该文件，只会把 shell 启动文件中的 managed block 替换为新安装目录的 PATH 与运行时路径。
 - macOS：在 macOS 15+ arm64 目标机下载或构建与 CPython ABI 匹配的新 tarball，核验 checksum / quarantine 后运行 `install-offline.sh`；更新语义与 Linux 相同，默认固定安装目录同样是 `~/.local/share/paper-fetch-skill`。
 
 ```bash
@@ -269,16 +267,16 @@ source ~/.local/share/paper-fetch-skill/activate-offline.sh
 Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的清理复选框，静默卸载（包括升级先卸载）始终保留。清理仅接受 `optional-tools.json` 中本向导拥有的版本目录：Ghostscript 校对注册路径和官方卸载器摘要后调用对应可见卸载器；UAC 取消、路径不符或失败时保留并报告位置。libvips 仅删除清单内摘要未变的文件，新增/修改文件保留。清理报告保存为 `optional-cleanup-results.txt`。Linux/macOS 不卸载 APT/Homebrew 工具；Windows 卸载另清理安装目录内由 runtime 生成的四个 fpgen 指纹模型文件，相关目录仅在为空时删除；用户新增文件保留。任何平台均不清理共享 Camoufox 缓存。
 
 - Windows：在“设置 > 应用 > 已安装的应用”中卸载 `Paper Fetch Skill`，或运行 `%LOCALAPPDATA%\PaperFetchSkill\unins000.exe`。卸载器会删除其管理的 runtime、wrapper、bundled skill 和元数据，删除安装器复制的 Codex / Claude Code / Antigravity skill、用户 PATH 中的安装目录 `bin`，并移除安装器管理的 Skill 安装；`offline.env`、`downloads/` 内用户文件、其它安装根用户内容及用户手写的其它 Codex / Claude / Antigravity 配置会保留。
-- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 Codex skill 的当前路径 `~/.agents/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，清理 shell 启动文件、用户配置和 Codex fallback config 中的 installer managed block，并直接按受管标记、命令路径或模块参数清理确认归属本工具的旧注册；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
+- Linux：运行 `~/.local/share/paper-fetch-skill/install-offline.sh --uninstall`，自定义目录则运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。该路径不做 checksum、Python ABI 或 bundle asset 检查，只删除 Codex skill 的当前路径 `~/.agents/skills/paper-fetch-skill`、`~/.claude/skills/paper-fetch-skill`、`~/.gemini/antigravity-cli/skills/paper-fetch-skill`，并清理 shell 启动文件和用户配置中的 installer managed block；不会删除固定安装目录、`bin/`、`runtime/`、`offline.env`、`downloads/`，也不会删除用户配置中的非 managed 内容。需要删除固定安装目录时显式运行 `install-offline.sh --purge`。
 - macOS：卸载命令与 Linux 相同；如果使用自定义安装目录，运行该目录下的 `install-offline.sh --install-dir <path> --uninstall`。卸载只清理 `~/Library/Application Support/paper-fetch/.env` 的 managed block，保留用户自写内容。`--purge` 会在删除任何用户集成之前拒绝 `/`、HOME 及其祖先、尚未安装的当前 bundle root 等危险目标，并要求目标目录中的 schema 3 `offline-manifest.json` 证明 project / entrypoint 所有权且存在 `runtime/python-bin` 安装标记；校验失败时不会做部分卸载。
 
 离线安装约束：
 
 - Linux / macOS 必须使用标准 GIL CPython，版本、`SOABI` 和架构均须与包名及 `offline-manifest.json` 目标完全匹配；例如 macOS `cp313` arm64 包只能用原生 arm64 CPython `3.13.x` 运行，Rosetta x86_64 Python、free-threaded/debug ABI 会在写入前拒绝
 - Linux / macOS 安装器会校验 `offline-manifest.json` 的 `target.platform` 和 `target.arch`；macOS 离线包只支持 arm64
-- macOS manifest 额外声明 `target.minimum_os_version = "15.0"`；安装器通过系统版本检查确认目标机满足最低版本，并在 shell、skill、旧协议 和用户配置写入前完成所有平台、ABI、checksum 与整个 bundle 的递归 quarantine 预检
+- macOS manifest 额外声明 `target.minimum_os_version = "15.0"`；安装器通过系统版本检查确认目标机满足最低版本，并在 shell、skill 和用户配置写入前完成所有平台、ABI、checksum 与整个 bundle 的递归 quarantine 预检
 - Linux 离线安装默认使用 `/usr/bin/python3`，不受 PATH 中 Miniforge、Conda 或 virtualenv 的优先级影响；macOS 默认仍使用 PATH 中的 `python3`。可通过 `--python /path/to/python3.14` 或 `--python=/path/to/python3.14` 自选解释器，也接受命令名和相对路径。安装时选择顺序为 `--python` → `PAPER_FETCH_OFFLINE_PYTHON_BIN` → 平台默认值；例如 `bash paper-fetch-skill-offline-linux-x86_64-cp314.sh --python /usr/bin/python3.14`。所选解释器必须匹配包的 ABI，缺失或不匹配时安装停止，可用 `--python` 指定兼容解释器
-- Linux / macOS 安装时把选中解释器的绝对路径写入 `runtime/python-bin`，并在安装结果中显示；后续 `runtime/paper-fetch-python` 私有 launcher、CLI wrapper 和 旧协议 都复用该解释器。运行时仍允许 `PAPER_FETCH_OFFLINE_PYTHON_BIN` 显式覆盖绑定；`paper-fetch update` 沿用当前解释器。离线包包含 Python 依赖，不包含独立解释器；`bin/` 不暴露通用 `python` wrapper
+- Linux / macOS 安装时把选中解释器的绝对路径写入 `runtime/python-bin`，并在安装结果中显示；后续 `runtime/paper-fetch-python` 私有 launcher 和 CLI wrapper 都复用该解释器。运行时仍允许 `PAPER_FETCH_OFFLINE_PYTHON_BIN` 显式覆盖绑定；`paper-fetch update` 沿用当前解释器。离线包包含 Python 依赖，不包含独立解释器；`bin/` 不暴露通用 `python` wrapper
 - Windows 安装器固定使用包内 CPython 3.14.10 x64 embeddable runtime；版本、python.org URL 与官方 SHA-256 `90905e64a840557d8c1bc4f5b74db3d7ee85e3ffb217611cac1c7813acea4159` 均来自 `installer/manifest.json`，构建器在解压前校验，目标机不需要预装 Python
 - Linux 构建阶段用临时 wheelhouse 把项目和依赖安装进 `runtime/site-packages`，然后只把安装后的 runtime、`bin/` 启动器、公式工具和 skill 放进自解压 `.sh` payload；目标机安装阶段不运行 pip，不包含源码树、`dist/` 或 `wheelhouse/`
 - browser/full 的 Python 依赖随离线 runtime 分发；当前平台浏览器 binary 和所需模型由[准备流程](#浏览器安装与准备)管理。离线使用需提前预置；现有安装验证不覆盖完全断网的浏览器启动。
@@ -288,7 +286,7 @@ Windows 正式卸载默认保留可选工具，交互窗口提供默认关闭的
 - Linux / macOS 默认写固定安装目录内的 `offline.env`、生成可在 bash/zsh 中 `source` 的 `activate-offline.sh`、复制三份 host skill，并把离线 CLI PATH、工具路径、`PAPER_FETCH_ENV_FILE`、`PYTHONUTF8`、`PYTHONIOENCODING` 等写入当前 shell 启动文件；`offline.env` 的 managed block 写入 `PAPER_FETCH_BROWSER_HEADLESS=true`，不覆盖 Camoufox 生成的 Firefox UA/指纹。只有显式传 `--user-config` 才会把受标记管理的运行时块合并到用户配置；Linux 目标是 `~/.config/paper-fetch/.env`，macOS 目标是 `~/Library/Application Support/paper-fetch/.env`
 - Linux / macOS `--install-dir <path>` 只接受不存在、空目录，或同时带 schema 3 ownership manifest 与 `runtime/python-bin` marker 的既有安装目录；拒绝 HOME/祖先、非空未拥有目录及指向它的 symlink。合法升级会清理 `src/`、`tests/`、`wheelhouse/`、`dist/`、`.github/` 等残留，保留安装目录内 `offline.env`，并保留用户配置中非 managed 内容
 - Linux / macOS `--reuse-env-file <path>` 会把 `PAPER_FETCH_ENV_FILE` 指向现有文件且不修改该文件；其它 runtime 路径仍由新安装目录写入 shell / activate / 运行环境，activate 时只做安全 dotenv 解析
-- Linux / macOS 写入 shell 启动文件和 Codex fallback config 时会先替换既有受管理 block，重复安装不会重复追加；不修改 `/etc/profile`。macOS 的 `.zshrc` 即使是 symlink 也保持 symlink
+- Linux / macOS 写入 shell 启动文件时会先替换既有受管理 block，重复安装不会重复追加；不修改 `/etc/profile`。macOS 的 `.zshrc` 即使是 symlink 也保持 symlink
 - Windows 首次安装会写安装目录内 `offline.env`；升级安装会保留用户已有内容，只替换 managed runtime block。Skill 安装环境固定指向安装目录内 runtime 路径，并设置 `PYTHONUTF8=1`、`PYTHONIOENCODING=utf-8`、`PAPER_FETCH_BROWSER_HEADLESS=true`，不注入 Chrome UA。全部平台将 `MATHML_TO_LATEX_NODE_BIN` 和 `PLAYWRIGHT_NODEJS_PATH` 默认指向独立打包的官方 Node 26.13.0（POSIX：`runtime/node/bin/node`；Windows：`runtime/node/node.exe`），公式工具、Playwright 与 Byparr 共用该运行时，并保留显式环境覆盖。Node 版本、下载 URL 和官方 SHA-256 由 `installer/manifest.json` 管理，许可证随包分发，离线 manifest、dependency evidence 和 SBOM 记录来源、归档摘要与实际可执行文件摘要
 - Windows 安装、升级或手工修改 `offline.env` 后，需要重启 Codex Desktop / Claude Code / Antigravity；已启动的 宿主进程不会自动继承新写入的 env。
 - Windows GUI 安装完成页会提示 Elsevier API key 申请入口和包内 `offline.env` 位置，并提供可选的 Notepad 打开项；silent 安装不会弹出该提示。使用 Elsevier API 路线时从 <https://dev.elsevier.com/> 申请 key，并在该文件中填写 `ELSEVIER_API_KEY`
@@ -346,7 +344,7 @@ Windows offline job 对最终 EXE 执行原生安装、CLI/doctor/provider statu
 再验证覆盖升级、用户内容保留、卸载完成与残留树。Inno/HKCU 和实际安装状态必须由
 原生 Windows 提供证据。
 
-Windows 原生 lifecycle gate 验证 cp314 全新安装后，校验并安装 v7.4.2 的 cp313 基线安装器，再升级至 cp314，核对用户配置、downloads、可选工具、Codex/Antigravity 旧协议 的独立 Node 路径和非受管内容保留，并继续验证 cp314 覆盖升级与卸载。基线 URL 和 SHA-256 固定在 `.github/workflows/offline.yml`；本地可通过 `scripts/verify-windows-installer-lifecycle.ps1 -PreviousSetupPath <已校验的旧安装器>` 复用同一验证。
+Windows 原生 lifecycle gate 验证 cp314 全新安装后，校验并安装 v7.4.2 的 cp313 基线安装器，再升级至 cp314，核对用户配置、downloads、可选工具、独立 Node 路径和非受管内容保留，并继续验证 cp314 覆盖升级与卸载。基线 URL 和 SHA-256 固定在 `.github/workflows/offline.yml`；本地可通过 `scripts/verify-windows-installer-lifecycle.ps1 -PreviousSetupPath <已校验的旧安装器>` 复用同一验证。
 
 只需要复核 Windows 安装器时，可手动触发 `Offline packages` workflow，并在运行记录中只重跑 Windows job。
 
@@ -486,9 +484,9 @@ paper-fetch doctor --group browser --detail compact
 记录完整文件列表、逐文件 SHA-256 与内容摘要。安装器在复制前后校验安装根与三个
 宿主 skill，缺失、多余、链接或摘要不符均无法通过完整性验收。
 
-Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。安装目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定；旧协议 配置位置沿用现有契约。安装和卸载仅处理当前 skill 路径，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
+Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级安装到项目 `.agents/skills/paper-fetch-skill`；Windows 用户级对应 `%USERPROFILE%\.agents\skills\paper-fetch-skill`。安装目录遵循 [OpenAI skill 指导](https://learn.chatgpt.com/docs/build-skills)，不由 `CODEX_HOME` 决定。安装和卸载仅处理当前 skill 路径，user/project scope 不互相清理。离线安装器仅处理其既有用户 scope。
 
-源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不注册或清理旧注册、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill/旧协议。
+源码安装或升级后可运行 `./scripts/install-codex-skill.sh --check` 检查 Codex user scope，或加 `--project --check` 检查仓库 `.agents/skills/paper-fetch-skill`。该模式严格只读，不安装包、不复制/建目录、不写配置/日志；`0` 表示精确同步，`1` 表示缺失或漂移，`2` 表示参数用法冲突。离线安装器会在复制前后及三个宿主目标上 fail closed 验证 Skill，完成后重启 Codex、Claude Code 和 Antigravity 使宿主重新扫描已验证的 skill。
 
 排查本地配置使用 `doctor` / `provider_status`；检查站点访问使用 CLI `browser-preflight`；需要登录或人工验证时运行 `paper-fetch auth <provider>`。live 步骤会访问网络，并复用[原生 profile](browser-backends.md)，与 auth、fetch 共用持久目录。preflight 入口共用 HTML 核心，均在实际启动前自动准备 managed runtime，不运行 PDF fallback 或自动 auth。静态 `ready` 只表示本地能力可用；站点访问由实际请求验收。
 
@@ -512,7 +510,7 @@ installer manifest 和 `prepare_release_assets.py` 维护，拒绝缺失、多�
 `scan_artifacts_for_secrets.py` 扫描，覆盖 raw/URL-encoded 值，只报告变量名和路径。
 原生 Camoufox 准备可向上游 CLI 传只读 `GITHUB_TOKEN`，不写入 cache/artifact。
 
-Live publisher/旧协议 和完整 golden 仅在本地显式执行。普通 unit/integration/golden
+Live publisher 和完整 golden 仅在本地显式执行。普通 unit/integration/golden
 沿用 pytest 并行配置；只有 live 或依赖共享外部状态的检查按其契约串行。
 Linux/WSL 先用项目 Python 执行 `scripts/validate_macos_adaptation.py`，再执行
 `scripts/test-macos-contract.sh`；Windows 对应 `.ps1`。`/mnt/*` 仅可作静态验证，
@@ -568,7 +566,7 @@ runtime 自动准备机制。进入受限网络前需显式预置并验证。Gho
 ./scripts/install-antigravity-skill.sh
 ```
 
-支持 --project/--user、--uninstall 与只读 --check。Skill 使用 CLI JSON 文件回执后读取本地正文；无需协议服务或常驻进程。安装、升级及卸载自动清理确认归属本工具的旧注册与 wrapper，包括自定义服务名；按受管标记、命令路径、模块参数识别，保留其他服务和用户数据。--check 不执行清理。
+支持 `--project`/`--user`、`--uninstall` 与只读 `--check`。Skill 使用 CLI JSON 文件回执后读取本地正文；无需常驻进程。安装、升级及卸载仅管理当前版本的静态 Skill 目录，保留其他服务和用户数据；`--check` 严格只读。
 
 ## 8. 更新方式
 
@@ -580,7 +578,7 @@ runtime 自动准备机制。进入受限网络前需显式预置并验证。Gho
 python3 -m pip install --upgrade .
 ```
 
-如果你还在使用 Codex 或 Claude Code，推荐顺手重跑对应安装脚本，让 skill 和 旧协议 一起更新：
+如果你还在使用 Codex、Claude Code 或 Antigravity，推荐顺手重跑对应安装脚本同步静态 skill：
 
 ## 9. 最小验证步骤
 
@@ -590,7 +588,7 @@ python3 -m pip install --upgrade .
 paper-fetch fetch --query "10.1186/1471-2105-11-421"
 ```
 
-CLI 默认打印 Markdown 到终端；如果指定 `--output-dir` 且未显式传 `--output`，主输出会用安全化论文 stem 加 `.md`、`.json` 或 `.both.json` 后缀写入该目录，正文不会打印到终端。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
+CLI 默认采用 `temporary_read`，将完整 Markdown、逐篇 manifest、章节与图片索引保存到独立临时目录，并向 stdout 输出一行 JSON 回执；指定 `--output -` 显式导出正文到终端，指定 `--output-dir` 将主输出与结果快照写入该目录。完整输出、artifact、资产下载和错误码语义见 [`cli.md`](cli.md)。
 
 源码 checkout 使用锁定的开发与完整依赖，再运行本地门禁：
 
@@ -610,7 +608,7 @@ integration，`--skip-typecheck` 跳过 mypy。发布前使用 `--with-golden`�
 CI 平台门禁见 [CI / GitHub Actions](#ci--github-actions)，发布终验见
 [发布前检查](#release-checklist)。live 检查只在本地显式执行。
 
-出版社/旧协议 live 入口及其网络、凭据和结果保存约定见[测试说明](../tests/README.md)。
+出版社 live 入口及其网络、凭据和结果保存约定见[测试说明](../tests/README.md)。
 
 ## 相关文档
 
@@ -643,8 +641,6 @@ macOS 使用统一的受管 Camoufox＋Byparr；浏览器和模型可能联网�
 本地修改涉及上述边界时，先运行 `python scripts/validate_macos_adaptation.py`，再在当前平台运行对应 contract 入口。原生发布证据只能由 macOS runner 提供。
 
 Codex skill 的 `.agents/skills` 当前路径安装与卸载同样适用于 macOS；Linux portable 验证不替代原生 macOS 安装证据。
-
-`browser.supplementary_index_without_body` 对应的跨平台行为见[补充材料索引](browser-runtime.md#补充材料索引)。
 
 macOS 出版社状态使用原生持久目录；升级保留状态与现有路径覆盖。备份应在浏览器
 关闭后执行，外部 Firefox 占用时先正常关闭，不删除原生锁。状态导入、认证重放和

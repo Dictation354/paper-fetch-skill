@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
-from tests.support._atypon_browser_workflow_provider_support import *
 from paper_fetch.runtime import RuntimeContext
+from tests.support._atypon_browser_workflow_provider_support import *
+
 # ruff: noqa: F403,F405
 
 
@@ -507,7 +509,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         self.assertEqual(
             runtime_context.new_browser_context_for_runtime_config.call_count, 2
         )
-        self.assertEqual(len(runtime_context._camoufox_browser_managers), 1)
+        self.assertEqual(len(runtime_context._browser_sessions.managers), 1)
         self.assert_direct_asset_attempted(transport)
         self.assertEqual(
             [asset["kind"] for asset in result["assets"]],
@@ -517,6 +519,12 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
         self.assertEqual(len(private_contexts), 1)
         self.assertTrue(all(context.route_calls == [] for context in private_contexts))
         self.assertFalse(any(context.closed for context in private_contexts))
+        close_for_thread = getattr(
+            runtime_context,
+            "close_browser_for_current_thread",
+            runtime_context.close_browser,
+        )
+        close_for_thread()
         for context in private_contexts:
             context.close()
 
@@ -754,11 +762,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                 _build_shared_browser_image_fetcher=mock.Mock(
                     return_value=shared_fetcher
                 ),
-            )
-            with (
-                mock.patch.object(
-                    atypon_browser_workflow_asset_scopes,
-                    "extract_scoped_html_assets",
+                _cached_browser_workflow_assets=mock.Mock(
                     return_value=[
                         {
                             "kind": "figure",
@@ -778,16 +782,16 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
                             "full_size_url": full_size_url,
                             "section": "body",
                         },
-                    ],
+                    ]
                 ),
-            ):
-                result = client.download_related_assets(
-                    SCIENCE_SAMPLE.doi,
-                    {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
-                    raw_payload,
-                    Path(tmpdir),
-                    asset_profile="body",
-                )
+            )
+            result = client.download_related_assets(
+                SCIENCE_SAMPLE.doi,
+                {"doi": SCIENCE_SAMPLE.doi, "title": SCIENCE_SAMPLE.title},
+                raw_payload,
+                Path(tmpdir),
+                asset_profile="body",
+            )
 
         mocked_fetch.assert_not_called()
         self.assertEqual(shared_fetcher.call_count, 1)

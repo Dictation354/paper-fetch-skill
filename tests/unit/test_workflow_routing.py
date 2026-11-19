@@ -1,9 +1,10 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import dataclass
+
 import unittest
+from dataclasses import dataclass
+
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow import routing
 from paper_fetch.workflow.batch_routing import (
     GENERIC_BATCH_LANE,
@@ -14,6 +15,7 @@ from paper_fetch.workflow.batch_routing import (
 )
 from paper_fetch.workflow.session_cache import LANDING_PDF_PROBE_KEY
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.trace import trace_facts
 
 
 @dataclass(frozen=True)

@@ -1,18 +1,18 @@
 """Real HTTP retry/cancellation under Elsevier's remaining enrichment budget."""
 
-from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 import threading
 import time
+from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
 import pytest
 
 from paper_fetch.http import HttpRequestPolicy, HttpTransport, RequestCancelledError
+from paper_fetch.http.url_policy import SafeRemoteUrlPolicy, ValidatedRemoteUrl
 from paper_fetch.providers._elsevier_reference_completion import (
-    _RequestTransport,
     _ReferenceDeadlineExceeded,
+    _RequestTransport,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.http.url_policy import SafeRemoteUrlPolicy, ValidatedRemoteUrl
 
 
 @pytest.fixture

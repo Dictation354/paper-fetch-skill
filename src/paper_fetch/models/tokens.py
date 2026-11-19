@@ -3,18 +3,17 @@
 from __future__ import annotations
 
 import math
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any
-from collections.abc import Mapping
 
 from ..utils import normalize_text
 from .markdown import normalize_markdown_text, strip_markdown_images
 from .schema import (
+    TRUNCATION_WARNING,
     MaxTokensMode,
     Reference,
     Section,
     TokenEstimateBreakdown,
-    TRUNCATION_WARNING,
 )
 from .sections import BODY_SECTION_EXCLUDED_KINDS, combine_abstract_text
 

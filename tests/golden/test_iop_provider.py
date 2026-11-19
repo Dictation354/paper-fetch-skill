@@ -1,12 +1,13 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
+
+import re
 from dataclasses import replace
 from pathlib import Path
-import re
+
 from paper_fetch.providers import _iop_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.iop import IopClient
-
+from paper_fetch.tracing import trace_event
 
 IOP_SAMPLE_DOI = "10.1088/1748-9326/ab7d02"
 IOP_SAMPLE_LANDING = f"https://iopscience.iop.org/article/{IOP_SAMPLE_DOI}"

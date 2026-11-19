@@ -10,7 +10,8 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "BrowserWorkflowBootstrapResult": (".profile", "BrowserWorkflowBootstrapResult"),
     "BrowserWorkflowPolicy": (".profile", "BrowserWorkflowPolicy"),
     "BrowserWorkflowClient": (".client", "BrowserWorkflowClient"),
-    "PdfFallbackFailure": ("paper_fetch.providers._pdf_fallback", "PdfFallbackFailure"),
+    "PdfFetchFailure": ("paper_fetch.providers._pdf_common", "PdfFetchFailure"),
+    "PdfFetchResult": ("paper_fetch.providers._pdf_common", "PdfFetchResult"),
     "ProviderBrowserProfile": (".profile", "ProviderBrowserProfile"),
     "browser_profile_catalog_mismatches": (
         ".profile",
@@ -106,7 +107,7 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     ),
 }
 
-__all__ = [*_EXPORTS]
+__all__ = sorted(_EXPORTS)
 
 
 def __getattr__(name: str) -> Any:

@@ -2,7 +2,7 @@
 
 ## 七个分面
 
-回执 acceptance 包含 overall、identity、fetch、content、asset、output、provenance，以及 has_fulltext/has_abstract。`target_satisfied` 与退出码共用目标满足判断；`status` 是生命周期。结合实际文件判断交付。按任务需要读取 manifest 中对应细节；不要仅凭退出码或文件名认定已取得全文。
+回执 acceptance 包含 overall、identity、fetch、content、asset、output、provenance，以及 has_fulltext/has_abstract、token_estimate 和 asset_summary。`target_satisfied` 与退出码共用目标满足判断；`status` 是生命周期。结合实际文件判断交付。按任务需要读取逐篇 schema-v3 manifest 的 `acceptance`（如 `content.semantic_losses`、`provenance`）获取完整细节；不要仅凭退出码或文件名认定已取得全文。
 
 ## 响应验收
 

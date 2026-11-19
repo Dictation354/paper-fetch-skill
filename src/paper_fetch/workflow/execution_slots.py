@@ -2,10 +2,10 @@
 
 from __future__ import annotations
 
-from contextlib import contextmanager
-from contextvars import ContextVar
 import threading
 from collections import Counter
+from contextlib import contextmanager
+from contextvars import ContextVar
 
 current_slots: ContextVar[ExecutionSlots | None] = ContextVar(
     "execution_slots", default=None

@@ -5,19 +5,20 @@ from __future__ import annotations
 import contextlib
 import hashlib
 import json
-from pathlib import Path
 import shutil
 import sys
 import tempfile
 import time
-from typing import Any
 import urllib.request
 import zipfile
+from pathlib import Path
+from typing import Any
 
 from filelock import FileLock, Timeout
 
-from .types import BrowserRuntimeFailure
 from ...browser_runtime_policy import BYPARR_MANIFEST_PATH as MANIFEST_PATH
+from .preparation import fetch_browser_preparation
+from .types import BrowserRuntimeFailure
 
 
 class PreparationBudget:
@@ -247,8 +248,6 @@ def prepare_source(cache: Path, budget: PreparationBudget) -> Path:
 
 
 def prepare_components(cache: Path, budget: PreparationBudget) -> Path:
-    from .preparation import fetch_browser_preparation
-
     scope = fetch_browser_preparation.get()
     if scope is None:
         return prepare_source(cache, budget)

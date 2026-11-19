@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import os
-from pathlib import Path
 import re
 import subprocess
 import tempfile
 import threading
 import urllib.parse
 from collections.abc import Mapping
+from dataclasses import dataclass
+from pathlib import Path
 
 from ..http.headers import header_value
 from ..reason_codes import (

@@ -1,5 +1,4 @@
 from __future__ import annotations
-from paper_fetch.providers import _springer_markdown
 
 from dataclasses import dataclass
 from pathlib import Path
@@ -9,27 +8,47 @@ from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import (
-    annualreviews as annualreviews_provider,
-    pnas as pnas_provider,
-    science as science_provider,
-    wiley as wiley_provider,
-    copernicus as copernicus_provider,
-    ams as ams_provider,
-    iop as iop_provider,
-    mdpi as mdpi_provider,
-    tandf as tandf_provider,
-    aip as aip_provider,
     _oxfordacademic_html as oxford_html,
 )
+from paper_fetch.providers import _springer_markdown
+from paper_fetch.providers import (
+    aip as aip_provider,
+)
+from paper_fetch.providers import (
+    ams as ams_provider,
+)
+from paper_fetch.providers import (
+    annualreviews as annualreviews_provider,
+)
+from paper_fetch.providers import (
+    copernicus as copernicus_provider,
+)
+from paper_fetch.providers import (
+    iop as iop_provider,
+)
+from paper_fetch.providers import (
+    mdpi as mdpi_provider,
+)
+from paper_fetch.providers import (
+    pnas as pnas_provider,
+)
+from paper_fetch.providers import (
+    science as science_provider,
+)
+from paper_fetch.providers import (
+    tandf as tandf_provider,
+)
+from paper_fetch.providers import (
+    wiley as wiley_provider,
+)
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.xml_security import parse_xml
 from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.xml_security import parse_xml
 from tests.golden_criteria import (
     doi_to_fixture_slug,
     iter_manifest_samples,
 )
 from tests.paths import FIXTURE_DIR
-
 
 BLOCK_FIXTURE_ROOT = FIXTURE_DIR / "block"
 

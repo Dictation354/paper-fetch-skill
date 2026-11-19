@@ -2,17 +2,20 @@
 
 from __future__ import annotations
 
-from ..markdown.math import protect_markdown_math, restore_markdown_math
-from ..formula.convert import normalize_latex
-from ..formula.validation import formula_document
-
 import re
-from copy import deepcopy
-from urllib.parse import urljoin
-from typing import Any
 from collections.abc import Callable
+from copy import deepcopy
+from typing import Any
+from urllib.parse import quote, urljoin
+
+from bs4 import BeautifulSoup, Comment, NavigableString, Tag
 
 from ..common_patterns import HEADING_TAG_PATTERN, INLINE_WHITESPACE_PATTERN
+from ..extraction.html._runtime import (
+    HTML_BLOCK_TAGS,
+    HTML_DROP_TAGS,
+    should_drop_html_element,
+)
 from ..extraction.html.inline import (
     InlineToken,
     html_inline_tokens,
@@ -20,37 +23,61 @@ from ..extraction.html.inline import (
     render_html_inline_node,
     render_inline_tokens,
 )
+from ..extraction.html.semantics import normalize_section_title
 from ..extraction.markdown_render.figures import (
     FIGURE_ACTION_TRAILING_LINK_PATTERN as FIGURE_ACTION_TRAILING_LINK_PATTERN,
+)
+from ..extraction.markdown_render.figures import (
     FIGURE_DESCRIPTION_SELECTORS as FIGURE_DESCRIPTION_SELECTORS,
+)
+from ..extraction.markdown_render.figures import (
     FIGURE_ID_PATTERN as FIGURE_ID_PATTERN,
+)
+from ..extraction.markdown_render.figures import (
     FIGURE_LABEL_PATTERN as FIGURE_LABEL_PATTERN,
+)
+from ..extraction.markdown_render.figures import (
     INLINE_FIGURE_ALT_ATTR as INLINE_FIGURE_ALT_ATTR,
+)
+from ..extraction.markdown_render.figures import (
     INLINE_FIGURE_SRC_ATTR as INLINE_FIGURE_SRC_ATTR,
+)
+from ..extraction.markdown_render.figures import (
     is_html_figure_container as _is_figure_container,
+)
+from ..extraction.markdown_render.figures import (
     render_html_figure_markdown,
 )
 from ..extraction.markdown_render.formulas import (
-    is_html_formula_container as _is_formula_container,
     is_html_display_formula_node as _is_display_formula_node,
+)
+from ..extraction.markdown_render.formulas import (
+    is_html_formula_container as _is_formula_container,
+)
+from ..extraction.markdown_render.formulas import (
     is_html_formula_image_node as _is_formula_image_node,
+)
+from ..extraction.markdown_render.formulas import (
     is_mathjax_tex_node as _is_mathjax_tex_node,
-    render_inline_latex_markdown as _render_inline_latex_markdown,
+)
+from ..extraction.markdown_render.formulas import (
     render_html_formula_container as _render_formula_container,
+)
+from ..extraction.markdown_render.formulas import (
     render_html_formula_image_node as _render_formula_image_node,
+)
+from ..extraction.markdown_render.formulas import (
     render_html_mathml_node as _render_mathml_node,
 )
-from ..extraction.html.semantics import normalize_section_title
-from ..extraction.html._runtime import (
-    HTML_BLOCK_TAGS,
-    HTML_DROP_TAGS,
-    should_drop_html_element,
+from ..extraction.markdown_render.formulas import (
+    render_inline_latex_markdown as _render_inline_latex_markdown,
 )
-from ..models import normalize_text
+from ..formula.convert import normalize_latex
+from ..formula.validation import formula_document
 from ..markdown.citations import numeric_citation_payload_from_html_node
 from ..markdown.images import render_markdown_image
-
-from bs4 import BeautifulSoup, Comment, NavigableString, Tag
+from ..markdown.math import protect_markdown_math, restore_markdown_math
+from ..models import normalize_text
 
 INLINE_IMAGE_SPACING_PATTERN = re.compile(r"(?<=[^\s])(!\[)")
 LINE_EDGE_WHITESPACE_PATTERN = re.compile(r" *\n *")
@@ -688,8 +715,6 @@ def _raw_inline_markdown_from_node(node: Any) -> str | None:
         )
         if node["href"] == "#":
             return label
-        from urllib.parse import quote
-
         href = quote(str(node["href"]), safe="/:#?=&%+@;,~!$*'[]")
         return f"[{label}]({href})"
     if node.name == "img" and (

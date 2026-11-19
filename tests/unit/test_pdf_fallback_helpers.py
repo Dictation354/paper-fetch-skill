@@ -1,20 +1,22 @@
 from __future__ import annotations
-from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+
 import json
 import os
-from pathlib import Path
 import sys
-import threading
 import tempfile
+import threading
 import types
 import unittest
+from pathlib import Path
 from unittest import mock
+
 from paper_fetch.providers import (
-    browser_runtime,
     _pdf_candidates,
     _pdf_common,
     _pdf_fallback,
+    browser_runtime,
 )
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 from paper_fetch.providers.browser_workflow import pdf_fallback as browser_pdf_fallback
 from paper_fetch.runtime import RuntimeContext
 from tests.support._browser_workflow_deps import browser_workflow_deps
@@ -182,9 +184,12 @@ class PdfFallbackHelperTests(unittest.TestCase):
             calls[0]["candidate_urls"], ["https://example.org/article.pdf"]
         )
         self.assertEqual(calls[0]["headers"], {"User-Agent": "UnitTest/1.0"})
-        self.assertEqual(calls[0]["timeout"], 42)
+        request = calls[0]["request"]
+        assert isinstance(request, _pdf_fallback.PdfRequestContext)
+        self.assertEqual(request.timeout_seconds, 42)
         self.assertEqual(calls[0]["artifact_dir"], Path("artifacts/pdf"))
-        self.assertEqual(calls[0]["seed_urls"], ["https://example.org/article"])
+        self.assertNotIn("seed_urls", calls[0])
+        self.assertNotIn("timeout", calls[0])
         self.assertEqual(
             calls[0]["browser_cookies"],
             [{"name": "token", "value": "abc", "domain": ".example.org"}],
@@ -311,7 +316,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
         self.assertEqual(headers["Sec-Fetch-Site"], "same-origin")
         self.assertEqual(headers["Sec-Fetch-Mode"], "navigate")
         self.assertEqual(headers["Sec-Fetch-Dest"], "document")
-        self.assertEqual(mocked_http.call_args.kwargs["seed_urls"], [seed_url])
+        self.assertNotIn("seed_urls", mocked_http.call_args.kwargs)
 
     def test_extract_pdf_candidate_urls_from_html_finds_meta_and_download_links(
         self,
@@ -1535,7 +1540,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
             with (
                 mock.patch.object(_pdf_fallback, "pdf_max_bytes", return_value=4),
                 self.assertRaisesRegex(
-                    _pdf_fallback.PdfFallbackFailure, "configured PDF limit"
+                    _pdf_fallback.PdfFetchFailure, "configured PDF limit"
                 ),
             ):
                 _pdf_fallback._response_to_pdf_result(
@@ -1545,7 +1550,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
                     final_url="https://example.org/article.pdf",
                 )
             with self.assertRaisesRegex(
-                _pdf_fallback.PdfFallbackFailure, "Failed to read PDF"
+                _pdf_fallback.PdfFetchFailure, "Failed to read PDF"
             ):
                 _pdf_fallback._response_to_pdf_result(
                     FakeResponse({}, RuntimeError("read failed")),
@@ -1564,7 +1569,7 @@ class PdfFallbackHelperTests(unittest.TestCase):
             with (
                 mock.patch.object(_pdf_fallback, "pdf_max_bytes", return_value=4),
                 self.assertRaisesRegex(
-                    _pdf_fallback.PdfFallbackFailure, "configured PDF limit"
+                    _pdf_fallback.PdfFetchFailure, "configured PDF limit"
                 ),
             ):
                 _pdf_fallback._response_to_pdf_result(
@@ -1634,10 +1639,6 @@ class PdfFallbackHelperTests(unittest.TestCase):
         convert.assert_called_once()
 
 
-if __name__ == "__main__":
-    unittest.main()
-
-
 def test_pdf_byte_transport_is_recorded_at_the_branch_that_obtains_bytes(
     monkeypatch, tmp_path
 ):
@@ -1690,3 +1691,7 @@ def test_pdf_byte_transport_is_recorded_at_the_branch_that_obtains_bytes(
     )
     assert captured[-1]["bytes_transport"] == "browser_download"
     assert captured[-1]["final_url"] == Download.url
+
+
+if __name__ == "__main__":
+    unittest.main()

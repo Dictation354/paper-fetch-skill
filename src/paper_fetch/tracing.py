@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass, field
 import hashlib
 import math
 import urllib.parse
 from collections.abc import Iterable, Mapping
+from dataclasses import dataclass, field
 
 from .reason_codes import NOT_CONFIGURED, RATE_LIMITED
 from .utils import normalize_text
@@ -151,8 +151,12 @@ def route_event(component: str, outcome: str = "info") -> TraceEvent:
     return trace_event("route", component, outcome)
 
 
-def resolve_event(component: str, outcome: str = "info") -> TraceEvent:
-    return trace_event("resolve", component, outcome)
+def resolve_event(
+    component: str, outcome: str = "info", *, duration_ms: float | None = None
+) -> TraceEvent:
+    return trace_event(
+        "resolve", component, outcome, context=TraceContext(duration_ms=duration_ms)
+    )
 
 
 def fallback_event(component: str, outcome: str = "info") -> TraceEvent:

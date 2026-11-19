@@ -5,23 +5,23 @@ from __future__ import annotations
 
 import argparse
 import base64
-from configparser import ConfigParser
 import csv
-from email.parser import BytesParser
 import hashlib
 import io
-from pathlib import Path, PurePosixPath
 import stat
 import tarfile
 import zipfile
+from configparser import ConfigParser
+from email.parser import BytesParser
+from pathlib import Path, PurePosixPath
 
+from packaging.requirements import Requirement
 from packaging.utils import (
     canonicalize_name,
     parse_sdist_filename,
     parse_wheel_filename,
 )
 from packaging.version import Version
-
 
 _DISTRIBUTION = "paper-fetch-skill"
 _REQUIRED_CONSOLE_SCRIPTS = {
@@ -38,7 +38,7 @@ _REQUIRED_PACKAGE_PATHS = {
     "paper_fetch/resources/formula/package-lock.json",
     "paper_fetch/resources/formula/package.json",
     "paper_fetch/resources/journal_routes/journal-routes-v1.json",
-    "paper_fetch/resources/manifest/manifest-record-v2.schema.json",
+    "paper_fetch/resources/manifest/manifest-record-v3.schema.json",
 }
 _REQUIRED_SKILL_PATHS = {
     "share/paper-fetch-skill/skills/paper-fetch-skill/SKILL.md",
@@ -100,8 +100,6 @@ def _assert_distribution_metadata(
     label: str,
 ) -> None:
     metadata = BytesParser().parsebytes(payload, headersonly=True)
-    from packaging.requirements import Requirement
-
     if any(
         canonicalize_name(Requirement(item).name) == "mcp"
         for item in metadata.get_all("Requires-Dist", [])

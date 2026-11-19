@@ -1,30 +1,29 @@
 """Offline reassembly using the bounded 2026-09-18 official asset captures."""
 
-from dataclasses import replace
-from paper_fetch.models import Quality
-
-
-from dataclasses import asdict
+from dataclasses import asdict, replace
 
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.extraction.html.assets import merge_extracted_and_downloaded_assets
-from paper_fetch.models import FetchEnvelope
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.plos import (
     PlosClient,
-    parse_plos_xml,
     _plos_figure_candidates,
+    parse_plos_xml,
 )
 from paper_fetch.quality.assets import build_asset_quality_summary
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-from tests.golden_criteria import source_selections
+from tests.golden_criteria import (
+    golden_criteria_asset,
+    golden_criteria_sample_for_doi,
+    source_selections,
+)
 from tests.paths import REPO_ROOT
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import (
-    captured_body,
-    capture_records,
     _response,
+    capture_records,
+    captured_body,
 )
 from tests.support.arxiv_graphic_replay import GRAPHIC_IDS, graphic_payload
 from tests.support.captured_images import download_captured_images

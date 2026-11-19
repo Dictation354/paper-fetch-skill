@@ -3,22 +3,23 @@
 from __future__ import annotations
 
 import contextlib
+import errno
 import hashlib
 import importlib
 import json
-import errno
 import os
 import threading
 import time
 from pathlib import Path
 from typing import Any
 
-from filelock import FileLock, Timeout as FileLockTimeout
+from filelock import FileLock
+from filelock import Timeout as FileLockTimeout
 
+from ...http import RequestCancelledError
+from ...http.transport import request_cancel_check
 from .byparr_manager import ByparrManager
-from .paths import (
-    _atomic_write_json,
-)
+from .paths import _atomic_write_json, default_provider_user_data_dir
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 
 METADATA_FILENAME = "paper-fetch-profile.json"
@@ -28,8 +29,6 @@ PROFILE_LOCK_FILENAME = ".paper-fetch-profile.lock"
 def profile_path(config: BrowserRuntimeConfig) -> Path:
     path = config.profile_dir or config.user_data_dir
     if path is None:
-        from .paths import default_provider_user_data_dir
-
         path = default_provider_user_data_dir(os.environ, provider=config.provider)
     return Path(os.path.normcase(str(Path(path).expanduser().resolve())))
 
@@ -158,7 +157,6 @@ class PublisherProfileManager:
     def _acquire(self) -> None:
         self.path.mkdir(parents=True, exist_ok=True)
         from ...workflow.execution_slots import profile_wait
-        from ...http.transport import request_cancel_check
 
         started = time.monotonic()
         if self.runtime_context is not None:
@@ -176,8 +174,6 @@ class PublisherProfileManager:
                 else:
                     cancelled = request_cancel_check.get()
                     if cancelled is not None and cancelled():
-                        from ...http import RequestCancelledError
-
                         raise RequestCancelledError(
                             "Request cancelled while waiting for profile."
                         )
@@ -246,8 +242,6 @@ class PublisherProfileManager:
             try:
                 self.context = self.manager.new_context()
             except Exception as exc:
-                from ...http import RequestCancelledError
-
                 if isinstance(exc, (BrowserRuntimeFailure, RequestCancelledError)):
                     raise
                 raise BrowserRuntimeFailure(

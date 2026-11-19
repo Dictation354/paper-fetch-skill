@@ -2,12 +2,12 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from functools import cache
 from importlib import import_module
 from types import ModuleType
 from typing import Any
-from collections.abc import Callable, Mapping
 
 from ..extraction.html.provider_rules import (
     DomHooks,
@@ -28,6 +28,8 @@ from .browser_workflow.shared import (
     build_browser_workflow_html_candidates,
     build_browser_workflow_pdf_candidates,
     extract_pdf_url_from_crossref,
+)
+from .browser_workflow.shared import (
     preferred_html_candidate_from_landing_page as _preferred_html_candidate_from_landing_page,
 )
 

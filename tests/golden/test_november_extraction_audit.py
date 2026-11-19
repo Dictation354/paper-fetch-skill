@@ -7,15 +7,15 @@ import re
 import subprocess
 from urllib.parse import urlsplit
 
+import pytest
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
-import pytest
 
 from paper_fetch.models.markdown import iter_markdown_images
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample
-from tests.support.replay import build_article_from_fixture, persisted_fixture_markdown
 from tests.paths import REPO_ROOT
+from tests.support.replay import build_article_from_fixture, persisted_fixture_markdown
 
 CURRENT = [
     "10.1016_j.edumed.2018.09.002",
@@ -185,8 +185,8 @@ def test_acs_wide_table_keeps_all_source_rows_under_one_number():
     fixture = golden_corpus_fixture_for_doi("10.1021/acsomega.3c06992")
     source = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
     wrapper = source.find(id="tbl2").find_parent(class_="table-wrap")
-    from paper_fetch.providers._acs_html import render_acs_table
     from paper_fetch.extraction.html.tables import render_table_inline_text
+    from paper_fetch.providers._acs_html import render_acs_table
 
     markdown = render_acs_table(wrapper, label="Table 2.", caption="Source caption")
     tokens = MarkdownIt().enable("table").parse(markdown)

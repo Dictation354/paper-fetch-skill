@@ -1,7 +1,7 @@
 """Minimal provider-local table and Methods classification boundaries."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.providers._science_html import render_table_with_missing_trailing_cells
 from paper_fetch.providers._springer_dom import extract_html_extraction_sidecars

@@ -2,21 +2,20 @@
 
 from __future__ import annotations
 
-
 import hashlib
 import io
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
 import sys
 import tarfile
+from pathlib import Path
 from zipfile import ZipFile
 
 import pytest
-
 from scripts.build_node_runtime import stage_node_runtime
+
 from tests.support._installer_support import write_posix_command_wrappers
 
 

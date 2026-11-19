@@ -1,27 +1,27 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
+
 import base64
 import json
 import tempfile
 import threading
 import time
 import unittest
+from dataclasses import replace
 from pathlib import Path
 from unittest import mock
+
+from paper_fetch.extraction.html import assets as html_assets
+from paper_fetch.extraction.html.assets import download as asset_impl
 from paper_fetch.http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     DEFAULT_TIMEOUT_SECONDS,
     RequestFailure,
 )
-from paper_fetch.extraction.html import assets as html_assets
-from paper_fetch.extraction.html.assets import download as asset_impl
 from paper_fetch.providers import browser_runtime, browser_workflow
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import fetchers as browser_fetchers
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import image as image_fetcher
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import (
     ElsevierClient,
@@ -31,9 +31,11 @@ from paper_fetch.providers.elsevier import (
 from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
-from tests.support._browser_workflow_deps import browser_workflow_deps
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import png_header
+from tests.support._browser_workflow_deps import browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.trace import trace_facts
 
 
 class _FakeImagePage:
@@ -1364,37 +1366,18 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(failure["reason"], "canvas_tainted")
         self.assertEqual(failure["canvas_error"], "SecurityError")
 
-    def test_browser_image_document_payload_requires_image_payload(self) -> None:
-        result = browser_runtime.BrowserFetchedHtml(
-            source_url="https://example.test/figure.png",
-            final_url="https://example.test/figure.png",
-            html="<html><title>figure.png (40×30)</title></html>",
-            response_status=200,
-            response_headers={},
-            title="figure.png (40×30)",
-            summary="",
-            browser_context_seed={},
-            screenshot_b64=base64.b64encode(b"fake-screenshot").decode("ascii"),
-        )
-
-        payload = browser_fetchers._browser_image_document_payload(result)
-
-        self.assertIsNone(payload)
-
-    def test_browser_image_document_payload_prefers_browser_exported_pixels(
+    def test_payload_from_browser_image_payload_requires_mapping_and_exported_pixels(
         self,
     ) -> None:
-        result = browser_runtime.BrowserFetchedHtml(
-            source_url="https://example.test/figure.png",
-            final_url="https://example.test/figure.png",
-            html="<html></html>",
-            response_status=200,
-            response_headers={},
-            title="figure.png (40x30)",
-            summary="",
-            browser_context_seed={},
-            screenshot_b64=None,
-            image_payload={
+        self.assertIsNone(
+            image_fetcher._payload_from_browser_image_payload(
+                None,
+                fallback_url="https://example.test/figure.png",
+            )
+        )
+
+        payload = image_fetcher._payload_from_browser_image_payload(
+            {
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "image/png",
@@ -1404,9 +1387,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 "width": 40,
                 "height": 30,
             },
+            fallback_url="https://example.test/figure.png",
         )
-
-        payload = browser_fetchers._browser_image_document_payload(result)
 
         self.assertIsNotNone(payload)
         assert payload is not None
@@ -1414,18 +1396,9 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload["url"], "https://example.test/figure.png")
         self.assertEqual(payload["dimensions"], {"width": 40, "height": 30})
 
-    def test_browser_image_document_payload_rejects_invalid_payload(self) -> None:
-        result = browser_runtime.BrowserFetchedHtml(
-            source_url="https://example.test/figure.png",
-            final_url="https://example.test/figure.png",
-            html="<html></html>",
-            response_status=200,
-            response_headers={},
-            title="figure.png (40x30)",
-            summary="",
-            browser_context_seed={},
-            screenshot_b64=None,
-            image_payload={
+    def test_payload_from_browser_image_payload_rejects_invalid_payload(self) -> None:
+        payload = image_fetcher._payload_from_browser_image_payload(
+            {
                 "status": 200,
                 "url": "https://example.test/figure.png",
                 "contentType": "text/html",
@@ -1433,25 +1406,15 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 "width": 40,
                 "height": 30,
             },
+            fallback_url="https://example.test/figure.png",
         )
-
-        payload = browser_fetchers._browser_image_document_payload(result)
 
         self.assertIsNone(payload)
 
-    def test_browser_image_document_payload_accepts_svg_payload(self) -> None:
+    def test_payload_from_browser_image_payload_accepts_svg_payload(self) -> None:
         svg_body = b"\xef\xbb\xbf\n<?xml version='1.0'?><svg xmlns='http://www.w3.org/2000/svg'></svg>"
-        result = browser_runtime.BrowserFetchedHtml(
-            source_url="https://example.test/figure.svg",
-            final_url="https://example.test/figure.svg",
-            html=svg_body.decode("utf-8-sig"),
-            response_status=200,
-            response_headers={"content-type": "image/svg+xml"},
-            title="figure.svg",
-            summary="",
-            browser_context_seed={},
-            screenshot_b64=None,
-            image_payload={
+        payload = image_fetcher._payload_from_browser_image_payload(
+            {
                 "status": 200,
                 "url": "https://example.test/figure.svg",
                 "contentType": "image/svg+xml",
@@ -1459,9 +1422,8 @@ class ProviderRequestOptionsTests(unittest.TestCase):
                 "width": 0,
                 "height": 0,
             },
+            fallback_url="https://example.test/figure.svg",
         )
-
-        payload = browser_fetchers._browser_image_document_payload(result)
 
         self.assertIsNotNone(payload)
         assert payload is not None
@@ -1469,28 +1431,18 @@ class ProviderRequestOptionsTests(unittest.TestCase):
         self.assertEqual(payload["body"], svg_body)
         self.assertEqual(payload["url"], "https://example.test/figure.svg")
 
-    def test_browser_image_document_payload_rejects_svg_content_type_with_html_body(
+    def test_payload_from_browser_image_payload_rejects_svg_content_type_with_html_body(
         self,
     ) -> None:
-        result = browser_runtime.BrowserFetchedHtml(
-            source_url="https://example.test/figure.svg",
-            final_url="https://example.test/figure.svg",
-            html="<html><title>Just a moment...</title></html>",
-            response_status=403,
-            response_headers={"content-type": "text/html"},
-            title="Just a moment...",
-            summary="",
-            browser_context_seed={},
-            screenshot_b64=None,
-            image_payload={
+        payload = image_fetcher._payload_from_browser_image_payload(
+            {
                 "status": 403,
                 "url": "https://example.test/figure.svg",
                 "contentType": "image/svg+xml",
                 "bodyB64": base64.b64encode(b"<html>challenge</html>").decode("ascii"),
             },
+            fallback_url="https://example.test/figure.svg",
         )
-
-        payload = browser_fetchers._browser_image_document_payload(result)
 
         self.assertIsNone(payload)
 

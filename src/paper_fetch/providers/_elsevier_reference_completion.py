@@ -6,23 +6,24 @@ All matching evidence is internal; conversion to ArticleModel performs no I/O.
 
 from __future__ import annotations
 
-from ..publication_dates import citation_date
-
-from copy import copy
-from dataclasses import dataclass, replace
 import re
 import unicodedata
-from typing import Any
 from collections.abc import Mapping, Sequence
+from copy import copy
+from dataclasses import dataclass, replace
+from typing import Any
+
+from bs4 import BeautifulSoup
 
 from ..http import HttpRequestPolicy, RequestCancelledError
 from ..http.transport import request_cancel_check
+from ..publication_dates import citation_date
 from ..publisher_identity import normalize_doi
 from ..tracing import TraceEvent
 from ._article_markdown_common import (
+    child_text,
     first_child,
     first_descendant,
-    child_text,
     xml_local_name,
 )
 from ._article_markdown_elsevier_document import _extract_reference_title
@@ -213,12 +214,11 @@ def _crossref_client(context):
 
 
 def _web_references(client, doi, metadata, context):
+    from ..extraction.html._metadata import parse_html_metadata
+    from ..extraction.html.parsing import choose_parser
     from . import _elsevier_html
     from .browser_runtime import BrowserHtmlReadiness
     from .browser_runtime.types import BrowserHtmlFetchOptions
-    from ..extraction.html._metadata import parse_html_metadata
-    from ..extraction.html.parsing import choose_parser
-    from bs4 import BeautifulSoup
 
     runtime = client.deps.load_runtime_config(client.env, provider="elsevier", doi=doi)
     if runtime.backend != "byparr":
@@ -249,8 +249,8 @@ def _web_references(client, doi, metadata, context):
 
 def complete_reference_dois(client, doi, metadata, payload, context):
     """Enrich accepted XML, retaining it on lookup, browser or matching failure."""
-    from .elsevier import elsevier_xml_root_from_payload
     from ..workflow.session_cache import CROSSREF_METADATA_KEY
+    from .elsevier import elsevier_xml_root_from_payload
 
     context.raise_if_cancelled()
     root = elsevier_xml_root_from_payload(

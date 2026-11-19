@@ -1,6 +1,7 @@
 """Compare stage facts while tests separately assert timing and route details."""
 
 from collections.abc import Mapping
+
 from paper_fetch.tracing import TraceEvent
 
 

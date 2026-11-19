@@ -1,6 +1,5 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
 import contextlib
 import io
 import json
@@ -14,13 +13,16 @@ import unittest
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
+
 from paper_fetch import cli as paper_fetch_cli
+from paper_fetch import service as paper_fetch
 from paper_fetch.config import DOWNLOAD_DIR_ENV_VAR
 from paper_fetch.logging_utils import emit_structured_log
-from paper_fetch import service as paper_fetch
 from paper_fetch.models import ArticleModel, Asset, Metadata, RenderOptions
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.tracing import trace_event
 from tests.support._paper_fetch_support import build_envelope, sample_article
+from tests.support.trace import trace_facts
 
 
 class CliTests(unittest.TestCase):
@@ -49,16 +51,13 @@ class CliTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             output_dir = Path(tmpdir)
             results_path = output_dir / "batch-results.jsonl"
-            args = SimpleNamespace(
-                batch_results=str(results_path),
+            command = paper_fetch_cli.BatchFetchCommand(
+                queries=("10.1000/first", "10.1000/second"),
+                options=paper_fetch_cli.FetchExecutionOptions(
+                    artifact_mode="markdown-assets",
+                ),
                 batch_concurrency=2,
-                format="markdown",
-                asset_profile="none",
-                include_refs="all",
-                max_tokens="full_text",
-                no_download=True,
-                save_markdown_to_disk=False,
-                output="-",
+                batch_results=str(results_path),
             )
             with (
                 mock.patch.object(
@@ -70,11 +69,9 @@ class CliTests(unittest.TestCase):
                 ),
             ):
                 exit_code = paper_fetch_cli.run_batch_fetch(
-                    args,
-                    queries=["10.1000/first", "10.1000/second"],
+                    command,
                     output_dir=output_dir,
                     runtime_env={},
-                    artifact_mode="markdown-assets",
                 )
 
             result_lines = [
@@ -172,7 +169,7 @@ class CliTests(unittest.TestCase):
         normalized_help = " ".join(help_text.split())
 
         self.assertIn(
-            "{fetch,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
+            "{fetch,lookup,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
             help_text,
         )
         self.assertIn("Fetch one paper or a query-file batch.", help_text)
@@ -185,7 +182,7 @@ class CliTests(unittest.TestCase):
             (): (
                 "usage: paper-fetch",
                 "commands:",
-                "{fetch,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
+                "{fetch,lookup,resolve,check,fetch-assets,auth,browser-preflight,doctor,update}",
                 "Doctor performs static, network-free checks.",
             ),
             ("fetch",): (
@@ -195,7 +192,16 @@ class CliTests(unittest.TestCase):
                 "--artifact-mode {markdown-assets,all,none}",
                 "preset default: none",
                 "--asset-profile {none,body,all}",
-                "preset default: none",
+                "default for the paper target: none",
+                f"platform-selected engine ({paper_fetch_cli.engine_name()} here)",
+                "paper-fetch doctor --catalog",
+                "Only the supplementary target downloads attachments by default.",
+                "Use all to download supplementary materials alongside the paper",
+            ),
+            ("lookup",): (
+                "usage: paper-fetch lookup",
+                "--doi DOI",
+                "--output-dir OUTPUT_DIR",
             ),
             ("auth",): (
                 "usage: paper-fetch auth",
@@ -235,23 +241,6 @@ class CliTests(unittest.TestCase):
                 rendered = " ".join(stdout.getvalue().split()).replace("- ", "-")
                 for fragment in fragments:
                     self.assertIn(fragment, rendered)
-
-    def test_doctor_default_command_remains_replaceable(self) -> None:
-        registered: list[str] = []
-
-        def register_doctor(subparsers) -> None:
-            subparsers.add_parser("doctor", help="Injected doctor command.")
-            registered.append("doctor")
-
-        default_help = paper_fetch_cli.build_parser().format_help()
-        injected_help = paper_fetch_cli.build_parser(
-            doctor_registrar=register_doctor,
-        ).format_help()
-
-        self.assertEqual(registered, ["doctor"])
-        self.assertNotIn("Injected doctor command.", default_help)
-        self.assertIn("Inspect static provider configuration and local", default_help)
-        self.assertIn("Injected doctor command.", injected_help)
 
     def test_doctor_json_is_static_machine_readable_without_install_provenance(
         self,
@@ -347,28 +336,37 @@ class CliTests(unittest.TestCase):
         self.assertIn("does not belong to group", stderr.getvalue())
 
     def test_fetch_subparser_uses_current_fetch_defaults(self) -> None:
-        args = paper_fetch_cli.build_parser().parse_args(
-            [
-                "fetch",
-                "--artifact-mode",
-                "none",
-                "--asset-profile",
-                "all",
-                "--query",
-                "10.1000/example",
-            ]
-        )
+        argv = [
+            "fetch",
+            "--artifact-mode",
+            "none",
+            "--asset-profile",
+            "all",
+            "--query",
+            "10.1000/example",
+        ]
+        args = paper_fetch_cli.build_parser().parse_args(argv)
 
         self.assertEqual(args.query, "10.1000/example")
         self.assertEqual(args.artifact_mode, "none")
         self.assertEqual(args.asset_profile, "all")
-        self.assertEqual(args.format, "markdown")
-        self.assertEqual(args.output, "-")
+        self.assertIsNone(args.format)
+        self.assertIsNone(args.output)
+        self.assertIsNone(args.prefer_cache)
+
+        command = paper_fetch_cli.parse_cli_command(argv)
+        self.assertIsInstance(command, paper_fetch_cli.SingleFetchCommand)
+        assert isinstance(command, paper_fetch_cli.SingleFetchCommand)
+        self.assertEqual(command.query, "10.1000/example")
+        self.assertEqual(command.options.artifact_mode, "none")
+        self.assertEqual(command.options.asset_profile, "all")
+        self.assertEqual(command.options.output_plan.output_format, "markdown")
+        self.assertEqual(command.options.output_plan.output, "-")
 
     def test_argparse_errors_use_command_specific_usage_and_stderr(self) -> None:
         cases = (
             (["unknown-command"], "usage: paper-fetch ", "invalid choice"),
-            (["--unknown-option"], "usage: paper-fetch ", "required: _command"),
+            (["--unknown-option"], "usage: paper-fetch ", "required: command"),
             (
                 ["fetch", "--unknown-option"],
                 "usage: paper-fetch ",
@@ -2571,6 +2569,7 @@ class CliTests(unittest.TestCase):
                     == [
                         "primary_markdown",
                         "reading_markdown",
+                        "section_index",
                         "image_index",
                         "diagnostic",
                     ]
@@ -2918,80 +2917,55 @@ class CliTests(unittest.TestCase):
 
     def test_compute_modes_covers_stdout_file_both_and_save_markdown(self) -> None:
         self.assertEqual(
-            paper_fetch_cli._compute_modes(
-                SimpleNamespace(
-                    format="markdown",
+            paper_fetch_cli.compute_output_modes(
+                paper_fetch_cli.FetchOutputPlan(
+                    output_format="markdown",
                     output="-",
-                    save_markdown=False,
-                    no_download=False,
+                    save_markdown_to_disk=False,
                 )
             ),
             {"markdown"},
         )
         self.assertEqual(
-            paper_fetch_cli._compute_modes(
-                SimpleNamespace(
-                    format="markdown",
+            paper_fetch_cli.compute_output_modes(
+                paper_fetch_cli.FetchOutputPlan(
+                    output_format="markdown",
                     output="/tmp/out.md",
-                    save_markdown=False,
-                    no_download=False,
+                    save_markdown_to_disk=False,
                 )
             ),
             {"article", "markdown"},
         )
         self.assertEqual(
-            paper_fetch_cli._compute_modes(
-                SimpleNamespace(
-                    format="markdown",
+            paper_fetch_cli.compute_output_modes(
+                paper_fetch_cli.FetchOutputPlan(
+                    output_format="markdown",
                     output="-",
-                    save_markdown=False,
-                    no_download=False,
+                    save_markdown_to_disk=False,
                     primary_output_to_output_dir=True,
                 )
             ),
             {"article", "markdown"},
         )
         self.assertEqual(
-            paper_fetch_cli._compute_modes(
-                SimpleNamespace(
-                    format="both", output="-", save_markdown=False, no_download=True
+            paper_fetch_cli.compute_output_modes(
+                paper_fetch_cli.FetchOutputPlan(
+                    output_format="both",
+                    output="-",
+                    save_markdown_to_disk=False,
                 )
             ),
             {"article", "markdown"},
         )
         self.assertEqual(
-            paper_fetch_cli._compute_modes(
-                SimpleNamespace(
-                    format="json", output="-", save_markdown=True, no_download=True
+            paper_fetch_cli.compute_output_modes(
+                paper_fetch_cli.FetchOutputPlan(
+                    output_format="json",
+                    output="-",
+                    save_markdown_to_disk=True,
                 )
             ),
             {"article", "markdown"},
-        )
-
-    def test_exit_code_for_error_maps_specific_statuses(self) -> None:
-        self.assertEqual(
-            paper_fetch_cli.exit_code_for_error(
-                paper_fetch.PaperFetchFailure("ambiguous", "Need user confirmation.")
-            ),
-            1,
-        )
-        self.assertEqual(
-            paper_fetch_cli.exit_code_for_error(
-                ProviderFailure("no_access", "Forbidden")
-            ),
-            1,
-        )
-        self.assertEqual(
-            paper_fetch_cli.exit_code_for_error(
-                ProviderFailure("rate_limited", "Slow down")
-            ),
-            1,
-        )
-        self.assertEqual(
-            paper_fetch_cli.exit_code_for_error(
-                ProviderFailure("error", "Unexpected provider error")
-            ),
-            1,
         )
 
     def test_main_reports_ambiguous_errors_as_json(self) -> None:
@@ -3154,7 +3128,6 @@ def test_cli_read_and_archive_presets_preserve_explicit_output_and_asset_options
 
 
 def test_cli_material_archive_and_explicit_overrides():
-    parser = paper_fetch_cli.build_parser()
     for flags, expected in [
         ([], ("all", "markdown-assets")),
         (["--artifact-mode=none"], ("all", "none")),
@@ -3167,9 +3140,12 @@ def test_cli_material_archive_and_explicit_overrides():
             "--target=supplementary",
             *flags,
         ]
-        args = parser.parse_args(raw)
-        paper_fetch_cli._apply_cli_preset(args, raw)
-        assert (args.asset_profile, args.artifact_mode) == expected
+        command = paper_fetch_cli.parse_cli_command(raw)
+        assert isinstance(command, paper_fetch_cli.SingleFetchCommand)
+        assert (
+            command.options.asset_profile,
+            command.options.artifact_mode,
+        ) == expected
 
 
 def test_doctor_catalog_is_shared_and_suggests_only_unique_provider_ids(capsys):

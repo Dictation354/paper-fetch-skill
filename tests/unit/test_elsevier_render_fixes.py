@@ -2,8 +2,8 @@
 
 import re
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models import SemanticLosses, article_from_markdown
 from paper_fetch.providers import _elsevier_html as html
@@ -148,6 +148,7 @@ See [first](#elsevier-ref1) and [second](#elsevier-ref2).
 
 def test_xml_article_notes_keep_source_labels_and_table_notes_stay_out():
     from pathlib import Path
+
     from paper_fetch.providers._article_markdown_elsevier_document import (
         build_article_structure,
     )
@@ -183,7 +184,7 @@ def test_budget_drops_incomplete_or_orphan_generated_anchors(partial):
 
 
 def test_explicit_numeric_source_label_keeps_one_list_item():
-    from tests.support.markdown_lists import markdown_tree, inline_text
+    from tests.support.markdown_lists import inline_text, markdown_tree
 
     md, _ = render(
         '<ul><li><span class="list-label">1)</span><span class="list-content"><p>First step.</p></span></li></ul>'
@@ -232,6 +233,7 @@ def test_bibliography_aliases_use_source_keys_instead_of_position():
 
 def test_xml_navigation_keeps_nested_formula_and_article_note_targets():
     from pathlib import Path
+
     from paper_fetch.providers._article_markdown_elsevier_document import (
         build_article_structure,
     )
@@ -275,6 +277,6 @@ See the [attachment](#elsevier-supp).
 <a id="elsevier-supp"></a>[Source attachment](https://example.org/source.zip)
 """,
     )
-    md = article.to_ai_markdown(asset_profile=profile, include_supplementary=True)
+    md = article.to_ai_markdown(asset_profile=profile)
     assert ("[attachment](#elsevier-supp)" in md) == (profile == "all")
     assert ('id="elsevier-supp"' in md) == (profile == "all")

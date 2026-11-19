@@ -8,16 +8,16 @@ from collections import Counter
 from pathlib import PurePosixPath
 from urllib.parse import urljoin, urlsplit
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers._arxiv_assets import _arxiv_source_downloaded_asset
 from tests.support.arxiv_graphic_replay import (
-    graphic_source,
-    graphic_payload,
-    graphic_article,
     graphic_acceptance,
+    graphic_article,
+    graphic_payload,
+    graphic_source,
 )
 
 REVIEW_IDS = (

@@ -1,29 +1,30 @@
 """Camoufox package preparation contracts run where that engine is installed."""
 
 from __future__ import annotations
+
 import json
-from types import SimpleNamespace
 import threading
+from types import SimpleNamespace
 from unittest import mock
+
 import pytest
-from paper_fetch.config import (
-    XDG_DATA_HOME_ENV_VAR,
-)
-from paper_fetch.providers import _playwright_browser, browser_runtime
+
+from paper_fetch.config import XDG_DATA_HOME_ENV_VAR
+from paper_fetch.providers import browser_runtime
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_runtime.backends.camoufox import (
-    CamoufoxBackend,
+from paper_fetch.providers.browser_runtime import (
+    context as browser_runtime_context,
+)
+from paper_fetch.providers.browser_runtime import (
+    html_fetcher,
+    preparation,
+)
+from paper_fetch.providers.browser_runtime.backends.byparr import (
+    ByparrBackend,
     _dependency_details,
 )
-from paper_fetch.providers.browser_runtime.camoufox_manager import (
-    _launch_executable_path,
-)
-from paper_fetch.providers.browser_runtime import preparation
-from paper_fetch.providers.browser_runtime import context as browser_runtime_context
-from paper_fetch.providers.browser_runtime.types import (
-    BrowserRuntimeConfig,
-)
-
+from paper_fetch.providers.browser_runtime.preparation import _launch_executable_path
+from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
 
 pytest.importorskip("camoufox")
 
@@ -33,6 +34,7 @@ def fingerprint_model(monkeypatch, tmp_path):
     import hashlib
     from io import BytesIO
     from zipfile import ZipFile
+
     import requests
     from camoufox import fpgen_model, pkgman
 
@@ -191,11 +193,16 @@ def test_model_api_missing_asset_does_not_download(fingerprint_model):
 def managed_camoufox(monkeypatch, tmp_path):
     """Exercise upstream version selection/install against an isolated fake archive."""
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
+        lambda: "camoufox",
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
         _dependency_details,
     )
     monkeypatch.setattr(preparation, "prepare_camoufox_fingerprint_model", lambda: None)
     import zipfile
+
     from camoufox import multiversion, pkgman
 
     root = tmp_path / "managed"
@@ -730,7 +737,7 @@ def test_managed_camoufox_concurrent_preparation_installs_once(managed_camoufox)
 def test_managed_camoufox_static_status_never_prepares(managed_camoufox):
     env = managed_camoufox
     before = env.multi.CONFIG_FILE.read_bytes()
-    status = CamoufoxBackend().probe_runtime_status({}, provider="science")
+    status = ByparrBackend().probe_runtime_status({}, provider="science")
     assert status.status == "not_configured"
     assert env.multi.CONFIG_FILE.read_bytes() == before
     assert not env.multi.COMPAT_FLAG.exists()
@@ -741,7 +748,7 @@ def test_managed_camoufox_static_status_never_prepares(managed_camoufox):
 def test_explicit_camoufox_binary_skips_management(monkeypatch):
     prepare = mock.Mock(side_effect=AssertionError("must not manage explicit binary"))
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
+        "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_managed_runtime",
         prepare,
     )
     assert _launch_executable_path("/custom/camoufox") == "/custom/camoufox"
@@ -773,7 +780,7 @@ def test_browser_entrypoints_prepare_missing_runtime(
     launch = mock.Mock(side_effect=RuntimeError("launch boundary reached"))
     monkeypatch.setattr(byparr_manager, "prepare_components", launch)
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         browser_runtime_context.open_browser_context,
     )
@@ -784,7 +791,7 @@ def test_browser_entrypoints_prepare_missing_runtime(
         else "Camoufox browser preparation failed"
     )
     if route == "fetch":
-        config = CamoufoxBackend().load_runtime_config(
+        config = ByparrBackend().load_runtime_config(
             runtime_env, provider="ieee", doi="10.1109/example"
         )
         byparr.DEFAULT_BYPARR_BACKEND.ensure_runtime_ready(config)
@@ -813,7 +820,11 @@ def test_browser_entrypoints_prepare_missing_runtime(
 
 def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path):
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.camoufox._dependency_details",
+        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
+        lambda: "camoufox",
+    )
+    monkeypatch.setattr(
+        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
         lambda: {
             "runtime_valid": False,
             "packages": {"camoufox": False, "playwright": True},
@@ -827,7 +838,7 @@ def test_camoufox_missing_python_dependency_still_rejected(monkeypatch, tmp_path
         user_agent=None,
     )
     with pytest.raises(ProviderFailure, match="requires compatible") as error:
-        CamoufoxBackend().ensure_runtime_ready(config)
+        ByparrBackend().ensure_runtime_ready(config)
     assert error.value.code == "not_configured"
 
 

@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import unittest
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.semantics import (
     has_explicit_reference_marker,
     identity_category,

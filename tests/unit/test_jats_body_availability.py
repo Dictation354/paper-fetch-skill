@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 from paper_fetch.providers._article_markdown_jats import (
     assess_jats_body_availability,
     parse_jats_xml,

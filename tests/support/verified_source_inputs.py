@@ -1,19 +1,20 @@
 """Identity checks on captured publisher originals, without network or conversion."""
 
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
 
-
-from urllib.parse import urlsplit
 import unicodedata
+from urllib.parse import urlsplit
 
 from bs4 import BeautifulSoup
+
+from paper_fetch.tracing import trace_event
 
 
 def inspect_original(body: bytes, provider: str, doi: str, url: str) -> dict | None:
     expected = doi.casefold()
     if body.startswith(b"%PDF"):
         import pymupdf
+
         from paper_fetch.publisher_identity import extract_doi
 
         with pymupdf.open(stream=body, filetype="pdf") as document:
@@ -241,8 +242,8 @@ def pdf_landing_identity(
 
 def build_verified_source_article(row: dict):
     """Use the selected original rather than an unverified historical default."""
-    from tests.golden_criteria import golden_criteria_sample
     from tests.golden_corpus import build_article_from_fixture
+    from tests.golden_criteria import golden_criteria_sample
     from tests.paths import REPO_ROOT
     from tests.support.acquired_publisher_inputs import CapturedSourceFixture
 

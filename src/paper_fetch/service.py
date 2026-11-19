@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from .formula.convert import formula_runtime_env
-from .formula.validation import formula_validation_session, capture_formula_diagnostics
+from .formula.validation import capture_formula_diagnostics, formula_validation_session
 from .models import FetchEnvelope, OutputMode, RenderOptions
 from .models.quality import (
     QUALITY_FLAG_FORMULA_FALLBACK_PRESENT,

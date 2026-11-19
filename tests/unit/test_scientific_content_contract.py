@@ -1,10 +1,10 @@
 """Negative controls for content assertions, not publisher evidence."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from tests.support.canonical_content import comparable_cell, formula_route
-from tests.support.scientific_content import scientific_text_key, assert_mathml_formulas
+from tests.support.scientific_content import assert_mathml_formulas, scientific_text_key
 
 
 @pytest.mark.parametrize(
@@ -158,6 +158,7 @@ def test_object_position_rejects_moving_complete_table():
 
 def test_figure_caption_must_belong_to_own_image():
     from types import SimpleNamespace
+
     from tests.support.object_content import assert_figure_bindings
 
     fixture = SimpleNamespace(provider="pnas", doi="contract")

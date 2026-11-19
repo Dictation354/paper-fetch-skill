@@ -2,19 +2,15 @@
 
 from __future__ import annotations
 
-from ..tracing import TraceEvent
-
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
-from dataclasses import asdict, dataclass
-from pathlib import Path
-from typing import Any
-from collections.abc import Mapping
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping
+from dataclasses import asdict, dataclass
+from pathlib import Path
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
 from ..extraction.html._metadata import merge_html_metadata
@@ -34,8 +30,8 @@ from ..extraction.html.landing import (
 )
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
     PDF_MIME_TYPE,
+    HttpTransport,
     RequestFailure,
 )
 from ..http.headers import header_value
@@ -52,8 +48,10 @@ from ..provider_catalog import (
     provider_xml_path_templates,
 )
 from ..publisher_identity import normalize_doi
+from ..quality.access_boundary import propagate_paywall
+from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
-from ..tracing import download_event, fulltext_event
+from ..tracing import TraceEvent, download_event, fulltext_event
 from ..utils import (
     choose_public_landing_page_url,
     empty_asset_results,
@@ -69,6 +67,7 @@ from ._article_markdown_common import (
     xml_local_name,
 )
 from ._article_markdown_copernicus import CopernicusExtraction, parse_copernicus_xml
+from ._definitions import PROVIDER_DEFINITIONS
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -85,7 +84,6 @@ from ._waterfall import (
     ProviderWaterfallStep,
     run_provider_waterfall,
 )
-from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED, OK, PDF_FALLBACK
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -98,9 +96,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
-from bs4 import BeautifulSoup, Tag
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["copernicus"]
 

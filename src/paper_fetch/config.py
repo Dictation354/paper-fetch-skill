@@ -3,9 +3,9 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from dataclasses import dataclass
 from pathlib import Path
-from collections.abc import Mapping
 
 from dotenv import dotenv_values
 from platformdirs import user_config_path, user_data_path
@@ -55,16 +55,6 @@ HTTP_POOL_MAXSIZE_ENV_VAR = "PAPER_FETCH_HTTP_POOL_MAXSIZE"
 HTTP_PER_HOST_CONCURRENCY_ENV_VAR = "PAPER_FETCH_HTTP_PER_HOST_CONCURRENCY"
 ASSET_DOWNLOAD_CONCURRENCY_ENV_VAR = "PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY"
 DEFAULT_ASSET_DOWNLOAD_CONCURRENCY = 4
-WILEY_PROFILE_DIR_ENV_VAR = "PAPER_FETCH_WILEY_PROFILE_DIR"
-
-
-def browser_env_value(
-    env: Mapping[str, str],
-    generic_name: str,
-) -> str:
-    """Resolve a browser setting from its current environment variable."""
-
-    return str(env.get(generic_name, "")).strip()
 
 
 def load_env_file(path: Path) -> dict[str, str]:

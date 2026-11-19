@@ -3,11 +3,12 @@
 import hashlib
 import json
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
-from tests.paths import REPO_ROOT
 from tests.fixture_catalog import fixture_catalog
+from tests.golden_criteria import golden_criteria_manifest, source_selections
+from tests.paths import REPO_ROOT
 from tests.support.fixture_provenance import (
     capture_index,
     rejected_source_hashes,
@@ -19,9 +20,6 @@ from tests.support.verified_source_inputs import (
     inspect_original,
     pdf_landing_identity,
 )
-
-
-from tests.golden_criteria import source_selections, golden_criteria_manifest
 
 ROWS = source_selections()
 VERIFIED = [row for row in ROWS if row.get("source_status") == "verified_capture"]

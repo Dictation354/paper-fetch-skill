@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-
 from paper_fetch.delivery.fetch_cache import cached_request_matches
 from paper_fetch.delivery.requests import FetchPaperRequest
 

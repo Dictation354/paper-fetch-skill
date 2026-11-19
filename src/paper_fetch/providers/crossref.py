@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
 from collections.abc import Mapping
 
 from ..http import HttpTransport
 from ..metadata.crossref import CrossrefLookupClient
 from ..metadata.types import CrossrefMetadata
+from ..reason_codes import OK
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import ProviderBundle
 from .base import (
     ProviderClient,
@@ -16,8 +16,6 @@ from .base import (
     build_provider_status_check,
     summarize_capability_status,
 )
-from ..reason_codes import OK
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["crossref"]
 

@@ -9,35 +9,40 @@ from typing import Any, Literal
 from pydantic import BaseModel, ConfigDict, Field, model_validator
 
 from ..models import (
-    AcquisitionProvenance,
     QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION,
+    AcquisitionProvenance,
     Asset,
     AssetProfile,
+    AssetQualitySummary,
     FetchEnvelope,
     Quality,
     SemanticLosses,
 )
-from ..publisher_identity import normalize_doi
 from ..provider_catalog import (
     acquisition_matches_provider_route,
     compile_route_execution_policy,
     provider_for_source,
+)
+from ..publisher_identity import normalize_doi
+from ..quality.assets import (
+    asset_has_remote_link,
+    build_asset_quality_summary,
+    logical_asset_kind,
 )
 from ..reason_codes import (
     ABSTRACT_ONLY,
     AUTH_REQUIRED,
     ERROR,
     METADATA_ONLY,
-    NOT_CONFIGURED,
     NO_ACCESS,
+    NOT_CONFIGURED,
     PDF_FALLBACK,
     RATE_LIMITED,
 )
 from ..tracing import TraceEvent, acquisition_fallback_used
 from ..utils import normalize_text
 
-FETCH_ACCEPTANCE_SCHEMA_VERSION = 2
-FETCH_ACCEPTANCE_MIN_READER_VERSION = 2
+FETCH_ACCEPTANCE_SCHEMA_VERSION = 3
 
 
 class OverallAcceptanceStatus(StrEnum):
@@ -118,38 +123,10 @@ class IdentityAcceptanceFacet(_AcceptanceModel):
     canonical_landing_unique: bool = False
     codes: tuple[str, ...] = ()
 
-    @model_validator(mode="after")
-    def validate_resolved_identity(self) -> IdentityAcceptanceFacet:
-        if self.status != IdentityAcceptanceStatus.RESOLVED:
-            return self
-        if self.doi:
-            return self
-        if not (
-            self.canonical_landing_url
-            and self.canonical_landing_verified
-            and self.canonical_landing_unique
-        ):
-            raise ValueError(
-                "DOI-less resolved identity requires one verified unique canonical landing"
-            )
-        return self
-
 
 class FetchAcceptanceFacet(_AcceptanceModel):
     status: FetchAcceptanceStatus
-    completed: bool
     code: str | None = None
-
-
-class TableAcceptanceFacet(_AcceptanceModel):
-    fallback_count: int = Field(default=0, ge=0)
-    layout_degraded_count: int = Field(default=0, ge=0)
-    semantic_loss_count: int = Field(default=0, ge=0)
-
-
-class FormulaAcceptanceFacet(_AcceptanceModel):
-    fallback_count: int = Field(default=0, ge=0)
-    missing_count: int = Field(default=0, ge=0)
 
 
 class ContentAcceptanceFacet(_AcceptanceModel):
@@ -158,10 +135,7 @@ class ContentAcceptanceFacet(_AcceptanceModel):
     has_fulltext: bool
     has_abstract: bool
     token_estimate: int = Field(default=0, ge=0)
-    confidence: str | None = None
-    flags: tuple[str, ...] = ()
-    tables: TableAcceptanceFacet = Field(default_factory=TableAcceptanceFacet)
-    formulas: FormulaAcceptanceFacet = Field(default_factory=FormulaAcceptanceFacet)
+    semantic_losses: SemanticLosses = Field(default_factory=SemanticLosses)
 
     @model_validator(mode="after")
     def validate_content_status(self) -> ContentAcceptanceFacet:
@@ -179,8 +153,36 @@ class ContentAcceptanceFacet(_AcceptanceModel):
         return self
 
 
+class BodyAssetCounts(_AcceptanceModel):
+    """Body file counts retained for CLI receipts and strict-asset acceptance."""
+
+    discovered: int = Field(default=0, ge=0)
+    attempted: int = Field(default=0, ge=0)
+    local: int = Field(default=0, ge=0)
+    full_size: int = Field(default=0, ge=0)
+    preview: int = Field(default=0, ge=0)
+    failed: int = Field(default=0, ge=0)
+    not_archived: int = Field(default=0, ge=0)
+    remote_only_count: int = Field(default=0, ge=0)
+
+    @property
+    def all_local(self) -> bool:
+        return self.discovered == 0 or (
+            self.local >= self.discovered
+            and self.failed == 0
+            and self.not_archived == 0
+            and self.remote_only_count == 0
+        )
+
+    @property
+    def all_full_size(self) -> bool:
+        return (
+            self.all_local and self.preview == 0 and self.full_size >= self.discovered
+        )
+
+
 class AssetAcceptanceSummary(_AcceptanceModel):
-    """Structured asset facts accepted by the evaluator and future asset audits."""
+    """Structured asset facts accepted by the evaluator and asset audits."""
 
     requested: bool
     profile: AcceptanceAssetProfile = "unknown"
@@ -188,10 +190,8 @@ class AssetAcceptanceSummary(_AcceptanceModel):
     expected: int | None = Field(default=None, ge=0)
     discovered: int = Field(default=0, ge=0)
     attempted: int = Field(default=0, ge=0)
-    total: int = Field(default=0, ge=0)
     local: int = Field(default=0, ge=0)
     full_size: int = Field(default=0, ge=0)
-    preview: int = Field(default=0, ge=0)
     accepted_preview: int = Field(default=0, ge=0)
     fallback_preview: int = Field(default=0, ge=0)
     failed: int = Field(default=0, ge=0)
@@ -199,34 +199,21 @@ class AssetAcceptanceSummary(_AcceptanceModel):
     not_archived: int = Field(default=0, ge=0)
     remote_link_count: int = Field(default=0, ge=0)
     remote_only_count: int = Field(default=0, ge=0)
-    body_discovered: int = Field(default=0, ge=0)
-    body_attempted: int = Field(default=0, ge=0)
-    body_local: int = Field(default=0, ge=0)
-    body_full_size: int = Field(default=0, ge=0)
-    body_preview: int = Field(default=0, ge=0)
-    body_failed: int = Field(default=0, ge=0)
-    body_not_archived: int = Field(default=0, ge=0)
-    body_remote_only_count: int = Field(default=0, ge=0)
+    body_assets: BodyAssetCounts = Field(default_factory=BodyAssetCounts)
     require_local_body_assets: bool = False
     require_full_size_body_assets: bool = False
-    has_local_body_assets: bool = False
-    all_body_assets_local: bool = True
-    all_body_assets_full_size: bool = True
     local_body_assets_satisfied: bool = True
     full_size_body_assets_satisfied: bool = True
     failure_codes: tuple[str, ...] = ()
     issue_codes: tuple[str, ...] = ()
 
-    @model_validator(mode="after")
-    def validate_preview_counts(self) -> AssetAcceptanceSummary:
-        if self.preview != self.accepted_preview + self.fallback_preview:
-            raise ValueError("preview must equal accepted_preview + fallback_preview")
-        return self
+    @property
+    def preview(self) -> int:
+        return self.accepted_preview + self.fallback_preview
 
 
 class AssetAcceptanceFacet(AssetAcceptanceSummary):
     status: AssetAcceptanceStatus
-    remote_links_preserved: bool
 
     @model_validator(mode="after")
     def validate_request_status(self) -> AssetAcceptanceFacet:
@@ -236,8 +223,6 @@ class AssetAcceptanceFacet(AssetAcceptanceSummary):
             raise ValueError("requested assets cannot use not_requested status")
         if self.profile == "none" and self.requested:
             raise ValueError("asset profile none cannot be requested")
-        if self.discovered != self.total:
-            raise ValueError("discovered must match total")
         if self.attempted > self.discovered:
             raise ValueError("attempted cannot exceed discovered")
         return self
@@ -245,29 +230,21 @@ class AssetAcceptanceFacet(AssetAcceptanceSummary):
 
 class OutputAcceptanceFacet(_AcceptanceModel):
     status: OutputAcceptanceStatus
-    requested: tuple[AcceptanceOutputKind, ...] = ()
-    available: tuple[AcceptanceOutputKind, ...] = ()
-    missing: tuple[AcceptanceOutputKind, ...] = ()
 
 
 class ProvenanceAcceptanceFacet(_AcceptanceModel):
     status: ProvenanceAcceptanceStatus
     source: str | None = None
     acquisition: AcquisitionProvenance | None = None
-    trace_event_count: int = Field(default=0, ge=0)
     fallback_codes: tuple[str, ...] = ()
     warning_codes: tuple[str, ...] = ()
     failure_codes: tuple[str, ...] = ()
-    unstructured_warning_count: int = Field(default=0, ge=0)
-    acceptance_policy: str | None = None
-    acceptance_policy_satisfied: bool = False
 
 
 class FetchAcceptanceReport(_AcceptanceModel):
     """Canonical acceptance report shared by all external adapters."""
 
-    schema_version: Literal[2]
-    minimum_reader_schema_version: Literal[2]
+    schema_version: Literal[3]
     overall: OverallAcceptanceStatus
     target: Literal["paper", "supplementary"] = "paper"
     identity: IdentityAcceptanceFacet
@@ -295,15 +272,11 @@ _TRACE_WARNING_OUTCOMES = frozenset(
 )
 _TRACE_FALLBACK_CODES = frozenset({ABSTRACT_ONLY, METADATA_ONLY, PDF_FALLBACK})
 _NON_DEGRADING_QUALITY_FLAGS = frozenset({QUALITY_FLAG_CACHED_WITH_CURRENT_REVISION})
-_REMOTE_PREFIXES = ("http://", "https://", "//")
-_REMOTE_ASSET_FIELDS = (
-    "url",
-    "download_url",
-    "original_url",
-    "source_url",
-    "source_href",
+_BODY_ASSET_KINDS: tuple[Literal["figure", "formula", "table"], ...] = (
+    "figure",
+    "formula",
+    "table",
 )
-_BODY_ASSET_KINDS = frozenset({"figure", "formula", "table"})
 
 
 def _normalized_codes(values: Sequence[str | None]) -> tuple[str, ...]:
@@ -335,19 +308,6 @@ def _trace_is_failure(event: TraceEvent) -> bool:
         or code in {RATE_LIMITED, NOT_CONFIGURED}
         or event.http_status == 429
     )
-
-
-def _quality_for(envelope: FetchEnvelope | None) -> Quality:
-    if envelope is None:
-        return Quality()
-    return envelope.quality
-
-
-def _trace_for(envelope: FetchEnvelope | None, quality: Quality) -> list[TraceEvent]:
-    del quality
-    if envelope is None:
-        return []
-    return list(envelope.trace)
 
 
 def _title_for(
@@ -411,7 +371,6 @@ def _identity_facet(
             if resolved_title and not resolved_doi
             else None
         )
-    codes = _normalized_codes([identity_code])
     return IdentityAcceptanceFacet(
         status=status,
         doi=resolved_doi or None,
@@ -419,9 +378,9 @@ def _identity_facet(
         title=resolved_title,
         candidate_count=candidate_count,
         canonical_landing_url=resolved_landing_url,
-        canonical_landing_verified=bool(canonical_landing_verified),
-        canonical_landing_unique=bool(canonical_landing_unique),
-        codes=codes,
+        canonical_landing_verified=canonical_landing_verified,
+        canonical_landing_unique=canonical_landing_unique,
+        codes=_normalized_codes([identity_code]),
     )
 
 
@@ -429,18 +388,14 @@ def _fetch_facet(
     envelope: FetchEnvelope | None, failure_code: str | None
 ) -> FetchAcceptanceFacet:
     if envelope is not None:
-        return FetchAcceptanceFacet(
-            status=FetchAcceptanceStatus.OK,
-            completed=True,
-            code=None,
-        )
+        return FetchAcceptanceFacet(status=FetchAcceptanceStatus.OK, code=None)
     code = normalize_text(failure_code).lower() or ERROR
     status = (
         FetchAcceptanceStatus.ACTION_REQUIRED
         if code in _ACTION_REQUIRED_CODES
         else FetchAcceptanceStatus.FAILED
     )
-    return FetchAcceptanceFacet(status=status, completed=False, code=code)
+    return FetchAcceptanceFacet(status=status, code=code)
 
 
 def _content_facet(
@@ -452,390 +407,216 @@ def _content_facet(
     else:
         status = ContentAcceptanceStatus(envelope.quality.content_kind)
         has_abstract = bool(envelope.quality.has_abstract)
-    losses: SemanticLosses = quality.semantic_losses
     return ContentAcceptanceFacet(
         status=status,
         has_fulltext=status == ContentAcceptanceStatus.FULLTEXT,
         has_abstract=has_abstract,
         token_estimate=max(int(quality.token_estimate or 0), 0),
-        confidence=(
-            normalize_text(quality.confidence) or None if envelope is not None else None
-        ),
-        flags=_normalized_codes(quality.flags),
-        tables=TableAcceptanceFacet(
-            fallback_count=max(int(losses.table_fallback_count or 0), 0),
-            layout_degraded_count=max(int(losses.table_layout_degraded_count or 0), 0),
-            semantic_loss_count=max(int(losses.table_semantic_loss_count or 0), 0),
-        ),
-        formulas=FormulaAcceptanceFacet(
-            fallback_count=max(int(losses.formula_fallback_count or 0), 0),
-            missing_count=max(int(losses.formula_missing_count or 0), 0),
-        ),
+        semantic_losses=quality.semantic_losses,
     )
 
 
-def _is_remote(value: str | None) -> bool:
-    return normalize_text(value).lower().startswith(_REMOTE_PREFIXES)
-
-
-def _asset_remote_counts(asset: Asset) -> tuple[int, int]:
-    has_remote = any(
-        _is_remote(getattr(asset, field, None)) for field in _REMOTE_ASSET_FIELDS
-    )
-    if not has_remote:
-        return 0, 0
-    return 1, int(not normalize_text(asset.path))
-
-
-def _asset_failure_code(failure: Mapping[str, Any]) -> str | None:
-    for key in ("code", "error_category", "reason"):
-        code = normalize_text(failure.get(key)).lower()
-        if code:
-            return code
-    return None
-
-
-def _diagnostic_value(diagnostic: Any, field: str, default: Any = None) -> Any:
-    if isinstance(diagnostic, Mapping):
-        return diagnostic.get(field, default)
-    return getattr(diagnostic, field, default)
-
-
-def _audited_body_counts(diagnostics: Any) -> dict[str, int] | None:
-    """Count only body records that represent an independently archivable file."""
-
-    if not isinstance(diagnostics, Sequence) or isinstance(
-        diagnostics, (str, bytes, bytearray)
-    ):
-        return None
-    if not diagnostics:
-        return None
-    counts = {
-        "discovered": 0,
-        "attempted": 0,
-        "local": 0,
-        "full_size": 0,
-        "preview": 0,
-        "failed": 0,
-        "not_archived": 0,
-        "remote_only": 0,
-    }
-    for diagnostic in diagnostics:
-        kind = normalize_text(_diagnostic_value(diagnostic, "kind")).lower()
-        status = normalize_text(_diagnostic_value(diagnostic, "status")).lower()
-        path = normalize_text(_diagnostic_value(diagnostic, "path"))
-        tier = normalize_text(_diagnostic_value(diagnostic, "download_tier")).lower()
-        failure_code = normalize_text(
-            _diagnostic_value(diagnostic, "failure_code")
-        ).lower()
-        if kind not in _BODY_ASSET_KINDS or status == "not_requested":
-            continue
-        # Inline semantic tables/formulas/figures can be complete without a
-        # separate binary payload. They are not strict-local file obligations.
-        if not path and not tier and status == "available":
-            continue
-        counts["discovered"] += 1
-        counts["attempted"] += 1
-        local = bool(path) and status not in {"failed", "not_archived"}
-        if local:
-            counts["local"] += 1
-            counts["preview" if tier == "preview" else "full_size"] += 1
-        if status == "failed":
-            counts["failed"] += 1
-        if status == "not_archived":
-            counts["not_archived"] += 1
-        if status == "not_archived" or failure_code == "missing_path":
-            counts["remote_only"] += 1
-    return counts
-
-
-def _audited_asset_summary(
-    quality: Quality, *, profile: AcceptanceAssetProfile
-) -> AssetAcceptanceSummary | None:
-    summary = getattr(quality, "asset_summary", None)
-    if summary is None:
-        return None
-    audited = (
-        bool(summary.get("audited"))
-        if isinstance(summary, Mapping)
-        else bool(getattr(summary, "audited", False))
-    )
-    summary_profile = normalize_text(
-        summary.get("profile")
-        if isinstance(summary, Mapping)
-        else getattr(summary, "profile", "")
-    ).lower()
-    if not audited or summary_profile != profile:
-        return None
-
-    def value(field: str, default: Any = 0) -> Any:
-        if isinstance(summary, Mapping):
-            return summary.get(field, default)
-        return getattr(summary, field, default)
-
-    preview = max(int(value("preview") or 0), 0)
-    accepted_preview = max(int(value("accepted_preview") or 0), 0)
-    fallback_preview = max(int(value("fallback_preview") or 0), 0)
-    by_kind = value("by_kind", {})
-
-    def kind_value(kind: str, field: str) -> int:
-        if not isinstance(by_kind, Mapping):
-            return 0
-        kind_summary = by_kind.get(kind)
-        if isinstance(kind_summary, Mapping):
-            raw = kind_summary.get(field, 0)
-        else:
-            raw = getattr(kind_summary, field, 0)
-        return max(int(raw or 0), 0)
-
-    body_counts = _audited_body_counts(value("diagnostics", ()))
-    if body_counts is None:
-        body_full_size = sum(
-            kind_value(kind, "full_size") for kind in _BODY_ASSET_KINDS
+def _audited_body_counts(q_summary: AssetQualitySummary) -> BodyAssetCounts:
+    if q_summary.diagnostics:
+        body_diagnostics = [
+            item
+            for item in q_summary.diagnostics
+            if item.kind in _BODY_ASSET_KINDS
+            and item.status != "not_requested"
+            # Inline semantic tables/formulas/figures without a separate binary
+            # payload are not strict-local file obligations.
+            and not (
+                not item.path and not item.download_tier and item.status == "available"
+            )
+        ]
+        local = [
+            item
+            for item in body_diagnostics
+            if item.path and item.status not in {"failed", "not_archived"}
+        ]
+        preview = sum(
+            normalize_text(item.download_tier).lower() == "preview" for item in local
         )
-        body_preview = sum(kind_value(kind, "preview") for kind in _BODY_ASSET_KINDS)
-        body_local = body_full_size + body_preview
-        body_failed = sum(kind_value(kind, "failed") for kind in _BODY_ASSET_KINDS)
-        body_not_archived = sum(
-            kind_value(kind, "not_archived") for kind in _BODY_ASSET_KINDS
-        )
-        body_discovered = sum(
-            kind_value(kind, "requested") for kind in _BODY_ASSET_KINDS
-        )
-        body_attempted = min(
-            body_discovered,
-            body_local + body_failed + body_not_archived,
-        )
-        body_remote_only = body_not_archived
-    else:
-        body_discovered = body_counts["discovered"]
-        body_attempted = body_counts["attempted"]
-        body_local = body_counts["local"]
-        body_full_size = body_counts["full_size"]
-        body_preview = body_counts["preview"]
-        body_failed = body_counts["failed"]
-        body_not_archived = body_counts["not_archived"]
-        body_remote_only = body_counts["remote_only"]
-    return AssetAcceptanceSummary(
-        requested=bool(value("requested", profile != "none")),
-        profile=profile,
-        audited=audited,
-        expected=(
-            max(int(value("expected")), 0)
-            if value("expected", None) is not None
-            else None
-        ),
-        discovered=max(int(value("discovered", value("total")) or 0), 0),
-        attempted=max(
-            int(
-                value(
-                    "attempted",
-                    (
-                        int(value("local") or 0)
-                        + int(value("failed") or 0)
-                        + int(value("not_archived") or 0)
-                    ),
-                )
-                or 0
+        return BodyAssetCounts(
+            discovered=len(body_diagnostics),
+            attempted=len(body_diagnostics),
+            local=len(local),
+            full_size=len(local) - preview,
+            preview=preview,
+            failed=sum(item.status == "failed" for item in body_diagnostics),
+            not_archived=sum(
+                item.status == "not_archived" for item in body_diagnostics
             ),
-            0,
-        ),
-        total=max(int(value("total") or 0), 0),
-        local=max(int(value("local") or 0), 0),
-        full_size=max(int(value("full_size") or 0), 0),
+            remote_only_count=sum(
+                item.status == "not_archived" or item.failure_code == "missing_path"
+                for item in body_diagnostics
+            ),
+        )
+
+    kinds = [q_summary.by_kind[kind] for kind in _BODY_ASSET_KINDS]
+    discovered = sum(kind.requested for kind in kinds)
+    full_size = sum(kind.full_size for kind in kinds)
+    preview = sum(kind.preview for kind in kinds)
+    failed = sum(kind.failed for kind in kinds)
+    not_archived = sum(kind.not_archived for kind in kinds)
+    return BodyAssetCounts(
+        discovered=discovered,
+        attempted=min(discovered, full_size + preview + failed + not_archived),
+        local=full_size + preview,
+        full_size=full_size,
         preview=preview,
-        accepted_preview=accepted_preview,
-        fallback_preview=fallback_preview,
-        failed=max(int(value("failed") or 0), 0),
-        placeholder_suspected=max(int(value("placeholder_suspected") or 0), 0),
-        not_archived=max(int(value("not_archived") or 0), 0),
-        remote_link_count=max(int(value("remote_link_count") or 0), 0),
-        remote_only_count=max(int(value("remote_only_count") or 0), 0),
-        body_discovered=body_discovered,
-        body_attempted=body_attempted,
-        body_local=body_local,
-        body_full_size=body_full_size,
-        body_preview=body_preview,
-        body_failed=body_failed,
-        body_not_archived=body_not_archived,
-        body_remote_only_count=body_remote_only,
-        failure_codes=_normalized_codes(value("failure_codes", ())),
-        issue_codes=_normalized_codes(value("issue_codes", ())),
+        failed=failed,
+        not_archived=not_archived,
+        remote_only_count=not_archived,
     )
 
 
-def _asset_summary_from_envelope(
-    envelope: FetchEnvelope | None,
-    *,
-    profile: AcceptanceAssetProfile,
-    quality: Quality,
-) -> AssetAcceptanceSummary:
-    if audited_summary := _audited_asset_summary(quality, profile=profile):
-        return audited_summary
-    assets = list(envelope.article.assets) if envelope and envelope.article else []
-    requested = profile != "none"
-    remote_counts = [_asset_remote_counts(asset) for asset in assets]
-    remote_link_count = sum(item[0] for item in remote_counts)
-    remote_only_count = sum(item[1] for item in remote_counts)
-    local = sum(bool(normalize_text(asset.path)) for asset in assets)
-    from ..quality.assets import logical_asset_kind, preview_asset_is_accepted
-
+def _unaudited_body_counts(
+    assets: Sequence[Asset], failures: Sequence[Mapping[str, Any]]
+) -> BodyAssetCounts:
     body_assets = [
         asset for asset in assets if logical_asset_kind(asset) in _BODY_ASSET_KINDS
     ]
-
-    preview_assets = (
-        [
-            asset
-            for asset in assets
-            if normalize_text(asset.download_tier).lower() == "preview"
-        ]
-        if requested
-        else []
+    local = [asset for asset in body_assets if normalize_text(asset.path)]
+    preview = sum(
+        normalize_text(asset.download_tier).lower() == "preview" for asset in local
     )
-    accepted_preview = sum(preview_asset_is_accepted(asset) for asset in preview_assets)
-    fallback_preview = len(preview_assets) - accepted_preview
-    preview = accepted_preview + fallback_preview
-    failures = list(quality.asset_failures) if requested else []
-    body_failures = [
-        failure
-        for failure in failures
-        if logical_asset_kind(failure) in _BODY_ASSET_KINDS
-    ]
-    body_local_assets = [asset for asset in body_assets if normalize_text(asset.path)]
-    body_preview = sum(
-        normalize_text(asset.download_tier).lower() == "preview"
-        for asset in body_local_assets
+    failed = sum(logical_asset_kind(item) in _BODY_ASSET_KINDS for item in failures)
+    remote_only = sum(
+        not normalize_text(asset.path) and asset_has_remote_link(asset)
+        for asset in body_assets
     )
-    body_remote_only_count = sum(
-        _asset_remote_counts(asset)[1] for asset in body_assets
-    )
-    body_discovered = len(body_assets) + len(body_failures)
-    body_local = len(body_local_assets)
-    discovered = len(assets) + len(failures)
-    attempted = (
-        sum(
-            bool(normalize_text(asset.path)) or _asset_remote_counts(asset)[0] > 0
-            for asset in assets
-        )
-        + len(failures)
-        if requested
-        else 0
-    )
-    not_archived = remote_only_count if requested else 0
-    failure_codes = _normalized_codes(
-        [_asset_failure_code(failure) for failure in failures]
-    )
-    issue_codes: list[str] = []
-    if failures:
-        issue_codes.append("asset_download_failure")
-    if fallback_preview:
-        issue_codes.append("asset_fidelity_degraded")
-    if requested and remote_only_count:
-        issue_codes.append("asset_remote_only")
-    return AssetAcceptanceSummary(
-        requested=requested,
-        profile=profile,
-        audited=False,
-        expected=None,
+    discovered = len(body_assets) + failed
+    return BodyAssetCounts(
         discovered=discovered,
-        attempted=attempted,
-        total=discovered,
-        local=local,
-        full_size=max(local - preview, 0),
+        attempted=min(discovered, len(local) + failed + remote_only),
+        local=len(local),
+        full_size=len(local) - preview,
         preview=preview,
-        accepted_preview=accepted_preview,
-        fallback_preview=fallback_preview,
-        failed=len(failures),
-        not_archived=not_archived,
-        remote_link_count=remote_link_count,
-        remote_only_count=remote_only_count,
-        body_discovered=body_discovered,
-        body_attempted=min(
-            body_discovered,
-            body_local + len(body_failures) + body_remote_only_count,
-        ),
-        body_local=body_local,
-        body_full_size=max(body_local - body_preview, 0),
-        body_preview=body_preview,
-        body_failed=len(body_failures),
-        body_not_archived=body_remote_only_count if requested else 0,
-        body_remote_only_count=body_remote_only_count if requested else 0,
-        failure_codes=failure_codes,
-        issue_codes=tuple(issue_codes),
+        failed=failed,
+        not_archived=remote_only,
+        remote_only_count=remote_only,
     )
 
 
-def _with_asset_requirements(
-    summary: AssetAcceptanceSummary,
+def _evaluate_asset_summary(
+    envelope: FetchEnvelope | None,
     *,
+    profile: AssetProfile,
+    quality: Quality,
+    explicit_summary: AssetAcceptanceSummary | None,
     require_local_body_assets: bool,
     require_full_size_body_assets: bool,
 ) -> AssetAcceptanceSummary:
+    if explicit_summary is not None:
+        requested = False if profile == "none" else explicit_summary.requested
+        updates: dict[str, Any] = {"profile": profile, "requested": requested}
+        if not requested:
+            updates.update(
+                accepted_preview=0,
+                fallback_preview=0,
+                failed=0,
+                placeholder_suspected=0,
+                not_archived=0,
+                failure_codes=(),
+                issue_codes=(),
+            )
+        summary = explicit_summary.model_copy(update=updates)
+        all_local = summary.discovered == 0 or (
+            summary.local >= summary.discovered
+            and summary.failed == 0
+            and summary.not_archived == 0
+            and summary.remote_only_count == 0
+        )
+        all_full_size = (
+            all_local
+            and summary.preview == 0
+            and (summary.discovered == 0 or summary.full_size >= summary.discovered)
+        )
+    elif envelope is None:
+        summary = AssetAcceptanceSummary(
+            requested=profile != "none",
+            profile=profile,
+        )
+        all_local = True
+        all_full_size = True
+    else:
+        q_summary = quality.asset_summary
+        if q_summary.audited and q_summary.profile == profile:
+            audited = True
+            body_counts = _audited_body_counts(q_summary)
+        else:
+            audited = False
+            assets = envelope.article.assets if envelope.article is not None else ()
+            failures = quality.asset_failures if profile != "none" else ()
+            q_summary = build_asset_quality_summary(
+                assets,
+                asset_failures=failures,
+                asset_profile=profile,
+                archive_enabled=bool(failures),
+            )
+            body_counts = _unaudited_body_counts(assets, failures)
+        all_local = body_counts.all_local
+        all_full_size = body_counts.all_full_size
+
+        issue_codes = list(q_summary.issue_codes)
+        if not audited and profile != "none" and q_summary.remote_only_count:
+            issue_codes.append("asset_remote_only")
+        summary = AssetAcceptanceSummary(
+            requested=q_summary.requested,
+            profile=profile,
+            audited=audited,
+            expected=q_summary.expected,
+            discovered=q_summary.discovered,
+            attempted=min(
+                q_summary.discovered,
+                q_summary.attempted
+                or (q_summary.local + q_summary.failed + q_summary.not_archived),
+            ),
+            local=q_summary.local,
+            full_size=q_summary.full_size,
+            accepted_preview=q_summary.accepted_preview,
+            fallback_preview=q_summary.fallback_preview,
+            failed=q_summary.failed,
+            placeholder_suspected=q_summary.placeholder_suspected,
+            not_archived=q_summary.not_archived,
+            remote_link_count=q_summary.remote_link_count,
+            remote_only_count=q_summary.remote_only_count,
+            body_assets=body_counts,
+            failure_codes=_normalized_codes(q_summary.failure_codes),
+            issue_codes=_normalized_codes(issue_codes),
+        )
+
     require_full_size = bool(require_full_size_body_assets)
     require_local = bool(require_local_body_assets or require_full_size)
     applicable = summary.profile in {"body", "all"} and summary.requested
-    body_discovered = summary.body_discovered
-    body_attempted = summary.body_attempted
-    body_local = summary.body_local
-    body_full_size = summary.body_full_size
-    body_preview = summary.body_preview
-    body_failed = summary.body_failed
-    body_not_archived = summary.body_not_archived
-    body_remote_only = summary.body_remote_only_count
-    all_local = bool(
-        body_discovered == 0
-        or (
-            body_local >= body_discovered
-            and body_failed == 0
-            and body_not_archived == 0
-            and body_remote_only == 0
-        )
-    )
-    all_full_size = bool(
-        all_local
-        and (body_discovered == 0 or body_full_size >= body_discovered)
-        and body_preview == 0
-    )
     local_satisfied = not applicable or not require_local or all_local
     full_size_satisfied = not applicable or not require_full_size or all_full_size
-    issue_codes = list(summary.issue_codes)
+    final_issues = list(summary.issue_codes)
     if not local_satisfied:
-        issue_codes.append("local_body_assets_required")
+        final_issues.append("local_body_assets_required")
     if not full_size_satisfied:
-        issue_codes.append("full_size_body_assets_required")
+        final_issues.append("full_size_body_assets_required")
     return summary.model_copy(
         update={
-            "body_discovered": body_discovered,
-            "body_attempted": body_attempted,
-            "body_local": body_local,
-            "body_full_size": body_full_size,
-            "body_preview": body_preview,
-            "body_failed": body_failed,
-            "body_not_archived": body_not_archived,
-            "body_remote_only_count": body_remote_only,
             "require_local_body_assets": require_local,
             "require_full_size_body_assets": require_full_size,
-            "has_local_body_assets": body_local > 0,
-            "all_body_assets_local": all_local,
-            "all_body_assets_full_size": all_full_size,
             "local_body_assets_satisfied": local_satisfied,
             "full_size_body_assets_satisfied": full_size_satisfied,
-            "issue_codes": tuple(dict.fromkeys(issue_codes)),
+            "issue_codes": tuple(dict.fromkeys(final_issues)),
         }
     )
 
 
 def _asset_facet(
-    summary: AssetAcceptanceSummary, *, fetch_completed: bool
+    summary: AssetAcceptanceSummary, *, fetch_ok: bool
 ) -> AssetAcceptanceFacet:
-    discovered = summary.discovered or summary.total
     attempted = summary.attempted or min(
-        discovered,
+        summary.discovered,
         summary.local + summary.failed + summary.not_archived,
     )
     issue_codes = list(summary.issue_codes)
-    if not issue_codes:
+    if summary.requested and not issue_codes:
         if summary.failed:
             issue_codes.append("asset_download_failure")
         if summary.fallback_preview:
@@ -846,15 +627,13 @@ def _asset_facet(
             issue_codes.append("asset_remote_only")
     normalized_summary = summary.model_copy(
         update={
-            "discovered": discovered,
             "attempted": attempted,
-            "total": discovered,
             "issue_codes": tuple(dict.fromkeys(issue_codes)),
         }
     )
     if not normalized_summary.requested:
         status = AssetAcceptanceStatus.NOT_REQUESTED
-    elif not fetch_completed:
+    elif not fetch_ok:
         status = AssetAcceptanceStatus.UNAVAILABLE
     elif normalized_summary.audited and normalized_summary.expected == 0:
         status = AssetAcceptanceStatus.NOT_APPLICABLE
@@ -877,7 +656,6 @@ def _asset_facet(
     return AssetAcceptanceFacet(
         **normalized_summary.model_dump(),
         status=status,
-        remote_links_preserved=normalized_summary.remote_only_count > 0,
     )
 
 
@@ -927,12 +705,7 @@ def _output_facet(
         status = OutputAcceptanceStatus.PARTIAL
     else:
         status = OutputAcceptanceStatus.MISSING
-    return OutputAcceptanceFacet(
-        status=status,
-        requested=requested,
-        available=available,
-        missing=missing,
-    )
+    return OutputAcceptanceFacet(status=status)
 
 
 def _structured_warning_codes(
@@ -1018,15 +791,13 @@ def _provenance_facet(
     normalized_source = normalize_text(source) or None
     source_provider = provider_for_source(normalized_source)
     acquisition_consistent = False
-    route_acceptance_policy: str | None = None
     route_acceptance_satisfied = False
     if acquisition_matches_provider_route(acquisition) and acquisition is not None:
         compiled_route = compile_route_execution_policy(
             acquisition.provider, acquisition.route
         )
-        route_acceptance_policy = compiled_route.acceptance_policy
         route_acceptance_satisfied = _route_acceptance_satisfied(
-            route_acceptance_policy,
+            compiled_route.acceptance_policy,
             acquisition=acquisition,
             identity=identity,
             content=content,
@@ -1095,7 +866,6 @@ def _provenance_facet(
         status=status,
         source=normalized_source,
         acquisition=acquisition,
-        trace_event_count=len(trace),
         fallback_codes=_normalized_codes(
             [_trace_fact_code(event) for event in fallback_events]
         ),
@@ -1112,10 +882,6 @@ def _provenance_facet(
                 *[_trace_fact_code(event) for event in trace_failures],
             ]
         ),
-        # Kept only for visibility; warning message text is never classified.
-        unstructured_warning_count=len(quality.warnings),
-        acceptance_policy=route_acceptance_policy,
-        acceptance_policy_satisfied=route_acceptance_satisfied,
     )
 
 
@@ -1185,7 +951,7 @@ def evaluate_fetch_acceptance(
     canonical_landing_verified: bool = False,
     canonical_landing_unique: bool = False,
 ) -> FetchAcceptanceReport:
-    """Evaluate immutable fetch facts without network, filesystem, or provider work."""
+    """Evaluate immutable fetch facts without network or provider work."""
 
     if candidate_count < 0:
         raise ValueError("candidate_count must not be negative")
@@ -1205,43 +971,18 @@ def evaluate_fetch_acceptance(
             requested_outputs = [
                 item for item in requested_outputs if item != "article"
             ]
-    quality = _quality_for(envelope)
-    trace = _trace_for(envelope, quality)
+    quality = envelope.quality if envelope is not None else Quality()
+    trace = list(envelope.trace) if envelope is not None else []
     resolved_source = (
         normalize_text(source or (envelope.source if envelope is not None else None))
         or None
     )
-    resolved_profile: AcceptanceAssetProfile = asset_profile
 
-    if asset_summary is None:
-        summary = _asset_summary_from_envelope(
-            envelope,
-            profile=resolved_profile,
-            quality=quality,
-        )
-    else:
-        requested = asset_summary.requested
-        if resolved_profile == "none":
-            requested = False
-        updates: dict[str, Any] = {
-            "profile": resolved_profile,
-            "requested": requested,
-        }
-        if not requested:
-            updates.update(
-                preview=0,
-                accepted_preview=0,
-                fallback_preview=0,
-                failed=0,
-                placeholder_suspected=0,
-                not_archived=0,
-                failure_codes=(),
-                issue_codes=(),
-            )
-        summary = asset_summary.model_copy(update=updates)
-
-    summary = _with_asset_requirements(
-        summary,
+    summary = _evaluate_asset_summary(
+        envelope,
+        profile=asset_profile,
+        quality=quality,
+        explicit_summary=asset_summary,
         require_local_body_assets=require_local_body_assets,
         require_full_size_body_assets=require_full_size_body_assets,
     )
@@ -1269,7 +1010,7 @@ def evaluate_fetch_acceptance(
         if target == "supplementary"
         else _content_facet(envelope, quality)
     )
-    asset = _asset_facet(summary, fetch_completed=fetch.completed)
+    asset = _asset_facet(summary, fetch_ok=fetch.status == FetchAcceptanceStatus.OK)
     output = _output_facet(envelope, requested_outputs)
     provenance = _provenance_facet(
         source=resolved_source,
@@ -1291,7 +1032,6 @@ def evaluate_fetch_acceptance(
     )
     return FetchAcceptanceReport(
         schema_version=FETCH_ACCEPTANCE_SCHEMA_VERSION,
-        minimum_reader_schema_version=FETCH_ACCEPTANCE_MIN_READER_VERSION,
         overall=overall,
         target=target,
         identity=identity,
@@ -1303,7 +1043,12 @@ def evaluate_fetch_acceptance(
     )
 
 
-def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outputs):
+def _evaluate_supplementary_acceptance(
+    envelope: FetchEnvelope,
+    *,
+    expected_doi: str | None,
+    requested_outputs: Collection[AcceptanceOutputKind | str] | None,
+) -> FetchAcceptanceReport:
     result = envelope.supplementary
     assert result is not None
     local = sum(bool(asset.get("path")) for asset in result.assets)
@@ -1317,9 +1062,9 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
     )
     identity = _identity_facet(
         envelope,
-        identity_status=None
-        if result.identity_verified
-        else IdentityAcceptanceStatus.UNAVAILABLE,
+        identity_status=(
+            None if result.identity_verified else IdentityAcceptanceStatus.UNAVAILABLE
+        ),
         failure_code=None,
         candidate_count=0,
         doi=envelope.doi,
@@ -1346,13 +1091,11 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
         audited=result.discovery_complete,
         expected=len(result.assets) if result.discovery_complete else None,
         discovered=len(result.assets),
-        total=len(result.assets),
         attempted=min(len(result.assets), local + failed),
         local=local,
         failed=failed,
         not_archived=unarchived,
         remote_only_count=unarchived,
-        remote_links_preserved=bool(unarchived),
         failure_codes=codes,
         issue_codes=_normalized_codes(
             [*codes, "asset_not_archived" if unarchived else None]
@@ -1389,16 +1132,14 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
         else OverallAcceptanceStatus.DEGRADED
     )
     return FetchAcceptanceReport(
-        schema_version=2,
-        minimum_reader_schema_version=2,
+        schema_version=FETCH_ACCEPTANCE_SCHEMA_VERSION,
         target="supplementary",
         overall=overall,
         identity=identity,
         fetch=FetchAcceptanceFacet(
-            status=FetchAcceptanceStatus.OK
-            if completed
-            else FetchAcceptanceStatus.FAILED,
-            completed=completed,
+            status=(
+                FetchAcceptanceStatus.OK if completed else FetchAcceptanceStatus.FAILED
+            ),
             code=None if completed else status,
         ),
         content=ContentAcceptanceFacet(
@@ -1409,24 +1150,22 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
         ),
         asset=assets,
         output=OutputAcceptanceFacet(
-            status=OutputAcceptanceStatus.COMPLETE
-            if not missing
-            else OutputAcceptanceStatus.MISSING,
-            requested=requested,
-            available=available,
-            missing=missing,
+            status=(
+                OutputAcceptanceStatus.COMPLETE
+                if not missing
+                else OutputAcceptanceStatus.MISSING
+            ),
         ),
         provenance=ProvenanceAcceptanceFacet(
-            status=ProvenanceAcceptanceStatus.COMPLETE
-            if provenance_complete
-            else ProvenanceAcceptanceStatus.PARTIAL,
+            status=(
+                ProvenanceAcceptanceStatus.COMPLETE
+                if provenance_complete
+                else ProvenanceAcceptanceStatus.PARTIAL
+            ),
             source=envelope.source,
             acquisition=envelope.acquisition,
-            trace_event_count=len(envelope.trace),
             warning_codes=assets.issue_codes,
             failure_codes=codes,
-            acceptance_policy="validated_asset",
-            acceptance_policy_satisfied=status == "complete",
         ),
     )
 
@@ -1434,7 +1173,7 @@ def _evaluate_supplementary_acceptance(envelope, *, expected_doi, requested_outp
 def parse_fetch_acceptance_report(
     payload: Mapping[str, Any],
 ) -> FetchAcceptanceReport:
-    """Load the public v2 acceptance contract."""
+    """Load the public v3 acceptance contract."""
 
     return FetchAcceptanceReport.model_validate(dict(payload))
 
@@ -1446,7 +1185,6 @@ def fetch_acceptance_json_schema() -> dict[str, Any]:
 
 
 __all__ = [
-    "FETCH_ACCEPTANCE_MIN_READER_VERSION",
     "FETCH_ACCEPTANCE_SCHEMA_VERSION",
     "AcceptanceOutputKind",
     "AssetAcceptanceFacet",
@@ -1457,7 +1195,6 @@ __all__ = [
     "FetchAcceptanceFacet",
     "FetchAcceptanceReport",
     "FetchAcceptanceStatus",
-    "FormulaAcceptanceFacet",
     "IdentityAcceptanceFacet",
     "IdentityAcceptanceStatus",
     "OutputAcceptanceFacet",
@@ -1465,7 +1202,6 @@ __all__ = [
     "OverallAcceptanceStatus",
     "ProvenanceAcceptanceFacet",
     "ProvenanceAcceptanceStatus",
-    "TableAcceptanceFacet",
     "evaluate_fetch_acceptance",
     "fetch_acceptance_json_schema",
     "parse_fetch_acceptance_report",

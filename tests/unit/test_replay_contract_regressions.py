@@ -1,6 +1,7 @@
 """Local contracts exposed by full source replays, without replay in unit."""
 
 import pytest
+
 from paper_fetch.providers._ieee_metadata import build_ieee_article_model
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.quality.access_boundary import html_paywall_diagnostics

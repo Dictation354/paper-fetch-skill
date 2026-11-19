@@ -5,8 +5,8 @@ import json
 import pytest
 
 from paper_fetch.providers._science_html import (
-    prepare_browser_page,
     finalize_extraction,
+    prepare_browser_page,
 )
 
 

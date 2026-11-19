@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
-from datetime import datetime
-from collections.abc import Sequence
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Sequence
+from dataclasses import dataclass
+from datetime import datetime
 
 from ..arxiv_id import arxiv_id_from_query, normalize_arxiv_id
 from ..http import (

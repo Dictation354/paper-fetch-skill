@@ -1,8 +1,9 @@
 from __future__ import annotations
+
 from dataclasses import replace
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.extraction.html.provider_rules import (
     provider_html_rules,
@@ -235,8 +236,8 @@ def test_post_content_policy_injects_provider_tokens_once() -> None:
 
 def test_iop_formula_registration_only_extends_shared_defaults() -> None:
     from paper_fetch.extraction.html.formula_rules import (
-        GENERIC_FORMULA_CONTAINER_TOKENS,
         GENERIC_DISPLAY_FORMULA_SELECTORS,
+        GENERIC_FORMULA_CONTAINER_TOKENS,
         display_formula_nodes,
         display_formula_selectors_for_profile,
         formula_container_tokens_for_profile,

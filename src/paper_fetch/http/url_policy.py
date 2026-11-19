@@ -5,9 +5,9 @@ from __future__ import annotations
 import ipaddress
 import socket
 import urllib.parse
+from collections.abc import Callable, Iterable, Sequence
 from dataclasses import dataclass
 from typing import Any, TypeAlias
-from collections.abc import Callable, Iterable, Sequence
 
 from .cache import redact_url_for_cache
 from .errors import RequestErrorCategory, RequestFailure

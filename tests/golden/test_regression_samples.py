@@ -1,19 +1,9 @@
 from __future__ import annotations
-from tests.support._paper_fetch_support import FixtureProvider
-from tests.support.trace import trace_facts
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from paper_fetch.providers import (
-    springer as springer_provider,
-    science as science_provider,
-    pnas as pnas_provider,
-)
-from paper_fetch.providers.base import ProviderFailure
-from tests.provider_benchmark_samples import WILEY_PDF_FALLBACK_SAMPLE
+
 import unittest
+from dataclasses import replace
+
 from paper_fetch import service as paper_fetch
-from paper_fetch.extraction.html.assets import extract_html_assets
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html._runtime import (
     clean_markdown,
@@ -21,9 +11,19 @@ from paper_fetch.extraction.html._runtime import (
     extract_html_abstract_blocks,
     extract_html_section_hints,
 )
+from paper_fetch.extraction.html.assets import extract_html_assets
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import elsevier as elsevier_provider
+from paper_fetch.providers import (
+    pnas as pnas_provider,
+)
+from paper_fetch.providers import (
+    science as science_provider,
+)
+from paper_fetch.providers import (
+    springer as springer_provider,
+)
 from paper_fetch.providers import tandf as tandf_provider
 from paper_fetch.providers import wiley as wiley_provider
 from paper_fetch.providers.atypon_browser_workflow import (
@@ -31,12 +31,18 @@ from paper_fetch.providers.atypon_browser_workflow import (
 )
 from paper_fetch.providers.base import (
     ProviderContent,
+    ProviderFailure,
     RawFulltextPayload,
 )
+from paper_fetch.tracing import trace_event
+from tests.paths import FIXTURE_DIR
 from tests.provider_benchmark_samples import (
+    WILEY_PDF_FALLBACK_SAMPLE,
     provider_benchmark_sample,
 )
-from tests.paths import FIXTURE_DIR
+from tests.support._paper_fetch_support import FixtureProvider
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
 
 
 class FixtureTransport(RecordedStreamTransport, HttpTransport):
@@ -233,6 +239,7 @@ class RegressionSampleTests(unittest.TestCase):
         )
         if "source_fixture" in case:
             from bs4 import BeautifulSoup
+
             from tests.support.reviewed_publisher_content import _words
 
             source = BeautifulSoup(
@@ -414,6 +421,7 @@ class RegressionSampleTests(unittest.TestCase):
         self,
     ) -> None:
         from bs4 import BeautifulSoup
+
         from tests.support.reviewed_publisher_content import _words
 
         article = self._build_elsevier_bilingual_fixture_article()

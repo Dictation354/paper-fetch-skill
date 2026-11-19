@@ -3,11 +3,11 @@
 from __future__ import annotations
 
 import copy
-from importlib import resources
-from typing import Any
-from collections.abc import Sequence
 import json
 import re
+from collections.abc import Sequence
+from importlib import resources
+from typing import Any
 
 from ..extraction.html import assets as html_assets
 from ..extraction.markdown_render.formulas import render_inline_latex_markdown
@@ -414,8 +414,8 @@ def _arxiv_math_is_display(node: Any) -> bool:
 
 
 def _arxiv_math_markdown(node: Any) -> str:
-    from ..formula.validation import select_formula_latex
     from ..extraction.html.formula_rules import mathml_element_from_html_node
+    from ..formula.validation import select_formula_latex
 
     latex = _arxiv_math_annotation_latex(node)
     selected = select_formula_latex(

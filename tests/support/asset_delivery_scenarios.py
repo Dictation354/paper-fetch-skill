@@ -1,7 +1,7 @@
 """Small article/index and streaming image boundary for directed asset contracts."""
 
-from paper_fetch.targeted_assets import AssetContext, discover_content_images
 from paper_fetch.providers.base import ProviderContent
+from paper_fetch.targeted_assets import AssetContext, discover_content_images
 from tests.support.transport import RecordedStreamTransport
 from tests.support.wiley_page_assets import png_bytes
 

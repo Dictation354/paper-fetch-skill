@@ -4,14 +4,12 @@ Historical article HTML keeps its unknown HTTP envelope. Newly captured satellit
 pages and images replay their actual response envelopes. No failure is injected.
 """
 
-from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
-
-
 import re
 from pathlib import Path
 
 from bs4 import BeautifulSoup
 
+from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.springer import SpringerClient
 from tests.golden_criteria import golden_criteria_asset
@@ -130,8 +128,8 @@ def test_original_old_nature_table_pages_recover_all_four_real_images(tmp_path):
 
     # The canonical whole-article replay also consumes these verified captures.
     from tests.golden_corpus import (
-        golden_corpus_fixture_for_doi,
         build_article_from_fixture,
+        golden_corpus_fixture_for_doi,
     )
 
     fixture = golden_corpus_fixture_for_doi(doi)
@@ -160,7 +158,7 @@ def test_original_old_nature_table_pages_recover_all_four_real_images(tmp_path):
         assert full.count(f"]({target})") == 1
         image_positions.append(full.index(f"]({target})"))
     assert image_positions == sorted(image_positions)
-    hidden = canonical.to_ai_markdown(asset_profile="all", include_supplementary=False)
+    hidden = canonical.to_ai_markdown(asset_profile="body")
     assert "## Extended Data" not in hidden
     assert "table1-image-response.bin" not in hidden
     assert "_Fig5_ESM.jpg" not in hidden
@@ -231,6 +229,7 @@ def test_original_science_pure_code_statement_survives_acknowledgments():
 
 def test_original_ieee_table_wins_over_formula_candidate_with_same_preview():
     from dataclasses import asdict
+
     from paper_fetch.extraction.html.assets import extract_formula_assets
     from paper_fetch.providers import _ieee_html, ieee
 

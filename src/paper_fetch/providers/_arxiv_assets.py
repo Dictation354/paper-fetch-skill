@@ -6,25 +6,25 @@ import contextlib
 import io
 import math
 import os
-from pathlib import Path
-from typing import Any
-from collections.abc import Mapping, Sequence
 import re
 import urllib.parse
 import uuid
+from collections.abc import Mapping, Sequence
+from pathlib import Path
+from typing import Any
 
-from ..common_patterns import EXTENDED_DATA_FIGURE_LABEL
+from ..artifacts import ArtifactStore
 from ..arxiv_id import arxiv_id_from_query, canonical_arxiv_abs_url
 from ..asset_budget import AssetBudget, AssetBudgetExceeded, AssetReservation
-from ..artifacts import ArtifactStore
+from ..common_patterns import EXTENDED_DATA_FIGURE_LABEL
 from ..config import resolve_asset_download_concurrency
+from ..extraction.html import assets as html_assets
 from ..extraction.image_payloads import (
     image_dimensions_from_bytes,
     image_dimensions_from_path,
     image_mime_type_from_bytes,
     payload_mime_type_from_path,
 )
-from ..extraction.html import assets as html_assets
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
     HttpRequestPolicy,
@@ -33,25 +33,29 @@ from ..http import (
     RequestFailure,
     provider_request_policy,
 )
-from ..runtime import RuntimeContext
 from ..markdown.images import render_markdown_image
 from ..models.markdown import iter_markdown_images
+from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, normalize_text, sanitize_filename
+from ._arxiv_html import BeautifulSoup, Tag
 from ._arxiv_parsing import ARXIV_HTML_PARSER
+from ._arxiv_references import _is_arxiv_inline_figure_container
 from ._arxiv_source_archive import (
     _ARXIV_SOURCE_MAX_MEMBER_BYTES,
+    _arxiv_source_url,
     _ArxivSourceMember,
     _cleanup_arxiv_source_members,
     _extract_arxiv_source_figure_references,
     _read_arxiv_source_files_from_path,
     _read_bounded_stream,
+)
+from ._arxiv_source_archive import (
     _retain_arxiv_source_member as _retain_arxiv_source_member,
+)
+from ._arxiv_source_archive import (
     _safe_arxiv_source_member_name as _safe_arxiv_source_member_name,
-    _arxiv_source_url,
 )
 from ._asset_retry import AssetRetryPolicy, is_retryable_asset_failure
-from ._arxiv_html import Tag, BeautifulSoup
-from ._arxiv_references import _is_arxiv_inline_figure_container
 from ._html_asset_engine import merge_assets_by_identity
 from ._html_section_markdown import (
     INLINE_FIGURE_ALT_ATTR,

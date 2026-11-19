@@ -7,8 +7,8 @@ import os
 import shutil
 import subprocess
 import sys
-from pathlib import Path
 from collections.abc import Sequence
+from pathlib import Path
 
 from .paths import (
     GHOSTSCRIPT_EXECUTABLE_NAMES,

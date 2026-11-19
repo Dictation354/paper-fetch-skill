@@ -1,5 +1,5 @@
 from __future__ import annotations
-from tests.support.http_cache import FakeHTTPResponse, build_http_error
+
 import concurrent.futures
 import gzip
 import json
@@ -10,19 +10,15 @@ import threading
 import unittest
 import urllib.error
 import urllib.parse
-import warnings
 from unittest import mock
-from paper_fetch import http as http_module
-from paper_fetch.providers import base as provider_base
+
 import urllib3
+
+from paper_fetch import http as http_module
+from paper_fetch.http.transport import request_cancel_check
+from paper_fetch.providers import base as provider_base
 from tests.support._logging_support import RecordCaptureHandler
-
-
-warnings.filterwarnings(
-    "ignore",
-    message=r"Implicitly cleaning up <HTTPError 429: 'HTTP 429'>",
-    category=ResourceWarning,
-)
+from tests.support.http_cache import FakeHTTPResponse
 
 
 def lower_header_map(headers: dict[str, str]) -> dict[str, str]:
@@ -839,20 +835,18 @@ class HttpTransportCacheTests(unittest.TestCase):
     def test_retry_after_is_respected_once_for_rate_limited_requests(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
-        rate_limited_error = build_http_error(
+        rate_limited_response = FakeHTTPResponse(
+            b"rate limited",
             "https://example.test/article",
             status=429,
             headers={"Retry-After": "1"},
-            body=b"rate limited",
         )
-        original_close = rate_limited_error.close
-        rate_limited_error.close = mock.Mock(side_effect=original_close)
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise rate_limited_error
+                return rate_limited_response
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
@@ -868,27 +862,25 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(response["body"], b"ok")
         mocked_sleep.assert_called_once()
         self.assertAlmostEqual(mocked_sleep.call_args.args[0], 1.0, places=3)
-        rate_limited_error.close.assert_called_once_with()
+        self.assertTrue(rate_limited_response.released)
 
     def test_rate_limited_request_without_retry_after_uses_short_fallback_backoff(
         self,
     ) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
         call_count = 0
-        rate_limited_error = build_http_error(
+        rate_limited_response = FakeHTTPResponse(
+            b"rate limited",
             "https://example.test/article",
             status=429,
             headers={},
-            body=b"rate limited",
         )
-        original_close = rate_limited_error.close
-        rate_limited_error.close = mock.Mock(side_effect=original_close)
 
         def fake_urlopen(request, timeout=20):
             nonlocal call_count
             call_count += 1
             if call_count == 1:
-                raise rate_limited_error
+                return rate_limited_response
             return FakeHTTPResponse(b"ok", request.full_url)
 
         with mock.patch.object(transport, "_perform_request", side_effect=fake_urlopen):
@@ -908,7 +900,7 @@ class HttpTransportCacheTests(unittest.TestCase):
             http_module.DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
             places=3,
         )
-        rate_limited_error.close.assert_called_once_with()
+        self.assertTrue(rate_limited_response.released)
 
     def test_transient_http_5xx_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
@@ -918,8 +910,10 @@ class HttpTransportCacheTests(unittest.TestCase):
             nonlocal call_count
             call_count += 1
             if call_count <= 2:
-                raise build_http_error(
-                    "https://example.test/article", status=503, body=b"transient"
+                return FakeHTTPResponse(
+                    b"transient",
+                    "https://example.test/article",
+                    status=503,
                 )
             return FakeHTTPResponse(b"ok", request.full_url)
 
@@ -961,6 +955,33 @@ class HttpTransportCacheTests(unittest.TestCase):
         self.assertEqual(call_count, 3)
         self.assertEqual(response["body"], b"ok")
         self.assertEqual(mocked_sleep.call_args_list, [mock.call(0.5), mock.call(1.0)])
+
+    def test_timeout_reading_http_error_body_is_retried(self) -> None:
+        transport = http_module.HttpTransport()
+        url = "https://example.test/article"
+        unavailable = FakeHTTPResponse(b"", url, status=503)
+        with (
+            mock.patch.object(
+                unavailable,
+                "read",
+                side_effect=urllib3.exceptions.ReadTimeoutError(None, url, "timed out"),
+            ),
+            mock.patch.object(
+                transport,
+                "_perform_request",
+                side_effect=[unavailable, FakeHTTPResponse(b"ok", url)],
+            ) as send,
+            mock.patch.object(http_module.time, "sleep") as sleep,
+        ):
+            response = transport.request(
+                "GET", url, retry_on_transient=True, transient_retries=1
+            )
+
+        self.assertEqual(response["body"], b"ok")
+        self.assertEqual(send.call_count, 2)
+        self.assertTrue(unavailable.closed)
+        self.assertTrue(unavailable.released)
+        sleep.assert_called_once_with(0.5)
 
     def test_urllib3_protocol_timeout_is_retried_with_exponential_backoff(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
@@ -1207,18 +1228,20 @@ class HttpTransportCacheTests(unittest.TestCase):
 
         self.assertEqual(first_calls, 2)
 
-    def test_http_error_wrapper_is_closed_when_request_failure_is_raised(self) -> None:
+    def test_http_error_response_is_released_when_request_failure_is_raised(
+        self,
+    ) -> None:
         transport = http_module.HttpTransport(cache_ttl=0, cache_capacity=0)
-        server_error = build_http_error(
+        server_error = FakeHTTPResponse(
+            b"server error",
             "https://example.test/article",
             status=500,
             headers={},
-            body=b"server error",
         )
-        original_close = server_error.close
-        server_error.close = mock.Mock(side_effect=original_close)
 
-        with mock.patch.object(transport, "_perform_request", side_effect=server_error):
+        with mock.patch.object(
+            transport, "_perform_request", return_value=server_error
+        ):
             with self.assertRaises(http_module.RequestFailure):
                 transport.request(
                     "GET",
@@ -1226,7 +1249,7 @@ class HttpTransportCacheTests(unittest.TestCase):
                     headers={"Accept": "text/plain"},
                 )
 
-        server_error.close.assert_called_once_with()
+        self.assertTrue(server_error.released)
 
     def test_concurrent_get_requests_keep_cache_consistent(self) -> None:
         transport = http_module.HttpTransport(cache_ttl=30, cache_capacity=4)
@@ -1327,8 +1350,6 @@ class HttpTransportCacheTests(unittest.TestCase):
 
 
 def test_shared_transport_request_cancellation_is_context_local():
-    from paper_fetch.http.transport import request_cancel_check
-
     transport = http_module.HttpTransport()
     entered = threading.Barrier(2)
     cancelled = threading.Event()
@@ -1342,12 +1363,12 @@ def test_shared_transport_request_cancellation_is_context_local():
             if should_cancel:
                 cancelled.set()
                 try:
-                    transport._cancellable_sleep(1)
+                    transport.sleep_with_cancel(1)
                 except http_module.RequestCancelledError:
                     return "cancelled"
                 raise AssertionError("Cancellation was ignored")
             assert cancelled.wait(1)
-            transport._cancellable_sleep(0.01)
+            transport.sleep_with_cancel(0.01)
             return "finished"
         finally:
             request_cancel_check.reset(token)

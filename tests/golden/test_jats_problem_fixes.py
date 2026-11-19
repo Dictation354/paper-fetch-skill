@@ -2,12 +2,11 @@
 
 from types import SimpleNamespace
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models.markdown import iter_markdown_images
-from tests.golden_criteria import golden_criteria_sample_for_doi
-from tests.golden_criteria import source_selections
+from tests.golden_criteria import golden_criteria_sample_for_doi, source_selections
 from tests.paths import REPO_ROOT
 from tests.support.canonical_content import source_prose_blocks
 from tests.support.object_content import assert_object_position

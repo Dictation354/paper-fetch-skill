@@ -1,11 +1,8 @@
 """P28–P30: image identity and local-asset acceptance boundary contracts."""
 
-from paper_fetch.models import Quality
-
-
 import pytest
 
-from paper_fetch.models import FetchEnvelope
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.providers._arxiv_assets import (
     _match_source_figures_to_html_placeholders,
     inline_arxiv_source_assets_in_markdown,
@@ -150,9 +147,9 @@ def test_localization_keeps_occurrence_label_through_file_rendering(
     tmp_path, alt, expected
 ):
     from paper_fetch.models import RenderOptions, article_from_markdown
-    from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
     from paper_fetch.models.markdown import iter_markdown_images
     from paper_fetch.models.render import rewrite_markdown_asset_links as bind_images
+    from paper_fetch.workflow.rendering import rewrite_markdown_asset_links
 
     path = tmp_path / "shared.png"
     path.write_bytes(b"local asset boundary")

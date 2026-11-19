@@ -1,16 +1,19 @@
 from __future__ import annotations
-from tests.support.canonical_content import comparable_cell
-from tests.support.markdown_presentation import visible_markdown
+
 import re
 from pathlib import Path
 from urllib.parse import parse_qs, urlparse
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.providers import (
     _royalsocietypublishing_html,
 )
 from tests.golden_corpus import GoldenCorpusFixture, build_article_from_fixture
 from tests.golden_criteria import golden_criteria_sample_for_doi
 from tests.support.acquired_publisher_inputs import CapturedSourceFixture, _record
+from tests.support.canonical_content import comparable_cell
+from tests.support.markdown_presentation import visible_markdown
 
 
 def test_recorded_section_links_resolve_to_original_heading_targets() -> None:

@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 from dataclasses import replace
 from typing import Any
+
 from paper_fetch.providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
     default_browser_workflow_deps,

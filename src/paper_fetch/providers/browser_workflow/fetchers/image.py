@@ -2,35 +2,36 @@
 
 from __future__ import annotations
 
-from ...browser_runtime.navigation import context_get, evaluate_get
-
-from ...browser_runtime.navigation import navigate_page
-
 import base64
 import time
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any, cast
 
+from ....extraction.html.assets.state import AssetFetchResponse
 from ....extraction.html.shared import (
     html_text_snippet as _html_text_snippet,
+)
+from ....extraction.html.shared import (
     html_title_snippet as _html_title_snippet,
+)
+from ....extraction.html.shared import (
     image_magic_type as _image_magic_type,
 )
-from ....extraction.image_payloads import is_placeholder_image_url
 from ....extraction.html.signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS as _CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
 )
+from ....extraction.image_payloads import is_placeholder_image_url
 from ....reason_codes import CLOUDFLARE_CHALLENGE
 from ....runtime import RuntimeContext
 from ....utils import normalize_text
 from ..._registry import browser_asset_policy
-from ...browser_runtime.types import BrowserFetchedHtml
+from ...browser_runtime.navigation import context_get, evaluate_get, navigate_page
 from .context import (
     BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
-    _ThreadLocalSharedDocumentFetcher,
     _browser_response_headers,
     _browser_response_status,
+    _ThreadLocalSharedDocumentFetcher,
 )
 from .diagnostics import (
     _image_fetch_failure_reason,
@@ -96,15 +97,6 @@ def _looks_like_placeholder_image_url(source_url: str | None) -> bool:
     return is_placeholder_image_url(source_url)
 
 
-def _browser_image_document_payload(
-    result: BrowserFetchedHtml,
-) -> dict[str, Any] | None:
-    return _payload_from_browser_image_payload(
-        result.image_payload,
-        fallback_url=result.final_url or result.source_url,
-    )
-
-
 def _payload_from_browser_image_payload(
     payload: Mapping[str, Any] | None,
     *,
@@ -136,9 +128,18 @@ def _payload_from_browser_image_payload(
 
 
 def _copy_image_payload(payload: Mapping[str, Any]) -> dict[str, Any]:
+    if isinstance(payload, AssetFetchResponse):
+        copied_response = payload.copy()
+        headers = copied_response.diagnostics.get("headers")
+        if isinstance(headers, Mapping):
+            copied_response.diagnostics["headers"] = dict(headers)
+        dimensions = copied_response.diagnostics.get("dimensions")
+        if isinstance(dimensions, Mapping):
+            copied_response.diagnostics["dimensions"] = dict(dimensions)
+        return cast(dict[str, Any], copied_response)
     copied = dict(payload)
     body = payload.get("body")
-    if isinstance(body, (bytes, bytearray)):
+    if isinstance(body, bytes | bytearray):
         copied["body"] = bytes(body)
     headers = payload.get("headers")
     if isinstance(headers, Mapping):
@@ -499,7 +500,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
             body = response.body()
         except Exception:
             body = b""
-        if not isinstance(body, (bytes, bytearray)) or not body:
+        if not isinstance(body, bytes | bytearray) or not body:
             self._record_failure(
                 attempted_url,
                 status=status,
@@ -985,7 +986,8 @@ def fetch_image_document_with_browser(
         min_height=min_height,
     )
     try:
-        return fetcher(normalized_url, {})
+        result = fetcher(normalized_url, {})
+        return dict(result) if result is not None else None
     except Exception:
         return None
     finally:

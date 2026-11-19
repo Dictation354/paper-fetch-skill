@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from collections.abc import Callable
+from typing import Any
+
+from bs4 import Tag
 
 from ...common_patterns import HEADING_LEVEL_PATTERN, REFERENCE_TOKEN_VOCABULARY
 from ...section_vocab import MARKDOWN_ABSTRACT_HEADINGS
@@ -12,6 +14,8 @@ from ...utils import normalize_text
 from ..citation_anchors import looks_like_reference_href
 from ..section_hints import (
     SECTION_HINT_KINDS as HTML_SECTION_HINT_KINDS,
+)
+from ..section_hints import (
     coerce_section_hint_dicts,
     match_next_section_hint,
 )
@@ -21,8 +25,6 @@ from .ui_tokens import (
     COMMON_NOISE_TOKENS,
     RELATED_CONTENT_CHROME_TOKENS,
 )
-
-from bs4 import Tag
 
 HTML_BLOCK_TAGS = frozenset(
     {

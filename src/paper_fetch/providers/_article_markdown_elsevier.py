@@ -5,10 +5,11 @@ from __future__ import annotations
 import copy
 import re
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
 
+from ..extraction.markdown_render import MarkdownList, render_list
 from ._article_markdown_common import (
     add_figure_once,
     child_text,
@@ -30,18 +31,17 @@ from ._article_markdown_elsevier_tables import (
     should_render_elsevier_table_entry,
 )
 from ._article_markdown_math import FormulaRenderResult, render_display_formula_result
-from ..extraction.markdown_render import MarkdownList, render_list
+from ._elsevier_objects import (
+    build_elsevier_object_index,
+    elsevier_formula_locators,
+    resolve_elsevier_formula_locator,
+)
 from ._elsevier_xml_rules import (
     ELSEVIER_IMAGE_ASSET_TYPES,
     combine_elsevier_section_title,
     get_elsevier_element_rule,
     infer_elsevier_asset_group_key,
     should_ignore_elsevier_section_title,
-)
-from ._elsevier_objects import (
-    build_elsevier_object_index,
-    elsevier_formula_locators,
-    resolve_elsevier_formula_locator,
 )
 
 ELSEVIER_BLOCK_LOCAL_NAMES = {

@@ -1,12 +1,13 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
+
 from unittest import mock
+
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import springer
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from tests.support._paper_fetch_support import fulltext_pdf_bytes
-
+from tests.support.trace import trace_facts
 
 BRIEFING_DOI = "10.1038/s41561-022-00983-6"
 BRIEFING_URL = f"https://www.nature.com/articles/{BRIEFING_DOI}"

@@ -1,20 +1,23 @@
 """Component preparation results and request scopes, with no browser/network I/O."""
 
-from tests.support.transport import configure_stream_transport
-
-from concurrent.futures import ThreadPoolExecutor
 import json
 import threading
+from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock
 
 import pytest
 
 from paper_fetch.http import RequestCancelledError
-from paper_fetch.providers.browser_runtime import preparation as prep
-from paper_fetch.providers.browser_runtime import byparr_preparation as flare
 from paper_fetch.models.codec import envelope_from_payload, model_to_payload
+from paper_fetch.providers.browser_runtime import (
+    byparr_preparation as flare,
+)
+from paper_fetch.providers.browser_runtime import (
+    preparation as prep,
+)
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import sample_envelope
+from tests.support.transport import configure_stream_transport
 
 
 def test_latest_failure_overrides_earlier_success(tmp_path):

@@ -1,6 +1,7 @@
 """Minimum source-environment contracts, independent of image byte fidelity."""
 
 import pytest
+
 from paper_fetch.providers._arxiv_source_archive import (
     _extract_arxiv_source_figure_references,
 )

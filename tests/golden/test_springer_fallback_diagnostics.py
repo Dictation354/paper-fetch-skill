@@ -1,18 +1,15 @@
 """Captured abstract-only HTML retains its diagnosis after injected PDF recovery."""
 
-from paper_fetch.tracing import trace_event
-from paper_fetch.models import Quality
-
-
 import pytest
 
-from paper_fetch.models import FetchEnvelope
-from paper_fetch.providers.springer import SpringerClient
+from paper_fetch.models import FetchEnvelope, Quality
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support._paper_fetch_support import FixtureHtmlTransport
+from tests.support.acquired_publisher_inputs import _record, _response
 
 
 @pytest.mark.parametrize(

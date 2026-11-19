@@ -1,6 +1,8 @@
 from __future__ import annotations
+
 import multiprocessing
 from pathlib import Path
+
 from paper_fetch.artifacts import ArtifactStore
 
 

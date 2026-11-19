@@ -1,17 +1,19 @@
 from __future__ import annotations
 
 import os
-from pathlib import Path
 import subprocess
 import tempfile
 import unittest
+from pathlib import Path
 from unittest import mock
 
-from paper_fetch.image_tools import ImageConversionFailure
+from paper_fetch.image_tools import (
+    ImageConversionFailure,
+    source_image_format_from_payload,
+)
 from paper_fetch.image_tools import convert as image_convert
 from paper_fetch.image_tools import install as image_install
 from paper_fetch.image_tools import paths as image_paths
-from paper_fetch.image_tools import source_image_format_from_payload
 from paper_fetch.image_tools.paths import (
     DEFAULT_IMAGE_TOOL_TIMEOUT_SECONDS,
     image_tool_timeout_seconds,

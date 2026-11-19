@@ -2,25 +2,26 @@
 
 from __future__ import annotations
 
-from ...browser_runtime.navigation import context_get
-
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from ....extraction.html.assets import supplementary_response_block_reason
 from ....extraction.html.shared import (
     html_text_snippet as _html_text_snippet,
+)
+from ....extraction.html.shared import (
     html_title_snippet as _html_title_snippet,
 )
 from ....runtime import RuntimeContext
 from ....utils import normalize_text
+from ...browser_runtime.navigation import context_get
 from .click import fetch_file_with_page_click
 from .context import (
     BrowserDocumentFetcherOptions,
     _BaseBrowserDocumentFetcher,
-    _ThreadLocalSharedDocumentFetcher,
     _browser_response_headers,
     _browser_response_status,
+    _ThreadLocalSharedDocumentFetcher,
 )
 
 
@@ -51,7 +52,7 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
 
     def __call__(
         self, file_url: str, asset: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
+    ) -> Mapping[str, Any] | None:
         normalized_url = normalize_text(file_url)
         if not normalized_url:
             return None
@@ -123,7 +124,7 @@ class _SharedBrowserFileDocumentFetcher(_BaseBrowserDocumentFetcher):
             body = response.body()
         except Exception:
             body = b""
-        if not isinstance(body, (bytes, bytearray)) or not body:
+        if not isinstance(body, bytes | bytearray) or not body:
             self._record_failure(
                 file_url,
                 status=status,

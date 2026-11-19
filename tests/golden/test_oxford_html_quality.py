@@ -1,27 +1,26 @@
 """Replay the captured warming article and existing Oxford HTML samples."""
 
-from tests.support.markdown_presentation import visible_markdown
-
 import hashlib
 import json
 import re
 import time
 from pathlib import Path
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
+from paper_fetch.extraction.image_payloads import image_dimensions_from_bytes
 from paper_fetch.providers import _oxfordacademic_html
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
-from paper_fetch.extraction.image_payloads import image_dimensions_from_bytes
 from paper_fetch.quality.assets import build_asset_quality_summary
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.paths import FIXTURE_DIR
+from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.oxford_html import (
     build_oxford_html_article,
     build_oxford_html_payload,
 )
-from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
 from tests.support.verified_source_inputs import inspect_original
 
 

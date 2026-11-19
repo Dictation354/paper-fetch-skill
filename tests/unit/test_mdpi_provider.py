@@ -1,9 +1,11 @@
 from __future__ import annotations
-from functools import cache
-from pathlib import Path
+
 import tempfile
 import unittest
+from functools import cache
+from pathlib import Path
 from unittest import mock
+
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import RequestFailure
@@ -11,16 +13,15 @@ from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import _mdpi_markdown, browser_runtime
 from paper_fetch.providers.mdpi import MdpiClient
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-from tests.support._browser_workflow_deps import install_browser_workflow_deps
-from tests.support._paper_fetch_support import fulltext_pdf_bytes
 from tests.support._atypon_browser_workflow_provider_support import (
-    AtyponBrowserWorkflowProviderTestCase,
     AssetTransport,
+    AtyponBrowserWorkflowProviderTestCase,
     _payload_route,
     _typed_raw_payload,
     png_header,
 )
-
+from tests.support._browser_workflow_deps import install_browser_workflow_deps
+from tests.support._paper_fetch_support import fulltext_pdf_bytes
 
 MDPI_STRUCTURE_DOI = "10.3390/membranes15030093"
 MDPI_TABLE_DOI = "10.3390/su12072826"
@@ -316,7 +317,7 @@ class MdpiProviderTests(AtyponBrowserWorkflowProviderTestCase):
         self.assertEqual(_payload_route(raw_payload), "html")
 
     @mock.patch(
-        "paper_fetch.providers._playwright_browser.open_browser_context",
+        "paper_fetch.providers.browser_runtime.html_fetcher.open_browser_context",
         side_effect=RuntimeError("Mock browser unavailable"),
     )
     def test_mdpi_pdf_fallback_uses_article_pdf_candidate(self, _browser) -> None:

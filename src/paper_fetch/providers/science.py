@@ -2,28 +2,26 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import (
     ATYPON_FRONT_MATTER_CONTAINS_TOKENS,
+    SCIENCE_FRONT_MATTER_EXACT_TEXTS,
+    SCIENCE_FRONT_MATTER_PUBLICATION_KEYWORDS,
+    SCIENCE_POST_CONTENT_BREAK_TOKENS,
+    SCIENCE_SITE_RULE_OVERRIDES,
     DomHooks,
     MarkdownHooks,
     ProviderCleanupRules,
     ProviderFrontMatterRules,
     ProviderHtmlRules,
-    SCIENCE_FRONT_MATTER_EXACT_TEXTS,
-    SCIENCE_FRONT_MATTER_PUBLICATION_KEYWORDS,
-    SCIENCE_POST_CONTENT_BREAK_TOKENS,
-    SCIENCE_SITE_RULE_OVERRIDES,
 )
 from ..quality.html_signals import (
     SCIENCE_AVAILABILITY_OVERRIDES,
     SCIENCE_SIGNAL_SET,
 )
 from . import _science_html, browser_workflow
+from ._definitions import PROVIDER_DEFINITIONS
 from ._registry import BrowserAssetPolicy, BrowserPagePolicy, ProviderBundle
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["science"]
 

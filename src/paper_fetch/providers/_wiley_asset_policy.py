@@ -8,8 +8,7 @@ from typing import Any
 from urllib.parse import urlsplit, urlunsplit
 
 from ..utils import normalize_text
-from .browser_workflow.asset_download import _matching_failure, _attempt_from_failure
-
+from .browser_workflow.asset_download import _attempt_from_failure, _matching_failure
 from .browser_workflow.fetchers.readiness import wait_for_atypon_body_dom_ready
 
 

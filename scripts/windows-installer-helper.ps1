@@ -12,8 +12,6 @@ $ErrorActionPreference = "Stop"
 $SkillName = "paper-fetch-skill"
 $OfflineManagedBegin = "# BEGIN paper-fetch offline managed"
 $OfflineManagedEnd = "# END paper-fetch offline managed"
-$CodexManagedBegin = "# BEGIN paper-fetch installer managed"
-$CodexManagedEnd = "# END paper-fetch installer managed"
 $RuntimeEnvKeys = @(
     "PYTHONUTF8",
     "PYTHONIOENCODING",
@@ -43,8 +41,6 @@ function Import-InstallerManifest {
     $script:SkillName = [string]$manifest.skill.name
     $script:OfflineManagedBegin = [string]$manifest.managed_blocks.offline.begin
     $script:OfflineManagedEnd = [string]$manifest.managed_blocks.offline.end
-    $script:CodexManagedBegin = [string]$manifest.managed_blocks.codex.begin
-    $script:CodexManagedEnd = [string]$manifest.managed_blocks.codex.end
     $script:RuntimeEnvKeys = @($manifest.runtime.env_keys | ForEach-Object { [string]$_ })
     Normalize-RuntimeEnvKeys
     $script:OfflineEnvKeys = @(
@@ -54,8 +50,6 @@ function Import-InstallerManifest {
     if ([string]::IsNullOrWhiteSpace($script:SkillName) -or
         [string]::IsNullOrWhiteSpace($script:OfflineManagedBegin) -or
         [string]::IsNullOrWhiteSpace($script:OfflineManagedEnd) -or
-        [string]::IsNullOrWhiteSpace($script:CodexManagedBegin) -or
-        [string]::IsNullOrWhiteSpace($script:CodexManagedEnd) -or
         $script:RuntimeEnvKeys.Count -eq 0 -or
         $script:OfflineEnvKeys.Count -eq 0) {
         throw "installer manifest is missing required installer constants."
@@ -405,19 +399,6 @@ function Remove-UserPathEntry {
     Write-Log "Removed $Entry from the user PATH"
 }
 
-function Backup-File {
-    param([string]$Path)
-    if (Test-Path -LiteralPath $Path -PathType Leaf) {
-        $stamp = Get-Date -Format "yyyyMMddHHmmss"
-        Copy-Item -LiteralPath $Path -Destination "$Path.bak-$stamp" -Force
-    }
-}
-
-function Remove-LegacyIntegration {
-    $migration = Join-Path $InstallRoot "scripts/cleanup_legacy_mcp.py"
-    Invoke-Checked -FilePath (Join-Path $InstallRoot "runtime/python.exe") -Arguments @("-X", "utf8", $migration, "--install-root", $InstallRoot)
-}
-
 function Invoke-SmokeChecks {
     $texmath = ConvertTo-FullPath (Join-Path (Join-Path $InstallRoot "formula-tools") "bin/texmath.exe")
     $node = ConvertTo-FullPath (Get-MathmlToLatexNode)
@@ -466,7 +447,6 @@ switch ($Action) {
         Invoke-InstallerStep -Name "offline.env update" -Required -ScriptBlock { Write-ManagedEnvFile }
         Invoke-InstallerStep -Name "skill installation" -Required -ScriptBlock { Install-Skills }
         Invoke-InstallerStep -Name "PATH update" -ScriptBlock { Add-UserPathEntry (Join-Path $InstallRoot "bin") }
-        Invoke-InstallerStep -Name "legacy integration cleanup" -Required -ScriptBlock { Remove-LegacyIntegration }
         if (-not $SkipSmoke) {
             Invoke-InstallerStep -Name "smoke checks" -ScriptBlock { Invoke-SmokeChecks }
         }
@@ -476,7 +456,6 @@ switch ($Action) {
         }
     }
     "Uninstall" {
-        Remove-LegacyIntegration
         try { Remove-Skills } catch { Write-Warn $_.Exception.Message }
         try { Remove-UserPathEntry (Join-Path $InstallRoot "bin") } catch { Write-Warn $_.Exception.Message }
     }

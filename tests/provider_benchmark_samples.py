@@ -1,10 +1,10 @@
 from __future__ import annotations
-from paper_fetch.tracing import TraceEvent, trace_event
 
 from dataclasses import dataclass
 
 import paper_fetch.providers  # noqa: F401
 from paper_fetch.provider_catalog import official_provider_names
+from paper_fetch.tracing import TraceEvent, trace_event
 from tests.golden_criteria import doi_to_fixture_slug
 
 

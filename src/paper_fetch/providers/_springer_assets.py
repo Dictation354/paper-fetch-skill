@@ -2,33 +2,39 @@
 
 from __future__ import annotations
 
-import urllib.parse
 import re
-from typing import Any
+import urllib.parse
 from collections.abc import Mapping
+from typing import Any
 
 from bs4 import BeautifulSoup, Tag
 
+from ..config import resolve_asset_download_concurrency
 from ..extraction.html.assets import (
-    FULL_SIZE_IMAGE_ATTRS,
     FIGURE_KIND,
+    FULL_SIZE_IMAGE_ATTRS,
     PREVIEW_IMAGE_ATTRS,
+    SUPPLEMENTARY_KIND,
     AssetDownloadOptions,
     FigurePageFetcher,
-    SUPPLEMENTARY_KIND,
     _soup_attr_url,
     download_assets,
-    extract_figure_assets as extract_generic_figure_assets,
-    extract_formula_assets as extract_generic_formula_assets,
-    extract_supplementary_assets as extract_generic_supplementary_assets,
     looks_like_full_size_asset_url,
     split_body_and_supplementary_assets,
+)
+from ..extraction.html.assets import (
+    extract_figure_assets as extract_generic_figure_assets,
+)
+from ..extraction.html.assets import (
+    extract_formula_assets as extract_generic_formula_assets,
+)
+from ..extraction.html.assets import (
+    extract_supplementary_assets as extract_generic_supplementary_assets,
 )
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import normalize_section_title
 from ..http.headers import header_value
 from ..utils import normalize_text
-from ..config import resolve_asset_download_concurrency
 from ._html_asset_engine import (
     HtmlAssetExtractionPolicy,
     extract_scoped_assets_with_policy,
@@ -37,7 +43,7 @@ from ._springer_dom import (
     SPRINGER_EXTENDED_DATA_SECTION_TITLES,
     SPRINGER_PEER_REVIEW_TOKENS,
     SPRINGER_SOURCE_DATA_TITLE_PREFIX,
-    SPRINGER_SUPPLEMENTARY_SECTION_TITLES as SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
+    SPRINGER_TABLE_LABEL_PATTERN,
     _extract_asset_html_scope_fragments,
     _normalized_root_html,
     _springer_collect_asset_sections,
@@ -52,11 +58,13 @@ from ._springer_dom import (
     _springer_table_image_candidate_urls,
     _springer_table_image_roots,
     _springer_table_meta_image_urls,
-    SPRINGER_TABLE_LABEL_PATTERN,
     decode_html,
     extract_full_size_figure_image_url,
     extract_html_extraction_sidecars,
     promote_springer_media_url_to_full_size,
+)
+from ._springer_dom import (
+    SPRINGER_SUPPLEMENTARY_SECTION_TITLES as SPRINGER_SUPPLEMENTARY_SECTION_TITLES,
 )
 
 

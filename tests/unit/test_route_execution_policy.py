@@ -1,14 +1,20 @@
 from __future__ import annotations
-from tests.support.transport import configure_stream_transport
-from dataclasses import replace
 
 import threading
 from concurrent.futures import ThreadPoolExecutor
+from dataclasses import replace
 from types import SimpleNamespace
 from unittest import mock
 
 import pytest
 
+import paper_fetch.provider_catalog as provider_catalog_module
+from paper_fetch.asset_budget import AssetBudget
+from paper_fetch.extraction.html.assets import (
+    FIGURE_KIND,
+    AssetDownloadOptions,
+    download_assets,
+)
 from paper_fetch.http import (
     HttpRequestPolicy,
     HttpStreamOptions,
@@ -17,23 +23,19 @@ from paper_fetch.http import (
     RequestCancelledError,
 )
 from paper_fetch.http.provider_policy import provider_request_policy
-import paper_fetch.provider_catalog as provider_catalog_module
-from paper_fetch.asset_budget import AssetBudget
-from paper_fetch.extraction.html.assets import (
-    FIGURE_KIND,
-    AssetDownloadOptions,
-    download_assets,
-)
 from paper_fetch.provider_catalog import (
     compile_route_execution_policy,
     effective_route_asset_scope,
 )
-from paper_fetch.providers import _playwright_browser
-from paper_fetch.providers import _pdf_fallback
-from paper_fetch.providers import _arxiv_assets
+from paper_fetch.providers import _arxiv_assets, _pdf_fallback
+from paper_fetch.providers.browser_runtime import html_fetcher
+from paper_fetch.providers.browser_runtime.types import (
+    BrowserRuntimeConfig,
+    BrowserRuntimeFailure,
+)
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.providers.plos import PlosClient, _fetch_plos_redirected_response
-from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
+from tests.support.transport import configure_stream_transport
 
 
 class _FakeClock:
@@ -264,7 +266,7 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
     tmp_path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "compile_route_execution_policy_for_kind",
         lambda *_args, **_kwargs: SimpleNamespace(
             timeout_seconds=7,
@@ -272,7 +274,7 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
         ),
     )
     monkeypatch.setattr(
-        _playwright_browser,
+        html_fetcher,
         "open_browser_context",
         mock.Mock(side_effect=RuntimeError("controlled context failure")),
     )
@@ -285,8 +287,8 @@ def test_browser_runtime_caps_deadline_from_compiled_route_policy(
         timeout_ms=120_000,
     )
 
-    with pytest.raises(_playwright_browser.PlaywrightBrowserFailure) as captured:
-        _playwright_browser.fetch_html_with_playwright(
+    with pytest.raises(BrowserRuntimeFailure) as captured:
+        html_fetcher.fetch_browser_html(
             ["https://www.annualreviews.org/doi/10.1146/example"],
             publisher="annualreviews",
             config=config,

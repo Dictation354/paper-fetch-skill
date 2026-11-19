@@ -10,24 +10,47 @@ from types import MappingProxyType
 from typing import Any, overload
 
 from .acquisition import AcquisitionProvenance
-from .providers._definitions import BUILTIN_PROVIDER_DEFINITIONS
-from .providers._registry import ProviderBundle, provider_bundle
-
+from .provider_contracts import (
+    ATYPON_DEFAULT_PDF_PATH_TEMPLATES as ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+)
+from .provider_contracts import (
+    DEFAULT_BODY_TEXT_THRESHOLDS as DEFAULT_BODY_TEXT_THRESHOLDS,
+)
 from .provider_contracts import (
     AssetDefault as AssetDefault,
-    MetadataProbeShortCircuit as MetadataProbeShortCircuit,
-    ProviderRouteKind as ProviderRouteKind,
-    ProviderRouteTransport as ProviderRouteTransport,
+)
+from .provider_contracts import (
     BodyTextThresholds as BodyTextThresholds,
-    DEFAULT_BODY_TEXT_THRESHOLDS as DEFAULT_BODY_TEXT_THRESHOLDS,
-    ATYPON_DEFAULT_PDF_PATH_TEMPLATES as ATYPON_DEFAULT_PDF_PATH_TEMPLATES,
+)
+from .provider_contracts import (
+    MetadataProbeShortCircuit as MetadataProbeShortCircuit,
+)
+from .provider_contracts import (
     PdfSourcePathTemplate as PdfSourcePathTemplate,
+)
+from .provider_contracts import (
+    ProviderRouteKind as ProviderRouteKind,
+)
+from .provider_contracts import (
     ProviderRouteSpec as ProviderRouteSpec,
+)
+from .provider_contracts import (
+    ProviderRouteTransport as ProviderRouteTransport,
+)
+from .provider_contracts import (
     ProviderSpec as ProviderSpec,
+)
+from .provider_contracts import (
     RouteExecutionPolicy as RouteExecutionPolicy,
-    _default_route_timeout as _default_route_timeout,
+)
+from .provider_contracts import (
     _default_route_acceptance as _default_route_acceptance,
 )
+from .provider_contracts import (
+    _default_route_timeout as _default_route_timeout,
+)
+from .providers._definitions import BUILTIN_PROVIDER_DEFINITIONS
+from .providers._registry import ProviderBundle, provider_bundle
 
 
 def _normalize_catalog_token(value: str | None) -> str:
@@ -39,9 +62,7 @@ def _normalize_hostname(value: str | None) -> str:
     if not normalized:
         return ""
     if "://" in normalized:
-        from urllib.parse import urlparse
-
-        return _normalize_catalog_token(urlparse(normalized).hostname)
+        return _normalize_catalog_token(urllib.parse.urlparse(normalized).hostname)
     if "/" in normalized:
         normalized = normalized.split("/", 1)[0]
     if "@" in normalized:

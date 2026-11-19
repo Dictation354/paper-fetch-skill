@@ -4,12 +4,14 @@
 from __future__ import annotations
 
 import argparse
+import importlib.util
 import json
 import re
 import runpy
 import sys
 import tomllib
 from pathlib import Path
+from types import SimpleNamespace
 from typing import Any
 
 import yaml
@@ -21,6 +23,15 @@ CONTRACT_PATH = REPO_ROOT / "docs" / "macos-adaptation-contract.toml"
 
 def load_contract(path: Path = CONTRACT_PATH) -> dict[str, Any]:
     return tomllib.loads(path.read_text(encoding="utf-8"))
+
+
+def _load_module(path: Path, name: str) -> Any:
+    spec = importlib.util.spec_from_file_location(name, path)
+    if spec is None or spec.loader is None:
+        raise ValueError(f"cannot load module from {path}")
+    module = importlib.util.module_from_spec(spec)
+    spec.loader.exec_module(module)
+    return module
 
 
 def _workflow(name: str, *, repo_root: Path) -> dict[str, Any]:
@@ -46,17 +57,47 @@ def _macos_release_matrix(*, repo_root: Path) -> list[dict[str, str]]:
     ]
 
 
-def _release_owner_facts() -> tuple[list[str], list[str], list[str]]:
-    namespace = runpy.run_path(str(REPO_ROOT / "scripts" / "prepare_release_assets.py"))
-    TARGET_ARTIFACTS = namespace["TARGET_ARTIFACTS"]
-    targets = [target for target, _artifact, _installer in TARGET_ARTIFACTS]
+def _release_owner_facts(
+    *, repo_root: Path = REPO_ROOT
+) -> tuple[list[str], list[str], list[str]]:
+    namespace = runpy.run_path(str(repo_root / "scripts" / "prepare_release_assets.py"))
+    target_artifacts = namespace["TARGET_ARTIFACTS"]
+    targets = [target for target, _artifact, _installer in target_artifacts]
     macos_targets = [target for target in targets if target.startswith("macos-")]
     macos_installers = [
         installer
-        for target, _artifact, installer in TARGET_ARTIFACTS
+        for target, _artifact, installer in target_artifacts
         if target.startswith("macos-")
     ]
     return targets, macos_targets, macos_installers
+
+
+def _validate_darwin_requirements(
+    requirement_strings: list[str],
+    *,
+    source_label: str,
+    expected_camoufox: Requirement,
+    expected_playwright: Requirement,
+    errors: list[str],
+) -> None:
+    requirements = [Requirement(value) for value in requirement_strings]
+    for machine in ("arm64", "aarch64", "x86_64"):
+        env = {"sys_platform": "darwin", "platform_machine": machine}
+        active = {
+            req.name: req
+            for req in requirements
+            if not req.marker or req.marker.evaluate(env)
+        }
+        camoufox = active.get("camoufox")
+        if camoufox is None or camoufox.specifier != expected_camoufox.specifier:
+            errors.append(f"browser.python_package_spec must match {source_label}")
+        playwright = active.get("playwright")
+        if playwright is None or playwright.specifier != expected_playwright.specifier:
+            errors.append(f"browser.playwright_spec must match {source_label}")
+        if {"invisible-playwright", "invisible-core"} & active.keys():
+            errors.append(
+                f"browser.platform_dependencies_exclusive must match {source_label}"
+            )
 
 
 def validate_contract(
@@ -91,7 +132,9 @@ def validate_contract(
     matrix_versions = [item.get("python-version", "") for item in matrix]
     matrix_runners = sorted({item.get("os", "") for item in matrix})
     matrix_targets = [item.get("target", "") for item in matrix]
-    _all_targets, owner_targets, owner_installers = _release_owner_facts()
+    _all_targets, owner_targets, owner_installers = _release_owner_facts(
+        repo_root=repo_root
+    )
     owner_versions = [f"3.{target.rsplit('cp', 1)[1][-2:]}" for target in owner_targets]
     owner_architectures = sorted(
         {target.removeprefix("macos-").rsplit("-cp", 1)[0] for target in owner_targets}
@@ -124,16 +167,17 @@ def validate_contract(
         (repo_root / "installer" / "manifest.json").read_text(encoding="utf-8")
     )
     node = contract.get("node_runtime", {})
-    for key, expected in {
+    expected_node: dict[str, object] = {
         "installer_manifest_key": "macos_node_arm64",
         "executable": "runtime/node/bin/node",
         "license": "runtime/node/LICENSE",
         "architecture_check": True,
         "ad_hoc_signature": True,
         "environment": ["MATHML_TO_LATEX_NODE_BIN", "PLAYWRIGHT_NODEJS_PATH"],
-    }.items():
-        if node.get(key) != expected:
-            errors.append(f"node_runtime.{key} must be {expected!r}")
+    }
+    for key, expected_obj in expected_node.items():
+        if node.get(key) != expected_obj:
+            errors.append(f"node_runtime.{key} must be {expected_obj!r}")
     node_pin = installer.get("embedded_runtimes", {}).get(
         node.get("installer_manifest_key"), {}
     )
@@ -172,6 +216,15 @@ def validate_contract(
         not in native_job_text
     ):
         errors.append("evidence.native.python_version must match verify workflow")
+    release_workflow = native_contract.get("release_matrix_workflow")
+    if (
+        not isinstance(release_workflow, str)
+        or release_workflow != ".github/workflows/offline.yml"
+        or not (repo_root / release_workflow).is_file()
+    ):
+        errors.append(
+            "evidence.native.release_matrix_workflow must point to .github/workflows/offline.yml"
+        )
 
     safety = contract.get("safety", {})
     for key, enabled in safety.items():
@@ -192,108 +245,91 @@ def validate_contract(
         errors.append(f"safety is missing: {sorted(missing_safety)!r}")
 
     codex = contract.get("skills", {}).get("codex", {})
-    for key, expected in {
+    expected_codex: dict[str, object] = {
         "user_directory": "~/.agents/skills/paper-fetch-skill",
         "project_directory": ".agents/skills/paper-fetch-skill",
         "current_skill_path_only": True,
         "check_is_read_only": True,
-    }.items():
-        if codex.get(key) != expected:
-            errors.append(f"skills.codex.{key} must be {expected!r}")
+    }
+    for key, expected_obj in expected_codex.items():
+        if codex.get(key) != expected_obj:
+            errors.append(f"skills.codex.{key} must be {expected_obj!r}")
 
-    codex_config = contract.get("host_config", {}).get("codex", {})
-    for key, expected in {
-        "home_override": "CODEX_HOME",
-        "default_directory": "~/.codex",
-        "legacy_cleanup_active_home": True,
-        "print_destination": True,
-    }.items():
-        if codex_config.get(key) != expected:
-            errors.append(f"host_config.codex.{key} must be {expected!r}")
-
+    policy = _load_module(
+        repo_root / "src" / "paper_fetch" / "browser_runtime_policy.py",
+        "_paper_fetch_browser_runtime_policy",
+    )
     browser = contract.get("browser", {})
-    for key in (
-        "system_chrome_required",
-        "runtime_bundle_built_in",
-        "optional_install_download_requires_consent",
-        "fetch_start_preparation",
-    ):
+    for key in ("system_chrome_required", "runtime_bundle_built_in"):
         if browser.get(key) is not False:
             errors.append(f"browser.{key} must be false")
-    for key in (
-        "core_install_downloads_runtime",
-        "on_demand_preparation",
-        "success_only_update_interval",
-        "installer_prepares_byparr",
-        "installer_prepares_camoufox",
-        "installer_skip_browser_prepare",
-        "installer_preparation_single_pass",
-        "optional_install_failure_preserves_core",
-        "managed_runtime_preparation",
-        "fingerprint_model_github_api_fallback",
-        "fingerprint_model_before_playwright",
-        "batch_prepares_once",
-        "prerelease_includes_stable",
-        "native_bundle_gate",
-        "empty_system_proxy_direct_launch",
-        "cooperative_cancel_owner_thread_cleanup",
-        "request_local_browser_session_owner",
-        "html_snapshot_owner_thread",
-        "supplementary_index_without_body",
-        "publisher_native_persistent_profiles",
-        "profile_exclusive_lock_owner_thread",
-        "auth_native_profile_replay",
-        "ams_verified_auth_required",
-        "auth_coordination_cancellable",
-        "native_profile_only",
-    ):
-        if browser.get(key) is not True:
-            errors.append(f"browser.{key} must be true")
-    for key, expected in (
-        ("default_backend", "byparr"),
-        ("pnas_backend", "byparr"),
-        ("elsevier_browser_routes", "supported"),
-        ("default_channel", "official/prerelease"),
-        ("python_package_spec", "camoufox==0.5.9"),
-        ("byparr_version", "3.1.1"),
-        ("native_engine", "camoufox"),
-        ("update_check_interval_seconds", 86400),
-    ):
-        if browser.get(key) != expected:
-            errors.append(f"browser.{key} must be {expected}")
-    if browser.get("playwright_spec") != ">=1.58,<1.63":
-        errors.append("browser.playwright_spec must be >=1.58,<1.63")
     if browser.get("platform_dependencies_exclusive") is not True:
         errors.append("browser.platform_dependencies_exclusive must be true")
+    expected_backend = policy.selected_backend({}, provider="pnas")
+    if browser.get("default_backend") != expected_backend:
+        errors.append(f"browser.default_backend must be {expected_backend}")
+    original_sys = policy.sys
+    original_platform = policy.platform
+    try:
+        policy.sys = SimpleNamespace(platform="darwin")
+        darwin_engines = set()
+        darwin_supported = True
+        for machine in ("arm64", "aarch64", "x86_64"):
+            policy.platform = SimpleNamespace(machine=lambda m=machine: m)
+            darwin_engines.add(policy.engine_name())
+            darwin_supported = darwin_supported and bool(policy.supported_platform())
+    finally:
+        policy.sys = original_sys
+        policy.platform = original_platform
+    if not darwin_supported or darwin_engines != {browser.get("native_engine")}:
+        errors.append(
+            "browser.native_engine must match browser_runtime_policy on darwin"
+        )
+    if browser.get("python_package_spec") != "camoufox==0.5.9":
+        errors.append("browser.python_package_spec must be camoufox==0.5.9")
+    if browser.get("playwright_spec") != ">=1.58,<1.63":
+        errors.append("browser.playwright_spec must be >=1.58,<1.63")
+    try:
+        expected_camoufox = Requirement(str(browser.get("python_package_spec") or ""))
+        expected_playwright = Requirement(
+            f"playwright{browser.get('playwright_spec') or ''}"
+        )
+    except Exception:
+        expected_camoufox = Requirement("camoufox==0.5.9")
+        expected_playwright = Requirement("playwright>=1.58,<1.63")
+
     extras = project.get("project", {}).get("optional-dependencies", {})
     for extra in ("browser", "full"):
-        for machine in ("arm64", "aarch64", "x86_64"):
-            env = {"sys_platform": "darwin", "platform_machine": machine}
-            requirements = [Requirement(value) for value in extras.get(extra, [])]
-            active = {
-                r.name: r
-                for r in requirements
-                if not r.marker or r.marker.evaluate(env)
-            }
-            camoufox = active.get("camoufox")
-            if camoufox is None or str(camoufox.specifier) != "==0.5.9":
-                errors.append(
-                    f"browser.python_package_spec must match project {extra} extra"
-                )
-            playwright = active.get("playwright")
-            if playwright is None or str(playwright.specifier) != "<1.63,>=1.58":
-                errors.append(
-                    f"browser.playwright_spec must match project {extra} extra"
-                )
-            if {"invisible-playwright", "invisible-core"} & active.keys():
-                errors.append(
-                    f"browser.platform_dependencies_exclusive must match project {extra} extra"
-                )
+        _validate_darwin_requirements(
+            list(extras.get(extra, [])),
+            source_label=f"project {extra} extra",
+            expected_camoufox=expected_camoufox,
+            expected_playwright=expected_playwright,
+            errors=errors,
+        )
+    byparr_manifest = json.loads(
+        Path(policy.BYPARR_MANIFEST_PATH).read_text(encoding="utf-8")
+    )
+    _validate_darwin_requirements(
+        list(byparr_manifest.get("shared_packages", [])),
+        source_label="byparr-manifest.json shared_packages",
+        expected_camoufox=expected_camoufox,
+        expected_playwright=expected_playwright,
+        errors=errors,
+    )
 
     release = contract.get("release", {})
-    if release.get("installer_manifest") != "installer/manifest.json":
+    installer_manifest = release.get("installer_manifest")
+    if (
+        installer_manifest != "installer/manifest.json"
+        or not (repo_root / installer_manifest).is_file()
+    ):
         errors.append("release.installer_manifest must identify the installer owner")
-    if release.get("asset_owner") != "scripts/prepare_release_assets.py":
+    asset_owner = release.get("asset_owner")
+    if (
+        asset_owner != "scripts/prepare_release_assets.py"
+        or not (repo_root / asset_owner).is_file()
+    ):
         errors.append("release.asset_owner must identify the release asset owner")
     if release.get("single_source_revision") is not True:
         errors.append("release.single_source_revision must be true")
@@ -301,21 +337,25 @@ def validate_contract(
         errors.append("release.public_assets_are_installers_only must be true")
     if release.get("build_evidence_is_not_public") is not True:
         errors.append("release.build_evidence_is_not_public must be true")
+
+    update_source = (repo_root / "src" / "paper_fetch" / "update.py").read_text(
+        encoding="utf-8"
+    )
+    repo_match = re.search(r'^REPOSITORY\s*=\s*"([^"]+)"', update_source, re.MULTILINE)
+    expected_repository = (
+        repo_match.group(1) if repo_match else "Dictation354/paper-fetch-skill"
+    )
     update = contract.get("update", {})
-    for key, expected in {
+    expected_update: dict[str, object] = {
         "command": "paper-fetch update",
-        "repository": "Dictation354/paper-fetch-skill",
+        "repository": expected_repository,
         "official_installation_only": True,
         "stable_release_only": True,
         "sha256_before_execute": True,
-        "archive_preflight": True,
-        "reuse_offline_installer_checks": True,
-        "staged_payload_validation": True,
-        "runtime_failure_rollback": True,
-        "validation_before_runtime_commit": True,
-    }.items():
-        if update.get(key) != expected:
-            errors.append(f"update.{key} must be {expected!r}")
+    }
+    for key, expected_obj in expected_update.items():
+        if update.get(key) != expected_obj:
+            errors.append(f"update.{key} must be {expected_obj!r}")
     return errors
 
 

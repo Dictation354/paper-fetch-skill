@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 import hashlib
 import json
 from collections import defaultdict

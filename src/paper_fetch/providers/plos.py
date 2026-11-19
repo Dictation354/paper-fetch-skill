@@ -2,20 +2,15 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
-from dataclasses import asdict
-from pathlib import Path
-from typing import Any
-from collections.abc import Mapping, Sequence
 import re
 import threading
 import urllib.parse
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict
+from pathlib import Path
+from typing import Any
 
 from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
-from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
@@ -27,15 +22,16 @@ from ..extraction.html.assets import (
 )
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.provider_rules import ProviderFrontMatterRules, ProviderHtmlRules
+from ..failure import FailureDiagnostics
 from ..http import (
+    PDF_MIME_TYPE,
     HttpRequestPolicy,
     HttpTransport,
-    PDF_MIME_TYPE,
     RequestFailure,
     redact_url_for_cache,
 )
-from ..http.provider_policy import provider_request_policy
 from ..http.headers import header_value
+from ..http.provider_policy import provider_request_policy
 from ..journal_routes import provider_journal_mapping
 from ..models import (
     AssetProfile,
@@ -49,6 +45,8 @@ from ..provider_catalog import (
     provider_xml_path_templates,
 )
 from ..publisher_identity import normalize_doi
+from ..quality.access_boundary import propagate_paywall
+from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, normalize_text
@@ -59,6 +57,7 @@ from ._article_markdown_jats import (
     assess_jats_body_availability,
     parse_jats_xml,
 )
+from ._definitions import PROVIDER_DEFINITIONS
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -80,8 +79,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["plos"]
 

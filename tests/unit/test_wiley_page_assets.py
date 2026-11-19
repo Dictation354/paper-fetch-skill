@@ -1,5 +1,3 @@
-from tests.support.transport import configure_stream_transport
-from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
 import hashlib
 import json
 from pathlib import Path
@@ -10,12 +8,14 @@ import pytest
 
 from paper_fetch.asset_budget import AssetBudget, AssetBudgetExceeded
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers._wiley_page_assets import WileyPageAssetFetcher, asset_urls
+from paper_fetch.providers.browser_runtime.types import BrowserWarmResult
+from tests.support.transport import configure_stream_transport
 from tests.support.wiley_page_assets import WEBP_1X1, formula, png_bytes
 
 ROOT = "https://onlinelibrary.wiley.com"
@@ -330,6 +330,10 @@ def test_wiley_default_policy_has_no_direct_probe_figure_page_or_refresh(
 
 
 def test_wiley_preview_fallback_remains_degraded_even_for_large_preview(tmp_path):
+    from paper_fetch.extraction.html.assets.state import (
+        AssetBinaryPayload,
+        AssetFetchResponse,
+    )
     from paper_fetch.providers.browser_workflow.asset_download import (
         BrowserAssetDownloadPlan,
         BrowserAssetRecoveryContext,
@@ -343,15 +347,16 @@ def test_wiley_preview_fallback_remains_degraded_even_for_large_preview(tmp_path
 
     def response(url, _asset):
         if url == asset["preview_url"]:
-            return {
-                "body": png_bytes(800, 600),
-                "url": url,
-                "headers": {"content-type": "image/png"},
-                "status_code": 200,
-                "_paper_fetch_recovery_attempts": [
-                    {"stage": "full_size", "status": 403}
-                ],
-            }
+            body = png_bytes(800, 600)
+            return AssetFetchResponse(
+                payload=AssetBinaryPayload(body=body, downloaded_bytes=len(body)),
+                recovery_attempts=[{"stage": "full_size", "status": 403}],
+                diagnostics={
+                    "url": url,
+                    "headers": {"content-type": "image/png"},
+                    "status_code": 200,
+                },
+            )
         return None
 
     fetcher = Mock(side_effect=response)
@@ -415,7 +420,7 @@ def test_browser_only_never_invokes_figure_page_or_deferred_candidates(tmp_path)
         options=AssetDownloadOptions(
             image_document_fetcher=Mock(return_value=None),
             figure_page_fetcher=figure_page,
-            _fallback_candidate_builder=fallback,
+            fallback_candidate_builder=fallback,
             fetch_policy="browser_only",
         ),
     )
@@ -457,8 +462,9 @@ def test_same_url_challenge_then_success_keeps_timeline(monkeypatch):
 
     page.wait_for_timeout.side_effect = finish
     response = fetcher(url, asset)
+    assert response is not None
     assert response["body"] == WEBP_1X1
-    assert [a["reason"] for a in response["_paper_fetch_recovery_attempts"]] == [
+    assert [a["reason"] for a in response.recovery_attempts] == [
         "cloudflare_challenge",
         "recovered",
     ]

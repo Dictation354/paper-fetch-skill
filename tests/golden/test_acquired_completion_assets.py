@@ -1,16 +1,16 @@
 """Captured object/Silverchair images through their provider-owned asset routes."""
 
 from dataclasses import replace
-
-
 from pathlib import Path
-from paper_fetch.providers import elsevier, oxfordacademic
+
+import paper_fetch.providers.elsevier as elsevier
+from paper_fetch.providers import oxfordacademic
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-from tests.support.markdown_links import local_markdown_paths
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import _record, _response
+from tests.support.markdown_links import local_markdown_paths
 
 
 def test_elsevier_original_xml_object_download_and_final_article(tmp_path):

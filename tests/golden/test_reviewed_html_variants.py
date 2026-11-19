@@ -2,13 +2,14 @@
 
 import re
 from urllib.parse import urlsplit
-from bs4 import BeautifulSoup
+
 import pytest
+from bs4 import BeautifulSoup
 
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.support.replay import build_article_from_fixture
-from tests.support.reviewed_publisher_content import _words
 from tests.support.reviewed_html_publisher_content import _table_cell
+from tests.support.reviewed_publisher_content import _words
 from tests.support.variant_content_scenarios import VARIANTS
 
 

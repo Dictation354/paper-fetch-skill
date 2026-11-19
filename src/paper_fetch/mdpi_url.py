@@ -9,7 +9,6 @@ from .journal_routes import provider_journal_mapping
 from .publisher_identity import normalize_doi
 from .utils import normalize_text
 
-
 MDPI_HOSTS = {"mdpi.com", "www.mdpi.com"}
 MDPI_ISSN_JOURNAL_CODES = provider_journal_mapping("mdpi", "issn_journal_codes")
 MDPI_JOURNAL_CODE_ISSNS = {

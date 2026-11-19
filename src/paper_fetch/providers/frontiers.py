@@ -2,21 +2,16 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-
-from dataclasses import asdict, dataclass, replace
 import html
 import json
-from pathlib import PurePosixPath
-from typing import Any
-from collections.abc import Mapping, Sequence
 import re
 import urllib.parse
+from collections.abc import Mapping, Sequence
+from dataclasses import asdict, dataclass, replace
+from pathlib import PurePosixPath
+from typing import Any
 
 from ..config import build_publisher_user_agent, resolve_asset_download_concurrency
-from ..failure import FailureDiagnostics
 from ..extraction.html.assets import (
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
@@ -29,10 +24,11 @@ from ..extraction.html.assets import (
 from ..extraction.html.availability_policy import AvailabilityPolicy
 from ..extraction.html.landing import fetch_landing_html
 from ..extraction.html.provider_rules import ProviderFrontMatterRules, ProviderHtmlRules
+from ..failure import FailureDiagnostics
 from ..http import (
     DEFAULT_FULLTEXT_TIMEOUT_SECONDS,
-    HttpTransport,
     PDF_MIME_TYPE,
+    HttpTransport,
     RequestFailure,
 )
 from ..http.headers import header_value
@@ -46,11 +42,13 @@ from ..provider_catalog import (
     provider_body_text_thresholds,
 )
 from ..publisher_identity import normalize_doi
+from ..quality.access_boundary import propagate_paywall
 from ..reason_codes import NO_RESULT, OK, PDF_FALLBACK
 from ..runtime import RuntimeContext
 from ..tracing import download_event, fulltext_event
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from ._article_markdown_jats import assess_jats_body_availability, parse_jats_xml
+from ._definitions import PROVIDER_DEFINITIONS
 from ._payloads import build_provider_payload
 from ._pdf_common import (
     default_pdf_headers,
@@ -72,7 +70,6 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["frontiers"]
 

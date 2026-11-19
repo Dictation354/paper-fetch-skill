@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 from tests.golden_corpus import (
     golden_corpus_replay_inventory,
     iter_golden_corpus_fixtures,

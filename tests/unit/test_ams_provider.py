@@ -1,11 +1,10 @@
 from __future__ import annotations
-from tests.support.transport import configure_stream_transport
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from functools import cache
+
 import tempfile
 import unittest
+from functools import cache
 from unittest import mock
+
 from paper_fetch.providers import (
     _ams_assets,
     _ams_authors,
@@ -15,23 +14,25 @@ from paper_fetch.providers import (
     browser_workflow,
 )
 from paper_fetch.providers.ams import AmsClient
-from paper_fetch.quality.assets import build_asset_quality_summary
 from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
 )
 from paper_fetch.providers.atypon_browser_workflow.markdown import (
     extract_atypon_browser_workflow_markdown,
 )
+from paper_fetch.quality.assets import build_asset_quality_summary
+from paper_fetch.tracing import trace_event
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._atypon_browser_workflow_provider_support import (
     AtyponBrowserWorkflowProviderTestCase,
-    _payload_route,
     _payload_events,
+    _payload_route,
     _typed_raw_payload,
     fulltext_pdf_bytes,
 )
-
+from tests.support._browser_workflow_deps import install_browser_workflow_deps
+from tests.support.trace import trace_facts
+from tests.support.transport import configure_stream_transport
 
 AMS_DOI = "10.1175/jcli-d-23-0738.1"
 AMS_TITLE = "Human Influence Has Increased the Likelihood of Extreme Autumn Fire Weather in California"

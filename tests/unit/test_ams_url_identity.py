@@ -11,10 +11,10 @@ from paper_fetch.delivery.fetch_cache import FetchCache
 from paper_fetch.delivery.requests import FetchPaperRequest
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.models import FetchEnvelope, SupplementaryResult
+from paper_fetch.providers import supplementary as provider_supplementary
 from paper_fetch.providers.ams import AmsClient
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
-from paper_fetch.providers import supplementary as provider_supplementary
 from paper_fetch.resolve.query import resolve_query
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.workflow import fulltext, supplementary
@@ -23,7 +23,6 @@ from paper_fetch.workflow.types import FetchStrategy, PaperFetchFailure
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.fetch_fixtures import sample_envelope
 from tests.support.publisher_profiles import write_verified_ams_profile
-
 
 DOI = "10.1175/jcli-d-21-0790.1"
 URL = "https://journals.ametsoc.org/view/journals/clim/35/18/JCLI-D-21-0790.1.xml"

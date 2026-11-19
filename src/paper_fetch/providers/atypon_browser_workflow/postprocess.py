@@ -3,17 +3,22 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from collections.abc import Mapping, Sequence
+from typing import Any
+
+from bs4 import Tag
 
 from ...extraction.html.figure_links import (
     inject_inline_figure_links,
+)
+from ...extraction.html.figure_links import (
     rewrite_inline_figure_links as _rewrite_inline_figure_links,
 )
 from ...extraction.html.language import collect_html_abstract_blocks
 from ...extraction.html.section_scan import SectionScanState
-from ...extraction.html.semantics import normalize_heading, node_source_selector
-from ...extraction.html.shared import attr_text, short_text as _short_text
+from ...extraction.html.semantics import node_source_selector, normalize_heading
+from ...extraction.html.shared import attr_text
+from ...extraction.html.shared import short_text as _short_text
 from ...extraction.html.tables import inject_inline_table_blocks
 from ...models import normalize_markdown_text
 from ...utils import normalize_text
@@ -22,7 +27,6 @@ from .._atypon_browser_workflow_profiles import publisher_profile as _publisher_
 from .normalization import _render_non_table_inline_text
 from .profile import (
     HEADING_TAG_PATTERN,
-    clean_markdown,
     _heading_category,
     _is_substantial_prose,
     _looks_like_access_gate_text,
@@ -34,9 +38,8 @@ from .profile import (
     _noise_profile_for_publisher,
     _strip_heading_terminal_punctuation,
     _structural_abstract_nodes,
+    clean_markdown,
 )
-
-from bs4 import Tag
 
 
 def _abstract_section_payloads(container: Tag) -> list[dict[str, Any]]:

@@ -4,20 +4,21 @@ Image-only equations/tables prove source identity, never OCR transcription.
 Old Nature, modern Nature and Springer Classic are separate original templates.
 """
 
-from tests.support.canonical_content import comparable_cell
-import re
 import html
+import re
 from urllib.parse import urljoin
-from tests.support.markdown_presentation import visible_markdown
-from tests.support.test_evidence import evidence_cache as cache
-from bs4 import BeautifulSoup
-import pytest
-from tests.golden_corpus import GoldenCorpusFixture
-from tests.support.replay import build_article_from_fixture
-from tests.golden_criteria import golden_criteria_sample_for_doi
-from tests.support.reviewed_publisher_content import _words
-from tests.support.reviewed_html_publisher_content import _table_cell
 
+import pytest
+from bs4 import BeautifulSoup
+
+from tests.golden_corpus import GoldenCorpusFixture
+from tests.golden_criteria import golden_criteria_sample_for_doi
+from tests.support.canonical_content import comparable_cell
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.replay import build_article_from_fixture
+from tests.support.reviewed_html_publisher_content import _table_cell
+from tests.support.reviewed_publisher_content import _words
+from tests.support.test_evidence import evidence_cache as cache
 
 CASES = [
     (

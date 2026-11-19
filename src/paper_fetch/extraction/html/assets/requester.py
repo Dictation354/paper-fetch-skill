@@ -2,18 +2,18 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable, Mapping
-import http.cookiejar
 import http.client
+import http.cookiejar
 import time
-from typing import Any, cast
 import urllib.error
 import urllib.parse
 import urllib.request
+from collections.abc import Callable, Mapping
+from typing import Any
 
 from ....http import (
-    DEFAULT_SAFE_REMOTE_URL_POLICY,
     DEFAULT_MAX_RESPONSE_BYTES,
+    DEFAULT_SAFE_REMOTE_URL_POLICY,
     RequestCancelledError,
     RequestErrorCategory,
     RequestFailure,
@@ -279,7 +279,6 @@ def build_cookie_seeded_opener(
         urllib.request.HTTPCookieProcessor(cookie_jar),
         _SafeRedirectHandler(policy),
     )
-    cast(Any, opener)._paper_fetch_remote_url_policy = policy
     seed_headers = {
         key: value
         for key, value in dict(headers).items()
@@ -328,7 +327,14 @@ def request_with_opener(
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     cancel_check: Callable[[], bool] | None = None,
 ) -> dict[str, Any]:
-    policy = getattr(opener, "_paper_fetch_remote_url_policy", None)
+    policy = next(
+        (
+            handler._policy
+            for handler in getattr(opener, "handlers", ())
+            if isinstance(handler, _SafeRedirectHandler)
+        ),
+        None,
+    )
     _validated_http_url(
         url,
         label=failure_label,

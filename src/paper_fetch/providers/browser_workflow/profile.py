@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping
 from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
-from collections.abc import Callable, Mapping
 
 from ...provider_catalog import (
     provider_base_domains,
@@ -90,11 +90,6 @@ class ProviderBrowserProfile:
     html_readiness: BrowserHtmlReadiness | None = None
     policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY
 
-    def __getattr__(self, name: str) -> Any:
-        if name in BrowserWorkflowPolicy.__dataclass_fields__:
-            return getattr(self.policy, name)
-        raise AttributeError(name)
-
 
 def make_browser_profile(
     name: str,
@@ -169,3 +164,15 @@ def validate_browser_profile_catalog_sync(
             f"Browser profile {profile.name!r} is out of sync with the provider "
             f"catalog: {', '.join(mismatches)}"
         )
+
+
+__all__ = [
+    "DEFAULT_BROWSER_WORKFLOW_POLICY",
+    "BrowserWorkflowBootstrapResult",
+    "BrowserWorkflowPolicy",
+    "ProviderBrowserProfile",
+    "browser_profile_catalog_mismatches",
+    "make_atypon_browser_profile",
+    "make_browser_profile",
+    "validate_browser_profile_catalog_sync",
+]

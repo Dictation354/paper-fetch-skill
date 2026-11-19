@@ -1,30 +1,30 @@
 """Replay 2026-09-14 response bytes, preserving endpoint and evidence limits."""
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-
-
-from tests.support.acquired_publisher_inputs import _record, _response
 import json
+
 import pymupdf
 import pytest
+
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import RequestFailure
-from paper_fetch.providers import elsevier, frontiers, springer
-from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers._iop_html import extract_supplementary_data_assets
-from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-from paper_fetch.service import build_fetch_envelope
 from paper_fetch.models import RenderOptions
+from paper_fetch.providers import elsevier, frontiers, springer
+from paper_fetch.providers._iop_html import extract_supplementary_data_assets
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.service import build_fetch_envelope
+from paper_fetch.tracing import trace_event
+from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.golden_criteria import golden_criteria_asset
-from tests.support._paper_fetch_support import RecordingTransport, FixtureHtmlTransport
+from tests.support._paper_fetch_support import FixtureHtmlTransport, RecordingTransport
+from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
+from tests.support.trace import trace_facts
 
 
 def test_elsevier_open_access_pdf_api_complete_response_and_article():
@@ -177,7 +177,7 @@ def test_iop_actual_data_challenge_rejects_as_attachment_index():
 
 
 def test_tandf_actual_figure_challenge_reports_failed_asset(tmp_path):
-    from tests.support.tandf_lst_render import source_html, DOI
+    from tests.support.tandf_lst_render import DOI, source_html
 
     record, body = _record(DOI, "acquisition/figure-1-challenge.html")
     url = record["requested_url"]
@@ -235,8 +235,8 @@ def test_frontiers_actual_api_resolves_same_article_supplementary_link():
     )
     fixture = golden_corpus_fixture_for_doi(doi)
     client = frontiers.FrontiersClient(transport, {})
-    from paper_fetch.providers._article_markdown_jats import parse_jats_xml
     from paper_fetch.models import article_from_markdown
+    from paper_fetch.providers._article_markdown_jats import parse_jats_xml
 
     extraction = parse_jats_xml(
         fixture.raw_path.read_bytes(), source_url=fixture.source_url
@@ -271,9 +271,9 @@ def test_frontiers_actual_api_resolves_same_article_supplementary_link():
 
 @pytest.mark.parametrize("page_kind", ["excerpt", "captured"])
 def test_arxiv_same_version_ancillary_discovery_and_article_link_metadata(page_kind):
+    from paper_fetch.models import article_from_markdown
     from paper_fetch.providers._arxiv_assets import discover_arxiv_ancillary_assets
     from paper_fetch.runtime import RuntimeContext
-    from paper_fetch.models import article_from_markdown
     from tests.support._paper_fetch_support import http_response
 
     doi = "10.48550/arxiv.0811.2625v2"

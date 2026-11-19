@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
+import re
+from collections.abc import Mapping
 from difflib import SequenceMatcher
 from functools import partial
-import re
 from typing import Any
-from collections.abc import Mapping
 from urllib.parse import urlparse
 
 from bs4 import BeautifulSoup, Tag
@@ -24,7 +24,6 @@ from ._html_authors import (
     extract_meta_authors,
 )
 from ._html_references import extract_numbered_references_from_html
-
 
 AIP_JSONLD_ARTICLE_TYPES = frozenset({"article", "scholarlyarticle"})
 # SITE_UI_COPY_REGRESSION_MARKER: AIP article chrome selectors owned by provider cleanup policy.

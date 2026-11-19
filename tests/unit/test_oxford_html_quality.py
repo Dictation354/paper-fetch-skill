@@ -1,7 +1,7 @@
 """Small structural cases for Oxford and its shared HTML renderers."""
 
-from bs4 import BeautifulSoup, Comment
 import pytest
+from bs4 import BeautifulSoup, Comment
 
 from paper_fetch.extraction.html.inline import render_html_inline_node
 from paper_fetch.extraction.markdown_render.formulas import (

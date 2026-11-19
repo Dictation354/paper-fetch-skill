@@ -1,7 +1,7 @@
 """P09 minimal corruption tests for independent source-object assertions."""
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from tests.support.object_content import (
     assert_image_occurrences,

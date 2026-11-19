@@ -3,14 +3,14 @@ from __future__ import annotations
 import io
 import json
 import os
-from pathlib import Path
 import stat
+import zipfile
+from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import Mock
-import zipfile
 
-from dotenv import dotenv_values
 import pytest
+from dotenv import dotenv_values
 
 from paper_fetch import offline_setup as wizard
 from paper_fetch import offline_windows_tools as windows
@@ -614,8 +614,8 @@ def test_detected_image_reports_ready_once_with_conversion_evidence(
 
 
 def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, capsys):
-    import warnings
     import sys
+    import warnings
     from types import SimpleNamespace
 
     class LeakWarning(UserWarning):

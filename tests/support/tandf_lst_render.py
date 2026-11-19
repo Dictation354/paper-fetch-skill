@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import re
-from tests.golden_criteria import golden_criteria_asset
 
+from tests.golden_criteria import golden_criteria_asset
 
 DOI = "10.1080/17538947.2022.2137254"
 

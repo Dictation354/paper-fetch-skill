@@ -1,16 +1,17 @@
 from __future__ import annotations
+
 import re
 import tempfile
 import unittest
 import xml.etree.ElementTree as ET
 from pathlib import Path
+
+import paper_fetch.providers.elsevier as elsevier_provider
+from paper_fetch.models import article_from_markdown, article_from_structure
 from paper_fetch.providers import (
     _article_markdown_elsevier_document as elsevier_document,
 )
-from paper_fetch.providers import elsevier as elsevier_provider
-from paper_fetch.models import article_from_structure
 from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
-from paper_fetch.models import article_from_markdown
 
 
 def build_elsevier_markdown(
@@ -110,6 +111,7 @@ def _assert_markdown_table_row(
 class ElsevierMarkdownTests(unittest.TestCase):
     def test_apgeog_xml_preserves_author_abstract_and_textual_highlights(self) -> None:
         from bs4 import BeautifulSoup
+
         from tests.golden_corpus import golden_corpus_fixture_for_doi
         from tests.support.replay import build_article_from_fixture
         from tests.support.reviewed_publisher_content import _words

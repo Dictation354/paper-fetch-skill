@@ -1,24 +1,23 @@
 """Real access evidence, independent of PDF conversion/formatting quality."""
 
-from tests.support.trace import trace_facts
-from tests.support.transport import RecordedStreamTransport
-from paper_fetch.tracing import trace_event
-
-
 import json
 from types import SimpleNamespace
 from urllib.parse import unquote
-from bs4 import BeautifulSoup
+
 import pytest
+from bs4 import BeautifulSoup
+
+from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import elsevier, iop
-from paper_fetch.extraction.html.signals import HtmlExtractionFailure
+from paper_fetch.tracing import trace_event
 from paper_fetch.xml_security import parse_xml
-from tests.golden_criteria import golden_criteria_asset
 from tests.block_fixtures import execute_block_fixture, iter_block_samples
+from tests.golden_criteria import golden_criteria_asset
 from tests.support.acquired_publisher_inputs import _record
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
-
+from tests.support.trace import trace_facts
+from tests.support.transport import RecordedStreamTransport
 
 PREFIX = "acquisition/subscription-2026-09-15/"
 ELSEVIER_DOIS = (

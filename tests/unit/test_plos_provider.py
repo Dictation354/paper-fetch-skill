@@ -1,5 +1,7 @@
 from __future__ import annotations
+
 import pytest
+
 from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.providers.plos import (
     PLOS_JOURNAL_PATHS,
@@ -7,7 +9,6 @@ from paper_fetch.providers.plos import (
     _fetch_plos_redirected_response,
 )
 from tests.support._paper_fetch_support import FixtureHtmlTransport, http_response
-
 
 STRUCTURE_DOI = "10.1371/journal.pone.0263725"
 TABLE_DOI = "10.1371/journal.pone.0304873"

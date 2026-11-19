@@ -1,12 +1,10 @@
 """Replay Oxford HTML through the production provider/model boundary."""
 
-from paper_fetch.tracing import trace_event
-
-
 from paper_fetch.http import HttpTransport
 from paper_fetch.providers import _oxfordacademic_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
+from paper_fetch.tracing import trace_event
 
 
 def build_oxford_html_payload(

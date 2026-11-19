@@ -2,17 +2,17 @@
 
 import builtins
 import json
-from pathlib import Path
 import tomllib
+from pathlib import Path
 from types import SimpleNamespace
 
-from packaging.requirements import Requirement
 import pytest
+from packaging.requirements import Requirement
 
 from paper_fetch import browser_runtime_policy as policy
-from paper_fetch.providers.browser_runtime import byparr_engine, preparation
-from paper_fetch.providers.browser_runtime.backends import byparr, camoufox
 from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.providers.browser_runtime import byparr_engine, preparation
+from paper_fetch.providers.browser_runtime.backends import byparr
 
 _REAL_DETAILS = byparr._dependency_details
 ROOT = Path(__file__).resolve().parents[2]
@@ -84,7 +84,7 @@ def test_invisible_status_and_readiness_never_touch_camoufox(
     monkeypatch.setattr(byparr_engine, "engine_name", lambda: "invisible")
     monkeypatch.setattr(byparr, "_dependency_details", _REAL_DETAILS)
     monkeypatch.setattr(
-        camoufox, "_dependency_details", lambda: pytest.fail("Camoufox probe")
+        byparr, "_camoufox_dependency_details", lambda: pytest.fail("Camoufox probe")
     )
     versions = {
         "playwright": "1.65.2",

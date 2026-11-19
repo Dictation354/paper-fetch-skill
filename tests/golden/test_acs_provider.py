@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 from unittest import mock
 from urllib.parse import urlparse
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.providers import _acs_html
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
@@ -13,7 +16,6 @@ from paper_fetch.providers.browser_workflow.assets import (
     _discover_browser_workflow_figure_original_url,
 )
 from tests.golden_criteria import golden_criteria_asset
-
 
 ACS_SAMPLE_DOI = "10.1021/acsomega.4c03987"
 ACS_SAMPLE_LANDING = f"https://pubs.acs.org/doi/{ACS_SAMPLE_DOI}"

@@ -1,19 +1,21 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
+
 import json
-from pathlib import Path
 import tempfile
 import unittest
+from dataclasses import replace
+from pathlib import Path
 from unittest import mock
+
 from paper_fetch.extraction.html import assets as html_assets
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
-from paper_fetch.providers import _ieee_html, _ieee_metadata, ieee as ieee_provider
+from paper_fetch.providers import _ieee_html, _ieee_metadata
+from paper_fetch.providers import ieee as ieee_provider
 from paper_fetch.providers._pdf_common import PdfFetchFailure, PdfFetchResult
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.ieee import IeeeClient
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.tracing import merge_trace
+from paper_fetch.tracing import merge_trace, trace_event
 from paper_fetch.workflow.types import FetchStrategy
 from tests.golden_criteria import (
     golden_criteria_asset,
@@ -22,6 +24,7 @@ from tests.golden_criteria import (
 )
 from tests.paths import REPO_ROOT
 from tests.support._paper_fetch_support import RecordingTransport
+
 # ruff: noqa: F401
 
 
@@ -297,9 +300,7 @@ def _real_ieee_fixture_article(
     article = client.to_article_model(
         {"doi": doi}, raw_payload, downloaded_assets=downloaded_assets
     )
-    markdown = article.to_ai_markdown(
-        asset_profile="body", include_figures="inline", max_tokens="full_text"
-    )
+    markdown = article.to_ai_markdown(asset_profile="body", max_tokens="full_text")
     return extraction, article, markdown
 
 

@@ -5,13 +5,14 @@ Original sources, assets, acquisition facts and historical api-fetch files remai
 unchanged. Existing final HTML articles retain their asset request and options.
 """
 
-from concurrent.futures import ProcessPoolExecutor
-from paper_fetch.tracing import fulltext_event
 import hashlib
 import json
 import os
-from pathlib import Path
 import tempfile
+from concurrent.futures import ProcessPoolExecutor
+from pathlib import Path
+
+from paper_fetch.tracing import fulltext_event
 
 ROOT = Path(__file__).resolve().parents[1]
 CORPUS = ROOT / "tests/fixtures/golden_criteria"
@@ -22,14 +23,15 @@ def write_json(path, value):
 
 
 def refresh_xml(sample):
-    from paper_fetch.formula.convert import formula_runtime_env
-    from tests.support.formula_runtime import captured_formula_environment
     from tests.golden_corpus import (
         build_article_from_fixture,
-        golden_corpus_fixture_for_doi,
         expected_summary_from_article,
+        golden_corpus_fixture_for_doi,
     )
+    from tests.support.formula_runtime import captured_formula_environment
     from tests.support.replay import persisted_fixture_markdown
+
+    from paper_fetch.formula.convert import formula_runtime_env
 
     fixture = golden_corpus_fixture_for_doi(sample["doi"])
     with formula_runtime_env(captured_formula_environment()):
@@ -45,14 +47,15 @@ def refresh_xml(sample):
 
 
 def refresh_html(path):
-    from paper_fetch.formula.convert import formula_runtime_env
     from tests.support.formula_runtime import captured_formula_environment
+
+    from paper_fetch.formula.convert import formula_runtime_env
+    from paper_fetch.models import FetchEnvelope
+    from paper_fetch.models.schema import coerce_acquisition_provenance
     from paper_fetch.providers import _elsevier_html
     from paper_fetch.providers._payloads import build_provider_payload
     from paper_fetch.providers.elsevier import ElsevierClient
-    from paper_fetch.models import FetchEnvelope
     from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
-    from paper_fetch.models.schema import coerce_acquisition_provenance
 
     path = Path(path)
     source = path.with_name("original.html")

@@ -1,12 +1,12 @@
 """Serial acceptance through the production CLI, requiring an observed challenge."""
 
 import json
-from contextlib import suppress
 import os
-from pathlib import Path
 import subprocess
 import sys
 import time
+from contextlib import suppress
+from pathlib import Path
 
 import pytest
 
@@ -52,8 +52,8 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
         "PAPER_FETCH_BROWSER_TIMEOUT_MS": "180000",
     }
     from tests._environment import (
-        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
         PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
+        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     )
 
     for key in ("PAPER_FETCH_BROWSER_PROFILE_DIR", "PAPER_FETCH_BROWSER_USER_DATA_DIR"):
@@ -121,11 +121,11 @@ def test_byparr_navigation_via_cli(tmp_path, provider, doi):
     events = [
         event.get("message", "") for node in navigations for event in node["events"]
     ]
-    from tests.support.live_acceptance import (
-        fetch_browser_diagnostics,
-        _asset_performance_summary,
-    )
     from paper_fetch.models.codec import article_from_payload
+    from tests.support.live_acceptance import (
+        _asset_performance_summary,
+        fetch_browser_diagnostics,
+    )
 
     articles = [
         payload

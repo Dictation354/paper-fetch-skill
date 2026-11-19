@@ -1,14 +1,14 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import json
+from dataclasses import asdict
 from pathlib import Path
 
 import pytest
 
+from paper_fetch import targeted_assets as assets
 from paper_fetch.providers.base import ProviderContent
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch import targeted_assets as assets
 from tests.support.asset_delivery_scenarios import (
     HTML,
     SOURCE,
@@ -142,23 +142,37 @@ def test_archive_survives_handle_cleanup_and_overwrite_is_explicit(tmp_path):
     assert replaced["results"][0]["path"] == str(path)
 
 
-def test_formula_image_summary_uses_final_markdown_references():
-    state = asset_state()
-    envelope = sample_envelope(modes={"markdown"})
-    envelope.__dict__["_asset_context"] = state
-    envelope.markdown = "Text ![Formula](https://example.test/math-1.gif)"
-    assert assets.image_delivery(envelope)["formula_images"] == 1
-    assert assets.image_delivery(envelope)["discovery_complete"] is True
-    envelope.markdown += " ![Formula](https://example.test/unknown.gif)"
-    assert assets.image_delivery(envelope)["discovery_complete"] is False
-    assert assets.image_delivery(envelope)["returned_images"] == 0
+def test_context_from_manifest_reads_acceptance_identity_doi(tmp_path):
+    from paper_fetch.delivery.receipts import save_reading_artifacts
+    from paper_fetch.manifest import build_manifest_record
+    from paper_fetch.manifest_writer import write_manifest_record
+
+    envelope = sample_envelope(modes={"article", "markdown"}, doi="10.1000/example")
+    envelope.__dict__["_asset_context"] = asset_state()
+    delivery_dir = tmp_path / "delivery"
+    artifacts = save_reading_artifacts(delivery_dir, envelope=envelope)
+    record = build_manifest_record(
+        tool_version="8.0.0",
+        index=1,
+        attempt=1,
+        query="10.1000/example",
+        request_parameters={},
+        asset_profile="none",
+        envelope=envelope,
+        output_artifacts=artifacts,
+    )
+    manifest_path = write_manifest_record(delivery_dir / "manifest.json", record)
+    restored = assets.context_from_manifest(manifest_path)
+    assert restored.doi == "10.1000/example"
+    assert restored.source_url == SOURCE
+    assert len(restored.assets) == 3
 
 
 def test_default_none_captures_index_without_download(monkeypatch):
     from paper_fetch.providers._result import assemble_provider_result
-    from paper_fetch.providers.base import ProviderClient
     from paper_fetch.providers.base import (
         PreparedFetchResultPayload,
+        ProviderClient,
         RawFulltextPayload,
     )
     from tests.support.fetch_fixtures import sample_article
@@ -212,6 +226,7 @@ def test_default_none_captures_index_without_download(monkeypatch):
 
 def test_source_recovery_uses_serializable_seed_without_public_credentials(monkeypatch):
     from types import SimpleNamespace
+
     from paper_fetch.providers import browser_runtime
 
     class Blocked(ImageTransport):

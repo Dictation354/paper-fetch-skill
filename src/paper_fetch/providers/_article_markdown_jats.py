@@ -2,17 +2,17 @@
 
 from __future__ import annotations
 
-from ..publication_dates import PublicationDate, publication_date, citation_date
-
+import re
+import xml.etree.ElementTree as ET
+from collections.abc import Mapping
+from copy import deepcopy
 from dataclasses import dataclass, field
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping
-import re
-import xml.etree.ElementTree as ET
 
+from ..formula.validation import capture_formula_diagnostics, formula_document
 from ..models import SemanticLosses
-from ..formula.validation import formula_document, capture_formula_diagnostics
+from ..publication_dates import PublicationDate, citation_date, publication_date
 from ..publisher_identity import extract_doi, normalize_doi
 from ..reason_codes import (
     STRUCTURED_ARTICLE_NOT_FULLTEXT,
@@ -21,6 +21,7 @@ from ..reason_codes import (
 from ..utils import dedupe_authors, normalize_text
 from ..xml_security import XmlParseFailure, parse_xml
 from ._article_markdown_common import (
+    _normalize_xml_character_data,
     child_text,
     collect_conversion_notes,
     first_child,
@@ -28,9 +29,8 @@ from ._article_markdown_common import (
     iter_children,
     iter_descendants,
     join_xml_inline_parts,
-    _normalize_xml_character_data,
-    normalize_lines,
     normalize_inline_markup_text,
+    normalize_lines,
     render_figure_block,
     render_inline_text,
     render_table_block,
@@ -310,8 +310,6 @@ def _render_inline_child_without_tail(
     source_url: str = "",
     formula_renders: list[FormulaRenderResult] | None = None,
 ) -> str:
-    from copy import deepcopy
-
     wrapper = ET.Element("p")
     clone = deepcopy(child)
     clone.tail = None

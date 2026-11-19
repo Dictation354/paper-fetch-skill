@@ -2,36 +2,36 @@
 
 from __future__ import annotations
 
-from ..publication_dates import publication_date
-
-from ._definitions import PROVIDER_DEFINITIONS
-
-from ..quality.access_boundary import propagate_paywall
-from ..failure import FailureDiagnostics
-
-from ..quality.access_boundary import raise_for_api_entitlement, raise_for_paywall
-
-from dataclasses import replace
 import mimetypes
 import urllib.parse
 import uuid
 import xml.etree.ElementTree as ET
+from collections.abc import Mapping, Sequence
+from dataclasses import replace
 from pathlib import Path
 from typing import Any
-from collections.abc import Mapping, Sequence
 
 from ..config import build_user_agent, resolve_asset_download_concurrency
+from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
+from ..extraction.html.assets import (
+    FIGURE_KIND,
+    SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
+    download_assets,
+)
 from ..extraction.html.availability_policy import AvailabilityPolicy
+from ..extraction.html.provider_rules import ProviderHtmlRules
+from ..extraction.html.signals import ASSET_BLOCKING_REASON_TOKENS
+from ..failure import FailureDiagnostics
 from ..http import (
+    PDF_MIME_TYPE,
     HttpRequestPolicy,
     HttpTransport,
-    PDF_MIME_TYPE,
     RequestFailure,
     decode_json_object_response,
     is_xml_content_type,
     provider_request_policy,
 )
-from ..elsevier_identifiers import extract_elsevier_pii_from_url, normalize_elsevier_pii
 from ..http.headers import header_value
 from ..metadata.types import ProviderMetadata
 from ..models import (
@@ -41,7 +41,29 @@ from ..models import (
     metadata_only_article,
 )
 from ..pdf_limits import pdf_max_bytes
+from ..publication_dates import publication_date
 from ..publisher_identity import extract_doi, normalize_doi
+from ..quality.access_boundary import (
+    propagate_paywall,
+    raise_for_api_entitlement,
+    raise_for_paywall,
+)
+from ..quality.html_availability import (
+    assess_plain_text_fulltext_availability,
+    assess_structured_article_fulltext_availability,
+)
+from ..quality.html_signals import ELSEVIER_AVAILABILITY_OVERRIDES
+from ..reason_codes import (
+    ERROR,
+    IDENTITY_MISMATCH,
+    NO_ACCESS,
+    NO_RESULT,
+    NOT_CONFIGURED,
+    NOT_SUPPORTED,
+    OK,
+    PDF_FALLBACK,
+    RATE_LIMITED,
+)
 from ..runtime import RuntimeContext
 from ..tracing import download_event, fulltext_event
 from ..utils import (
@@ -54,6 +76,7 @@ from ..utils import (
     strip_html_tags,
 )
 from ..xml_security import XmlParseFailure, parse_xml
+from . import _elsevier_html, browser_workflow
 from ._article_markdown_elsevier_document import build_article_structure
 from ._article_markdown_xml import xml_local_name
 from ._asset_retry import (
@@ -62,67 +85,40 @@ from ._asset_retry import (
     merge_asset_failures,
     merge_asset_retry_results,
 )
-from ._elsevier_xml_rules import (
-    classify_elsevier_asset_kind,
-    infer_elsevier_asset_group_key,
-)
+from ._definitions import PROVIDER_DEFINITIONS
+from ._elsevier_navigation import finalize_markdown as _finalize_elsevier_markdown
 from ._elsevier_objects import (
     elsevier_asset_priority,
     extract_elsevier_object_references,
 )
+from ._elsevier_xml_rules import (
+    classify_elsevier_asset_kind,
+    infer_elsevier_asset_group_key,
+)
+from ._payloads import build_provider_payload
 from ._pdf_common import (
     PdfFetchFailure,
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
-    pdf_fetch_result_warnings,
     pdf_fetch_result_from_response,
+    pdf_fetch_result_warnings,
 )
-from ._payloads import build_provider_payload
-from ._elsevier_navigation import finalize_markdown as _finalize_elsevier_markdown
 from ._registry import (
     BrowserAssetPolicy,
     BrowserPagePolicy,
     ProviderBundle,
     ProviderRenderPolicy,
 )
-from . import browser_workflow, _elsevier_html
-from .browser_runtime import BrowserHtmlReadiness, BrowserRuntimeFailure
-from ._pdf_fallback import PdfFallbackFailure
-from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
 from ._retry_categories import (
     DEFAULT_RETRYABLE_ASSET_ERROR_CATEGORIES,
     NETWORK_RETRYABLE_REASON_TOKENS,
 )
 from ._waterfall import (
-    ProviderWaterfallStep,
     ProviderWaterfallState,
+    ProviderWaterfallStep,
     run_provider_waterfall,
 )
-from ..reason_codes import (
-    ERROR,
-    IDENTITY_MISMATCH,
-    NO_ACCESS,
-    NO_RESULT,
-    NOT_CONFIGURED,
-    NOT_SUPPORTED,
-    OK,
-    PDF_FALLBACK,
-    RATE_LIMITED,
-)
-from ..quality.html_availability import (
-    assess_plain_text_fulltext_availability,
-    assess_structured_article_fulltext_availability,
-)
-from ..quality.html_signals import ELSEVIER_AVAILABILITY_OVERRIDES
-from ..extraction.html.provider_rules import ProviderHtmlRules
-from ..extraction.html.assets import (
-    FIGURE_KIND,
-    SUPPLEMENTARY_KIND,
-    AssetDownloadOptions,
-    download_assets,
-)
-from ..extraction.html.signals import ASSET_BLOCKING_REASON_TOKENS
 from .base import (
     ProviderArtifacts,
     ProviderClient,
@@ -133,7 +129,8 @@ from .base import (
     map_request_failure,
     summarize_capability_status,
 )
-
+from .browser_runtime import BrowserHtmlReadiness, BrowserRuntimeFailure
+from .browser_workflow.fetchers import BrowserDocumentFetcherOptions
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["elsevier"]
 
@@ -1316,7 +1313,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
                     exc.message,
                     diagnostics=FailureDiagnostics(details=exc.details),
                 ) from exc
-            except PdfFallbackFailure as exc:
+            except PdfFetchFailure as exc:
                 propagate_paywall(exc)
                 raise ProviderFailure(
                     IDENTITY_MISMATCH if exc.kind == IDENTITY_MISMATCH else NO_RESULT,

@@ -1,8 +1,9 @@
 from __future__ import annotations
-from pathlib import Path
+
 import stat
 import subprocess
 import textwrap
+from pathlib import Path
 
 
 def write_executable(path: Path, content: str) -> None:

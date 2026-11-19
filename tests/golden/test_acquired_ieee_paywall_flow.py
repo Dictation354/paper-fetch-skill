@@ -4,22 +4,24 @@ Successful REST bytes are live captures. The failure case explicitly injects
 REST/PDF transport failures; the browser's real captured DOM lacks article body.
 """
 
-from tests.support.acquired_ieee_paywall_flow import DOI, URL, _captured_landing
 from contextlib import nullcontext
 from types import SimpleNamespace
 from unittest import mock
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import (
     _ieee_browser_html,
-    _playwright_browser,
     browser_runtime,
+    ieee,
 )
 from paper_fetch.providers._pdf_common import PdfFetchFailure
+from paper_fetch.providers.browser_runtime import html_fetcher
 from paper_fetch.providers.ieee import IeeeClient
-from paper_fetch.providers import ieee
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.acquired_ieee_paywall_flow import DOI, URL, _captured_landing
 from tests.support.acquired_publisher_inputs import _record, _response
 from tests.support.camoufox_backend import _Context
 from tests.support.ieee_provider_routes import (
@@ -27,7 +29,6 @@ from tests.support.ieee_provider_routes import (
     _FakeIeeeBrowserPage,
 )
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
-
 
 REST = "https://ieeexplore.ieee.org/rest/document/10612240/?logAccess=true"
 PREFIX = "acquisition/ieee-flow-2026-09-15/"
@@ -56,10 +57,10 @@ def _setup_landing_browser(monkeypatch, tmp_path, raw, metadata):
     monkeypatch.setattr(
         browser_runtime,
         "fetch_html_with_browser",
-        _playwright_browser.fetch_html_with_playwright,
+        html_fetcher.fetch_browser_html,
     )
     monkeypatch.setattr(
-        _playwright_browser, "open_browser_context", lambda *a, **k: (None, browser)
+        html_fetcher, "open_browser_context", lambda *a, **k: (None, browser)
     )
     return browser
 

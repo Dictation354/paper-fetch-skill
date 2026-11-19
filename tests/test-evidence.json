@@ -330,13 +330,6 @@
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
-    "tests/unit/test_browser_image_payload.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "browser image payload",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
     "tests/unit/test_browser_preflight.py": {
       "default": {
         "kind": "mechanism",
@@ -4730,13 +4723,6 @@
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
-    "tests/unit/test_delivery_batch_resolve_payloads.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "delivery batch resolve payloads",
-        "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
-      }
-    },
     "tests/unit/test_delivery_cache_compact.py": {
       "default": {
         "kind": "mechanism",
@@ -4785,18 +4771,18 @@
         "reason": "最小片段和边界 mock 验证当前迁移行为。"
       }
     },
-    "tests/unit/test_legacy_cleanup.py": {
-      "default": {
-        "kind": "mechanism",
-        "scope": "CLI file receipts, profile admission and legacy migration contracts",
-        "reason": "最小片段和边界 mock 验证当前迁移行为。"
-      }
-    },
     "tests/integration/test_cli_receipts.py": {
       "default": {
         "kind": "mechanism",
         "scope": "Real CLI subprocess persistence and cancellation with synthetic acquisition",
         "reason": "验证文件回执和逐项交付，不证明出版社抓取质量。"
+      }
+    },
+    "tests/integration/test_nature_reading_delivery.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Nature URL and DOI batch deduplication, trace timing, and reading artifacts",
+        "reason": "固定 HTTP 响应隔离外部网络并验证 CLI 交付行为。"
       }
     },
     "tests/unit/test_ams_auth_gate.py": {

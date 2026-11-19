@@ -2,9 +2,9 @@
 
 from __future__ import annotations
 
+import re
 from copy import deepcopy
 from dataclasses import asdict
-import re
 from typing import Any
 from urllib.parse import urldefrag, urljoin, urlsplit
 
@@ -15,7 +15,9 @@ from ..extraction.html._metadata import parse_html_metadata
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import collect_html_section_hints
 from ..extraction.html.signals import HtmlExtractionFailure
-from ..formula.validation import formula_document, capture_formula_diagnostics
+from ..extraction.html.tables import render_table_inline_text
+from ..formula.validation import capture_formula_diagnostics, formula_document
+from ..markdown.images import render_markdown_image
 from ..models import SemanticLosses
 from ..publisher_identity import normalize_doi
 from ..quality.access_boundary import raise_for_paywall
@@ -24,19 +26,17 @@ from ..quality.html_availability import (
     availability_failure_message,
 )
 from ..utils import dedupe_authors, normalize_text
-from ._html_references import _reference_doi, _reference_year
-from ._reference_doi import reference_doi
+from ._elsevier_navigation import anchor_id, anchor_markup, finalize_markdown
 from ._elsevier_xml_rules import (
     combine_elsevier_section_title,
     format_elsevier_reference,
 )
+from ._html_references import _reference_doi, _reference_year
 from ._html_section_markdown import (
-    render_container_markdown,
     render_clean_text_from_html,
+    render_container_markdown,
 )
-from ..extraction.html.tables import render_table_inline_text
-from ..markdown.images import render_markdown_image
-from ._elsevier_navigation import anchor_id, anchor_markup, finalize_markdown
+from ._reference_doi import reference_doi
 
 BODY_SELECTOR = "#body"
 SUPPLEMENT_SELECTOR = ".Appendices .e-component, .appendices .e-component, .e-component, .supplementary-material, #supplementary-material"

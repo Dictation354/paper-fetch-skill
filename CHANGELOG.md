@@ -8,6 +8,19 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+### CLI, contracts and caching
+
+- Split `paper_fetch.cli` into a structured subpackage backed by typed command models and explicit output plans across `fetch`, `lookup`, `resolve`, `check`, `fetch-assets`, `auth`, `browser-preflight`, `doctor` and `update`.
+- Add `paper-fetch lookup --doi DOI --output-dir DIR` to recover verified, untruncated full-text receipts from retained results, and write 1-based Markdown heading ranges to `sections.json` (`section_index_path` on `paper-fetch/receipt`). Keep `asset_profile=none` by default for paper presets so only `--target supplementary` downloads attachments unless requested.
+- Advance `FetchAcceptanceReport` and `ManifestRecord` to schema v3 (`manifest-record-v3.schema.json`). Drop `minimum_reader_schema_version`, `fetch.completed`, nested table/formula facets, flat `body_*` counters, `total`, and `remote_links_preserved` from acceptance reports. Store body counts under `asset.body_assets` and semantic losses under `content.semantic_losses`. CLI receipt v1 retains its existing identity and asset fields. `fetch-assets --manifest` accepts v2 and v3 manifests. Remove the ten mirrored top-level fields (`query`, `identity`, `doi`, `source`, `acquisition`, `fallback_codes`, `warning_codes`, `failure_codes`, `semantic_losses`, `asset_summary`) from `ManifestRecord` in favor of `record.request` and `record.acceptance`, while preserving top-level convenience fields on `paper-fetch/receipt`.
+- Advance `FetchCache` sidecars to v8 (`<doi>.<request_fingerprint>.fetch-envelope.json`). Remove `.paper-fetch-cache.json` / `.paper-fetch-mcp-cache.json` index files, cache-inspection helpers and un-fingerprinted dual writes; resolve exact fingerprint hits first and scan same-DOI superset variants through a lightweight header gate before deserialization and scoped asset checks.
+
+### Browser runtime, transport and installation
+
+- Consolidate `_playwright_browser` and `runtime_browser` into `providers.browser_runtime` (`html_fetcher`, `readiness`, `telemetry` and `sessions`) and flatten browser backends to `ByparrBackend`. Remove unused backend selection layers, legacy `RuntimeContext` `_camoufox_*` forwarding properties and the `PAPER_FETCH_WILEY_PROFILE_DIR` environment alias.
+- Modularize HTTP rate gating (`RequestRateGate` for per-host concurrency, `Retry-After` cooldowns and QPS pacing) and two-stage HTML asset downloads (`download`, `state`, `streaming`, `recovery`, `conversion`). Record `duration_ms` trace timings for resolution, Crossref metadata and Springer HTML stages.
+- Remove `legacy_cleanup` and installer cleanup of pre-7.6.3 MCP registrations and Codex config blocks across Unix, macOS and Windows scripts. Trim `docs/macos-adaptation-contract.toml` to core support, safety and native evidence invariants, enable Ruff `I` (isort) import sorting, and align the Skill and architecture docs with the v3/v8 contracts.
+
 ## 7.7.2 - 2026-11-18
 
 - Add `paper-fetch fetch-assets --compact` for a single-line, versioned receipt with per-image results and absolute file paths. Save captions and download diagnostics in a separate redacted details file. The default invocation continues to return detailed JSON.

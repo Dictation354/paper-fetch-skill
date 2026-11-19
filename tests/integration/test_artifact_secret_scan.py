@@ -1,11 +1,12 @@
 from __future__ import annotations
+
 import os
-from pathlib import Path
 import subprocess
 import sys
+from pathlib import Path
 from urllib.parse import quote
-from scripts.scan_artifacts_for_secrets import scan_artifacts
 
+from scripts.scan_artifacts_for_secrets import scan_artifacts
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 

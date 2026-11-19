@@ -8,16 +8,16 @@ This helper neither discovers new URLs nor manufactures successful responses.
 from pathlib import Path
 
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import (
     _response,
-    captured_body,
     capture_records,
     capture_url_identity,
+    captured_body,
 )
 
 

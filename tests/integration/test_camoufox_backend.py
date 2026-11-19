@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 import json
 from types import SimpleNamespace
 from unittest import mock
+
 import pytest
 
 pytest.importorskip("camoufox")
@@ -13,6 +15,7 @@ def managed_camoufox(monkeypatch, tmp_path):
     """Exercise upstream version selection/install against an isolated fake archive."""
     monkeypatch.setattr(preparation, "prepare_camoufox_fingerprint_model", lambda: None)
     import zipfile
+
     from camoufox import multiversion, pkgman
 
     root = tmp_path / "managed"
@@ -161,10 +164,10 @@ _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 def test_automatic_preparation_entrypoints_share_update_interval(
     managed_camoufox, monkeypatch, tmp_path, first
 ):
-    from paper_fetch.providers.browser_runtime import byparr_engine, byparr_manager
     from paper_fetch import auth, browser_preflight
     from paper_fetch.providers.base import ProviderFailure
-    from paper_fetch.providers.browser_runtime.camoufox_manager import (
+    from paper_fetch.providers.browser_runtime import byparr_engine, byparr_manager
+    from paper_fetch.providers.browser_runtime.preparation import (
         _launch_executable_path,
     )
 

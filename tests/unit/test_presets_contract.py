@@ -2,14 +2,14 @@ from paper_fetch import cli
 
 
 def test_presets_fill_only_omitted_cli_options():
-    parser = cli.build_parser()
     for preset in ("temporary_read", "cacheable_read", "archive"):
         raw = ["fetch", "--query", "paper", "--preset", preset]
-        args = parser.parse_args(raw)
-        cli._apply_cli_preset(args, raw)
-        assert args.asset_profile == "none" and args.artifact_mode == "none"
-        assert args.max_tokens == "full_text" and args.include_refs == "all"
-        assert args.prefer_cache == (preset != "temporary_read")
+        command = cli.parse_cli_command(raw)
+        assert isinstance(command, cli.SingleFetchCommand)
+        options = command.options
+        assert options.asset_profile == "none" and options.artifact_mode == "none"
+        assert options.max_tokens == "full_text" and options.include_refs == "all"
+        assert options.prefer_cache == (preset != "temporary_read")
     raw = [
         "fetch",
         "--query",
@@ -21,9 +21,10 @@ def test_presets_fill_only_omitted_cli_options():
         "--max-tokens",
         "42",
     ]
-    args = parser.parse_args(raw)
-    cli._apply_cli_preset(args, raw)
-    assert (args.asset_profile, args.artifact_mode, args.max_tokens) == (
+    command = cli.parse_cli_command(raw)
+    assert isinstance(command, cli.SingleFetchCommand)
+    options = command.options
+    assert (options.asset_profile, options.artifact_mode, options.max_tokens) == (
         "body",
         "all",
         42,
@@ -31,7 +32,6 @@ def test_presets_fill_only_omitted_cli_options():
 
 
 def test_supplementary_presets_default_to_downloads_and_preserve_explicit_options():
-    parser = cli.build_parser()
     for preset in ("temporary_read", "cacheable_read", "archive"):
         for flags, expected in [
             ([], ("all", "markdown-assets")),
@@ -47,7 +47,8 @@ def test_supplementary_presets_default_to_downloads_and_preserve_explicit_option
                 preset,
                 *flags,
             ]
-            args = parser.parse_args(raw)
-            cli._apply_cli_preset(args, raw)
-            assert (args.asset_profile, args.artifact_mode) == expected
-            assert args.prefer_cache == (preset != "temporary_read")
+            command = cli.parse_cli_command(raw)
+            assert isinstance(command, cli.SingleFetchCommand)
+            options = command.options
+            assert (options.asset_profile, options.artifact_mode) == expected
+            assert options.prefer_cache == (preset != "temporary_read")

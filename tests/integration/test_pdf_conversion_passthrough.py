@@ -5,6 +5,7 @@ from unittest import mock
 
 import pymupdf
 import pytest
+
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import _pdf_common
 from tests.support._paper_fetch_support import fulltext_pdf_bytes

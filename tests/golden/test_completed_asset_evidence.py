@@ -6,20 +6,20 @@ from types import SimpleNamespace
 from urllib.parse import parse_qs, urlsplit
 from xml.etree import ElementTree as ET
 
-from bs4 import BeautifulSoup
 import pymupdf
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.models.markdown import iter_markdown_images
-from tests.support.arxiv_graphic_replay import GRAPHIC_IDS
 from tests.golden_criteria import golden_criteria_asset
-from tests.support.canonical_content import source_prose_blocks
-from tests.support.object_content import assert_object_position
+from tests.support.arxiv_graphic_replay import GRAPHIC_IDS
 from tests.support.asset_evidence_replay import (
     replay_arxiv_captured_graphics,
     replay_completed_signed_paper,
     replay_plos_captured_inline_formulas,
 )
+from tests.support.canonical_content import source_prose_blocks
+from tests.support.object_content import assert_object_position
 
 ARXIV_BODY_COUNTS = {
     "1406.2661v1": 10,
@@ -42,6 +42,17 @@ SIGNED_COUNTS = {
     "10.1098/rspb.2020.0097": 2,
     "10.1098/rsta.2019.0558": 2,
 }
+
+
+def _archivable_body_discovered(article) -> int:
+    return sum(
+        item.kind in {"figure", "formula", "table"}
+        and item.status != "not_requested"
+        and not (
+            not item.path and not item.download_tier and item.status == "available"
+        )
+        for item in article.quality.asset_summary.diagnostics
+    )
 
 
 def assert_actual_local_images(markdown, downloaded):
@@ -73,8 +84,8 @@ def test_p18_all_target_vectors_are_local_without_hiding_other_source_images(
             for asset in downloaded
         } == {r["sha256"] for r in records}
     assert article.quality.has_fulltext
-    assert acceptance.asset.body_discovered == ARXIV_BODY_COUNTS[arxiv_id]
-    assert acceptance.asset.body_local == len(downloaded)
+    assert _archivable_body_discovered(article) == ARXIV_BODY_COUNTS[arxiv_id]
+    assert acceptance.asset.local == len(downloaded)
     assert acceptance.asset.local_body_assets_satisfied == (
         len(downloaded) == ARXIV_BODY_COUNTS[arxiv_id]
     )
@@ -90,8 +101,8 @@ def test_p05_all_original_signed_objects_assemble_with_real_entities(doi, tmp_pa
     assert article.quality.has_fulltext
     assert len(downloaded) == len(historical["mappings"]) == SIGNED_COUNTS[doi]
     assert not any(mapping["old_url"] in markdown for mapping in historical["mappings"])
-    assert acceptance.asset.body_discovered == SIGNED_COUNTS[doi]
-    assert acceptance.asset.body_local == SIGNED_COUNTS[doi]
+    assert _archivable_body_discovered(article) == SIGNED_COUNTS[doi]
+    assert acceptance.asset.local == SIGNED_COUNTS[doi]
     assert acceptance.asset.local_body_assets_satisfied
 
 
@@ -144,10 +155,10 @@ def test_p19_real_inline_formula_pixels_assemble_with_full_source_asset_denomina
             graphic.parent, markdown, image.start, image.end, runs
         )
         previous = image.start
-    assert acceptance.asset.body_local == count
+    assert acceptance.asset.local == count
     # Independent original full-article candidates, including other formulas
     # and figures, remain in the audit rather than only the selected downloads.
-    assert acceptance.asset.body_discovered == len(
+    assert _archivable_body_discovered(article) == len(
         [
             a
             for a in discovered

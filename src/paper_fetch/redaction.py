@@ -2,10 +2,9 @@
 
 from __future__ import annotations
 
-from collections.abc import Iterable
 import functools
 import re
-
+from collections.abc import Iterable
 
 _CREDENTIAL_NAME_TOKENS = (
     "KEY",

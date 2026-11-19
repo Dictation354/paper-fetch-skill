@@ -4,14 +4,12 @@ import hashlib
 from pathlib import Path
 
 import pytest
-
 from scripts.prepare_release_assets import (
     _fsync_directory_best_effort,
     prepare_stable_release,
     stable_asset_names,
     stable_input_mapping,
 )
-
 
 VERSION = "5.6.1"
 

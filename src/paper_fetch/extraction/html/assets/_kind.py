@@ -2,16 +2,18 @@
 
 from __future__ import annotations
 
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import dataclass
 from pathlib import Path
 from typing import Any, Literal
-from collections.abc import Callable, Mapping, Sequence
 
+from ....image_tools import source_image_format_from_payload
 from ....utils import normalize_text
 from ...image_payloads import image_mime_type_from_bytes
-from ....image_tools import source_image_format_from_payload
 from ..shared import (
     html_text_snippet as _html_text_snippet,
+)
+from ..shared import (
     html_title_snippet as _html_title_snippet,
 )
 from .dom import looks_like_full_size_asset_url, supplementary_response_block_reason

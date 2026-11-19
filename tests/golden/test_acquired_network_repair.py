@@ -2,11 +2,12 @@
 
 import pymupdf
 import pytest
+
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.providers import _iop_html
-from paper_fetch.providers.iop import IopClient
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers._arxiv_assets import discover_arxiv_ancillary_assets
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.iop import IopClient
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 from tests.support._paper_fetch_support import RecordingTransport
@@ -15,7 +16,6 @@ from tests.support.iop_provider import (
     _FakeIopSupplementaryIndexFetcher,
     _iop_supplementary_test_deps,
 )
-
 
 PREFIX = "acquisition/network-repair/"
 

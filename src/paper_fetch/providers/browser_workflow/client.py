@@ -2,13 +2,11 @@
 
 from __future__ import annotations
 
-from ...quality.access_boundary import propagate_paywall
-
-from functools import partial
+from collections.abc import Mapping
 from dataclasses import replace
+from functools import partial
 from pathlib import Path
 from typing import Any, cast
-from collections.abc import Mapping
 
 from ...config import (
     build_browser_user_agent,
@@ -22,6 +20,7 @@ from ...metadata.types import ProviderMetadata
 from ...models import AssetProfile
 from ...provider_catalog import provider_route, provider_routes
 from ...publisher_identity import normalize_doi
+from ...quality.access_boundary import propagate_paywall
 from ...reason_codes import (
     ABSTRACT_ONLY,
     AWS_WAF_CHALLENGE,
@@ -38,15 +37,7 @@ from ...reason_codes import (
 from ...runtime import RuntimeContext
 from ...tracing import download_event, fulltext_event, trace_event
 from ...utils import empty_asset_results, normalize_text, provider_display_name
-from .shared import (
-    BrowserWorkflowDeps,
-    build_browser_workflow_html_candidates,
-    build_browser_workflow_pdf_candidates,
-    default_browser_workflow_deps,
-    extract_pdf_url_from_crossref,
-)
-from ..browser_runtime import merge_browser_context_seeds
-from .._pdf_fallback import PdfFallbackFailure
+from .._pdf_common import PdfFetchFailure
 from .._waterfall import ProviderWaterfallStep, run_provider_waterfall
 from ..base import (
     PreparedFetchResultPayload,
@@ -55,11 +46,7 @@ from ..base import (
     ProviderFailure,
     RawFulltextPayload,
 )
-from .fetchers import (
-    BrowserDocumentFetcherOptions,
-    _MemoizedFigurePageFetcher,
-    _MemoizedImageDocumentFetcher,
-)
+from ..browser_runtime import merge_browser_context_seeds
 from .article import (
     _finalize_abstract_only_provider_article,
     browser_workflow_article_from_payload,
@@ -70,8 +57,19 @@ from .asset_download import (
     download_browser_backed_related_assets,
     plan_browser_asset_download,
 )
+from .fetchers import (
+    BrowserDocumentFetcherOptions,
+    _MemoizedFigurePageFetcher,
+    _MemoizedImageDocumentFetcher,
+)
 from .profile import ProviderBrowserProfile
-
+from .shared import (
+    BrowserWorkflowDeps,
+    build_browser_workflow_html_candidates,
+    build_browser_workflow_pdf_candidates,
+    default_browser_workflow_deps,
+    extract_pdf_url_from_crossref,
+)
 
 _BROWSER_WORKFLOW_ACCESS_FAILURE_REASONS = frozenset(
     {
@@ -93,13 +91,13 @@ class BrowserWorkflowClient(ProviderClient):
         self,
         transport,
         env: Mapping[str, str],
-        deps: BrowserWorkflowDeps = default_browser_workflow_deps(),
+        deps: BrowserWorkflowDeps | None = None,
     ) -> None:
         self.transport = transport
         self.env = dict(env)
         self.user_agent = build_publisher_user_agent(env)
         self.browser_user_agent = build_browser_user_agent(env)
-        self.deps = deps
+        self.deps = deps or default_browser_workflow_deps()
 
     def probe_status(self):
         return self.deps.probe_runtime_status(self.env, provider=self.name)
@@ -363,7 +361,7 @@ class BrowserWorkflowClient(ProviderClient):
                     context=context,
                     deps=self.deps,
                 )
-            except PdfFallbackFailure as exc:
+            except PdfFetchFailure as exc:
                 propagate_paywall(exc)
                 reason = (
                     bootstrap.html_failure_message or f"{self.name} HTML route failed."
@@ -469,7 +467,7 @@ class BrowserWorkflowClient(ProviderClient):
                 raw_payload,
                 context=context,
             )
-        except (ProviderFailure, PdfFallbackFailure) as exc:
+        except (ProviderFailure, PdfFetchFailure) as exc:
             propagate_paywall(exc)
             provider_label = self.provider_label()
             prepared.finalize_warnings.append(

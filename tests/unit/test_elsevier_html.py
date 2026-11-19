@@ -1,11 +1,12 @@
 """ScienceDirect DOM boundary scenarios."""
 
-from paper_fetch.providers import _elsevier_html as html
-from paper_fetch.providers.elsevier import ElsevierClient
-from paper_fetch.providers.browser_runtime.api import load_runtime_config
-from paper_fetch.providers._payloads import build_provider_payload
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
+
+from paper_fetch.providers import _elsevier_html as html
+from paper_fetch.providers._payloads import build_provider_payload
+from paper_fetch.providers.browser_runtime.api import load_runtime_config
+from paper_fetch.providers.elsevier import ElsevierClient
 
 DOI = "10.1016/example"
 PII = "S016819232400090X"
@@ -98,11 +99,12 @@ def test_article_scope_authors_captions_references_and_asset_profiles():
 
 
 def test_unsupported_elsevier_keeps_api_cache_capability(monkeypatch):
-    from paper_fetch.capability_scope import capability_scopes_for_query
-    from paper_fetch.providers.browser_runtime import platforms
+    from paper_fetch import capability_scope
 
-    monkeypatch.setattr(platforms, "supported_platform", lambda: False)
-    scopes = capability_scopes_for_query({"ELSEVIER_API_KEY": "key"}, DOI)
+    monkeypatch.setattr(capability_scope, "supported_platform", lambda: False)
+    scopes = capability_scope.capability_scopes_for_query(
+        {"ELSEVIER_API_KEY": "key"}, DOI
+    )
     assert len(scopes) == 2 and scopes[0].startswith("credential:")
     assert scopes[1] == "public"
 
@@ -240,8 +242,8 @@ def test_reference_numbers_are_shared_by_extraction_and_article_without_year_cou
 
 @pytest.mark.parametrize("label", ["(1)", "1.", "a)", "•"])
 def test_list_label_first_paragraph_and_nested_blocks(label):
-    from paper_fetch.providers._html_section_markdown import render_container_markdown
     from paper_fetch.models.markdown import normalize_markdown_text
+    from paper_fetch.providers._html_section_markdown import render_container_markdown
     from tests.support.markdown_lists import ancestor, inline_text, markdown_tree
 
     soup = BeautifulSoup(

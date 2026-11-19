@@ -1,8 +1,8 @@
 from __future__ import annotations
 
-from collections import Counter
 import threading
 import time
+from collections import Counter
 
 import pytest
 

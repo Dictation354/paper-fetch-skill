@@ -4,13 +4,12 @@
 from __future__ import annotations
 
 import argparse
-from dataclasses import dataclass
-from datetime import date
-from pathlib import Path
 import re
 import sys
 import tomllib
-
+from dataclasses import dataclass
+from datetime import date
+from pathlib import Path
 
 REPO_ROOT = Path(__file__).resolve().parents[1]
 PYPROJECT = REPO_ROOT / "pyproject.toml"

@@ -3,30 +3,34 @@
 from __future__ import annotations
 
 import urllib.parse
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
+from bs4 import Tag
+
+from ....models import normalize_text
+from ....reason_codes import CLOUDFLARE_CHALLENGE
+from ...image_payloads import image_dimensions_from_bytes
 from ..asset_fields import (
     FULL_SIZE_IMAGE_ATTRS,
     PREVIEW_IMAGE_ATTRS,
     best_url_from_srcset,
 )
-from ..ui_tokens import SPRINGER_FULL_SIZE_IMAGE_LABEL
-from ....models import normalize_text
-from ....reason_codes import CLOUDFLARE_CHALLENGE
-from ...image_payloads import image_dimensions_from_bytes
+from ..shared import (
+    attr_text,
+)
+from ..shared import (
+    html_text_snippet as _html_text_snippet,
+)
+from ..shared import (
+    html_title_snippet as _html_title_snippet,
+)
 from ..signals import (
     CLOUDFLARE_CHALLENGE_TITLE_TOKENS,
     SUPPLEMENTARY_BLOCKING_BODY_TOKENS,
     SUPPLEMENTARY_BLOCKING_TITLE_TOKENS,
 )
-from ..shared import (
-    attr_text,
-    html_text_snippet as _html_text_snippet,
-    html_title_snippet as _html_title_snippet,
-)
-
-from bs4 import Tag
+from ..ui_tokens import SPRINGER_FULL_SIZE_IMAGE_LABEL
 
 FULL_SIZE_URL_TOKENS = (
     "/full/",

@@ -5,9 +5,9 @@ import json
 import re
 from urllib.parse import quote, unquote, urljoin, urlsplit
 
+import pytest
 from bs4 import BeautifulSoup
 from markdown_it import MarkdownIt
-import pytest
 
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.paths import REPO_ROOT

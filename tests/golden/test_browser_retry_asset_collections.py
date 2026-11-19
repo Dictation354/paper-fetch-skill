@@ -7,8 +7,8 @@ from pathlib import Path
 import pytest
 
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.extraction.image_payloads import (
@@ -19,13 +19,12 @@ from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow.asset_download import (
     plan_browser_asset_download,
 )
-from tests.support.acquired_article_assets import CLIENTS
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 from tests.paths import REPO_ROOT
 from tests.support._paper_fetch_support import FixtureHtmlTransport
+from tests.support.acquired_article_assets import CLIENTS
 from tests.support.acquired_publisher_inputs import _record, _response
-
 
 PREFIX = "acquisition/browser-retry-2026-09-16/"
 

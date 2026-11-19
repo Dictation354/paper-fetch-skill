@@ -4,7 +4,6 @@ from __future__ import annotations
 
 from ..provider_contracts import ProviderRouteSpec
 
-
 IEEE_ROUTES = (
     ProviderRouteSpec(name="metadata", kind="metadata"),
     ProviderRouteSpec(name="rest_html", kind="html", transport="api"),

@@ -2,11 +2,33 @@
 
 from __future__ import annotations
 
+import contextlib
 import re
 
+from bs4 import BeautifulSoup, Tag
+
 from ...common_patterns import HEADING_TAG_PATTERN
+from ...extraction.html._runtime import (
+    FRONT_MATTER_PUBLICATION_KEYWORDS,
+    _publication_watermark_label_tokens,
+    body_metrics,
+    clean_markdown,
+    extract_article_markdown,
+    has_sufficient_article_body,
+)
+from ...extraction.html.cleanup_policy import (
+    classify_markdown_cleanup_block,
+    extend_cleanup_policy,
+)
 from ...extraction.html.container_selectors import ARTICLE_BODY_SELECTORS
+from ...extraction.html.front_matter import COMMON_FRONT_MATTER_LINE_PATTERNS
 from ...extraction.html.language import html_node_language_hint
+from ...extraction.html.provider_rules import (
+    cleanup_policy_for_profile,
+    front_matter_contains_tokens_for_profile,
+    front_matter_exact_texts_for_profile,
+    front_matter_publication_keywords_for_profile,
+)
 from ...extraction.html.semantics import (
     ANCILLARY_TOKENS,
     BODY_CONTAINER_TOKENS,
@@ -16,47 +38,33 @@ from ...extraction.html.semantics import (
     heading_category,
     parse_markdown_heading,
 )
-from ...extraction.html.cleanup_policy import (
-    classify_markdown_cleanup_block,
-    extend_cleanup_policy,
-)
-from ...extraction.html.provider_rules import (
-    cleanup_policy_for_profile,
-    front_matter_contains_tokens_for_profile,
-    front_matter_exact_texts_for_profile,
-    front_matter_publication_keywords_for_profile,
-)
-from ...extraction.html._runtime import (
-    FRONT_MATTER_PUBLICATION_KEYWORDS,
-    _publication_watermark_label_tokens,
-    body_metrics,
-    clean_markdown,
-    extract_article_markdown,
-    has_sufficient_article_body,
-)
-from ...extraction.html.front_matter import COMMON_FRONT_MATTER_LINE_PATTERNS
-from ...extraction.html.signals import contains_access_gate_text
 from ...extraction.html.shared import (
     attr_text,
+)
+from ...extraction.html.shared import (
     class_tokens as _class_tokens,
+)
+from ...extraction.html.shared import (
     direct_child_tags as _direct_child_tags,
+)
+from ...extraction.html.shared import (
     short_text as _short_text,
 )
+from ...extraction.html.signals import contains_access_gate_text
 from ...quality.html_availability import (
     HTML_CONTAINER_BROWSER_WORKFLOW_FALLBACK_TAGS,
     HTML_CONTAINER_SCORE_BROWSER_WORKFLOW,
     HtmlContainerSelectionPolicy,
 )
-from .._html_authors import ATYPON_VIEW_ALL_ARTICLES_LABEL
 from ...utils import normalize_text
 from .._atypon_browser_workflow_postprocess import is_display_math_markdown_block
 from .._atypon_browser_workflow_profiles import (
     noise_profile_for_publisher as _profile_noise_profile_for_publisher,
+)
+from .._atypon_browser_workflow_profiles import (
     publisher_profile as _publisher_profile,
 )
-
-from bs4 import BeautifulSoup, Tag
-import contextlib
+from .._html_authors import ATYPON_VIEW_ALL_ARTICLES_LABEL
 
 BODY_PARAGRAPH_MIN_CHARS = 80
 

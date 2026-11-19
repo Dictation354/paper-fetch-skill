@@ -1,8 +1,10 @@
 """Real subscription pages; transient challenges are not paywall evidence."""
 
 import json
-from bs4 import BeautifulSoup
+
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html.signals import detect_html_block
 from paper_fetch.providers import ieee

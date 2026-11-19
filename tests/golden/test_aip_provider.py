@@ -1,15 +1,17 @@
 from __future__ import annotations
+
 import re
+from pathlib import Path
 from urllib.parse import urlsplit
+
+from bs4 import BeautifulSoup
+
 from tests.golden_corpus import (
     build_article_from_fixture,
     golden_corpus_fixture_for_doi,
 )
-from pathlib import Path
-from bs4 import BeautifulSoup
 from tests.golden_criteria import golden_criteria_asset
 from tests.support.reviewed_publisher_content import _words
-
 
 AIP_STRUCTURE_DOI = "10.1063/5.0129134"
 AIP_STRUCTURE_LANDING = (

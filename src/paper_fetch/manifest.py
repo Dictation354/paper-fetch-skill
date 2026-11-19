@@ -23,23 +23,21 @@ from pydantic import (
     model_validator,
 )
 
-from .models import AcquisitionProvenance, AssetProfile, FetchEnvelope
+from .models import AssetProfile, FetchEnvelope
 from .tracing import TraceEvent
 from .utils import normalize_text
 from .workflow.acceptance import (
     AcceptanceOutputKind,
-    AssetAcceptanceFacet,
     AssetAcceptanceSummary,
     FetchAcceptanceReport,
-    IdentityAcceptanceFacet,
+    FetchAcceptanceStatus,
     evaluate_fetch_acceptance,
 )
 
-MANIFEST_RECORD_SCHEMA_VERSION = 2
-MANIFEST_RECORD_MIN_READER_VERSION = 2
-MANIFEST_RECORD_SCHEMA_RESOURCE = "manifest-record-v2.schema.json"
+MANIFEST_RECORD_SCHEMA_VERSION = 3
+MANIFEST_RECORD_SCHEMA_RESOURCE = "manifest-record-v3.schema.json"
 MANIFEST_RECORD_SCHEMA_ID = (
-    "https://paper-fetch.local/schema/manifest-record-v2.schema.json"
+    "https://paper-fetch.local/schema/manifest-record-v3.schema.json"
 )
 
 
@@ -71,8 +69,6 @@ class ArtifactStat(Protocol):
 
 Clock = Callable[[], datetime]
 UuidFactory = Callable[[], UUID]
-
-
 ArtifactStatReader = Callable[[Path], ArtifactStat]
 ArtifactHasher = Callable[[Path], str]
 
@@ -108,7 +104,7 @@ DEFAULT_MANIFEST_BUILDER_DEPENDENCIES = ManifestBuilderDependencies()
 
 
 class _ManifestModel(BaseModel):
-    # Within v2, readers ignore additive fields they do not understand.
+    # Within v3, readers ignore additive fields they do not understand.
     model_config = ConfigDict(extra="ignore", frozen=True, from_attributes=True)
 
 
@@ -161,16 +157,6 @@ class ManifestError(_ManifestModel):
     reason: str = Field(min_length=1)
 
 
-class ManifestSemanticLosses(_ManifestModel):
-    """Semantic-loss summary derived from acceptance content facets."""
-
-    table_fallback_count: int = Field(default=0, ge=0)
-    table_layout_degraded_count: int = Field(default=0, ge=0)
-    table_semantic_loss_count: int = Field(default=0, ge=0)
-    formula_fallback_count: int = Field(default=0, ge=0)
-    formula_missing_count: int = Field(default=0, ge=0)
-
-
 class ManifestOutputArtifactSpec(_ManifestModel):
     """Adapter input for an output file that should be snapshotted."""
 
@@ -215,31 +201,20 @@ class ManifestOutputArtifact(_ManifestModel):
 class ManifestRecord(_ManifestModel):
     """One versioned fetch result record."""
 
-    schema_version: Literal[2]
-    minimum_reader_schema_version: Literal[2]
+    schema_version: Literal[3]
     tool_version: str = Field(min_length=1)
     run_id: UUID
     record_id: UUID
     index: int = Field(ge=1)
     attempt: int = Field(ge=1)
-    query: str
     request: ManifestRequest
     request_fingerprint: str = Field(pattern=r"^[0-9a-f]{64}$")
     record_status: ManifestRecordStatus
-    identity: IdentityAcceptanceFacet
-    doi: str | None
     started_at: AwareDatetime
     completed_at: AwareDatetime
-    source: str | None
-    acquisition: AcquisitionProvenance | None = None
     acceptance: FetchAcceptanceReport
     trace: tuple[ManifestTraceEvent, ...]
-    fallback_codes: tuple[str, ...]
-    warning_codes: tuple[str, ...]
-    failure_codes: tuple[str, ...]
     warnings: tuple[str, ...]
-    semantic_losses: ManifestSemanticLosses
-    asset_summary: AssetAcceptanceFacet
     error: ManifestError | None
     output_artifacts: tuple[ManifestOutputArtifact, ...]
 
@@ -247,42 +222,21 @@ class ManifestRecord(_ManifestModel):
     def validate_derived_fields(self) -> ManifestRecord:
         if self.completed_at < self.started_at:
             raise ValueError("completed_at must not precede started_at")
-        if self.query != self.request.query:
-            raise ValueError("query must match request.query")
         if self.request_fingerprint != build_manifest_request_fingerprint(self.request):
             raise ValueError("request_fingerprint does not match request")
-        if self.identity != self.acceptance.identity:
-            raise ValueError("identity must be the acceptance identity facet")
-        if self.doi != self.identity.doi:
-            raise ValueError("doi must be the normalized acceptance DOI")
-        if self.source != self.acceptance.provenance.source:
-            raise ValueError("source must be the acceptance provenance source")
-        if self.acquisition != self.acceptance.provenance.acquisition:
-            raise ValueError(
-                "acquisition must be the acceptance provenance acquisition"
-            )
-        if self.asset_summary != self.acceptance.asset:
-            raise ValueError("asset_summary must be the acceptance asset facet")
-        if self.fallback_codes != self.acceptance.provenance.fallback_codes:
-            raise ValueError("fallback_codes must come from acceptance provenance")
-        if self.warning_codes != self.acceptance.provenance.warning_codes:
-            raise ValueError("warning_codes must come from acceptance provenance")
-        if self.failure_codes != self.acceptance.provenance.failure_codes:
-            raise ValueError("failure_codes must come from acceptance provenance")
-        if self.semantic_losses != _semantic_losses_from_acceptance(self.acceptance):
-            raise ValueError("semantic_losses must come from acceptance content")
 
+        fetch_completed = self.acceptance.fetch.status == FetchAcceptanceStatus.OK
         if self.record_status == ManifestRecordStatus.COMPLETED:
             if self.error is not None:
                 raise ValueError("completed records cannot contain an error")
-            if not self.acceptance.fetch.completed:
+            if not fetch_completed:
                 raise ValueError("completed records require completed fetch acceptance")
         else:
             if self.error is None:
                 raise ValueError(
                     "failed/aborted records require their structured error"
                 )
-            if self.acceptance.fetch.completed:
+            if fetch_completed:
                 raise ValueError("failed/aborted records cannot have completed fetch")
 
         return self
@@ -312,20 +266,6 @@ def build_manifest_request_fingerprint(
         separators=(",", ":"),
     ).encode("utf-8")
     return hashlib.sha256(encoded).hexdigest()
-
-
-def _semantic_losses_from_acceptance(
-    acceptance: FetchAcceptanceReport,
-) -> ManifestSemanticLosses:
-    tables = acceptance.content.tables
-    formulas = acceptance.content.formulas
-    return ManifestSemanticLosses(
-        table_fallback_count=tables.fallback_count,
-        table_layout_degraded_count=tables.layout_degraded_count,
-        table_semantic_loss_count=tables.semantic_loss_count,
-        formula_fallback_count=formulas.fallback_count,
-        formula_missing_count=formulas.missing_count,
-    )
 
 
 def _trace_from_envelope(envelope: FetchEnvelope | None) -> list[TraceEvent]:
@@ -537,7 +477,7 @@ def build_manifest_record(
     if (
         envelope is not None
         and envelope.target == "supplementary"
-        and not acceptance.fetch.completed
+        and acceptance.fetch.status != FetchAcceptanceStatus.OK
     ):
         record_status = ManifestRecordStatus.FAILED
         manifest_error = ManifestError(
@@ -559,37 +499,38 @@ def build_manifest_record(
 
     return ManifestRecord(
         schema_version=MANIFEST_RECORD_SCHEMA_VERSION,
-        minimum_reader_schema_version=MANIFEST_RECORD_MIN_READER_VERSION,
         tool_version=tool_version,
-        run_id=run_id or deps.uuid_factory(),
-        record_id=record_id or deps.uuid_factory(),
+        run_id=(
+            run_id
+            if isinstance(run_id, UUID)
+            else UUID(run_id)
+            if run_id is not None
+            else deps.uuid_factory()
+        ),
+        record_id=(
+            record_id
+            if isinstance(record_id, UUID)
+            else UUID(record_id)
+            if record_id is not None
+            else deps.uuid_factory()
+        ),
         index=index,
         attempt=attempt,
-        query=query,
         request=request,
         request_fingerprint=build_manifest_request_fingerprint(request),
         record_status=record_status,
-        identity=acceptance.identity,
-        doi=acceptance.identity.doi,
         started_at=effective_started_at,
         completed_at=effective_completed_at,
-        source=acceptance.provenance.source,
-        acquisition=acceptance.provenance.acquisition,
         acceptance=acceptance,
         trace=_trace_for_record(envelope, manifest_error, trace),
-        fallback_codes=acceptance.provenance.fallback_codes,
-        warning_codes=acceptance.provenance.warning_codes,
-        failure_codes=acceptance.provenance.failure_codes,
         warnings=_warnings_for_record(envelope, manifest_error, warnings),
-        semantic_losses=_semantic_losses_from_acceptance(acceptance),
-        asset_summary=acceptance.asset,
         error=manifest_error,
         output_artifacts=artifacts,
     )
 
 
 def parse_manifest_record(payload: Mapping[str, Any]) -> ManifestRecord:
-    """Load manifest schema v2; additive unknown fields are ignored."""
+    """Load manifest schema v3; additive unknown fields are ignored."""
 
     return ManifestRecord.model_validate(payload)
 
@@ -614,7 +555,6 @@ def manifest_record_json_schema() -> dict[str, Any]:
 
 __all__ = [
     "DEFAULT_MANIFEST_BUILDER_DEPENDENCIES",
-    "MANIFEST_RECORD_MIN_READER_VERSION",
     "MANIFEST_RECORD_SCHEMA_ID",
     "MANIFEST_RECORD_SCHEMA_RESOURCE",
     "MANIFEST_RECORD_SCHEMA_VERSION",
@@ -627,7 +567,6 @@ __all__ = [
     "ManifestRecord",
     "ManifestRecordStatus",
     "ManifestRequest",
-    "ManifestSemanticLosses",
     "ManifestTraceEvent",
     "build_manifest_record",
     "build_manifest_request_fingerprint",

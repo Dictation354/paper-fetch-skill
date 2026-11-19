@@ -1,7 +1,6 @@
 """Workflow-layer orchestration modules for paper fetch."""
 
 from .acceptance import (
-    FETCH_ACCEPTANCE_MIN_READER_VERSION,
     FETCH_ACCEPTANCE_SCHEMA_VERSION,
     AcceptanceOutputKind,
     AssetAcceptanceFacet,
@@ -12,7 +11,6 @@ from .acceptance import (
     FetchAcceptanceFacet,
     FetchAcceptanceReport,
     FetchAcceptanceStatus,
-    FormulaAcceptanceFacet,
     IdentityAcceptanceFacet,
     IdentityAcceptanceStatus,
     OutputAcceptanceFacet,
@@ -20,7 +18,6 @@ from .acceptance import (
     OverallAcceptanceStatus,
     ProvenanceAcceptanceFacet,
     ProvenanceAcceptanceStatus,
-    TableAcceptanceFacet,
     evaluate_fetch_acceptance,
     fetch_acceptance_json_schema,
     parse_fetch_acceptance_report,
@@ -36,15 +33,14 @@ from .batch_runner import (
     BatchItemStatus,
     BatchLaneCooldown,
     BatchProgress,
-    BatchRunResult,
     BatchRunner,
+    BatchRunResult,
     run_batch,
     run_batch_async,
 )
 
 __all__ = [
     "DEFAULT_RATE_LIMIT_COOLDOWN_SECONDS",
-    "FETCH_ACCEPTANCE_MIN_READER_VERSION",
     "FETCH_ACCEPTANCE_SCHEMA_VERSION",
     "MAX_BATCH_WORKERS",
     "MIN_BATCH_WORKERS",
@@ -66,7 +62,6 @@ __all__ = [
     "FetchAcceptanceFacet",
     "FetchAcceptanceReport",
     "FetchAcceptanceStatus",
-    "FormulaAcceptanceFacet",
     "IdentityAcceptanceFacet",
     "IdentityAcceptanceStatus",
     "OutputAcceptanceFacet",
@@ -74,7 +69,6 @@ __all__ = [
     "OverallAcceptanceStatus",
     "ProvenanceAcceptanceFacet",
     "ProvenanceAcceptanceStatus",
-    "TableAcceptanceFacet",
     "evaluate_fetch_acceptance",
     "fetch_acceptance_json_schema",
     "parse_fetch_acceptance_report",

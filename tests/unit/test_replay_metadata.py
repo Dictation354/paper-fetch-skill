@@ -14,7 +14,6 @@ from tests.golden_corpus import (
 )
 from tests.support.acquired_publisher_inputs import CapturedSourceFixture
 
-
 DOI = "10.1234/example"
 
 

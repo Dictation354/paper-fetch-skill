@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Callable, Mapping
+from typing import Any
 
 from ...extraction.html.assets import (
     browser_asset_recovery_allowed,
@@ -21,8 +21,8 @@ from .._asset_retry import (
     merge_asset_retry_results,
 )
 from .._atypon_browser_workflow_profiles import publisher_profile
-from . import html_extraction as _html_extraction
 from .._registry import browser_asset_policy
+from . import html_extraction as _html_extraction
 
 
 def _cached_browser_workflow_assets(*args, **kwargs):

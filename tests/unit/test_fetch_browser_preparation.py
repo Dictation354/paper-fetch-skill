@@ -2,8 +2,6 @@
 
 from __future__ import annotations
 
-
-from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
@@ -11,9 +9,7 @@ import pytest
 from paper_fetch import cli, service
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers.browser_runtime import preparation
-from paper_fetch.providers.browser_runtime.camoufox_manager import (
-    _launch_executable_path,
-)
+from paper_fetch.providers.browser_runtime.preparation import _launch_executable_path
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import sample_article
 
@@ -32,11 +28,6 @@ def prepare(monkeypatch):
     check = Mock(return_value=preparation.CamoufoxRuntimeProbe("ready", True, True))
     monkeypatch.setattr(preparation, "find_spec", lambda _name: object())
     monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", check)
-    # A repeated preparation at launch would bypass the per-request boundary.
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.camoufox_manager.prepare_camoufox_managed_runtime",
-        lambda: pytest.fail("launch must reuse the request preparation"),
-    )
     return check
 
 
@@ -63,24 +54,16 @@ def test_cli_batch_prepares_before_scheduling_and_children_inherit(
 
     monkeypatch.setattr(cli, "_resolve_cli_batch_item_lane", resolve)
     monkeypatch.setattr(cli, "_run_single_fetch_with_context", fetch)
-    args = SimpleNamespace(
-        batch_results=None,
+    command = cli.BatchFetchCommand(
+        queries=("10.1000/one", "10.1000/two"),
+        options=cli.FetchExecutionOptions(artifact_mode="none"),
         batch_concurrency=2,
-        format="markdown",
-        asset_profile="none",
-        include_refs="all",
-        max_tokens="full_text",
-        no_download=True,
-        save_markdown_to_disk=False,
-        output="-",
     )
     assert (
         cli.run_batch_fetch(
-            args,
-            queries=["10.1000/one", "10.1000/two"],
+            command,
             output_dir=tmp_path,
             runtime_env={},
-            artifact_mode="none",
         )
         == 0
     )
@@ -126,12 +109,12 @@ def test_request_cancellation_during_preparation_propagates(prepare):
 
 
 def test_static_status_resolve_and_help_do_not_prepare(prepare, monkeypatch):
-    from paper_fetch.providers.browser_runtime.backends.camoufox import CamoufoxBackend
+    from paper_fetch.providers.browser_runtime import probe_runtime_status
 
     monkeypatch.setattr(service, "workflow_resolve_paper", lambda *_a, **_kw: None)
     with RuntimeContext(env={}) as context:
         service.resolve_paper("10.1000/example", context=context)
-    CamoufoxBackend().probe_runtime_status({}, provider="science")
+    probe_runtime_status({}, provider="science")
     with pytest.raises(SystemExit) as result:
         cli.main(["--help"])
     assert result.value.code == 0
@@ -141,8 +124,8 @@ def test_static_status_resolve_and_help_do_not_prepare(prepare, monkeypatch):
 def test_concurrent_fetch_calls_check_separately_even_with_shared_context(
     prepare, monkeypatch
 ):
-    from concurrent.futures import ThreadPoolExecutor
     import threading
+    from concurrent.futures import ThreadPoolExecutor
 
     barrier = threading.Barrier(2)
 

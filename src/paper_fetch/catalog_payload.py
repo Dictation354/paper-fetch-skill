@@ -2,18 +2,21 @@
 
 from __future__ import annotations
 
-from dataclasses import asdict
+import importlib.metadata
 import json
+import sys
+from dataclasses import asdict
+from pathlib import Path
 from typing import Any
 
-from .config import DEFAULT_USER_AGENT, build_runtime_env
+from . import provider_catalog as runtime_catalog
 from .browser_runtime_policy import (
     BYPARR_MANIFEST_PATH,
     UPDATE_CHECK_INTERVAL_SECONDS,
     engine_name,
     selected_backend,
 )
-from . import provider_catalog as runtime_catalog
+from .config import DEFAULT_USER_AGENT, build_runtime_env
 
 PROVIDER_CATALOG_ID = "paper-fetch/provider-catalog"
 PROVIDER_CATALOG_SCHEMA_VERSION = 1
@@ -133,10 +136,6 @@ __all__ = [
 
 
 def runtime_identity() -> dict[str, Any]:
-    import sys
-    from pathlib import Path
-    from importlib.metadata import distribution
-
     module_path = str(Path(__file__).resolve())
     try:
         from .update import find_installation
@@ -146,7 +145,10 @@ def runtime_identity() -> dict[str, Any]:
         installation_root = None
     try:
         direct_url = json.loads(
-            distribution("paper-fetch-skill").read_text("direct_url.json") or "null"
+            importlib.metadata.distribution("paper-fetch-skill").read_text(
+                "direct_url.json"
+            )
+            or "null"
         )
     except Exception:
         direct_url = None

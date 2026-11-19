@@ -2,11 +2,13 @@
 
 from __future__ import annotations
 
-import urllib.parse
-from html.parser import HTMLParser
 import re
-from typing import Any
+import urllib.parse
 from collections.abc import Callable, Mapping
+from html.parser import HTMLParser
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ....http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, HttpTransport, RequestFailure
 from ....http.headers import header_value
@@ -14,12 +16,12 @@ from ....models import normalize_text
 from ....utils import dedupe_normalized
 from .._metadata import parse_html_metadata
 from .._runtime import decode_html
-from ..parsing import choose_parser
-from ..shared import class_tokens as _tag_class_tokens
 from ..formula_rules import (
     formula_image_url_from_node,
     looks_like_formula_image,
 )
+from ..parsing import choose_parser
+from ..shared import class_tokens as _tag_class_tokens
 from .dom import (
     FIGURE_PAGE_HINTS,
     FULL_SIZE_IMAGE_ATTRS,
@@ -29,8 +31,6 @@ from .dom import (
     looks_like_full_size_asset_url,
 )
 from .silverchair import silverchair_download_image_url
-
-from bs4 import BeautifulSoup, Tag
 
 FigurePageFetcher = Callable[[str], tuple[str, str] | None]
 NOISY_IMAGE_ALT_TEXTS = frozenset({"refer to caption"})

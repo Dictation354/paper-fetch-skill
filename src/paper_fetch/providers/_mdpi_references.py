@@ -8,8 +8,8 @@ from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..models.markdown import NUMBERED_REFERENCE_PATTERN
-from ._reference_doi import reference_doi
 from ..utils import extend_unique, normalize_text
+from ._reference_doi import reference_doi
 
 _REFERENCE_SELECTORS = (
     "#html-references_list li",

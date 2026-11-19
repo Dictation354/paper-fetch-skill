@@ -2,15 +2,15 @@
 
 from __future__ import annotations
 
-from ..models import FetchEnvelope
 from ..failure import FailureDiagnostics
+from ..models import FetchEnvelope
 from ..models.builders import build_metadata
 from ..providers.base import ProviderFailure
 from ..reason_codes import NOT_SUPPORTED
 from ..tracing import (
     TraceContext,
-    resolve_event,
     merge_trace,
+    resolve_event,
     trace_event,
 )
 from .fulltext import _ranked_fulltext_provider_candidates
@@ -48,6 +48,9 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
     resolved = resolve_query_with_session_cache(
         query, resolver=resolve_paper_fn, context=context
     )
+    resolution_event = resolve_event(
+        resolved.query_kind, duration_ms=getattr(resolved, "duration_ms", None)
+    )
     if resolved.candidates and not resolved.doi:
         raise PaperFetchFailure(
             "ambiguous",
@@ -69,7 +72,7 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             else exc
         )
         trace = [
-            resolve_event(resolved.query_kind),
+            resolution_event,
             *context.fetch_trace,
             *[event for event in error.trace if event not in context.fetch_trace],
         ]
@@ -92,7 +95,7 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             ),
         ) from exc
     doi = str(metadata.get("doi") or resolved.doi or metadata.get("arxiv_id") or "")
-    trail = [resolve_event(resolved.query_kind), *metadata_trail]
+    trail = [resolution_event, *metadata_trail]
     trace = merge_trace(trail, context.fetch_trace)
     context.fetch_trace = trace
     failures = []

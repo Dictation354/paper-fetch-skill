@@ -1,18 +1,28 @@
 from __future__ import annotations
+
 import json
-import xml.etree.ElementTree as ET
-from paper_fetch.provider_catalog import provider_for_xml_source
-from typing import get_args
 import unittest
+import xml.etree.ElementTree as ET
+from typing import get_args
 from unittest import mock
-from paper_fetch import publisher_identity
+
+from paper_fetch import publisher_identity, utils
+from paper_fetch.extraction.html.provider_rules import (
+    COMMON_ACCESS_BLOCK_TOKENS,
+    IEEE_ACCESS_BLOCK_TEXT_TOKENS,
+    IEEE_AVAILABILITY_DROP_KEYWORDS,
+    IEEE_EXTRACTION_CLEANUP_SELECTORS,
+    SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS,
+    SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
+)
+from paper_fetch.models.schema import SourceKind
 from paper_fetch.provider_catalog import (
     DEFAULT_BODY_TEXT_THRESHOLDS,
     PROVIDER_BUNDLE_MAP,
     PROVIDER_CATALOG,
+    SOURCE_PROVIDER_MAP,
     ProviderRouteSpec,
     ProviderSpec,
-    SOURCE_PROVIDER_MAP,
     api_like_hosts,
     compile_route_execution_policy_for_kind,
     default_asset_profile_for_provider,
@@ -25,33 +35,24 @@ from paper_fetch.provider_catalog import (
     provider_base_domains,
     provider_body_text_thresholds,
     provider_crossref_pdf_position,
+    provider_display_names,
     provider_domain_matches,
     provider_emits_html_managed_marker,
     provider_for_source,
+    provider_for_xml_source,
     provider_html_path_templates,
     provider_managed_abstract_only_names,
     provider_metadata_probe_short_circuit,
-    provider_pdf_source_path_templates,
     provider_pdf_path_templates,
+    provider_pdf_source_path_templates,
     provider_persists_provider_html,
-    provider_display_names,
-    provider_supports_metadata_api_probe,
     provider_status_order,
+    provider_supports_metadata_api_probe,
     sources_by_provider,
 )
-from paper_fetch.extraction.html.provider_rules import (
-    COMMON_ACCESS_BLOCK_TOKENS,
-    IEEE_ACCESS_BLOCK_TEXT_TOKENS,
-    IEEE_AVAILABILITY_DROP_KEYWORDS,
-    IEEE_EXTRACTION_CLEANUP_SELECTORS,
-    SPRINGER_NATURE_DISPLAY_FORMULA_SELECTORS,
-    SPRINGER_NATURE_FORMULA_CONTAINER_TOKENS,
-)
-from paper_fetch.quality.html_profiles import site_rule_for_publisher
-from paper_fetch.models.schema import SourceKind
 from paper_fetch.providers import _pdf_candidates, html_springer_nature
-from paper_fetch import utils
 from paper_fetch.providers.registry import build_clients
+from paper_fetch.quality.html_profiles import site_rule_for_publisher
 from paper_fetch.workflow import fulltext, routing
 
 

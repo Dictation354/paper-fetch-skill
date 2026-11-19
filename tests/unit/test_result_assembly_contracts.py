@@ -1,4 +1,5 @@
 from pathlib import Path
+
 from paper_fetch.artifacts import ArtifactStore
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers.base import (

@@ -1,11 +1,18 @@
 """CLI receipts and retained reading artifacts, using boundary fetch doubles."""
 
-from pathlib import Path
 import json
+from pathlib import Path
+
 import pytest
 
 from paper_fetch import cli
-from paper_fetch.models import FetchEnvelope, Metadata, Quality
+from paper_fetch.models import (
+    AssetDiagnostic,
+    AssetQualitySummary,
+    FetchEnvelope,
+    Metadata,
+    Quality,
+)
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.service import HasFulltextProbeResult, PaperFetchFailure
 from tests.support.asset_delivery_scenarios import GIF, asset_state
@@ -31,15 +38,146 @@ def test_default_receipt_delivers_retained_full_body(isolated, capsys):
     )
     assert receipt["content_kind"] == "fulltext"
     assert receipt["target_satisfied"] is True and receipt["error"] is None
-    for key in ("body_path", "manifest_path", "image_index_path"):
+    for key in ("body_path", "manifest_path", "image_index_path", "section_index_path"):
         path = Path(receipt[key])
         assert path.is_absolute() and path.is_file()
     manifest = json.loads(Path(receipt["manifest_path"]).read_text())
-    assert manifest["identity"]["doi"] == "10.1000/acceptance"
+    assert manifest["acceptance"]["identity"]["doi"] == "10.1000/acceptance"
     assert "markdown" not in receipt and "trace" not in receipt
     assert not list(
         Path(receipt["manifest_path"]).parents[3].glob(".paper-fetch-cache.json")
     )
+
+
+def test_receipt_v1_preserves_asset_fields_across_lookup(
+    isolated, tmp_path, capsys, monkeypatch
+):
+    envelope = _envelope()
+    envelope.quality.asset_summary = AssetQualitySummary(
+        requested=True,
+        audited=True,
+        profile="body",
+        discovered=2,
+        attempted=2,
+        local=1,
+        accepted_preview=1,
+        not_archived=1,
+        remote_link_count=1,
+        remote_only_count=1,
+        diagnostics=[
+            AssetDiagnostic(
+                request_profile="body",
+                kind="figure",
+                status="available",
+                path="preview.png",
+                download_tier="preview",
+            ),
+            AssetDiagnostic(
+                request_profile="body", kind="figure", status="not_archived"
+            ),
+        ],
+    )
+    monkeypatch.setattr(cli, "fetch_paper", lambda *a, **kw: envelope)
+    doi = "10.1000/acceptance"
+    output = ["--output-dir", str(tmp_path)]
+    assert (
+        cli.main(
+            [
+                "fetch",
+                "--query",
+                doi,
+                *output,
+                "--asset-profile",
+                "body",
+                "--require-full-size-body-assets",
+            ]
+        )
+        == 0
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    assert receipt["schema_version"] == 1
+    assert {
+        key: receipt["identity"][key]
+        for key in (
+            "canonical_landing_url",
+            "canonical_landing_verified",
+            "canonical_landing_unique",
+        )
+    } == {
+        "canonical_landing_url": None,
+        "canonical_landing_verified": False,
+        "canonical_landing_unique": False,
+    }
+    assert receipt["acceptance"]["asset_summary"] == {
+        "requested": True,
+        "profile": "body",
+        "audited": True,
+        "expected": None,
+        "discovered": 2,
+        "attempted": 2,
+        "total": 2,
+        "local": 1,
+        "full_size": 0,
+        "preview": 1,
+        "accepted_preview": 1,
+        "fallback_preview": 0,
+        "failed": 0,
+        "placeholder_suspected": 0,
+        "not_archived": 1,
+        "remote_link_count": 1,
+        "remote_only_count": 1,
+        "body_discovered": 2,
+        "body_attempted": 2,
+        "body_local": 1,
+        "body_full_size": 0,
+        "body_preview": 1,
+        "body_failed": 0,
+        "body_not_archived": 1,
+        "body_remote_only_count": 1,
+        "require_local_body_assets": True,
+        "require_full_size_body_assets": True,
+        "has_local_body_assets": True,
+        "all_body_assets_local": False,
+        "all_body_assets_full_size": False,
+        "local_body_assets_satisfied": False,
+        "full_size_body_assets_satisfied": False,
+        "failure_codes": [],
+        "issue_codes": ["local_body_assets_required", "full_size_body_assets_required"],
+        "status": "degraded",
+        "remote_links_preserved": True,
+    }
+    assert cli.main(["lookup", "--doi", doi, *output]) == 0
+    assert json.loads(capsys.readouterr().out) == receipt
+
+
+def test_section_index_uses_written_body_lines_and_leaves_stdout_export_intact(
+    isolated, capsys, tmp_path, monkeypatch
+):
+    markdown = (
+        "---\n# YAML comment\ntitle: Paper\n---\n"
+        "# Paper\n\n## Main ###\nIntroduction.\n"
+        "````md\n## Fenced\n```\n## Still fenced\n````\n"
+        "~~~text\nHidden\n------\n~~~\n"
+        "\nResults\n-------\nResult text.\n\n### Detail\nLast line.\n"
+    )
+    envelope = _envelope()
+    envelope.markdown = markdown
+    monkeypatch.setattr(cli, "fetch_paper", lambda *a, **k: envelope)
+    args = ["fetch", "--query", "10.1000/acceptance", "--output-dir", str(tmp_path)]
+    assert cli.main(args) == 0
+    receipt = json.loads(capsys.readouterr().out)
+    assert Path(receipt["body_path"]).read_bytes() == markdown.encode()
+    assert json.loads(Path(receipt["section_index_path"]).read_text()) == {
+        "schema_version": 1,
+        "sections": [
+            {"title": "Paper", "level": 1, "start_line": 5, "end_line": 6},
+            {"title": "Main", "level": 2, "start_line": 7, "end_line": 18},
+            {"title": "Results", "level": 2, "start_line": 19, "end_line": 22},
+            {"title": "Detail", "level": 3, "start_line": 23, "end_line": 24},
+        ],
+    }
+    assert cli.main([*args, "--output", "-"]) == 0
+    assert capsys.readouterr().out == markdown
 
 
 @pytest.mark.parametrize("output_format", ["markdown", "json", "both"])
@@ -130,8 +268,9 @@ def test_resolve_and_check_map_inputs_without_body_fetch(
         assert [p["doi"] for p in payloads] == source.read_text().splitlines()
 
 
+@pytest.mark.parametrize("manifest_version", [2, 3])
 def test_manifest_assets_never_resolve_or_fetch_body(
-    isolated, tmp_path, capsys, monkeypatch
+    isolated, tmp_path, capsys, monkeypatch, manifest_version
 ):
     assert (
         cli.main(
@@ -140,6 +279,25 @@ def test_manifest_assets_never_resolve_or_fetch_body(
         == 0
     )
     receipt = json.loads(capsys.readouterr().out)
+    manifest_path = Path(receipt["manifest_path"])
+    if manifest_version == 2:
+        from paper_fetch.manifest import parse_manifest_record
+
+        payload = json.loads(manifest_path.read_text())
+        record = parse_manifest_record(payload)
+        payload.update(
+            schema_version=2,
+            minimum_reader_schema_version=2,
+            doi=record.acceptance.identity.doi,
+            identity=payload["acceptance"]["identity"],
+        )
+        payload["acceptance"].update(schema_version=2, minimum_reader_schema_version=2)
+        payload["output_artifacts"] = [
+            item
+            for item in payload["output_artifacts"]
+            if item["kind"] != "section_index"
+        ]
+        manifest_path.write_text(json.dumps(payload))
     from paper_fetch import targeted_assets
 
     seen = []
@@ -153,6 +311,9 @@ def test_manifest_assets_never_resolve_or_fetch_body(
         targeted_assets,
         "context_from_query",
         lambda *a: pytest.fail("query fetch forbidden"),
+    )
+    monkeypatch.setattr(
+        cli, "fetch_paper", lambda *a, **kw: pytest.fail("body fetch forbidden")
     )
     assert (
         cli.main(

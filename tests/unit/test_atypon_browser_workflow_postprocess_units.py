@@ -1,17 +1,20 @@
 from __future__ import annotations
-from tests.golden_criteria import golden_criteria_scenario_asset
+
+import unittest
+
+from bs4 import BeautifulSoup
+
+from paper_fetch.providers import _science_html
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
-import unittest
-from bs4 import BeautifulSoup
-from paper_fetch.providers.atypon_browser_workflow.postprocess import (
-    _postprocess_browser_workflow_markdown,
-)
-from paper_fetch.providers import _science_html
 from paper_fetch.providers.atypon_browser_workflow import (
     normalization as atypon_browser_workflow_normalization,
 )
+from paper_fetch.providers.atypon_browser_workflow.postprocess import (
+    _postprocess_browser_workflow_markdown,
+)
+from tests.golden_criteria import golden_criteria_scenario_asset
 
 
 class AtyponBrowserWorkflowPostprocessUnitTests(unittest.TestCase):

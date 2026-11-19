@@ -1,18 +1,26 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from paper_fetch.providers import _springer_assets, _springer_dom, _springer_markdown
+
 import unittest
+from dataclasses import replace
 from pathlib import Path
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.http import HttpTransport
-from paper_fetch.providers import html_springer_nature, springer as springer_provider
-from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.markdown.citations import normalize_inline_citation_markdown
-from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.providers import (
+    _springer_assets,
+    _springer_dom,
+    _springer_markdown,
+    html_springer_nature,
+)
+from paper_fetch.providers import springer as springer_provider
+from paper_fetch.providers._asset_retry import merge_asset_retry_results
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers._html_section_markdown import render_clean_text_from_html
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.quality.html_availability import assess_html_fulltext_availability
+from paper_fetch.tracing import trace_event
 from paper_fetch.utils import normalize_text
 
 

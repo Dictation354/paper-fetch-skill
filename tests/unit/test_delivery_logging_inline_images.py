@@ -1,11 +1,12 @@
 from __future__ import annotations
-from paper_fetch.models import Quality
+
 import tempfile
 import unittest
 from pathlib import Path
+
 from paper_fetch.delivery.fetch_cache import FetchCache
 from paper_fetch.delivery.requests import FetchPaperRequest
-from paper_fetch.models import Asset, FetchEnvelope
+from paper_fetch.models import Asset, FetchEnvelope, Quality
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import (
     sample_article,

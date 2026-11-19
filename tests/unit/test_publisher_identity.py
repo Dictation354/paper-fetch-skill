@@ -1,19 +1,19 @@
 from __future__ import annotations
-from dataclasses import replace
 
-import unittest
-from unittest import mock
-from pathlib import Path
 import tempfile
+import unittest
+from dataclasses import replace
+from pathlib import Path
+from unittest import mock
 
 from paper_fetch import publisher_identity
+from paper_fetch.providers._reference_doi import reference_doi_match
 from paper_fetch.providers.base import (
     ProviderClient,
     ProviderContent,
     ProviderFailure,
     RawFulltextPayload,
 )
-from paper_fetch.providers._reference_doi import reference_doi_match
 
 
 class PublisherIdentityTests(unittest.TestCase):

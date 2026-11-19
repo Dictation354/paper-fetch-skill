@@ -2,22 +2,20 @@
 
 from __future__ import annotations
 
-from ...tracing import TraceEvent
-
-from typing import Any
 from collections.abc import Mapping, Sequence
+from typing import Any
 
 from ...http import PDF_MIME_TYPE
-from ...runtime import RuntimeContext
-from ...tracing import trace_event
 from ...reason_codes import PDF_FALLBACK
-from .._pdf_fallback import PdfRequestContext
-from ..base import ProviderContent, RawFulltextPayload
+from ...runtime import RuntimeContext
+from ...tracing import TraceEvent, trace_event
 from .._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
 )
+from .._pdf_fallback import PdfRequestContext
+from ..base import ProviderContent, RawFulltextPayload
 from .fetchers import _choose_browser_seed_url
 from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
 
@@ -26,7 +24,7 @@ def fetch_seeded_browser_pdf_payload(
     *,
     provider: str,
     doi: str | None,
-    runtime,
+    runtime: Any,
     pdf_candidates: list[str],
     html_candidates: list[str],
     landing_page_url: str | None,
@@ -43,17 +41,19 @@ def fetch_seeded_browser_pdf_payload(
     context: RuntimeContext | None = None,
     deps: BrowserWorkflowDeps | None = None,
 ) -> RawFulltextPayload:
+    del user_agent
     if context is not None:
         context.raise_if_cancelled()
-    deps = deps or default_browser_workflow_deps()
-    context_warmer = deps.warm_browser_context
-    if deps.pdf_browser_context_seed is not deps.warm_browser_context:
+    active_deps = deps or default_browser_workflow_deps()
+    context_warmer = active_deps.warm_browser_context
+    if active_deps.pdf_browser_context_seed is not active_deps.warm_browser_context:
         from ..browser_runtime.api import (
             warm_browser_context as default_warm_browser_context,
         )
 
-        if deps.warm_browser_context is default_warm_browser_context:
-            context_warmer = deps.pdf_browser_context_seed
+        if active_deps.warm_browser_context is default_warm_browser_context:
+            context_warmer = active_deps.pdf_browser_context_seed
+
     if provider == "elsevier":
         # HTML already owns this Chrome session. Navigating a PDF merely to warm
         # it can start a download before the PDF fetcher installs its listener.
@@ -67,6 +67,7 @@ def fetch_seeded_browser_pdf_payload(
             runtime_context=context,
             lightweight=True,
         ).seed
+
     if context is not None:
         context.raise_if_cancelled()
     seed_url = _choose_browser_seed_url(
@@ -77,7 +78,7 @@ def fetch_seeded_browser_pdf_payload(
     )
     seeded_browser_cookies = list(pdf_context_seed.get("browser_cookies") or [])
     seed_urls = None if seeded_browser_cookies else ([seed_url] if seed_url else None)
-    pdf_result = deps.fetch_pdf_with_browser(
+    pdf_result = active_deps.fetch_pdf_with_browser(
         pdf_candidates,
         artifact_dir=runtime.artifact_dir / artifact_subdir,
         asset_profile=pdf_asset_profile_from_context(context),
@@ -101,16 +102,18 @@ def fetch_seeded_browser_pdf_payload(
     )
     if context is not None:
         context.raise_if_cancelled()
+
     payload_warnings = [str(item) for item in warnings or [] if str(item).strip()]
     pdf_result_warnings = getattr(pdf_result, "warnings", [])
     if isinstance(pdf_result_warnings, Sequence) and not isinstance(
-        pdf_result_warnings, (str, bytes, bytearray)
+        pdf_result_warnings, str | bytes | bytearray
     ):
         payload_warnings.extend(
             str(item) for item in pdf_result_warnings if str(item).strip()
         )
     if success_warning:
         payload_warnings.append(success_warning)
+
     failure_diagnostics = dict(html_failure_diagnostics or {})
     payload_trace = list(success_events or [])
     if html_failure_reason:

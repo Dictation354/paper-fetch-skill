@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import importlib.metadata
-from pathlib import Path
 import tomllib
+from pathlib import Path
 
 DIST_NAME = "paper-fetch-skill"
 

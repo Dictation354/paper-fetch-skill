@@ -1,14 +1,13 @@
 """Routing and probe logic for provider selection."""
 
 from __future__ import annotations
-from ..tracing import TraceEvent, extend_trace
 
+import urllib.parse
+from collections.abc import Mapping
 from concurrent.futures import ThreadPoolExecutor
 from contextvars import copy_context
 from dataclasses import dataclass
 from typing import Any, cast
-from collections.abc import Mapping
-import urllib.parse
 
 from ..config import build_publisher_user_agent
 from ..extraction.html.landing import fetch_landing_html
@@ -20,6 +19,14 @@ from ..provider_catalog import (
     provider_supports_metadata_api_probe,
 )
 from ..providers.base import ProviderFailure
+from ..providers.protocols import MetadataProvider
+from ..publisher_identity import (
+    ProviderIdentityCandidate,
+    _ordered_provider_signals,
+    normalize_doi,
+    ordered_provider_candidate_evidence,
+    ordered_provider_candidates,
+)
 from ..reason_codes import (
     ERROR,
     NO_ACCESS,
@@ -28,16 +35,8 @@ from ..reason_codes import (
     NOT_SUPPORTED,
     RATE_LIMITED,
 )
-from ..providers.protocols import MetadataProvider
 from ..runtime import RuntimeContext
-from ..tracing import route_event
-from ..publisher_identity import (
-    ProviderIdentityCandidate,
-    _ordered_provider_signals,
-    normalize_doi,
-    ordered_provider_candidates,
-    ordered_provider_candidate_evidence,
-)
+from ..tracing import TraceEvent, extend_trace, route_event
 from ..utils import (
     choose_public_landing_page_url,
     extend_unique,

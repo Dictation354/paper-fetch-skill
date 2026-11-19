@@ -6,7 +6,7 @@ import sys
 
 import pytest
 
-from paper_fetch.providers.browser_runtime.platforms import supported_platform
+from paper_fetch.browser_runtime_policy import supported_platform
 
 
 @pytest.mark.skipif(

@@ -1,7 +1,8 @@
 from dataclasses import fields
+
 from paper_fetch.providers.browser_runtime.types import (
-    BrowserRuntimeConfig,
     BrowserFetchedHtml,
+    BrowserRuntimeConfig,
 )
 
 

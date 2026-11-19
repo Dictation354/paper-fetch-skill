@@ -489,7 +489,7 @@ USER_CONFIG_FILE=""
 INSTALL_USER_CONFIG_FLAG="--no-user-config"
 mkdir -p "$GUARD_DIR" "$FAKE_HOME"
 mkdir -p "$FAKE_HOME/.gemini/antigravity-cli"
-printf '{"mcpServers":{"keep-server":{"command":"keep"},"custom-legacy":{"command":"python","args":["-m","paper_fetch.mcp.server"]}}}\n' > "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json"
+printf '{"mcpServers":{"keep-server":{"command":"keep"}}}\n' > "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json"
 if [ "$TARGET_PLATFORM" = "macos" ]; then
   mkdir -p "$FAKE_HOME/config"
   SHELL_STARTUP_EDIT_FILE="$FAKE_HOME/config/zshrc"
@@ -616,7 +616,7 @@ if grep -E -q '^[[:space:]]*PAPER_FETCH_BROWSER_USER_AGENT=' "$INSTALL_ROOT/offl
   die "Offline install must not override the default Camoufox fingerprint user agent."
 fi
 
-log "Verifying user shell, skill, and legacy registration cleanup"
+log "Verifying user shell and skill integration"
 [ ! -L "$SHELL_STARTUP_FILE" ] || [ "$TARGET_PLATFORM" = "macos" ] \
   || die "Unexpected shell startup symlink on non-macOS verifier."
 if [ "$TARGET_PLATFORM" = "macos" ]; then
@@ -637,19 +637,16 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
   grep -F -q "# BEGIN paper-fetch offline managed" "$USER_CONFIG_FILE"
 fi
 
-"$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" "$INSTALL_ROOT" <<'PY'
+"$RUNTIME_PYTHON" - "$FAKE_HOME/.gemini/antigravity-cli/mcp_config.json" <<'PY'
 import json
 import sys
 from pathlib import Path
 
 config_path = Path(sys.argv[1])
-install_root = Path(sys.argv[2])
 data = json.loads(config_path.read_text(encoding="utf-8"))
 servers = data["mcpServers"]
 assert "keep-server" in servers, servers
 assert "paper-fetch" not in servers, servers
-assert "custom-legacy" not in servers, servers
-
 PY
 
 if [ "$TARGET_PLATFORM" = "macos" ]; then

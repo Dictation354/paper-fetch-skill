@@ -3,8 +3,8 @@
 from __future__ import annotations
 
 import copy
-from contextlib import suppress
 from collections.abc import Callable, Iterator
+from contextlib import suppress
 from dataclasses import replace
 from typing import Any, Generic, TypeVar
 

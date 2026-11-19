@@ -1,21 +1,31 @@
 from __future__ import annotations
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
+
+import re
+import tempfile
+import unittest
+import xml.etree.ElementTree as ET
+from pathlib import Path
+
+import paper_fetch.providers.elsevier as elsevier_provider
 from paper_fetch.models import article_from_structure
-from paper_fetch.providers import elsevier as elsevier_provider
 from paper_fetch.providers import (
     _article_markdown_elsevier_document as elsevier_document,
 )
-from pathlib import Path
-import xml.etree.ElementTree as ET
-import unittest
-import tempfile
-import re
+from paper_fetch.providers import (
+    _article_markdown_math as article_markdown_math,
+)
+from paper_fetch.providers import (
+    _article_markdown_xml as article_markdown_xml,
+)
+from paper_fetch.providers import (
+    _elsevier_objects as elsevier_objects,
+)
+from paper_fetch.providers import (
+    _elsevier_xml_rules as elsevier_rules,
+)
 from paper_fetch.providers._article_markdown_common import render_inline_text
-from paper_fetch.providers import _article_markdown_xml as article_markdown_xml
-from paper_fetch.providers import _elsevier_objects as elsevier_objects
-from paper_fetch.providers import _elsevier_xml_rules as elsevier_rules
-from paper_fetch.providers import _article_markdown_math as article_markdown_math
 from paper_fetch.runtime import RuntimeContext
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_scenario_asset
 
 
 def build_elsevier_markdown(

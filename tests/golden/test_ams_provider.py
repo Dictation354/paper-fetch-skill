@@ -1,13 +1,13 @@
 from __future__ import annotations
-from tests.support.markdown_presentation import visible_markdown
-from tests.support.test_evidence import evidence_cache as cache
-from pathlib import Path
-import tempfile
-from tests.support.captured_images import download_captured_images
+
 import re
+import tempfile
 import unittest
+from pathlib import Path
 from urllib.parse import urljoin
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.models import article_from_markdown
 from paper_fetch.providers import (
     _ams_assets,
@@ -23,7 +23,9 @@ from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_
 from tests.support._atypon_browser_workflow_provider_support import (
     AtyponBrowserWorkflowProviderTestCase,
 )
-
+from tests.support.captured_images import download_captured_images
+from tests.support.markdown_presentation import visible_markdown
+from tests.support.test_evidence import evidence_cache as cache
 
 AMS_DOI = "10.1175/jcli-d-23-0738.1"
 AMS_TITLE = "Human Influence Has Increased the Likelihood of Extreme Autumn Fire Weather in California"

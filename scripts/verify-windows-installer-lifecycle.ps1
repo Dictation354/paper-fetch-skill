@@ -60,12 +60,11 @@ node_pin = json.loads((root / "installer/manifest.json").read_text())["embedded_
 assert subprocess.check_output([str(node), "--version"], text=True).strip() == "v" + node_pin["version"]
 config = tomllib.loads((Path(os.environ["USERPROFILE"]) / ".codex/config.toml").read_text())
 assert config["user_lifecycle_sentinel"] == "preserve"
-from paper_fetch.legacy_cleanup import owned_entry
-assert not any(owned_entry(entry) for entry in config.get("mcp_servers", {}).values())
+assert "paper-fetch" not in config.get("mcp_servers", {})
 agy_path = Path(os.environ["ANTIGRAVITY_HOME"]) / "mcp_config.json"
 if agy_path.exists():
     antigravity = json.loads(agy_path.read_text())
-    assert not any(owned_entry(entry) for entry in antigravity.get("mcpServers", {}).values())
+    assert "paper-fetch" not in antigravity.get("mcpServers", {})
 os.environ["PLAYWRIGHT_NODEJS_PATH"] = str(node)
 from playwright.sync_api import sync_playwright
 with sync_playwright() as driver:

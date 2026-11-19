@@ -5,31 +5,30 @@ IEEE pagination below is a constructed transport around real entries, not a
 capture of multiple publisher pages. Ancillary fixtures are original excerpts.
 """
 
-from tests.support.transport import RecordedStreamTransport
-
-from copy import deepcopy
-from tests.support.canonical_content import source_reference_text
-from types import SimpleNamespace
-from tests.support.test_evidence import evidence_cache as cache
-from tests.support.canonical_content import comparable_cell
 import hashlib
 import html
 import json
 import re
-from bs4 import BeautifulSoup
+from copy import deepcopy
+from types import SimpleNamespace
+
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch.providers import _ieee_metadata
 from tests.fixture_catalog import fixture_catalog
 from tests.golden_corpus import GoldenCorpusFixture
-from tests.support.replay import build_article_from_fixture
 from tests.golden_criteria import (
     golden_criteria_asset,
     golden_criteria_manifest,
     golden_criteria_sample_for_doi,
 )
-from tests.support.reviewed_publisher_content import _words
+from tests.support.canonical_content import comparable_cell, source_reference_text
+from tests.support.replay import build_article_from_fixture
 from tests.support.reviewed_html_publisher_content import _table_cell
-
+from tests.support.reviewed_publisher_content import _words
+from tests.support.test_evidence import evidence_cache as cache
+from tests.support.transport import RecordedStreamTransport
 
 ELSEVIER = "10.1016/j.agrformet.2024.109975"
 IEEE = "10.1109/TDEI.2024.3373549"

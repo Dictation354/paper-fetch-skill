@@ -3,18 +3,16 @@
 import hashlib
 import json
 
-from bs4 import BeautifulSoup
 import pytest
 import yaml
+from bs4 import BeautifulSoup
 
 from tests.golden_corpus import build_article_from_fixture
-from tests.golden_criteria import golden_criteria_sample
-from tests.golden_criteria import source_selections
+from tests.golden_criteria import golden_criteria_sample, source_selections
 from tests.paths import REPO_ROOT
 from tests.support.acquired_publisher_inputs import CapturedSourceFixture
 from tests.support.reviewed_publisher_content import _words
 from tests.support.verified_source_inputs import inspect_original
-
 
 TITLES = {
     "10.1016/j.rse.2026.115369": "Sentinel-1 for offshore wind energy application",
@@ -90,7 +88,9 @@ def test_legacy_replay_json_yaml_h1_use_original_title(
 
 def test_plos_scientific_identifier_survives_source_to_yaml_and_rendered_title():
     import xml.etree.ElementTree as ET
+
     from markdown_it import MarkdownIt
+
     from paper_fetch.models import article_from_markdown
     from paper_fetch.providers.plos import parse_plos_xml
     from tests.golden_criteria import golden_criteria_asset

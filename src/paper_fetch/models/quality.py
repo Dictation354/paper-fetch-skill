@@ -3,11 +3,9 @@
 from __future__ import annotations
 
 import re
-from collections.abc import Sequence
+from collections.abc import Mapping, Sequence
 from typing import Any, cast
-from collections.abc import Mapping
 
-from ..utils import normalize_text
 from ..reason_codes import (
     ABSTRACT_ONLY,
     ACCESS_PAGE_URL,
@@ -22,8 +20,10 @@ from ..reason_codes import (
     REDIRECTED_TO_ABSTRACT,
     WT_ABSTRACT_PAGE_TYPE,
 )
+from ..utils import normalize_text
 from .markdown import strip_markdown_images
 from .schema import (
+    EXTRACTION_REVISION,
     ArticleModel,
     AssetDiagnostic,
     AssetDiagnosticStatus,
@@ -33,7 +33,6 @@ from .schema import (
     AssetQualitySummary,
     BodyQualityMetrics,
     ContentKind,
-    EXTRACTION_REVISION,
     QualityConfidence,
     Section,
     SemanticLosses,
@@ -344,7 +343,6 @@ def _coerce_asset_kind_summary(value: Any) -> AssetKindSummary:
             "total": value.total,
             "requested": value.requested,
             "full_size": value.full_size,
-            "preview": value.preview,
             "accepted_preview": value.accepted_preview,
             "fallback_preview": value.fallback_preview,
             "failed": value.failed,
@@ -356,17 +354,12 @@ def _coerce_asset_kind_summary(value: Any) -> AssetKindSummary:
         payload = value
     else:
         raise ValueError("Asset kind summary must use the current schema")
-    accepted_preview = _nonnegative_int(payload.get("accepted_preview"))
-    fallback_preview = _nonnegative_int(payload.get("fallback_preview"))
-    preview = _nonnegative_int(payload.get("preview"))
-    preview = accepted_preview + fallback_preview
     return AssetKindSummary(
         total=_nonnegative_int(payload.get("total")),
         requested=_nonnegative_int(payload.get("requested")),
         full_size=_nonnegative_int(payload.get("full_size")),
-        preview=preview,
-        accepted_preview=accepted_preview,
-        fallback_preview=fallback_preview,
+        accepted_preview=_nonnegative_int(payload.get("accepted_preview")),
+        fallback_preview=_nonnegative_int(payload.get("fallback_preview")),
         failed=_nonnegative_int(payload.get("failed")),
         placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
         not_requested=_nonnegative_int(payload.get("not_requested")),
@@ -425,10 +418,8 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
             "expected": value.expected,
             "discovered": value.discovered,
             "attempted": value.attempted,
-            "total": value.total,
             "local": value.local,
             "full_size": value.full_size,
-            "preview": value.preview,
             "accepted_preview": value.accepted_preview,
             "fallback_preview": value.fallback_preview,
             "failed": value.failed,
@@ -466,10 +457,6 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
         )
         if (diagnostic := _coerce_asset_diagnostic(item)) is not None
     ]
-    accepted_preview = _nonnegative_int(payload.get("accepted_preview"))
-    fallback_preview = _nonnegative_int(payload.get("fallback_preview"))
-    preview = _nonnegative_int(payload.get("preview"))
-    preview = accepted_preview + fallback_preview
     return AssetQualitySummary(
         audited=bool(payload.get("audited")),
         requested=bool(payload.get("requested")),
@@ -479,14 +466,12 @@ def coerce_asset_quality_summary(value: Any) -> AssetQualitySummary:
             if payload.get("expected") is not None
             else None
         ),
-        discovered=_nonnegative_int(payload.get("discovered")),
+        discovered=_nonnegative_int(payload.get("discovered", payload.get("total"))),
         attempted=_nonnegative_int(payload.get("attempted")),
-        total=_nonnegative_int(payload.get("total")),
         local=_nonnegative_int(payload.get("local")),
         full_size=_nonnegative_int(payload.get("full_size")),
-        preview=preview,
-        accepted_preview=accepted_preview,
-        fallback_preview=fallback_preview,
+        accepted_preview=_nonnegative_int(payload.get("accepted_preview")),
+        fallback_preview=_nonnegative_int(payload.get("fallback_preview")),
         failed=_nonnegative_int(payload.get("failed")),
         placeholder_suspected=_nonnegative_int(payload.get("placeholder_suspected")),
         not_requested=_nonnegative_int(payload.get("not_requested")),

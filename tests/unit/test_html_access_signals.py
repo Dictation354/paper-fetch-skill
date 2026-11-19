@@ -7,14 +7,15 @@ from paper_fetch.extraction.html.signals import (
     ACCESS_GATE_PATTERNS,
     ASSET_ACCESS_BLOCK_LABELS,
     MARKDOWN_ACCESS_NOISE_LABELS,
+    detect_challenge_provider,
     detect_html_access_signals,
     detect_html_block,
-    detect_challenge_provider,
     html_failure_message,
     matched_access_gate_patterns,
     summarize_html,
     summarize_visible_html,
 )
+from paper_fetch.providers import _science_html
 from paper_fetch.quality.html_signals import (
     AAAS_DATALAYER_PATTERN,
     DATALAYER_SCHEMAS,
@@ -23,7 +24,6 @@ from paper_fetch.quality.html_signals import (
     evaluate_datalayer_blocking_signals,
     load_provider_datalayer,
 )
-from paper_fetch.providers import _science_html
 
 
 class HtmlAccessSignalsTests(unittest.TestCase):

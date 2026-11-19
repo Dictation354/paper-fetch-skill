@@ -1,20 +1,17 @@
 """P12 replacements: original response identity and current HTML/XML assembly."""
 
-from tests.support.markdown_presentation import visible_markdown
-
 import html
 import re
 from urllib.parse import unquote, urlsplit
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
-from tests.golden_criteria import golden_criteria_sample_for_doi
 from tests.golden_corpus import build_article_from_fixture
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support.acquired_publisher_inputs import CapturedSourceFixture, _record
+from tests.support.markdown_presentation import visible_markdown
 from tests.support.reviewed_publisher_content import _words
-from tests.golden_criteria import golden_criteria_asset
-
 
 CASES = [
     (

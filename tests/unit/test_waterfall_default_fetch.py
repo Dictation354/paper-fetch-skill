@@ -1,15 +1,18 @@
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-from paper_fetch.providers.base import ProviderContent
 
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 import pytest
 
 from paper_fetch.providers._waterfall import WaterfallStep
-from paper_fetch.providers.base import ProviderClient, RawFulltextPayload
+from paper_fetch.providers.base import (
+    ProviderClient,
+    ProviderContent,
+    RawFulltextPayload,
+)
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 
 
 class EmptyWaterfallClient(ProviderClient):

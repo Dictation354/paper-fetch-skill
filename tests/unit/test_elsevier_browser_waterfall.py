@@ -1,14 +1,12 @@
 """Minimal Elsevier route contracts; publisher content replays live in golden."""
 
-from tests.support.transport import configure_stream_transport
 from dataclasses import replace
-
-
 from types import SimpleNamespace
 from unittest.mock import Mock
 
 import pytest
 
+from paper_fetch import browser_runtime_policy as selection
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import elsevier
 from paper_fetch.providers.base import (
@@ -16,11 +14,11 @@ from paper_fetch.providers.base import (
     ProviderFailure,
     RawFulltextPayload,
 )
-from paper_fetch.providers.browser_runtime import selection
 from paper_fetch.providers.browser_workflow.profile import (
     BrowserWorkflowBootstrapResult,
 )
 from paper_fetch.quality.access_boundary import confirmed_paywall, paywall_failure
+from tests.support.transport import configure_stream_transport
 
 DOI = "10.1016/example"
 META = {"doi": DOI, "pii": "S016819232400090X", "title": "Example"}
@@ -176,6 +174,7 @@ def test_html_confirmed_paywall_is_terminal(monkeypatch):
 def test_macos_keeps_elsevier_browser_stages(monkeypatch, tmp_path):
     import platform
     import sys
+
     from paper_fetch.providers.browser_runtime.api import load_runtime_config
 
     monkeypatch.setattr(sys, "platform", "darwin")

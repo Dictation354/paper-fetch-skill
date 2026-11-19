@@ -6,7 +6,6 @@ from paper_fetch.providers._ieee_metadata import (
 )
 from tests.golden_criteria import golden_criteria_asset
 
-
 DOI = "10.1109/TBME.2024.3434477"
 
 URL = "https://ieeexplore.ieee.org/document/10612240/"

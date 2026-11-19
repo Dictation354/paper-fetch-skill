@@ -1,11 +1,12 @@
 from __future__ import annotations
-from tests.support.markdown_presentation import visible_markdown
+
+import unittest
+
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
-import unittest
 from tests.golden_criteria import golden_criteria_asset
-
+from tests.support.markdown_presentation import visible_markdown
 
 WILEY_FULL_FIXTURE = golden_criteria_asset("10.1111/gcb.16414", "original.html")
 WILEY_ABBREV_FIXTURE = golden_criteria_asset("10.1111/cas.16395", "original.html")

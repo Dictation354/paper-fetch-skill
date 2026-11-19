@@ -2,13 +2,13 @@
 
 from __future__ import annotations
 
+import contextlib
 import re
 import urllib.parse
+from collections.abc import Iterable
 from hashlib import sha1
 from pathlib import Path
 from typing import Any
-from collections.abc import Iterable
-import contextlib
 
 
 def first_non_empty(*values: Any) -> Any:

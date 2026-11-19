@@ -4,13 +4,13 @@ from __future__ import annotations
 
 import json
 import re
-from typing import Any
 from re import Pattern
+from typing import Any
+
+from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.parsing import choose_parser
 from ..utils import normalize_text
-
-from bs4 import BeautifulSoup, Tag
 
 _JSON_CLOSERS = {"{": "}", "[": "]"}
 

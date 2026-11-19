@@ -12,30 +12,17 @@ _EXPORTS: dict[str, tuple[str, str]] = {
     "AcsClient": (".acs", "AcsClient"),
     "AmsClient": (".ams", "AmsClient"),
     "ArxivClient": (".arxiv", "ArxivClient"),
-    "CrossrefClient": (".crossref", "CrossrefClient"),
     "CopernicusClient": (".copernicus", "CopernicusClient"),
+    "CrossrefClient": (".crossref", "CrossrefClient"),
     "ElsevierClient": (".elsevier", "ElsevierClient"),
     "FrontiersClient": (".frontiers", "FrontiersClient"),
     "IeeeClient": (".ieee", "IeeeClient"),
-    "PnasClient": (".pnas", "PnasClient"),
     "PlosClient": (".plos", "PlosClient"),
+    "PnasClient": (".pnas", "PnasClient"),
     "ScienceClient": (".science", "ScienceClient"),
     "SpringerClient": (".springer", "SpringerClient"),
     "TandfClient": (".tandf", "TandfClient"),
     "WileyClient": (".wiley", "WileyClient"),
-    "build_elsevier_object_url": (".elsevier", "build_elsevier_object_url"),
-    "download_elsevier_related_assets": (
-        ".elsevier",
-        "download_elsevier_related_assets",
-    ),
-    "elsevier_asset_priority": (".elsevier", "elsevier_asset_priority"),
-    "extract_elsevier_asset_references": (
-        ".elsevier",
-        "extract_elsevier_asset_references",
-    ),
-    "first_xml_child_text": (".elsevier", "first_xml_child_text"),
-    "infer_elsevier_asset_group_key": (".elsevier", "infer_elsevier_asset_group_key"),
-    "xml_local_name": (".elsevier", "xml_local_name"),
 }
 
 

@@ -2,25 +2,28 @@
 
 from __future__ import annotations
 
+import contextlib
 import logging
 import threading
-from dataclasses import dataclass
-from typing import Any, Literal
 from collections.abc import Callable, Mapping
+from dataclasses import dataclass, replace
+from typing import Any, Literal
 
 from ....logging_utils import emit_structured_log
 from ....runtime import RuntimeContext
 from ....utils import dedupe_normalized, normalize_text
 from ..._pdf_candidates import BROWSER_WORKFLOW_PDF_URL_TOKENS
-from ...browser_runtime.seed import parse_optional_int
 from ...browser_runtime.context import open_browser_context
+from ...browser_runtime.navigation import navigate_page
+from ...browser_runtime.seed import parse_optional_int
 from ...browser_runtime.types import BrowserRuntimeConfig
 from .diagnostics import (
     _compact_failure_diagnostic,
-    _context_failure_diagnostic as _build_context_failure_diagnostic,
     _copy_failure_diagnostic,
 )
-import contextlib
+from .diagnostics import (
+    _context_failure_diagnostic as _build_context_failure_diagnostic,
+)
 
 logger = logging.getLogger("paper_fetch.providers.browser_workflow")
 _RUNTIME_SHARED_PAGE_SESSION_KEY = ("browser_workflow", "shared_page_session")
@@ -233,7 +236,6 @@ def _new_browser_context(
 ) -> tuple[Any | None, Any | None, Any]:
     if browser_config is None:
         raise RuntimeError("browser asset fetch requires a Camoufox runtime config")
-    from dataclasses import replace
 
     active_config = replace(
         browser_config,
@@ -286,7 +288,7 @@ class _BaseBrowserDocumentFetcher:
 
     def __call__(
         self, source_url: str, asset: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
+    ) -> Mapping[str, Any] | None:
         raise NotImplementedError
 
     def close(self) -> None:
@@ -419,8 +421,6 @@ class _BaseBrowserDocumentFetcher:
             if max_urls is not None and warmed_count >= max_urls:
                 break
             try:
-                from ...browser_runtime.navigation import navigate_page
-
                 navigate_page(
                     page, seed_url, wait_until="domcontentloaded", timeout_ms=timeout_ms
                 )
@@ -499,7 +499,7 @@ class _ThreadLocalSharedDocumentFetcher:
 
     def __call__(
         self, source_url: str, asset: Mapping[str, Any]
-    ) -> dict[str, Any] | None:
+    ) -> Mapping[str, Any] | None:
         normalized_url = normalize_text(source_url)
         fetcher = self._get_fetcher()
         try:

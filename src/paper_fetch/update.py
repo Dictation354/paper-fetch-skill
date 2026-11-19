@@ -2,12 +2,10 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import hashlib
 import http.client
 import json
 import os
-from pathlib import Path, PurePosixPath
 import platform
 import re
 import shutil
@@ -16,6 +14,8 @@ import sys
 import sysconfig
 import tarfile
 import tempfile
+from dataclasses import dataclass
+from pathlib import Path, PurePosixPath
 from typing import Any
 from urllib.parse import quote
 from urllib.request import Request, urlopen

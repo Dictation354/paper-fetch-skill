@@ -3,13 +3,11 @@
 from __future__ import annotations
 
 import argparse
-from contextlib import contextmanager
 import ctypes
 import ctypes.util
 import getpass
 import io
 import os
-from pathlib import Path
 import re
 import shlex
 import shutil
@@ -18,6 +16,8 @@ import subprocess
 import sys
 import tempfile
 import warnings
+from contextlib import contextmanager
+from pathlib import Path
 
 from dotenv import dotenv_values
 from dotenv.parser import parse_stream
@@ -311,7 +311,7 @@ def preparation_warnings():
     if engine_name() == "invisible":
         yield
         return
-    from camoufox._warnings import LeakWarning, WARNINGS_DATA
+    from camoufox._warnings import WARNINGS_DATA, LeakWarning
 
     with warnings.catch_warnings():
         original = warnings.showwarning

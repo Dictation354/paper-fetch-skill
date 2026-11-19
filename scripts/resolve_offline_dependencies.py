@@ -4,15 +4,15 @@
 from __future__ import annotations
 
 import argparse
-from datetime import UTC, datetime
 import hashlib
 import json
 import platform
-from pathlib import Path
 import subprocess
 import sys
 import tempfile
 import tomllib
+from datetime import UTC, datetime
+from pathlib import Path
 from typing import Any
 
 sys.path.insert(0, str(Path(__file__).resolve().parents[1]))

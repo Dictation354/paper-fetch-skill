@@ -1,25 +1,31 @@
 from __future__ import annotations
+
 from dataclasses import replace
-from tests.support.browser_preflight import _runtime_config
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
+
 import pytest
+
 from paper_fetch import browser_preflight
-from paper_fetch.providers import _playwright_browser
 from paper_fetch.config import (
     BROWSER_TIMEOUT_MS_ENV_VAR,
     BROWSER_USER_AGENT_ENV_VAR,
     XDG_DATA_HOME_ENV_VAR,
 )
+from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
 from paper_fetch.providers.browser_runtime import (
     BrowserFetchedHtml,
     BrowserRuntimeConfig,
     BrowserRuntimeFailure,
+    html_fetcher,
 )
-from paper_fetch.providers.base import ProviderStatusResult, build_provider_status_check
+from paper_fetch.providers.browser_runtime import (
+    readiness as browser_readiness,
+)
 from paper_fetch.providers.browser_workflow import html_extraction
 from paper_fetch.providers.browser_workflow.shared import default_browser_workflow_deps
+from tests.support.browser_preflight import _runtime_config
 
 
 @pytest.mark.parametrize(
@@ -275,7 +281,7 @@ def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
 
     def fetch_html_with_playwright(*args, warm_wait_seconds=None, **kwargs):
         del warm_wait_seconds
-        return _playwright_browser.fetch_html_with_playwright(*args, **kwargs)
+        return html_fetcher.fetch_browser_html(*args, **kwargs)
 
     with (
         mock.patch.object(
@@ -290,12 +296,12 @@ def test_wiley_preflight_accepts_leading_login_navigation_after_body_readiness(
             side_effect=fetch_html_with_playwright,
         ),
         mock.patch.object(
-            _playwright_browser,
+            html_fetcher,
             "open_browser_context",
             return_value=(None, context),
         ),
         mock.patch.object(
-            _playwright_browser,
+            browser_readiness,
             "wait_for_atypon_body_dom_ready",
             return_value=SimpleNamespace(
                 attempted=True,

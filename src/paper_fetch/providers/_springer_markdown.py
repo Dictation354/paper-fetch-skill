@@ -6,25 +6,27 @@ from typing import Any
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
-from ..extraction.html.parsing import choose_parser
 
 from ..extraction.html._runtime import clean_markdown
 from ..extraction.html.figure_links import inject_inline_figure_links
+from ..extraction.html.parsing import choose_parser
 from ..extraction.html.renderer import render_html_markdown
-from .html_springer_nature import extract_springer_nature_markdown
+from ._html_references import (
+    _reference_doi,
+    _reference_text,
+    _reference_year,
+    extract_numbered_references_from_soup,
+)
 from ._springer_assets import extract_figure_assets
 from ._springer_authors import extract_authors
 from ._springer_dom import (
     _clean_springer_preview_markdown,
-    _remove_springer_ai_alt_disclaimers as _remove_springer_ai_alt_disclaimers,
     extract_html_extraction_sidecars,
 )
-from ._html_references import (
-    extract_numbered_references_from_soup,
-    _reference_text,
-    _reference_doi,
-    _reference_year,
+from ._springer_dom import (
+    _remove_springer_ai_alt_disclaimers as _remove_springer_ai_alt_disclaimers,
 )
+from .html_springer_nature import extract_springer_nature_markdown
 
 
 def extract_article_markdown(cleaned_html: str, source_url: str) -> str:

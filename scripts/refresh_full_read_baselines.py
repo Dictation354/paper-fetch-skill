@@ -6,19 +6,20 @@ minimal artifacts are never written.
 """
 
 import argparse
-from concurrent.futures import ProcessPoolExecutor, as_completed
 import hashlib
 import json
+from concurrent.futures import ProcessPoolExecutor, as_completed
 from pathlib import Path
 
 from tests.golden_corpus import (
     build_article_from_fixture,
-    golden_corpus_fixture_for_doi,
     expected_summary_from_article,
+    golden_corpus_fixture_for_doi,
 )
-from tests.support.replay import persisted_fixture_markdown
 from tests.golden_criteria import golden_criteria_asset
 from tests.support.formula_runtime import captured_formula_environment
+from tests.support.replay import persisted_fixture_markdown
+
 from paper_fetch.formula.convert import formula_runtime_env
 
 ROOT = Path(__file__).resolve().parents[1]

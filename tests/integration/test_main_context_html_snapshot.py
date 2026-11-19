@@ -8,10 +8,13 @@ import pytest
 
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers import _playwright_browser as fetcher
 from paper_fetch.providers.browser_runtime import (
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
+    BrowserRuntimeFailure,
+)
+from paper_fetch.providers.browser_runtime import (
+    html_fetcher as fetcher,
 )
 from paper_fetch.runtime import RuntimeContext
 from tests.support.offline_camoufox import prepared_browser
@@ -111,7 +114,7 @@ def test_ready_html_snapshot_keeps_delayed_body_math_and_prepared_references(
     with mock.patch.object(
         page, "content", side_effect=AssertionError("utility capture used")
     ):
-        result = fetcher.fetch_html_with_playwright(
+        result = fetcher.fetch_browser_html(
             [url],
             publisher=provider,
             config=BrowserRuntimeConfig(
@@ -170,7 +173,7 @@ def test_snapshot_navigation_race_falls_back_to_current_native_document(
 
     monkeypatch.setattr(page, "evaluate", navigating_evaluate)
     with mock.patch.object(page, "content", wraps=page.content) as native:
-        result = fetcher.fetch_html_with_playwright(
+        result = fetcher.fetch_browser_html(
             ["https://www.pnas.org/first"],
             publisher="pnas",
             config=BrowserRuntimeConfig(
@@ -229,9 +232,9 @@ def test_ready_snapshot_preserves_access_boundaries(
             "_main_context_html_snapshot",
             wraps=fetcher._main_context_html_snapshot,
         ) as capture,
-        pytest.raises((ProviderFailure, fetcher.PlaywrightBrowserFailure)) as caught,
+        pytest.raises((ProviderFailure, BrowserRuntimeFailure)) as caught,
     ):
-        fetcher.fetch_html_with_playwright(
+        fetcher.fetch_browser_html(
             [url],
             publisher="pnas",
             config=BrowserRuntimeConfig(

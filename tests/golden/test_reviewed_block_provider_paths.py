@@ -4,34 +4,33 @@ Only transport/browser setup and PDF failure are injected; no historical markdow
 or unrelated successful PDF supplies a recoverability claim.
 """
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-
-
-from tests.support.reviewed_block_provider_paths import _fetch_through_service
-from unittest import mock
 import json
+from unittest import mock
 from urllib.parse import unquote
-from paper_fetch.extraction.html._metadata import parse_html_metadata
+
 import pytest
+
+from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.providers import (
-    browser_runtime,
-    springer,
-    annualreviews,
-    pnas,
-    science,
-    wiley,
+    aip,
     ams,
+    annualreviews,
+    browser_runtime,
     iop,
     mdpi,
-    tandf,
-    aip,
     oxfordacademic,
+    pnas,
+    science,
+    springer,
+    tandf,
+    wiley,
 )
 from paper_fetch.providers._pdf_common import PdfFetchFailure
+from paper_fetch.tracing import trace_event
 from tests.block_fixtures import iter_block_samples
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
-
+from tests.support.reviewed_block_provider_paths import _fetch_through_service
+from tests.support.trace import trace_facts
 
 CLIENTS = {
     "aip": aip.AipClient,
@@ -143,11 +142,10 @@ def test_original_rejection_page_obeys_fixed_stop_or_fallback_expectation(
     article = envelope.article
     assert article is not None
     from paper_fetch.quality.access_boundary import (
-        html_paywall_diagnostics,
         CONFIRMED_PAYWALL,
+        html_paywall_diagnostics,
     )
-
-    from tests.support.subscription_scenarios import BLOCK_PAYWALLS, BLOCK_NOT_PAYWALLS
+    from tests.support.subscription_scenarios import BLOCK_NOT_PAYWALLS, BLOCK_PAYWALLS
 
     assert fixture.doi in BLOCK_PAYWALLS | BLOCK_NOT_PAYWALLS
     expected_gate = fixture.doi in BLOCK_PAYWALLS

@@ -1,20 +1,22 @@
 from __future__ import annotations
+
 import hashlib
 import json
 import os
-from pathlib import Path
 import platform
-import shutil
 import shlex
+import shutil
 import subprocess
 import sys
 import tempfile
 import textwrap
 import unittest
+from pathlib import Path
+
 import pytest
-from tests.support._installer_support import write_executable as _write_executable
 from scripts.skill_integrity import build_skill_bundle_manifest
 
+from tests.support._installer_support import write_executable as _write_executable
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LINUX_INSTALLER = REPO_ROOT / "install-offline.sh"
@@ -86,10 +88,6 @@ def _fake_python_script(
     while [[ "${{1:-}}" == "-X" ]]; do
       shift 2
     done
-
-    if [[ "${{1:-}}" == *cleanup_legacy_mcp.py ]]; then
-      exec "$REAL_PYTHON" "$@"
-    fi
 
     if [[ "${{1:-}}" == "-m" && "${{2:-}}" == "paper_fetch.offline_setup" ]]; then
       printf 'POST_INSTALL_SETUP %s\\n' "$*"
@@ -182,11 +180,6 @@ def _fake_python_script(
     exit 0
     SH
       chmod +x "$venv_dir/bin/paper-fetch"
-      cat > "$venv_dir/bin/paper-fetch-mcp" <<'SH'
-    #!/usr/bin/env bash
-    exit 0
-    SH
-      chmod +x "$venv_dir/bin/paper-fetch-mcp"
       exit 0
     fi
 
@@ -288,10 +281,6 @@ class OfflineInstallTests(unittest.TestCase):
         )
         (bundle / "scripts").mkdir()
         shutil.copy2(
-            REPO_ROOT / "src/paper_fetch/legacy_cleanup.py",
-            bundle / "scripts/cleanup_legacy_mcp.py",
-        )
-        shutil.copy2(
             REPO_ROOT / "scripts" / "skill_integrity.py",
             bundle / "scripts" / "skill_integrity.py",
         )
@@ -315,9 +304,6 @@ class OfflineInstallTests(unittest.TestCase):
         _write_executable(
             bundle / "bin" / "paper-fetch",
             '#!/usr/bin/env bash\nif [[ "${1:-}" == "--help" ]]; then exit 0; fi\nexit 0\n',
-        )
-        _write_executable(
-            bundle / "bin" / "paper-fetch-mcp", "#!/usr/bin/env bash\nexit 0\n"
         )
         _write_executable(
             bundle / "bin" / "paper-fetch-install-formula-tools",
@@ -1437,7 +1423,7 @@ exec /bin/mv "$@"
                 (home / ".agents/skills/paper-fetch-skill/SKILL.md").is_file()
             )
 
-    def test_codex_direct_registration_and_uninstall_use_active_codex_home(
+    def test_install_and_uninstall_preserve_codex_config_files_untouched(
         self,
     ) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1447,22 +1433,20 @@ exec /bin/mv "$@"
             _write_file(default, "# untouched default config\n")
             active_home = root / "active codex"
             active = active_home / "config.toml"
-            _write_file(
-                active,
-                '# keep active content\n[mcp_servers.custom]\ncommand="python"\nargs=["-m", "paper_fetch.mcp.server"]\n',
+            active_content = (
+                '# keep active content\n[mcp_servers.custom]\ncommand="keep"\n'
             )
+            _write_file(active, active_content)
             env = {"CODEX_HOME": str(active_home)}
-            registered = self._run_installer(bundle, fake_bin, home, extra_env=env)
-            self.assertEqual(registered.returncode, 0, registered.stderr)
-            self.assertNotIn("[mcp_servers.custom]", active.read_text())
-            self.assertIn(str(active), registered.stdout)
+            installed = self._run_installer(bundle, fake_bin, home, extra_env=env)
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+            self.assertEqual(active.read_text(), active_content)
             self.assertEqual(default.read_text(), "# untouched default config\n")
             removed = self._run_installer(
                 bundle, fake_bin, home, "--uninstall", extra_env=env
             )
             self.assertEqual(removed.returncode, 0, removed.stderr)
-            self.assertNotIn("[mcp_servers.paper-fetch]", active.read_text())
-            self.assertIn("# keep active content", active.read_text())
+            self.assertEqual(active.read_text(), active_content)
             self.assertEqual(default.read_text(), "# untouched default config\n")
 
     def test_missing_codex_cli_writes_config_toml_with_headless_without_browser_paths(
@@ -1723,10 +1707,6 @@ exec /bin/mv "$@"
                     {
                         "mcpServers": {
                             "keep-server": {"command": "keep"},
-                            "paper-fetch": {
-                                "command": "python",
-                                "args": ["-m", "paper_fetch.mcp.server"],
-                            },
                         }
                     }
                 )

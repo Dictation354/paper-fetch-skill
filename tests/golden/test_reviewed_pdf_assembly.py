@@ -5,6 +5,7 @@ The failed HTML/XML responses are injected; this is offline recovery evidence.
 """
 
 import pytest
+
 from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from paper_fetch.providers.plos import PlosClient
 from tests.golden_corpus import golden_corpus_fixture_for_doi

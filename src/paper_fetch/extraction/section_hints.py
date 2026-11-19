@@ -2,9 +2,8 @@
 
 from __future__ import annotations
 
-from collections.abc import Container, Sequence
+from collections.abc import Container, Mapping, Sequence
 from typing import Any
-from collections.abc import Mapping
 
 from ..utils import normalize_text
 

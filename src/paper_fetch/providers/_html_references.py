@@ -5,13 +5,13 @@ from __future__ import annotations
 import copy
 import re
 from typing import Any
-
-from ..extraction.html.parsing import choose_parser
 from urllib.parse import unquote
-from ._reference_doi import reference_doi
-from ..utils import normalize_text
 
 from bs4 import BeautifulSoup, Tag
+
+from ..extraction.html.parsing import choose_parser
+from ..utils import normalize_text
+from ._reference_doi import reference_doi
 
 YEAR_PATTERN = re.compile(r"\((?P<year>(?:18|19|20)\d{2})\)")
 REFERENCE_LINKOUT_LABELS = (

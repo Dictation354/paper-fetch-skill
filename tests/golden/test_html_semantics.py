@@ -1,6 +1,9 @@
 from __future__ import annotations
+
 import unittest
+
 from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.semantics import (
     heading_category,
     markdown_heading_category,

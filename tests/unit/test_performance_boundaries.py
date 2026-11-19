@@ -1,14 +1,15 @@
 from unittest import mock
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.http import RequestCancelledError, RequestFailure
-from paper_fetch.providers import _arxiv_atom, _playwright_browser
+from paper_fetch.providers import _arxiv_atom
+from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers.arxiv import ArxivClient
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers._payloads import build_provider_payload
-from paper_fetch.providers.browser_runtime import BrowserHtmlReadiness
+from paper_fetch.providers.browser_runtime import BrowserHtmlReadiness, html_fetcher
+from paper_fetch.providers.browser_runtime import readiness as browser_readiness
 from paper_fetch.providers.browser_workflow.fetchers import readiness
 from paper_fetch.quality import access_boundary, html_availability
 from paper_fetch.runtime import RuntimeContext
@@ -28,7 +29,7 @@ from tests.support._paper_fetch_support import RecordingTransport, http_response
 def test_main_context_snapshot_invalid_result_uses_native_fallback(payload):
     page = mock.Mock(url="https://example.test")
     page.evaluate.return_value = payload
-    assert _playwright_browser._main_context_html_snapshot(page) is None
+    assert html_fetcher._main_context_html_snapshot(page) is None
 
 
 @pytest.mark.parametrize(
@@ -39,9 +40,9 @@ def test_main_context_snapshot_capture_error_preserves_cancellation(error):
     page.evaluate.side_effect = error
     if isinstance(error, RequestCancelledError):
         with pytest.raises(RequestCancelledError):
-            _playwright_browser._main_context_html_snapshot(page)
+            html_fetcher._main_context_html_snapshot(page)
     else:
-        assert _playwright_browser._main_context_html_snapshot(page) is None
+        assert html_fetcher._main_context_html_snapshot(page) is None
 
 
 def test_aip_terminal_readiness_records_block_instead_of_timeout():
@@ -51,14 +52,13 @@ def test_aip_terminal_readiness_records_block_instead_of_timeout():
         "blockingReason": "cloudflare_challenge",
     }
     trace = {}
-    result = _playwright_browser._wait_for_browser_html_readiness(
+    result = browser_readiness.wait_for_browser_html_readiness(
         page,
         publisher="aip",
         readiness=BrowserHtmlReadiness(wait_for_article_body=True),
         wait_seconds=5,
         timeout_ms=120000,
         request_started=readiness.time.monotonic(),
-        return_image_payload=False,
         runtime_context=None,
         candidate_trace=trace,
         readiness_timeout_seconds=90,
@@ -280,11 +280,37 @@ def test_structure_dom_entry_matches_string_entry_and_preserves_input(html):
             "", kwargs.pop("metadata"), html_text=html, structure_dom=soup, **kwargs
         )
         assert parser.call_count == 1
-    string = html_availability.assess_html_fulltext_availability(
-        "", {"doi": "10.1000/test"}, html_text=html, structure_html_text=html, **kwargs
-    )
+    with mock.patch.object(
+        html_availability, "BeautifulSoup", wraps=BeautifulSoup
+    ) as parser:
+        string = html_availability.assess_html_fulltext_availability(
+            "",
+            {"doi": "10.1000/test"},
+            html_text=html,
+            structure_html_text=html,
+            **kwargs,
+        )
+        assert parser.call_count == 1
     assert dom.to_dict() == string.to_dict()
     assert str(soup) == original
+
+
+def test_ieee_html_assessment_parses_html_once_including_empty_shell_overrides():
+    html = '<article id="article"></article>'
+    with mock.patch.object(
+        html_availability, "BeautifulSoup", wraps=BeautifulSoup
+    ) as parser:
+        diagnostics = html_availability.assess_html_fulltext_availability(
+            "",
+            {"doi": "10.1109/test"},
+            provider="ieee",
+            html_text=html,
+            title="IEEE Shell",
+            final_url="https://ieeexplore.ieee.org/document/1",
+        )
+        assert parser.call_count == 1
+    assert not diagnostics.accepted
+    assert "ieee_empty_article_shell" in diagnostics.blocking_fallback_signals
 
 
 @pytest.mark.parametrize("provider", ["annualreviews", "wiley", "acs", "pnas", "tandf"])
@@ -292,6 +318,7 @@ def test_cleanup_scans_each_selector_once_and_keeps_independent_dom(
     monkeypatch, provider
 ):
     import copy
+
     from bs4 import Tag
 
     soup = BeautifulSoup(
@@ -380,8 +407,8 @@ def test_tandf_batch_application_preserves_per_item_failures():
 
 
 def test_science_uses_one_normal_attempt_without_fast_timeout(monkeypatch):
-    from paper_fetch.providers.science import ScienceClient
     from paper_fetch.providers.browser_workflow import html_extraction
+    from paper_fetch.providers.science import ScienceClient
 
     operation = mock.Mock(return_value=("html", "payload"))
     monkeypatch.setattr(html_extraction, "_fetch_browser_html_payload", operation)

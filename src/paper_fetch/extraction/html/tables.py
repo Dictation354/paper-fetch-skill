@@ -3,26 +3,28 @@
 from __future__ import annotations
 
 import re
-from typing import Any
 from collections.abc import Callable, Mapping, Sequence
+from copy import deepcopy
+from typing import Any
+from urllib.parse import quote
 
+from bs4 import Tag
+
+from ...markdown.images import render_markdown_image
+from ...models import normalize_markdown_text
+from ...utils import normalize_text
+from ..markdown_render import table_format as markdown_table_format
 from ..table_grid import (
     TableCell,
     TableConversionReason,
     TableRow,
     normalize_table,
 )
-from ..markdown_render import table_format as markdown_table_format
-from ...models import normalize_markdown_text
-from ...utils import normalize_text
-from ...markdown.images import render_markdown_image
 from .inline import (
     render_html_inline_node,
     wrap_html_inline_text_fragment,
 )
 from .shared import attr_text
-
-from bs4 import Tag
 
 TABLE_PLACEHOLDER_PREFIX = "PAPER_FETCH_TABLE_PLACEHOLDER_"
 
@@ -37,8 +39,6 @@ def wrap_table_text_fragment(text: str, marker: str | None) -> str:
 def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str:
     def image_markdown(child: Any) -> str | None:
         if isinstance(child, Tag) and child.name == "a" and child.get("href"):
-            from urllib.parse import quote
-
             href = quote(str(child["href"]), safe="/:#?=&%+@;,~!$*'[]")
             content = deepcopy(child)
             content.name = "span"
@@ -50,8 +50,8 @@ def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str
             )
             return label if href == "#" else f"[{label}]({href})"
         from ..markdown_render.formulas import (
-            is_mathjax_tex_node,
             is_html_formula_container,
+            is_mathjax_tex_node,
             render_html_formula_container,
         )
 
@@ -75,8 +75,6 @@ def render_table_inline_node(node: Any, *, text_style: str | None = None) -> str
                     "image", str(child.get("alt") or "Image"), url
                 )
         return None
-
-    from copy import deepcopy
 
     node = deepcopy(node)
     if isinstance(node, Tag):

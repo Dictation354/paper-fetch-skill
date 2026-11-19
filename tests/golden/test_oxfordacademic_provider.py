@@ -1,19 +1,20 @@
 from __future__ import annotations
-from dataclasses import replace
-from tests.support.markdown_presentation import visible_markdown
+
 import re
+from dataclasses import replace
 from pathlib import Path
-from tests.golden_criteria import golden_criteria_asset
+
+from paper_fetch.http import HttpTransport
+from paper_fetch.providers import _oxfordacademic_html
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
 from tests.golden_corpus import (
     build_article_from_fixture,
     golden_corpus_fixture_for_doi,
 )
-from paper_fetch.http import HttpTransport
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.providers import _oxfordacademic_html
-from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
+from tests.golden_criteria import golden_criteria_asset
 from tests.support.captured_images import download_captured_images
-
+from tests.support.markdown_presentation import visible_markdown
 
 HTML_DOI = "10.1093/bioinformatics/btaa161"
 FIGURE_DOI = "10.1093/bioinformatics/btaa823"

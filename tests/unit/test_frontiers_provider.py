@@ -1,22 +1,24 @@
 from __future__ import annotations
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-from dataclasses import replace
-from unittest import mock
-from pathlib import Path
-import re
+
 import json
+import re
+from dataclasses import replace
+from pathlib import Path
+from unittest import mock
+
 import pytest
+
 from paper_fetch.extraction.image_payloads import image_mime_type_from_bytes
 from paper_fetch.providers.frontiers import FrontiersClient
 from paper_fetch.reason_codes import PDF_FALLBACK
+from paper_fetch.tracing import trace_event
 from tests.support._atypon_browser_workflow_provider_support import png_header
 from tests.support._paper_fetch_support import (
     FixtureHtmlTransport,
     build_pdf_bytes,
     http_response,
 )
-
+from tests.support.trace import trace_facts
 
 DOI = "10.3389/fmars.2023.1101972"
 LEGACY_FULL_URL = f"https://www.frontiersin.org/articles/{DOI}/full"

@@ -1,11 +1,11 @@
 """Provider-owned HTML payload and asset planning for captured signed-image replay."""
 
 from paper_fetch.providers import (
+    _oxfordacademic_html,
     acs,
     aip,
-    royalsocietypublishing,
     oxfordacademic,
-    _oxfordacademic_html,
+    royalsocietypublishing,
 )
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow.asset_download import (
@@ -80,10 +80,12 @@ def replay_royal_captured_viewer_assets(output_dir):
     rendition to the signed URL in its captured viewer; this is offline response
     binding, not a fresh request or evidence that an old signature still works.
     """
+    from functools import partial
     from pathlib import Path
+
     from paper_fetch.extraction.html.assets import (
-        AssetDownloadOptions,
         FIGURE_KIND,
+        AssetDownloadOptions,
         download_assets,
     )
     from paper_fetch.extraction.html.assets.figures import (
@@ -94,9 +96,11 @@ def replay_royal_captured_viewer_assets(output_dir):
     )
     from tests.golden_criteria import golden_criteria_asset
     from tests.support._paper_fetch_support import FixtureHtmlTransport
-    from tests.support.acquired_publisher_inputs import _record, _response
-    from functools import partial
-    from tests.support.acquired_publisher_inputs import capture_url_identity
+    from tests.support.acquired_publisher_inputs import (
+        _record,
+        _response,
+        capture_url_identity,
+    )
 
     _identity = partial(capture_url_identity, provider="royalsocietypublishing")
 

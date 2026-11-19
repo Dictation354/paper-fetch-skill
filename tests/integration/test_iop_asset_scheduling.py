@@ -8,15 +8,15 @@ from unittest import mock
 
 import pytest
 
+from paper_fetch.asset_budget import AssetBudget
 from paper_fetch.http import RequestCancelledError, RequestFailure
+from paper_fetch.providers.browser_workflow import asset_download as download_owner
 from paper_fetch.providers.browser_workflow.asset_download import (
     BrowserAssetDownloadPlan,
     BrowserAssetRecoveryContext,
     run_browser_asset_download_attempt,
 )
 from paper_fetch.runtime import RuntimeContext
-from paper_fetch.providers.browser_workflow import asset_download as download_owner
-from paper_fetch.asset_budget import AssetBudget
 from tests.support._atypon_browser_workflow_provider_support import png_header
 from tests.support._browser_workflow_deps import browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport, http_response

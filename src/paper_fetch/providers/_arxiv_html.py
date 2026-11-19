@@ -3,13 +3,14 @@
 from __future__ import annotations
 
 import copy
+import re
+from collections.abc import Mapping
 from dataclasses import dataclass
 from typing import Any
-from collections.abc import Mapping
-import re
+
+from bs4 import BeautifulSoup, Tag
 
 from ..common_patterns import WORD_TOKEN_PATTERN
-from ..formula.validation import formula_document, formula_diagnostics
 from ..extraction.html._runtime import clean_markdown
 from ..extraction.html.html_tags import HTML_DROP_TAGS
 from ..extraction.html.semantics import (
@@ -23,8 +24,9 @@ from ..extraction.html.tables import (
     TABLE_PLACEHOLDER_PREFIX,
     inject_inline_table_blocks,
 )
-from ..models.markdown import normalize_markdown_text
+from ..formula.validation import formula_diagnostics, formula_document
 from ..metadata.types import ProviderMetadata
+from ..models.markdown import normalize_markdown_text
 from ..quality.html_availability import assess_plain_text_fulltext_availability
 from ..reason_codes import FULLTEXT, NO_RESULT
 from ..utils import normalize_text
@@ -35,8 +37,6 @@ from ._html_section_markdown import (
     render_heading_text_from_html,
 )
 from .base import ProviderFailure
-
-from bs4 import BeautifulSoup, Tag
 
 MIN_HTML_MARKDOWN_WORDS = 500
 _WORD_PATTERN = WORD_TOKEN_PATTERN
@@ -461,6 +461,7 @@ def _extract_arxiv_html_markdown(
             NO_RESULT, "arXiv official HTML did not expose a LaTeXML article body."
         )
 
+    from ..extraction.html.object_links import prepare_retained_object_links
     from ._arxiv_assets import (
         _annotate_arxiv_inline_figure_images,
         _extract_arxiv_html_assets,
@@ -474,8 +475,6 @@ def _extract_arxiv_html_markdown(
         _extract_arxiv_html_references,
         _prepare_arxiv_semantic_blocks,
     )
-
-    from ..extraction.html.object_links import prepare_retained_object_links
 
     prepare_retained_object_links(article, source_url)
     html_frontmatter = _extract_arxiv_html_frontmatter(

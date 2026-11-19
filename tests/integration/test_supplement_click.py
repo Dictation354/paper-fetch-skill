@@ -1,13 +1,11 @@
 """Real Camoufox page-click contracts against locally fulfilled responses."""
 
 from __future__ import annotations
-from tests.support.transport import configure_stream_transport
-
 
 import hashlib
-from html import escape
 import json
 import os
+from html import escape
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
@@ -32,14 +30,15 @@ from paper_fetch.providers.browser_workflow.fetchers.file import (
 from paper_fetch.runtime import RuntimeContext
 from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 from tests.support._paper_fetch_support import build_pdf_bytes
+from tests.support.transport import configure_stream_transport
 
 pytestmark = pytest.mark.browser
 
 
 @pytest.fixture
 def local_responses():
-    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
     import threading
+    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
 
     servers = []
 
@@ -453,10 +452,7 @@ def test_iop_directory_click_and_mdpi_original_url_mapping(
         )
         assert result is not None, fetcher.failure_for(base + "/cdn.zip")
         assert result["body"] == body
-        assert (
-            result["_paper_fetch_asset_route_diagnostics"]["original_href"]
-            == "/raw.zip"
-        )
+        assert result.route_diagnostics["original_href"] == "/raw.zip"
         assert fetcher._page.url == base + "/article"
         context.close()
 
@@ -508,10 +504,7 @@ def test_ieee_multimedia_tab_clicks_existing_filename_button(
         result = fetcher("https://example.test/si.zip", {"filename_hint": "si.zip"})
         assert result is not None, fetcher.failure_for("https://example.test/si.zip")
         assert result["body"] == body
-        assert (
-            result["_paper_fetch_asset_route_diagnostics"]["attachment_label"]
-            == "si.zip"
-        )
+        assert result.route_diagnostics["attachment_label"] == "si.zip"
         assert not context._impl_obj.listeners("response")
         context.close()
 
@@ -606,9 +599,9 @@ def test_mdpi_existing_modal_link_maps_to_normalized_asset(
         result = fetcher(base + "/cdn.zip", {"source_href": "/raw.zip"})
         assert result is not None, fetcher.failure_for(base + "/cdn.zip")
         assert result["body"] == body
-        assert result["_paper_fetch_asset_route_diagnostics"][
-            "click_target_url"
-        ] == base + ("/cdn.zip" if duplicate else "/raw.zip")
+        assert result.route_diagnostics["click_target_url"] == base + (
+            "/cdn.zip" if duplicate else "/raw.zip"
+        )
         assert fetcher._page.url == base + "/article"
         context.close()
 

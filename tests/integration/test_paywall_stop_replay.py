@@ -2,6 +2,7 @@
 
 import json
 from unittest import mock
+
 from paper_fetch import cli, service
 from paper_fetch.providers.browser_runtime import (
     BrowserFetchedHtml,

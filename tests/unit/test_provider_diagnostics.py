@@ -4,7 +4,6 @@ import json
 from pathlib import Path
 from unittest import mock
 
-
 from paper_fetch import config
 from paper_fetch.diagnostics import (
     doctor_payload,

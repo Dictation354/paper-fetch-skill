@@ -1,11 +1,8 @@
 """Real formula bytes remain tied to their JATS objects through final output."""
 
-from paper_fetch.models import Quality
-
-
 import pytest
 
-from paper_fetch.models import FetchEnvelope, RenderOptions
+from paper_fetch.models import FetchEnvelope, Quality, RenderOptions
 from paper_fetch.models.markdown import iter_markdown_images
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.plos import PlosClient, parse_plos_xml

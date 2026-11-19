@@ -1,7 +1,10 @@
 from __future__ import annotations
+
 import base64
-import pytest
 from unittest import mock
+
+import pytest
+
 from paper_fetch.providers import browser_workflow
 from paper_fetch.providers.browser_workflow.fetchers import context as fetcher_context
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
@@ -10,7 +13,6 @@ from paper_fetch.providers.browser_workflow.fetchers.memo import (
     _MemoizedFigurePageFetcher,
 )
 from paper_fetch.runtime import RuntimeContext
-
 
 TEST_CDP_ENDPOINT = "ws://127.0.0.1:9222/devtools/browser/test"
 
@@ -905,6 +907,7 @@ def test_click_failure_keeps_original_target_and_never_requests_directly():
 
 def test_wiley_panel_re_resolves_control_after_redraw():
     from types import SimpleNamespace
+
     from paper_fetch.providers import _wiley_asset_policy as wiley_asset_policy
 
     page = mock.Mock()

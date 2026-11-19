@@ -2,10 +2,8 @@
 
 from __future__ import annotations
 
-from ._definitions import PROVIDER_DEFINITIONS
-
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 from urllib.parse import quote, urlparse
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -23,12 +21,11 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _annualreviews_html, browser_workflow
+from ._annualreviews_supplement_click import reveal_supplement
+from ._definitions import PROVIDER_DEFINITIONS
 from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import BrowserAssetPolicy, ProviderBundle
 from .base import RawFulltextPayload
-
-
-from ._annualreviews_supplement_click import reveal_supplement
 
 _PROVIDER_DEFINITION = PROVIDER_DEFINITIONS["annualreviews"]
 

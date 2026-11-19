@@ -1,35 +1,33 @@
 """Camoufox-acquired IEEE PDF and unmodified, overlapping reference pages."""
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-
-
 import html
 import json
 from dataclasses import asdict
 from pathlib import Path
 from urllib.parse import urljoin
-from bs4 import BeautifulSoup
+
 import pymupdf
 import pytest
-from paper_fetch.providers import ieee
-from paper_fetch.providers import _ieee_html
-from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from bs4 import BeautifulSoup
+
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
+from paper_fetch.providers import _ieee_html, ieee
 from paper_fetch.providers._ieee_metadata import (
     IeeeLandingAttempt,
     fetch_ieee_reference_metadata,
 )
+from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
 from tests.support._paper_fetch_support import RecordingTransport, build_envelope
 from tests.support.acquired_publisher_inputs import _record, _response
-from tests.golden_criteria import golden_criteria_asset, golden_criteria_sample_for_doi
-
+from tests.support.trace import trace_facts
 
 DOI = "10.1109/ACCESS.2024.3352924"
 TITLE = (

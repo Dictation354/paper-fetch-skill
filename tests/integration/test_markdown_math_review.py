@@ -2,9 +2,9 @@
 
 import json
 import os
-from pathlib import Path
 import shutil
 import subprocess
+from pathlib import Path
 
 import pytest
 
@@ -16,6 +16,7 @@ def test_reader_keeps_iop_nested_math_and_arxiv_currency_inline(tmp_path):
     if not reader or not shutil.which("node"):
         pytest.skip("requires the explicitly selected installed LitRoot reader")
     from bs4 import BeautifulSoup
+
     from paper_fetch.extraction.markdown_render.formulas import (
         render_html_formula_container,
         render_inline_latex_markdown,
@@ -228,6 +229,7 @@ def test_reader_renders_preserved_styles_code_symbols_and_links(tmp_path):
     if not reader or not shutil.which("node"):
         pytest.skip("requires the explicitly selected installed LitRoot reader")
     from xml.etree import ElementTree as ET
+
     from paper_fetch.providers._article_markdown_common import render_inline_text
     from paper_fetch.providers._article_markdown_math import render_mathml_expression
 

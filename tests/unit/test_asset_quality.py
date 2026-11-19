@@ -1,7 +1,7 @@
 from __future__ import annotations
 
-from dataclasses import asdict
 import hashlib
+from dataclasses import asdict
 from pathlib import Path
 
 from paper_fetch.artifacts import ArtifactStore

@@ -2,11 +2,10 @@
 
 from __future__ import annotations
 
-from ..tracing import TraceEvent
-
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
+from ..tracing import TraceEvent
 from .base import ProviderContent, ProviderFailure, RawFulltextPayload
 
 

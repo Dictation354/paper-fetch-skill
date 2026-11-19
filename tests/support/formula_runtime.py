@@ -1,8 +1,8 @@
 """Use the already prepared local formula tools for real captured replays."""
 
 import os
-from pathlib import Path
 import shutil
+from pathlib import Path
 
 from tests._environment import PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR
 from tests.paths import REPO_ROOT

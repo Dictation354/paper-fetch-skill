@@ -1,11 +1,14 @@
 from __future__ import annotations
-import sys
+
 import os
+import stat
+import sys
 import tempfile
 import unittest
-import stat
 from pathlib import Path
+
 import pytest
+
 from paper_fetch.formula import convert as formula_conversion
 
 

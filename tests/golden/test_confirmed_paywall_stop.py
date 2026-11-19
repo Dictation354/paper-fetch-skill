@@ -1,10 +1,10 @@
 """Captured article gates and route-scoped API entitlement with local fallback."""
 
 from dataclasses import replace
-
+from types import SimpleNamespace
 
 import pytest
-from types import SimpleNamespace
+
 from paper_fetch.providers.base import (
     ProviderFailure,
 )
@@ -14,7 +14,6 @@ from paper_fetch.quality.access_boundary import (
 )
 from tests.block_fixtures import iter_block_samples
 from tests.support._paper_fetch_support import RecordingTransport, http_response
-
 
 DOI = "10.1111/example"
 URL = "https://onlinelibrary.wiley.com/doi/" + DOI
@@ -91,13 +90,15 @@ def test_real_official_api_entitlement_is_route_scoped_and_preserves_abstract():
 @pytest.mark.parametrize("provider", ["springer", "oxfordacademic", "ieee"])
 def test_http_error_with_real_article_gate_stops_before_browser_or_pdf(provider):
     from paper_fetch.http import RequestFailure
-    from paper_fetch.providers.springer import SpringerClient
-    from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
     from paper_fetch.providers.ieee import IeeeClient
+    from paper_fetch.providers.oxfordacademic import OxfordAcademicClient
+    from paper_fetch.providers.springer import SpringerClient
     from paper_fetch.runtime import RuntimeContext
     from tests.support.acquired_ieee_paywall_flow import (
-        _captured_landing,
         URL as IEEE_URL,
+    )
+    from tests.support.acquired_ieee_paywall_flow import (
+        _captured_landing,
     )
 
     if provider == "ieee":

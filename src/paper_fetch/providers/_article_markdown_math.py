@@ -2,16 +2,16 @@
 
 from __future__ import annotations
 
-from collections.abc import Callable
-from dataclasses import dataclass, field
-from copy import deepcopy
 import re
 import urllib.parse
 import xml.etree.ElementTree as ET
+from collections.abc import Callable
+from copy import deepcopy
+from dataclasses import dataclass, field
 
-from ..markdown.images import render_markdown_image
 from ..formula.convert import normalize_latex
-from ..formula.validation import select_formula_latex, same_node_mathml
+from ..formula.validation import same_node_mathml, select_formula_latex
+from ..markdown.images import render_markdown_image
 from ._article_markdown_xml import (
     child_text,
     first_descendant,
@@ -236,7 +236,7 @@ def render_mathml_expression(element: ET.Element | None) -> str:
     if source.expression:
         return source.expression
 
-    from ..formula.semantics import mathml_token_latex, _styled_mathml_text_latex
+    from ..formula.semantics import _styled_mathml_text_latex, mathml_token_latex
 
     inherited_variants = {}
 

@@ -5,22 +5,21 @@ transport failure below is injected. XML, landing and successful PDF bytes are
 the original canonical corpus files, and extraction/routing are current code.
 """
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-
-
 import hashlib
+
 import pytest
+
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers.copernicus import CopernicusClient
-from paper_fetch.xml_security import parse_xml
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+from paper_fetch.xml_security import parse_xml
 from tests.block_fixtures import iter_block_samples
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.golden_criteria import golden_criteria_asset
 from tests.support._paper_fetch_support import RecordingTransport, http_response
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
-
+from tests.support.trace import trace_facts
 
 FIXTURES = tuple(f for f in iter_block_samples() if f.provider == "copernicus")
 

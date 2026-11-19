@@ -1,30 +1,31 @@
 """Replay the publisher HTML through provider, service, CLI outputs."""
 
 from __future__ import annotations
-from paper_fetch.tracing import trace_event
-
 
 import hashlib
 import json
-from pathlib import Path
 import re
-from bs4 import BeautifulSoup
+from pathlib import Path
+
 import pytest
+from bs4 import BeautifulSoup
+
 from paper_fetch import cli, service
 from paper_fetch.extraction.html._metadata import parse_html_metadata
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.models import EXTRACTION_REVISION, RenderOptions
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
-from paper_fetch.providers.tandf import TandfClient
 from paper_fetch.providers.browser_workflow.asset_download import (
     plan_browser_asset_download,
 )
+from paper_fetch.providers.tandf import TandfClient
 from paper_fetch.resolve.query import ResolvedQuery
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.types import FetchStrategy
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.acquired_publisher_inputs import _record, _response
@@ -234,10 +235,10 @@ def test_python_cli_core_saved_semantics(replay, tmp_path, capsys):
     record = json.loads(manifest.read_text())
     assert record["acceptance"]["overall"] == "complete", json.dumps(
         {
-            "asset": record["asset_summary"],
-            "losses": record["semantic_losses"],
-            "warnings": record["warning_codes"],
-            "failures": record["failure_codes"],
+            "asset": record["acceptance"]["asset"],
+            "losses": record["acceptance"]["content"]["semantic_losses"],
+            "warnings": record["acceptance"]["provenance"]["warning_codes"],
+            "failures": record["acceptance"]["provenance"]["failure_codes"],
         }
     )
     assert (

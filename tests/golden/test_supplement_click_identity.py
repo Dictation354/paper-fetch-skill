@@ -1,10 +1,10 @@
 """Original publisher links remain usable without changing body discovery."""
 
-from urllib.parse import urljoin, urlsplit
 import json
+from urllib.parse import urljoin, urlsplit
 
-from bs4 import BeautifulSoup
 import pytest
+from bs4 import BeautifulSoup
 
 from paper_fetch.providers import (
     _annualreviews_html,
@@ -13,14 +13,14 @@ from paper_fetch.providers import (
     _mdpi_assets,
     royalsocietypublishing,
 )
+from paper_fetch.providers._definitions import PROVIDER_DEFINITIONS
 from paper_fetch.providers._ieee_supplementary import (
     _supplementary_assets_from_ieee_multimedia_payload,
 )
+from paper_fetch.providers._registry import browser_asset_policy
 from paper_fetch.providers.browser_workflow.asset_download import (
     plan_browser_asset_download,
 )
-from paper_fetch.providers._definitions import PROVIDER_DEFINITIONS
-from paper_fetch.providers._registry import browser_asset_policy
 from paper_fetch.runtime import RuntimeContext
 from tests.golden_criteria import golden_criteria_asset
 from tests.provider_benchmark_samples import provider_benchmark_sample
@@ -149,9 +149,9 @@ def test_real_iop_directory_retains_attachment_id_and_original_link():
     "provider", ["science", "wiley", "mdpi", "annualreviews", "acs", "iop"]
 )
 def test_independent_supplementary_scope_replays_publisher_material_links(provider):
-    from paper_fetch.providers.supplementary import _html_assets
     from paper_fetch.extraction.html._metadata import parse_html_metadata
     from paper_fetch.providers import annualreviews, mdpi
+    from paper_fetch.providers.supplementary import _html_assets
 
     sample = provider_benchmark_sample(provider)
     doi, url = sample.doi, sample.landing_url
@@ -192,8 +192,8 @@ def test_independent_supplementary_scope_replays_publisher_material_links(provid
 
 
 def test_independent_springer_scope_keeps_extended_and_source_data():
-    from paper_fetch.providers.supplementary import _html_assets
     from paper_fetch.providers.springer import SpringerClient
+    from paper_fetch.providers.supplementary import _html_assets
 
     doi = "10.1038/s41561-022-00912-7"
     html = golden_criteria_asset(doi, "original.html").read_text()

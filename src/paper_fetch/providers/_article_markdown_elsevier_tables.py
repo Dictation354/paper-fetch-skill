@@ -2,11 +2,11 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
 import re
 import xml.etree.ElementTree as ET
-from typing import Any
 from collections.abc import Mapping
+from dataclasses import dataclass
+from typing import Any
 
 from ..extraction.table_grid import (
     TableConversionReason,

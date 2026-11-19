@@ -1,6 +1,7 @@
 """OUP signed image identity is distinct from its unchanged request URL."""
 
 import pytest
+
 from paper_fetch.providers.oxfordacademic import _merge_oxford_assets
 
 OLD = "https://oup.silverchair-cdn.com/oup/paper/2/figure.jpeg?Expires=1&Signature=old&Key-Pair-Id=key"

@@ -12,27 +12,27 @@ separately in provenance and never counted as downloaded files.
 import hashlib
 import json
 from pathlib import Path
+
 import pytest
+
 from paper_fetch.extraction.html.assets import (
-    AssetDownloadOptions,
     FIGURE_KIND,
     SUPPLEMENTARY_KIND,
+    AssetDownloadOptions,
     download_assets,
 )
 from paper_fetch.models import article_from_markdown
 from paper_fetch.provider_catalog import SOURCE_PROVIDER_MAP
 from tests.asset_collection import discover_assets, source_markdown
+from tests.golden_criteria import golden_criteria_asset, golden_criteria_manifest
+from tests.paths import REPO_ROOT
+from tests.support._paper_fetch_support import FixtureHtmlTransport
 from tests.support.acquired_publisher_inputs import (
-    capture_url_identity,
     _record,
     _response,
+    capture_url_identity,
 )
-from tests.paths import REPO_ROOT
 from tests.support.markdown_links import local_markdown_paths
-from tests.support._paper_fetch_support import FixtureHtmlTransport
-
-
-from tests.golden_criteria import golden_criteria_manifest, golden_criteria_asset
 
 ROWS = [
     sample["asset_collection"]
@@ -209,7 +209,7 @@ def test_captured_collection_download_and_final_article_links(row, tmp_path):
     ],
 )
 def test_xml_provider_owns_the_complete_download_and_article_chain(doi, tmp_path):
-    from paper_fetch.providers import frontiers, plos, elsevier
+    from paper_fetch.providers import elsevier, frontiers, plos
     from paper_fetch.providers._article_markdown_jats import parse_jats_xml
     from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
     from paper_fetch.runtime import RuntimeContext

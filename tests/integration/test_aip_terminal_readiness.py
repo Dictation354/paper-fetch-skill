@@ -3,17 +3,17 @@ from unittest import mock
 
 import pytest
 
+from paper_fetch.providers.browser_runtime import (
+    BrowserHtmlReadiness,
+    BrowserRuntimeConfig,
+    html_fetcher,
+)
 from paper_fetch.providers.browser_workflow.fetchers.readiness import (
     _BODY_READY_SCRIPT,
     wait_for_atypon_body_dom_ready,
 )
-from tests.support.offline_camoufox import prepared_browser
-from paper_fetch.providers import _playwright_browser
-from paper_fetch.providers.browser_runtime import (
-    BrowserRuntimeConfig,
-    BrowserHtmlReadiness,
-)
 from paper_fetch.runtime import RuntimeContext
+from tests.support.offline_camoufox import prepared_browser
 
 
 def _validation_route(text, status):
@@ -146,7 +146,7 @@ def test_aip_terminal_challenge_saves_diagnostic_and_advances_candidate(
 
         context.route("**/*", route_page)
         monkeypatch.setattr(
-            _playwright_browser,
+            html_fetcher,
             "open_browser_context",
             lambda *_a, **_k: (None, context),
         )
@@ -160,7 +160,7 @@ def test_aip_terminal_challenge_saves_diagnostic_and_advances_candidate(
         with RuntimeContext(
             env={}, download_dir=tmp_path, artifact_mode="all"
         ) as runtime:
-            result = _playwright_browser.fetch_html_with_playwright(
+            result = html_fetcher.fetch_browser_html(
                 [
                     "https://pubs.aip.org/crawlprevention/governor",
                     "https://pubs.aip.org/article/test",

@@ -6,10 +6,10 @@ from __future__ import annotations
 import argparse
 import hashlib
 import json
-from pathlib import Path
 import shutil
 import tarfile
 import tempfile
+from pathlib import Path
 from urllib.request import urlopen
 from zipfile import ZipFile
 

@@ -8,10 +8,6 @@
     "offline": {
       "begin": "# BEGIN paper-fetch offline managed",
       "end": "# END paper-fetch offline managed"
-    },
-    "codex": {
-      "begin": "# BEGIN paper-fetch installer managed",
-      "end": "# END paper-fetch installer managed"
     }
   },
   "packages": {

@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-
 from copy import deepcopy
 from pathlib import Path
 
@@ -10,6 +9,7 @@ from pathlib import Path
 def write_verified_ams_profile(path: Path) -> None:
     """Write the credential-free summary/marker produced by successful auth."""
     import json
+
     from paper_fetch.providers.browser_runtime.profile import METADATA_FILENAME
 
     path.mkdir(parents=True, exist_ok=True)

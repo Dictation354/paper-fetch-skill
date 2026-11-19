@@ -1,8 +1,8 @@
 """Browser runtime backend implementations."""
 
-from .camoufox import CamoufoxBackend, DEFAULT_CAMOUFOX_BACKEND
+from .byparr import DEFAULT_BYPARR_BACKEND, ByparrBackend
 
 __all__ = [
-    "DEFAULT_CAMOUFOX_BACKEND",
-    "CamoufoxBackend",
+    "DEFAULT_BYPARR_BACKEND",
+    "ByparrBackend",
 ]

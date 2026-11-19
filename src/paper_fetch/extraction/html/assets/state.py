@@ -2,23 +2,21 @@
 
 from __future__ import annotations
 
-from concurrent.futures import as_completed, CancelledError, ThreadPoolExecutor
+import threading
+import time
+import urllib.parse
+from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
+from concurrent.futures import CancelledError, ThreadPoolExecutor, as_completed
 from contextvars import copy_context
 from dataclasses import dataclass, field, replace
 from pathlib import Path
-import threading
-import time
 from typing import Any, TypeVar
-import urllib.parse
-from collections.abc import Callable, Iterator, Mapping, MutableMapping, Sequence
 
 from ....asset_budget import AssetBudget, AssetBudgetExceeded, AssetReservation
 from ....config import DEFAULT_ASSET_DOWNLOAD_CONCURRENCY
 from ....reason_codes import ASSET_CANCELLED
 
 AssetWorkItem = TypeVar("AssetWorkItem")
-_ASSET_TIMING_INTERNAL_KEY = "_paper_fetch_asset_timing_seconds"
-_ASSET_STARTED_INTERNAL_KEY = "_paper_fetch_asset_started_monotonic"
 _ASSET_TIMING_PHASES = (
     ("queue", "queue_ms"),
     ("candidate_resolution", "candidate_resolution_ms"),
@@ -30,6 +28,32 @@ _ASSET_TIMING_PHASES = (
     ("conversion", "conversion_ms"),
     ("save", "save_ms"),
 )
+
+
+def empty_asset_timing(*, status: str = "failed") -> dict[str, Any]:
+    """Build a zeroed public ``asset_timing`` payload from canonical phases."""
+
+    timing: dict[str, Any] = {
+        public_name: 0.0 for _phase, public_name in _ASSET_TIMING_PHASES
+    }
+    timing["total_ms"] = 0.0
+    timing["status"] = status
+    return timing
+
+
+def _merge_phase_timings(
+    base: Mapping[str, float] | None,
+    extra: Mapping[str, float] | None,
+) -> dict[str, float]:
+    merged: dict[str, float] = {
+        str(key): max(0.0, float(value))
+        for key, value in (base or {}).items()
+        if isinstance(value, int | float)
+    }
+    for key, value in (extra or {}).items():
+        if isinstance(value, int | float):
+            merged[str(key)] = merged.get(str(key), 0.0) + max(0.0, float(value))
+    return merged
 
 
 @dataclass(frozen=True)
@@ -46,8 +70,11 @@ class AssetHostRecoveryCircuit:
 
     The instance is deliberately scoped to one runtime/fetch session.  The
     first caller for a host owns the direct probe while concurrent callers
-    wait.  Once browser recovery succeeds, later assets from the same host
-    skip direct HTTP and use that already-verified path.
+    wait.  When caller-thread browser recovery is required, a failed direct
+    probe transitions the host to ``pending_browser`` so concurrent HTTP
+    workers immediately defer to the caller-thread stage instead of issuing
+    redundant failing direct requests.  Once browser recovery succeeds, later
+    assets from the same host skip direct HTTP and reuse that verified path.
     """
 
     def __init__(self) -> None:
@@ -67,10 +94,20 @@ class AssetHostRecoveryCircuit:
             while self._routes.get(host) == "probing":
                 self._condition.wait()
             route = self._routes.get(host)
-            if route in {"direct", "browser"}:
+            if route in {"direct", "browser", "pending_browser"}:
                 return AssetHostRouteDecision(host=host, route=route)
             self._routes[host] = "probing"
             return AssetHostRouteDecision(host=host, route="direct", probe=True)
+
+    def defer_to_browser(self, decision: AssetHostRouteDecision) -> None:
+        """Release concurrent HTTP waiters into Stage 2 caller-thread recovery."""
+
+        if not decision.host:
+            return
+        with self._condition:
+            if decision.probe and self._routes.get(decision.host) == "probing":
+                self._routes[decision.host] = "pending_browser"
+            self._condition.notify_all()
 
     def observe(
         self,
@@ -84,7 +121,7 @@ class AssetHostRecoveryCircuit:
             current = self._routes.get(decision.host)
             if browser_recovery_succeeded:
                 self._routes[decision.host] = "browser"
-            elif decision.probe and current == "probing":
+            elif decision.probe and current in {"probing", "pending_browser"}:
                 self._routes[decision.host] = "direct"
             self._condition.notify_all()
 
@@ -94,7 +131,7 @@ class AssetHostRecoveryCircuit:
         if not decision.host or not decision.probe:
             return
         with self._condition:
-            if self._routes.get(decision.host) == "probing":
+            if self._routes.get(decision.host) in {"probing", "pending_browser"}:
                 self._routes[decision.host] = "direct"
             self._condition.notify_all()
 
@@ -107,78 +144,31 @@ class AssetHostRecoveryCircuit:
             return route if route in {"direct", "browser"} else None
 
 
-def _timed_mapping(
-    payload: Mapping[str, Any],
-    *,
-    queued_at: float,
-    queue_seconds: float,
-) -> dict[str, Any]:
-    timed = dict(payload)
-    raw = payload.get(_ASSET_TIMING_INTERNAL_KEY)
-    timings = dict(raw) if isinstance(raw, Mapping) else {}
-    timings["queue"] = max(0.0, float(timings.get("queue", 0.0))) + max(
-        0.0, queue_seconds
-    )
-    timed[_ASSET_TIMING_INTERNAL_KEY] = timings
-    timed[_ASSET_STARTED_INTERNAL_KEY] = queued_at
-    return timed
-
-
-def _timed_resolution(
-    resolved: AssetDownloadResolution | None,
-    *,
-    queued_at: float,
-    queue_seconds: float,
-) -> AssetDownloadResolution | None:
-    if resolved is None:
-        return None
-    if resolved.response is not None:
-        response = resolved.response.copy()
-        response.timing["queue"] = max(0.0, response.timing.get("queue", 0.0)) + max(
-            0.0, queue_seconds
-        )
-        response.started_at = queued_at
-        return replace(resolved, response=response)
-    if resolved.failure is not None:
-        return replace(
-            resolved,
-            failure=AssetDownloadFailure(
-                _timed_mapping(
-                    resolved.failure.diagnostic,
-                    queued_at=queued_at,
-                    queue_seconds=queue_seconds,
-                )
-            ),
-        )
-    return resolved
-
-
 def _finalize_asset_timing(
     payload: Mapping[str, Any],
     *,
     status: str,
+    timings: Mapping[str, float] | None = None,
+    started_at: float | None = None,
     save_seconds: float = 0.0,
 ) -> dict[str, Any]:
     finalized = dict(payload)
-    raw = finalized.pop(_ASSET_TIMING_INTERNAL_KEY, None)
-    started_at = finalized.pop(_ASSET_STARTED_INTERNAL_KEY, None)
-    timings = dict(raw) if isinstance(raw, Mapping) else {}
-    timings["save"] = max(0.0, float(timings.get("save", 0.0))) + max(0.0, save_seconds)
+    merged_timings = dict(timings or {})
+    merged_timings["save"] = max(0.0, float(merged_timings.get("save", 0.0))) + max(
+        0.0, save_seconds
+    )
     total_seconds = (
         max(0.0, time.monotonic() - float(started_at))
         if isinstance(started_at, int | float)
-        else sum(max(0.0, float(value or 0.0)) for value in timings.values())
+        else sum(max(0.0, float(value or 0.0)) for value in merged_timings.values())
     )
-    finalized["asset_timing"] = {
-        public_name: round(max(0.0, float(timings.get(phase, 0.0))) * 1000, 3)
+    asset_timing: dict[str, Any] = {
+        public_name: round(max(0.0, float(merged_timings.get(phase, 0.0))) * 1000, 3)
         for phase, public_name in _ASSET_TIMING_PHASES
     }
-    finalized["asset_timing"].update(
-        {
-            "total_ms": round(total_seconds * 1000, 3),
-            "status": status,
-        }
-    )
+    asset_timing["total_ms"] = round(total_seconds * 1000, 3)
+    asset_timing["status"] = status
+    finalized["asset_timing"] = asset_timing
     return finalized
 
 
@@ -198,10 +188,11 @@ class AssetBinaryPayload:
 
 @dataclass
 class AssetFetchResponse(MutableMapping[str, Any]):
-    """Typed resources with a mapping view for existing response inspectors.
+    """Typed asset response with a mapping view for HTTP fields.
 
-    Only HTTP fields and diagnostic extensions appear in the mapping view.
-    Reservations and converted source ownership always travel as typed fields.
+    Reservations, converted source ownership, browser backend/fetcher identity,
+    recovery attempts, and route diagnostics always travel as explicit typed
+    fields rather than magic dictionary keys.
     """
 
     payload: AssetBinaryPayload = field(default_factory=AssetBinaryPayload)
@@ -209,6 +200,10 @@ class AssetFetchResponse(MutableMapping[str, Any]):
     original_content_type: str = ""
     source_format: str = ""
     conversion_tool: str = ""
+    browser_backend: str = ""
+    final_fetcher: str = ""
+    recovery_attempts: list[dict[str, Any]] = field(default_factory=list)
+    route_diagnostics: dict[str, Any] = field(default_factory=dict)
     timing: dict[str, float] = field(default_factory=dict)
     started_at: float | None = None
     diagnostics: dict[str, Any] = field(default_factory=dict)
@@ -222,22 +217,22 @@ class AssetFetchResponse(MutableMapping[str, Any]):
         body = bytes(raw_body) if isinstance(raw_body, bytes | bytearray) else b""
         staging = fields.pop("staging_path", None)
         size = int(fields.pop("downloaded_bytes", 0) or len(body))
-        timing = fields.pop(_ASSET_TIMING_INTERNAL_KEY, None)
-        started = fields.pop(_ASSET_STARTED_INTERNAL_KEY, None)
         return cls(
             payload=AssetBinaryPayload(
                 body=body,
                 staging_path=Path(staging) if staging else None,
                 downloaded_bytes=size,
             ),
-            timing=dict(timing) if isinstance(timing, Mapping) else {},
-            started_at=started,
             diagnostics=fields,
         )
 
     def copy(self) -> AssetFetchResponse:
         return replace(
-            self, timing=dict(self.timing), diagnostics=dict(self.diagnostics)
+            self,
+            recovery_attempts=[dict(item) for item in self.recovery_attempts],
+            route_diagnostics=dict(self.route_diagnostics),
+            timing=dict(self.timing),
+            diagnostics=dict(self.diagnostics),
         )
 
     def __getitem__(self, key: str) -> Any:
@@ -284,6 +279,9 @@ class AssetDownloadCandidate:
 @dataclass(frozen=True)
 class AssetDownloadFailure:
     diagnostic: dict[str, Any]
+    timing: dict[str, float] = field(default_factory=dict)
+    started_at: float | None = None
+    route_diagnostics: dict[str, Any] = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -308,6 +306,21 @@ class AssetDownloadAttempt:
 
 
 @dataclass(frozen=True)
+class AssetDeferredBrowserWork:
+    """Typed handoff from an HTTP worker thread to caller-thread browser recovery."""
+
+    candidate_urls: tuple[str, ...]
+    candidate_index: int
+    candidate_seconds: float = 0.0
+    direct_attempt: AssetDownloadAttempt | None = None
+    decision: AssetHostRouteDecision | None = None
+    conversion_degraded: bool = False
+    full_size_access_failed: bool = False
+    timing: dict[str, float] = field(default_factory=dict)
+    started_at: float | None = None
+
+
+@dataclass(frozen=True)
 class AssetDownloadResolution:
     asset: dict[str, Any]
     response: AssetFetchResponse | None = None
@@ -318,6 +331,7 @@ class AssetDownloadResolution:
     download_tier_override: str = ""
     provenance: tuple[str, ...] = ()
     reservation: AssetReservation | None = None
+    deferred_browser: AssetDeferredBrowserWork | None = None
 
     def __post_init__(self) -> None:
         if self.response is not None:
@@ -337,6 +351,79 @@ class AssetDownloadResolution:
             self.reservation.rollback()
 
 
+def _timed_resolution(
+    resolved: AssetDownloadResolution | None,
+    *,
+    queued_at: float,
+    queue_seconds: float,
+) -> AssetDownloadResolution | None:
+    if resolved is None:
+        return None
+    clamped_queue = max(0.0, queue_seconds)
+    if resolved.deferred_browser is not None:
+        deferred_timing = dict(resolved.deferred_browser.timing)
+        deferred_timing["queue"] = (
+            max(0.0, float(deferred_timing.get("queue", 0.0))) + clamped_queue
+        )
+        return replace(
+            resolved,
+            deferred_browser=replace(
+                resolved.deferred_browser,
+                timing=deferred_timing,
+                started_at=queued_at,
+            ),
+        )
+    if resolved.response is not None:
+        response = resolved.response.copy()
+        response.timing["queue"] = (
+            max(0.0, response.timing.get("queue", 0.0)) + clamped_queue
+        )
+        response.started_at = queued_at
+        return replace(resolved, response=response)
+    if resolved.failure is not None:
+        failure_timing = dict(resolved.failure.timing)
+        failure_timing["queue"] = (
+            max(0.0, float(failure_timing.get("queue", 0.0))) + clamped_queue
+        )
+        return replace(
+            resolved,
+            failure=replace(
+                resolved.failure,
+                timing=failure_timing,
+                started_at=queued_at,
+            ),
+        )
+    return resolved
+
+
+def _merge_deferred_timing_into_resolution(
+    resolved: AssetDownloadResolution | None,
+    deferred: AssetDeferredBrowserWork,
+) -> AssetDownloadResolution | None:
+    if resolved is None:
+        return None
+    if resolved.response is not None:
+        response = resolved.response.copy()
+        response.timing = _merge_phase_timings(deferred.timing, response.timing)
+        if deferred.started_at is not None:
+            response.started_at = deferred.started_at
+        return replace(resolved, response=response)
+    if resolved.failure is not None:
+        return replace(
+            resolved,
+            failure=replace(
+                resolved.failure,
+                timing=_merge_phase_timings(deferred.timing, resolved.failure.timing),
+                started_at=(
+                    deferred.started_at
+                    if deferred.started_at is not None
+                    else resolved.failure.started_at
+                ),
+            ),
+        )
+    return resolved
+
+
 def asset_download_worker_count(total: int, configured_concurrency: int | None) -> int:
     if total <= 0:
         return 0
@@ -347,10 +434,21 @@ def asset_download_worker_count(total: int, configured_concurrency: int | None) 
     return min(max(1, concurrency), total)
 
 
-def asset_failure(diagnostic: Mapping[str, Any] | None) -> AssetDownloadFailure | None:
+def asset_failure(
+    diagnostic: Mapping[str, Any] | None,
+    *,
+    timing: Mapping[str, float] | None = None,
+    started_at: float | None = None,
+    route_diagnostics: Mapping[str, Any] | None = None,
+) -> AssetDownloadFailure | None:
     if not diagnostic:
         return None
-    return AssetDownloadFailure(dict(diagnostic))
+    return AssetDownloadFailure(
+        diagnostic=dict(diagnostic),
+        timing=dict(timing) if timing else {},
+        started_at=started_at,
+        route_diagnostics=dict(route_diagnostics) if route_diagnostics else {},
+    )
 
 
 def resolution_from_attempt(
@@ -392,6 +490,12 @@ class _AssetCollectionState:
     outcomes: list[tuple[str, dict[str, Any]] | None]
     queued_at_by_id: dict[int, float]
     completion_callback: Callable[[int, bool], None] | None = None
+    caller_thread_resolver: (
+        Callable[[AssetDownloadResolution], AssetDownloadResolution | None] | None
+    ) = None
+    deferred_items: list[tuple[int, AssetDownloadResolution]] = field(
+        default_factory=list
+    )
 
     def resolve(self, item: Any) -> AssetDownloadResolution | None:
         queued_at = self.queued_at_by_id.get(id(item), time.monotonic())
@@ -407,6 +511,16 @@ class _AssetCollectionState:
             )
 
     def consume(self, index: int, resolved: AssetDownloadResolution | None) -> None:
+        if (
+            resolved is not None
+            and resolved.deferred_browser is not None
+            and self.caller_thread_resolver is not None
+        ):
+            if self.asset_budget.internally_cancelled:
+                resolved.rollback()
+                return
+            self.deferred_items.append((index, resolved))
+            return
         self._consume(index, resolved)
         outcome = self.outcomes[index]
         if outcome is not None and self.completion_callback is not None:
@@ -421,11 +535,16 @@ class _AssetCollectionState:
         if resolved.response is None:
             resolved.rollback()
             if resolved.failure is not None:
+                diagnostic = dict(resolved.failure.diagnostic)
+                if resolved.failure.route_diagnostics:
+                    diagnostic["asset_route"] = dict(resolved.failure.route_diagnostics)
                 self.outcomes[index] = (
                     "failure",
                     _finalize_asset_timing(
-                        resolved.failure.diagnostic,
+                        diagnostic,
                         status="failed",
+                        timings=resolved.failure.timing,
+                        started_at=resolved.failure.started_at,
                     ),
                 )
             return
@@ -446,35 +565,84 @@ class _AssetCollectionState:
                 "reason"
             ) in {ASSET_CANCELLED, "empty_response_body"}:
                 return
-            timed_failure = dict(saved.diagnostic)
-            if resolved.response is not None:
-                timed_failure[_ASSET_TIMING_INTERNAL_KEY] = resolved.response.timing
-                timed_failure[_ASSET_STARTED_INTERNAL_KEY] = (
-                    resolved.response.started_at
-                )
+            failure_diagnostic = dict(saved.diagnostic)
+            route_diagnostics = (
+                saved.route_diagnostics or resolved.response.route_diagnostics
+            )
+            if route_diagnostics:
+                failure_diagnostic["asset_route"] = dict(route_diagnostics)
             self.outcomes[index] = (
                 "failure",
                 _finalize_asset_timing(
-                    timed_failure,
+                    failure_diagnostic,
                     status="failed",
+                    timings=_merge_phase_timings(
+                        resolved.response.timing, saved.timing
+                    ),
+                    started_at=resolved.response.started_at,
                     save_seconds=time.monotonic() - save_started_at,
                 ),
             )
         elif saved is not None:
-            timed_asset = dict(saved)
-            if resolved.response is not None:
-                timed_asset[_ASSET_TIMING_INTERNAL_KEY] = resolved.response.timing
-                timed_asset[_ASSET_STARTED_INTERNAL_KEY] = resolved.response.started_at
             self.outcomes[index] = (
                 "asset",
                 _finalize_asset_timing(
-                    timed_asset,
+                    saved,
                     status="saved",
+                    timings=resolved.response.timing,
+                    started_at=resolved.response.started_at,
                     save_seconds=time.monotonic() - save_started_at,
                 ),
             )
         else:
             resolved.rollback()
+
+
+def _resolve_deferred_browser_items_on_caller_thread(
+    state: _AssetCollectionState,
+) -> None:
+    if not state.deferred_items or state.caller_thread_resolver is None:
+        return
+    ordered_items = sorted(
+        state.deferred_items,
+        key=lambda entry: (
+            0
+            if (
+                entry[1].deferred_browser is not None
+                and entry[1].deferred_browser.decision is not None
+                and entry[1].deferred_browser.decision.probe
+            )
+            else 1,
+            entry[0],
+        ),
+    )
+    state.deferred_items.clear()
+    try:
+        for index, deferred_res in ordered_items:
+            deferred = deferred_res.deferred_browser
+            assert deferred is not None
+            if state.asset_budget.cancelled:
+                if state.asset_budget.internally_cancelled:
+                    break
+                state.asset_budget.raise_if_cancelled()
+            try:
+                with state.asset_budget.worker_slot(
+                    route_concurrency_cap=state.route_concurrency_cap
+                ):
+                    resolved = state.caller_thread_resolver(deferred_res)
+            except AssetBudgetExceeded as exc:
+                if exc.fatal and state.asset_budget.internally_cancelled:
+                    continue
+                raise
+            merged = _merge_deferred_timing_into_resolution(resolved, deferred)
+            state.consume(index, merged)
+    except BaseException:
+        state.asset_budget.cancel(
+            ASSET_CANCELLED,
+            diagnostic={"boundary": "asset_browser_recovery"},
+        )
+        state.asset_budget.rollback_active()
+        raise
 
 
 def _resolve_asset_collection_serially(
@@ -553,13 +721,16 @@ def resolve_and_collect_downloads_as_completed(
     asset_download_concurrency: int | None,
     asset_budget: AssetBudget,
     completion_callback: Callable[[int, bool], None] | None = None,
+    caller_thread_resolver: (
+        Callable[[AssetDownloadResolution], AssetDownloadResolution | None] | None
+    ) = None,
     force_worker_thread: bool = False,
     route_concurrency_cap: int | None = None,
     terminal_failure_factory: (
         Callable[[AssetWorkItem, Mapping[str, Any]], dict[str, Any]] | None
     ) = None,
 ) -> dict[str, list[dict[str, Any]]]:
-    """Persist each completed asset immediately, then restore input order."""
+    """Persist completed HTTP assets concurrently, then run caller-thread recovery."""
 
     if not work_items:
         return {"assets": [], "asset_failures": []}
@@ -580,6 +751,7 @@ def resolve_and_collect_downloads_as_completed(
         outcomes=outcomes,
         queued_at_by_id={id(item): queued_at for item in work_items},
         completion_callback=completion_callback,
+        caller_thread_resolver=caller_thread_resolver,
     )
 
     if max_workers <= 1 and not force_worker_thread:
@@ -590,6 +762,9 @@ def resolve_and_collect_downloads_as_completed(
             work_items,
             max_workers=max_workers,
         )
+
+    if state.deferred_items and not asset_budget.internally_cancelled:
+        _resolve_deferred_browser_items_on_caller_thread(state)
 
     if asset_budget.internally_cancelled:
         diagnostic = asset_budget.diagnostic
@@ -606,33 +781,30 @@ def resolve_and_collect_downloads_as_completed(
             outcomes[index] = (
                 "failure",
                 _finalize_asset_timing(
-                    _timed_mapping(
-                        failure,
-                        queued_at=queued,
-                        queue_seconds=time.monotonic() - queued,
-                    ),
+                    failure,
                     status="failed",
+                    timings={"queue": max(0.0, time.monotonic() - queued)},
+                    started_at=queued,
                 ),
             )
 
     return {
         "assets": [
-            payload
+            outcome[1]
             for outcome in outcomes
             if outcome is not None and outcome[0] == "asset"
-            for payload in [outcome[1]]
         ],
         "asset_failures": [
-            payload
+            outcome[1]
             for outcome in outcomes
             if outcome is not None and outcome[0] == "failure"
-            for payload in [outcome[1]]
         ],
     }
 
 
 __all__ = [
     "AssetBinaryPayload",
+    "AssetDeferredBrowserWork",
     "AssetDownloadAttempt",
     "AssetDownloadCandidate",
     "AssetDownloadFailure",
@@ -642,6 +814,7 @@ __all__ = [
     "AssetHostRouteDecision",
     "asset_download_worker_count",
     "asset_failure",
+    "empty_asset_timing",
     "resolution_from_attempt",
     "resolve_and_collect_downloads_as_completed",
 ]

@@ -1,18 +1,18 @@
 from __future__ import annotations
 
-import os
 import json
+import os
+import shlex
 import shutil
 import stat
-import shlex
-import sys
 import subprocess
+import sys
 import tempfile
 import unittest
 from pathlib import Path
 
-import yaml
 import pytest
+import yaml
 
 from tests.paths import REPO_ROOT, SKILL_DIR
 from tests.skill_bundle_links import (
@@ -445,15 +445,6 @@ def test_codex_scope_migration_upgrade_and_uninstall(
             else f'exec {shlex.quote(sys.executable)} "$@"\n'
         )
     )
-    migration = repo / "src/paper_fetch/legacy_cleanup.py"
-    migration.parent.mkdir(parents=True, exist_ok=True)
-    shutil.copy2(REPO_ROOT / "src/paper_fetch/legacy_cleanup.py", migration)
-    script = python.read_text()
-    script = script.replace(
-        "exit 1\n",
-        f'if [ "$1" = "{migration}" ]; then exec {shlex.quote(sys.executable)} "$@"; fi\nexit 1\n',
-    )
-    python.write_text(script)
     python.chmod(0o755)
     env = dict(
         os.environ,
@@ -497,4 +488,5 @@ def test_codex_scope_migration_upgrade_and_uninstall(
 def test_installer_has_no_legacy_skill_cleanup_entrypoint():
     script = (REPO_ROOT / "scripts/_skill_install_common.sh").read_text()
     assert "pf_skill_remove_legacy_copies" not in script
+    assert "legacy_cleanup" not in script
     assert ".codex/skills" not in script

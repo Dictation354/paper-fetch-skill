@@ -3,10 +3,10 @@
 from __future__ import annotations
 
 import os
+from collections.abc import Mapping
 from importlib.resources import files
 from importlib.resources.abc import Traversable
 from pathlib import Path
-from collections.abc import Mapping
 
 from ..config import resolve_user_data_dir
 

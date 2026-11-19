@@ -1,12 +1,11 @@
 from __future__ import annotations
+
 import io
 from contextlib import redirect_stderr, redirect_stdout
-from dataclasses import asdict
 from pathlib import Path
 from unittest import mock
-from tests.support.fetch_fixtures import sample_resolved_query
+
 from paper_fetch import cli
-from paper_fetch.manifest import ManifestRecord, build_manifest_record
 from paper_fetch.delivery.fetch_cache import (
     FetchCache,
     envelope_from_payload,
@@ -14,12 +13,12 @@ from paper_fetch.delivery.fetch_cache import (
     request_cache_payload,
 )
 from paper_fetch.delivery.requests import FetchPaperRequest
+from paper_fetch.manifest import ManifestRecord, build_manifest_record
 from paper_fetch.models import AssetQualitySummary, SemanticLosses
+from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import TraceContext, trace_event
-from paper_fetch.workflow.acceptance import (
-    FetchAcceptanceReport,
-    evaluate_fetch_acceptance,
-)
+from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
+from tests.support.fetch_fixtures import sample_resolved_query
 from tests.support.workflow_acceptance import _envelope
 
 
@@ -31,7 +30,7 @@ def _contract_envelope():
         audited=True,
         requested=True,
         profile="body",
-        total=2,
+        discovered=2,
         local=1,
         full_size=1,
         failed=1,
@@ -46,43 +45,33 @@ def _contract_envelope():
     assert envelope.article is not None
     envelope.article.quality.asset_summary = asset_summary
     envelope.trace = [
+        trace_event("resolve", "doi_selected", "ok"),
         trace_event(
             "fulltext",
-            "example_html",
+            "elsevier_html",
             "fail",
             code="browser_connect_timeout",
             context=TraceContext(attempt=1, attempt_id="html-1"),
         ),
         trace_event(
             "fulltext",
-            "example_html",
-            "fail",
-            code="browser_connect_timeout",
-            context=TraceContext(attempt=2, attempt_id="html-2"),
+            "elsevier_xml",
+            "ok",
+            context=TraceContext(provider="elsevier", route="xml_api"),
         ),
     ]
+    envelope.acquisition = envelope.acquisition.__class__(
+        provider="elsevier",
+        route="xml_api",
+        representation="xml",
+        transport="api",
+        fallback_used=True,
+    )
+    envelope.article.acquisition = envelope.acquisition
     return envelope
 
 
-def _summary(report: FetchAcceptanceReport) -> dict[str, object]:
-    return {
-        "status": "evaluated",
-        "overall": report.overall.value,
-        "identity": report.identity.status.value,
-        "fetch": report.fetch.status.value,
-        "content": report.content.status.value,
-        "asset": report.asset.status.value,
-        "output": report.output.status.value,
-        "provenance": report.provenance.status.value,
-        "acquisition": (
-            asdict(report.provenance.acquisition)
-            if report.provenance.acquisition is not None
-            else None
-        ),
-    }
-
-
-def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
+def test_cli_cache_and_manifest_adapters_share_acceptance_contract(
     tmp_path: Path,
 ) -> None:
     request = FetchPaperRequest.model_validate(
@@ -90,6 +79,7 @@ def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
             "query": "10.1000/acceptance",
             "modes": ["article", "markdown"],
             "strategy": {"asset_profile": "body"},
+            "prefer_cache": True,
         }
     )
     requested_outputs = request.requested_modes()
@@ -100,9 +90,9 @@ def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
         expected_doi=request.query,
     )
 
-    mcp_payload = payload_from_envelope(_contract_envelope(), request)
-    mcp_report = evaluate_fetch_acceptance(
-        envelope_from_payload(mcp_payload),
+    wire_payload = payload_from_envelope(_contract_envelope(), request)
+    wire_report = evaluate_fetch_acceptance(
+        envelope_from_payload(wire_payload),
         asset_profile="body",
         requested_outputs=requested_outputs,
         expected_doi=request.query,
@@ -154,32 +144,40 @@ def test_cli_mcp_cache_and_manifest_adapters_share_acceptance_contract(
         cli_manifest.read_text(encoding="utf-8")
     )
 
-    cache = FetchCache(tmp_path / "cache")
+    cache_dir = tmp_path / "cache"
+    cache = FetchCache(cache_dir)
     cache.write_fetch_envelope(_contract_envelope(), request)
-    cache_payload = cache.get_payload(
-        request.query,
-        request=request,
-        detail="compact",
+    with RuntimeContext(env={}, download_dir=cache_dir) as context:
+        cached_envelope = cache.load_fetch_envelope(
+            request,
+            resolve_paper_fn=mock.Mock(),
+            context=context,
+        )
+    assert cached_envelope is not None
+    cached_report = evaluate_fetch_acceptance(
+        cached_envelope,
+        asset_profile="body",
+        requested_outputs=requested_outputs,
+        expected_doi=request.query,
     )
 
     assert exit_code == 0
-    assert mcp_report == expected
+    assert wire_report == expected
     assert manifest_record.acceptance == expected
     assert cli_record.acceptance == expected
-    assert cache_payload["acceptance"] == _summary(expected)
-    assert tuple(mcp_payload["quality"]["asset_summary"]["issue_codes"]) == (
+    assert cached_report == expected
+    assert tuple(wire_payload["quality"]["asset_summary"]["issue_codes"]) == (
         "asset_download_failure",
         "asset_placeholder_suspected",
     )
-    assert manifest_record.asset_summary.issue_codes == (
+    assert manifest_record.acceptance.asset.issue_codes == (
         "asset_download_failure",
         "asset_placeholder_suspected",
     )
-    assert cli_record.asset_summary.issue_codes == (
+    assert cli_record.acceptance.asset.issue_codes == (
         "asset_download_failure",
         "asset_placeholder_suspected",
     )
-    assert expected.provenance.trace_event_count == 2
-    assert len(mcp_payload["trace"]) == 2
-    assert len(manifest_record.trace) == 2
-    assert len(cli_record.trace) == 2
+    assert len(wire_payload["trace"]) == 3
+    assert len(manifest_record.trace) == 3
+    assert len(cli_record.trace) == 3

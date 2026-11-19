@@ -1,4 +1,5 @@
 from __future__ import annotations
+
 import io
 import json
 import os
@@ -14,7 +15,6 @@ import unittest
 from pathlib import Path
 
 import pytest
-
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 BUILD_OFFLINE_PACKAGE = REPO_ROOT / "scripts" / "build-offline-package.sh"

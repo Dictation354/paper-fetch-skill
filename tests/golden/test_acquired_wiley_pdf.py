@@ -4,22 +4,21 @@ Only browser bootstrap failure and the offline token are injected; PDF bytes,
 transport envelope, parsing, route selection and article assembly are real.
 """
 
-from tests.support.trace import trace_facts
-from paper_fetch.tracing import trace_event
-
-
 from unittest import mock
+
 import pymupdf
-from paper_fetch.providers.wiley import WileyClient
+
 from paper_fetch.providers.browser_workflow.profile import (
     BrowserWorkflowBootstrapResult,
 )
+from paper_fetch.providers.wiley import WileyClient
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.tracing import trace_event
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
 from tests.support._paper_fetch_support import RecordingTransport, build_envelope
 from tests.support.acquired_publisher_inputs import _record, _response
-
+from tests.support.trace import trace_facts
 
 DOI = "10.1111/gcb.16414"
 

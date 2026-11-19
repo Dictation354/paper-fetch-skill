@@ -1,9 +1,11 @@
 from __future__ import annotations
-from tests.support.transport import RecordedStreamTransport
+
 import json
 import unittest
+
 from paper_fetch.resolve import query as resolve_query
 from tests.support._paper_fetch_support import RecordingTransport
+from tests.support.transport import RecordedStreamTransport
 
 
 class ResolveQueryTests(unittest.TestCase):
@@ -14,6 +16,39 @@ class ResolveQueryTests(unittest.TestCase):
         self.assertEqual(result.doi, "10.1016/j.rse.2026.115369")
         self.assertEqual(result.provider_hint, "elsevier")
         self.assertEqual(result.confidence, 1.0)
+
+    def test_only_modern_nature_article_paths_resolve_without_a_landing_request(self):
+        article_id = "s41586-020-1941-5"
+        for host in ("nature.com", "www.nature.com"):
+            url = f"https://{host}/articles/{article_id}?tracking=1#Main"
+            transport = RecordingTransport({})
+            result = resolve_query.resolve_query(url, transport=transport, env={})
+            self.assertEqual(result.doi, f"10.1038/{article_id}")
+            self.assertEqual(result.landing_url, url)
+            self.assertEqual(result.provider_hint, "springer")
+            self.assertFalse(transport.calls)
+
+        for url in (
+            "https://www.nature.com/articles/nature12345",
+            f"https://www.nature.com/articles/{article_id}/tables/1",
+            f"https://www.nature.com/articles/{article_id}.pdf",
+            f"https://other.nature.com/articles/{article_id}",
+            f"https://nature.com.example.org/articles/{article_id}",
+        ):
+            with self.subTest(url=url):
+                transport = RecordingTransport(
+                    {
+                        ("GET", url): {
+                            "status_code": 200,
+                            "headers": {"content-type": "text/html"},
+                            "body": b'<meta name="citation_doi" content="10.1038/legacy">',
+                            "url": url,
+                        }
+                    }
+                )
+                result = resolve_query.resolve_query(url, transport=transport, env={})
+                self.assertEqual(result.doi, "10.1038/legacy")
+                self.assertEqual(len(transport.calls), 1)
 
     def test_direct_science_and_pnas_doi_queries_use_new_provider_hints(self) -> None:
         science_result = resolve_query.resolve_query("10.1126/science.ady3136")

@@ -7,54 +7,70 @@ import functools
 import importlib
 import logging
 import re
-from ...formula.validation import formula_document
+from collections.abc import Mapping
 from dataclasses import dataclass
 from email.message import Message
 from html.parser import HTMLParser
 from typing import Any
-from collections.abc import Mapping
 
-from ...extraction.html.language import (
-    collect_html_abstract_blocks,
-    html_node_language_hint,
-)
-from ...extraction.html.front_matter import (
-    ARTICLE_TYPE_FRONT_MATTER_PREFIXES,
-    COMMON_FRONT_MATTER_LINE_PATTERNS,
-)
+from bs4 import BeautifulSoup
+
 from ...extraction.html.cleanup_policy import (
     HTML_DROP_SELECTORS as HTML_DROP_SELECTORS,
+)
+from ...extraction.html.cleanup_policy import (
     HTML_EXACT_NOISE_TEXTS as HTML_EXACT_NOISE_TEXTS,
+)
+from ...extraction.html.cleanup_policy import (
     HTML_NOISE_ATTR_TOKENS as HTML_NOISE_ATTR_TOKENS,
+)
+from ...extraction.html.cleanup_policy import (
     HTML_PREFIX_NOISE_TEXTS as HTML_PREFIX_NOISE_TEXTS,
+)
+from ...extraction.html.cleanup_policy import (
     MARKDOWN_CHROME_SECTION_HEADINGS,
-    MARKDOWN_EXACT_NOISE_TEXTS as MARKDOWN_EXACT_NOISE_TEXTS,
-    MARKDOWN_PREFIX_NOISE_TEXTS as MARKDOWN_PREFIX_NOISE_TEXTS,
-    MARKDOWN_SHORT_NOISE_TOKENS as MARKDOWN_SHORT_NOISE_TOKENS,
     CleanupPolicy,
     classify_dom_cleanup_node,
     classify_markdown_cleanup_line,
     count_words,
     looks_like_markdown_promo_line,
 )
+from ...extraction.html.cleanup_policy import (
+    MARKDOWN_EXACT_NOISE_TEXTS as MARKDOWN_EXACT_NOISE_TEXTS,
+)
+from ...extraction.html.cleanup_policy import (
+    MARKDOWN_PREFIX_NOISE_TEXTS as MARKDOWN_PREFIX_NOISE_TEXTS,
+)
+from ...extraction.html.cleanup_policy import (
+    MARKDOWN_SHORT_NOISE_TOKENS as MARKDOWN_SHORT_NOISE_TOKENS,
+)
+from ...extraction.html.front_matter import (
+    ARTICLE_TYPE_FRONT_MATTER_PREFIXES,
+    COMMON_FRONT_MATTER_LINE_PATTERNS,
+)
 from ...extraction.html.html_tags import HTML_DROP_TAGS
+from ...extraction.html.language import (
+    collect_html_abstract_blocks,
+    html_node_language_hint,
+)
 from ...extraction.html.parsing import choose_parser
+from ...extraction.html.section_scan import SectionScanState
 from ...extraction.html.semantics import (
     HTML_BLOCK_TAGS,
-    collect_html_section_hints,
     coerce_html_section_hints,
+    collect_html_section_hints,
     markdown_heading_category,
     match_next_html_section_hint,
     parse_markdown_heading,
 )
-from ...extraction.html.section_scan import SectionScanState
 from ...extraction.html.signals import (
     contains_access_gate_text,
 )
-from ...models import normalize_markdown_text, normalize_text
+from ...formula.validation import formula_document
 from ...markdown.math import protect_markdown_math, restore_markdown_math
-from ...publisher_identity import normalize_doi
+from ...models import normalize_markdown_text, normalize_text
 from ...publisher_identity import extract_doi as extract_doi_from_text
+from ...publisher_identity import normalize_doi
 from .provider_rules import (
     cleanup_policy_for_profile,
     front_matter_exact_texts_for_profile,
@@ -62,7 +78,6 @@ from .provider_rules import (
     front_matter_publication_keywords_for_profile,
     normalize_noise_profile,
 )
-from bs4 import BeautifulSoup
 
 _TRAFILATURA_UNSET = object()
 trafilatura: Any = _TRAFILATURA_UNSET

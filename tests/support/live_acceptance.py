@@ -1,19 +1,18 @@
 """Privacy-safe live report persistence, including assertion and skip outcomes."""
 
-from pathlib import Path
-from collections.abc import Mapping
-from statistics import median
-
-from paper_fetch.publisher_identity import normalize_doi
-
-from collections import Counter
-from contextlib import contextmanager
 import json
 import time
+from collections import Counter
+from collections.abc import Mapping
+from contextlib import contextmanager
+from pathlib import Path
+from statistics import median
 
 import pytest
+
 from paper_fetch.http import redact_text_for_diagnostics
 from paper_fetch.logging_utils import redact_log_value
+from paper_fetch.publisher_identity import normalize_doi
 from tests.provider_benchmark_samples import iter_provider_benchmark_samples
 
 

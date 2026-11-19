@@ -1,7 +1,9 @@
 from __future__ import annotations
+
 from dataclasses import replace
 from pathlib import Path
 from unittest import mock
+
 from paper_fetch import publisher_identity
 from paper_fetch.provider_catalog import (
     PROVIDER_CATALOG,
@@ -22,7 +24,6 @@ from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
 from tests.support._browser_workflow_deps import install_browser_workflow_deps
-
 
 AIP_STRUCTURE_DOI = "10.1063/5.0129134"
 AIP_STRUCTURE_LANDING = (
@@ -185,11 +186,11 @@ def test_aip_browser_client_profile_and_author_fallback() -> None:
         "Ada Lovelace",
         "Grace Hopper",
     ]
-    assert not client.profile.empty_script_response_urls
-    assert not client.profile.blocked_resource_types
-    assert not client.profile.fast_html_attempt
-    assert client.profile.html_readiness_budget_seconds == 90.0
-    assert client.profile.persistent_storage_state
+    assert not client.profile.policy.empty_script_response_urls
+    assert not client.profile.policy.blocked_resource_types
+    assert not client.profile.policy.fast_html_attempt
+    assert client.profile.policy.html_readiness_budget_seconds == 90.0
+    assert client.profile.policy.persistent_storage_state
 
 
 def test_aip_asset_extraction_prefers_largest_official_srcset_rendition() -> None:

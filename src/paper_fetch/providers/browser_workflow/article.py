@@ -2,13 +2,9 @@
 
 from __future__ import annotations
 
-from ...tracing import extend_trace
-
-from ...quality.access_boundary import propagate_paywall
-
+from collections.abc import Callable, Mapping
 from dataclasses import replace
 from typing import TYPE_CHECKING, Any, cast
-from collections.abc import Callable, Mapping
 
 from ...extraction.html.signals import HtmlExtractionFailure
 from ...metadata.types import ProviderMetadata
@@ -19,17 +15,19 @@ from ...models import (
 )
 from ...models.schema import SourceKind
 from ...publisher_identity import normalize_doi
+from ...quality.access_boundary import propagate_paywall
+from ...reason_codes import ABSTRACT_ONLY, PDF_FALLBACK
 from ...runtime import RuntimeContext
 from ...tracing import (
+    extend_trace,
     fulltext_event,
 )
 from ...utils import dedupe_authors, extend_unique, normalize_text
-from ...reason_codes import ABSTRACT_ONLY, PDF_FALLBACK
+from ..base import RawFulltextPayload
 from .html_extraction import (
     _cached_browser_workflow_markdown,
     rewrite_inline_figure_links,
 )
-from ..base import RawFulltextPayload
 
 if TYPE_CHECKING:
     from .client import BrowserWorkflowClient

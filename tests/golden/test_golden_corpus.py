@@ -1,13 +1,14 @@
 from __future__ import annotations
+
 import pytest
+
+from paper_fetch.provider_catalog import provider_names
 from tests.golden_corpus import (
     GoldenCorpusFixture,
     expected_summary_from_article,
     iter_golden_corpus_fixtures,
 )
 from tests.support.replay import build_article_from_fixture
-from paper_fetch.provider_catalog import provider_names
-
 
 GOLDEN_CORPUS_FIXTURES = iter_golden_corpus_fixtures()
 
@@ -51,7 +52,7 @@ def test_golden_corpus_expected_summary_matches_current_extractor(
         assert actual["counts"]["sections"] == expected["counts"]["sections"]
         assert actual["counts"]["body_sections"] == expected["counts"]["body_sections"]
     else:
-        from tests.support.canonical_content import source_soup, source_prose_blocks
+        from tests.support.canonical_content import source_prose_blocks, source_soup
         from tests.support.full_read_assertions import assert_source_declarations
         from tests.support.scientific_content import scientific_text_key as _words
 
@@ -95,7 +96,7 @@ SOURCE_FIXTURES = [f for f in GOLDEN_CORPUS_FIXTURES if f.route_kind != "pdf_fal
 
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_complete_source_author_order(fixture):
-    from tests.support.canonical_content import source_soup, source_authors, author_key
+    from tests.support.canonical_content import author_key, source_authors, source_soup
 
     soup = source_soup(fixture)
     names, selector = source_authors(fixture, soup)
@@ -108,14 +109,15 @@ def test_canonical_complete_source_author_order(fixture):
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_all_source_reference_text_and_doi(fixture, subtests):
     import re
-    from tests.support.reviewed_publisher_content import _words
+
     from tests.support.canonical_content import (
-        source_soup,
-        source_references,
+        numeric_signature,
         source_reference_doi,
         source_reference_text,
-        numeric_signature,
+        source_references,
+        source_soup,
     )
+    from tests.support.reviewed_publisher_content import _words
 
     soup = source_soup(fixture)
     originals = source_references(fixture, soup)
@@ -207,7 +209,7 @@ def test_canonical_all_source_reference_text_and_doi(fixture, subtests):
 
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_source_prose_blocks_in_order(fixture):
-    from tests.support.canonical_content import source_soup, source_prose_blocks
+    from tests.support.canonical_content import source_prose_blocks, source_soup
     from tests.support.scientific_content import scientific_text_key as _words
 
     soup = source_soup(fixture)
@@ -246,7 +248,9 @@ def test_canonical_source_prose_blocks_in_order(fixture):
 )
 def test_canonical_pdf_identity_and_converter_passthrough(fixture):
     from unittest import mock
+
     import pymupdf
+
     from tests import golden_corpus
 
     body = fixture.raw_path.read_bytes()
@@ -284,9 +288,9 @@ def test_canonical_pdf_identity_and_converter_passthrough(fixture):
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_source_table_cells(fixture, subtests):
     from tests.support.canonical_content import (
+        source_prose_blocks,
         source_soup,
         source_tables,
-        source_prose_blocks,
     )
     from tests.support.object_content import assert_source_tables
 
@@ -308,9 +312,9 @@ def test_canonical_source_table_cells(fixture, subtests):
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_all_source_figure_captions(fixture, subtests):
     from tests.support.canonical_content import (
-        source_soup,
-        source_figures,
         source_caption_runs,
+        source_figures,
+        source_soup,
     )
     from tests.support.scientific_content import scientific_text_key as _words
 
@@ -340,10 +344,10 @@ def test_canonical_all_source_figure_captions(fixture, subtests):
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_source_table_notes_and_retained_statements(fixture, subtests):
     from tests.support.canonical_content import (
-        source_soup,
-        source_table_notes,
-        source_statements,
         source_caption_runs,
+        source_soup,
+        source_statements,
+        source_table_notes,
     )
     from tests.support.scientific_content import scientific_text_key as _words
 
@@ -372,8 +376,8 @@ def test_canonical_source_table_notes_and_retained_statements(fixture, subtests)
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_source_tex_formulas_preserve_structure(fixture, subtests):
     from tests.support.canonical_content import (
-        source_soup,
         source_formulas,
+        source_soup,
         source_tex,
         tex_key,
     )
@@ -404,9 +408,9 @@ def test_canonical_source_tex_formulas_preserve_structure(fixture, subtests):
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_mathml_numeric_and_structural_facts(fixture, subtests):
     from tests.support.canonical_content import (
-        source_soup,
-        source_formulas,
         formula_route,
+        source_formulas,
+        source_soup,
     )
     from tests.support.scientific_content import assert_mathml_formulas
 
@@ -424,10 +428,11 @@ def test_canonical_rendered_images_have_original_source_identity(fixture, subtes
     import html
     import re
     from urllib.parse import unquote, urlsplit
+
     from tests.support.canonical_content import (
-        source_soup,
-        source_figures,
         source_figure_markup,
+        source_figures,
+        source_soup,
     )
 
     raw = unquote(html.unescape(fixture.raw_path.read_text())).lower()
@@ -468,6 +473,7 @@ def test_canonical_rendered_images_have_original_source_identity(fixture, subtes
             image_origins.extend(origins)
             if source_url.startswith("data:image/svg+xml;base64,"):
                 import base64
+
                 from bs4 import BeautifulSoup
 
                 saved = BeautifulSoup(
@@ -537,10 +543,10 @@ def test_canonical_rendered_images_have_original_source_identity(fixture, subtes
 @pytest.mark.parametrize("fixture", SOURCE_FIXTURES, ids=_fixture_id)
 def test_canonical_source_citations_resolve_to_ordered_references(fixture, subtests):
     from tests.support.canonical_content import (
-        source_soup,
         source_citation_targets,
-        source_references,
         source_reference_doi,
+        source_references,
+        source_soup,
     )
 
     soup = source_soup(fixture)
@@ -578,18 +584,19 @@ def test_canonical_review_register_covers_exact_corpus():
 @pytest.mark.parametrize("fixture", GOLDEN_CORPUS_FIXTURES, ids=_fixture_id)
 def test_canonical_registered_source_counts_and_hash(fixture):
     import hashlib
+
     from tests.support.canonical_content import (
-        source_soup,
-        source_authors,
-        source_references,
-        source_prose_blocks,
-        source_tables,
-        source_table_grid,
-        source_figures,
-        source_table_notes,
-        source_statements,
-        source_formulas,
         formula_route,
+        source_authors,
+        source_figures,
+        source_formulas,
+        source_prose_blocks,
+        source_references,
+        source_soup,
+        source_statements,
+        source_table_grid,
+        source_table_notes,
+        source_tables,
     )
 
     row = fixture.load_expected()["source_review"]

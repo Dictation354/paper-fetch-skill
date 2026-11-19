@@ -3,15 +3,26 @@
 from __future__ import annotations
 
 import copy
-from functools import partial
 import re
-from typing import Any
 from collections.abc import Mapping
+from functools import partial
+from typing import Any
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
+from ..extraction.html.assets.silverchair import promote_silverchair_srcset_originals
+from ..extraction.html.inline import render_html_inline_node
 from ..extraction.html.parsing import choose_parser
+from ..extraction.html.tables import (
+    _table_rows_to_ir,
+    render_table_inline_text,
+    table_header_row_count,
+    table_rows,
+)
+from ..extraction.markdown_render.tables import render_grouped_table_block
+from ..extraction.table_grid import normalize_table
 from ..utils import normalize_text
+from ._html_asset_engine import merge_assets_by_identity
 from ._html_authors import (
     ATYPON_AUTHOR_NOISE_TEXT,
     AuthorExtractionPipeline,
@@ -20,7 +31,12 @@ from ._html_authors import (
     extract_meta_authors,
 )
 from ._html_references import extract_numbered_references_from_html
-
+from ._html_section_markdown import render_retained_text_from_html
+from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
+from .atypon_browser_workflow.profile import (
+    _drop_promotional_blocks,
+    _promo_block_tokens,
+)
 
 ACS_JSONLD_ARTICLE_TYPES = frozenset({"article", "scholarlyarticle", "newsarticle"})
 # SITE_UI_COPY_REGRESSION_MARKER: ACS Publications article chrome selectors.
@@ -92,11 +108,6 @@ def _decompose_matching(container: Any, selectors: tuple[str, ...]) -> None:
 
 
 def acs_before_block_normalization(container: Any) -> None:
-    from .atypon_browser_workflow.profile import (
-        _drop_promotional_blocks,
-        _promo_block_tokens,
-    )
-
     _decompose_matching(container, ACS_DOM_CHROME_SELECTORS)
     for operator in container.find_all(lambda node: node.name in {"mo", "mml:mo"}):
         if operator.get_text() == "\u2063" and operator.get("rspace"):
@@ -117,8 +128,6 @@ def acs_before_block_normalization(container: Any) -> None:
     # each accompanied by a hidden accessibility copy. The provider table hook
     # keeps distinct visible segments together under their source wrapper.
     for wrapper in list(container.select(".table-wrap")):
-        from ._html_section_markdown import render_retained_text_from_html
-
         note_blocks = []
         for note in wrapper.select(".table-wrap-foot"):
             paragraph = BeautifulSoup("", choose_parser()).new_tag("p")
@@ -136,15 +145,6 @@ def acs_before_block_normalization(container: Any) -> None:
 
 def render_acs_table(node: Tag, *, label: str, caption: str) -> str | None:
     """Group visible source segments and lift coefficient-group expressions once."""
-    from ..extraction.html.tables import (
-        table_rows,
-        table_header_row_count,
-        _table_rows_to_ir,
-        render_table_inline_text,
-    )
-    from ..extraction.table_grid import normalize_table
-    from ..extraction.markdown_render.tables import render_grouped_table_block
-
     tables = [
         t
         for t in ([node] if node.name == "table" else node.find_all("table"))
@@ -322,7 +322,6 @@ def _clean_reference_text(node: Tag) -> str:
     ):
         for match in list(clone.select(selector)):
             match.decompose()
-    from ..extraction.html.inline import render_html_inline_node
 
     text = normalize_text(render_html_inline_node(clone))
     text = re.sub(r"\s+([,.;:])", r"\1", text)
@@ -396,12 +395,6 @@ def scoped_asset_extractor(
     source_url: str,
     **kwargs: Any,
 ) -> list[dict[str, str]]:
-    from ..extraction.html.assets.silverchair import (
-        promote_silverchair_srcset_originals,
-    )
-    from ._html_asset_engine import merge_assets_by_identity
-    from .atypon_browser_workflow.asset_scopes import extract_scoped_html_assets
-
     # Silverchair also embeds chemical graphics in table wrappers, outside
     # .fig-section. Expose those nodes only in the asset-discovery copy; the
     # article's table markup and signed image URLs remain unchanged.

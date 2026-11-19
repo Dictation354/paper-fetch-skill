@@ -1,17 +1,17 @@
 """Article entitlement stops requests, with local degradation and evidence."""
 
 from dataclasses import replace
-
-
 from types import SimpleNamespace
 from unittest import mock
+
 import pytest
+
 from paper_fetch.models import RenderOptions, article_from_markdown
 from paper_fetch.providers._pdf_fallback import PdfRequestContext, fetch_pdf_over_http
 from paper_fetch.providers._waterfall import WaterfallStep, run_provider_waterfall
 from paper_fetch.providers.base import (
-    ProviderFailure,
     ProviderContent,
+    ProviderFailure,
     RawFulltextPayload,
 )
 from paper_fetch.providers.wiley import WileyClient
@@ -26,7 +26,6 @@ from paper_fetch.service import build_fetch_envelope
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.support._paper_fetch_support import RecordingTransport, http_response
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
-
 
 DOI = "10.1111/example"
 URL = "https://onlinelibrary.wiley.com/doi/" + DOI
@@ -270,16 +269,16 @@ def test_confirmed_http_error_prevents_retry_only_for_article_routes(
     route, body, terminal
 ):
     from paper_fetch.http import (
-        HttpTransport,
         HttpRequestPolicy,
+        HttpTransport,
         provider_request_policy,
     )
-    from tests.support.http_cache import FakeHTTPResponse, build_http_error
+    from tests.support.http_cache import FakeHTTPResponse
 
     transport = HttpTransport(cache_ttl=0, cache_capacity=0)
     perform = mock.Mock(
         side_effect=[
-            build_http_error(URL, status=503, body=body),
+            FakeHTTPResponse(body, URL, status=503),
             FakeHTTPResponse(b"ok", URL),
         ]
     )
@@ -378,7 +377,7 @@ def test_weak_provider_candidate_stops_cross_provider_dispatch(allow_fallback):
 
 
 def test_browser_candidate_loop_closes_page_before_preparation_or_next_url(tmp_path):
-    from paper_fetch.providers import _playwright_browser
+    from paper_fetch.providers.browser_runtime import html_fetcher
     from tests.support.browser_preflight import _runtime_config
 
     page = mock.Mock(url=URL)
@@ -395,17 +394,17 @@ def test_browser_candidate_loop_closes_page_before_preparation_or_next_url(tmp_p
     )
     with (
         mock.patch.object(
-            _playwright_browser, "open_browser_context", return_value=(None, context)
+            html_fetcher, "open_browser_context", return_value=(None, context)
         ),
-        mock.patch.object(_playwright_browser, "_wait_for_browser_html_readiness"),
+        mock.patch.object(html_fetcher, "wait_for_browser_html_readiness"),
         mock.patch.object(
-            _playwright_browser,
+            html_fetcher,
             "_prepare_provider_browser_page",
             side_effect=AssertionError("Page expansion after gate"),
         ) as prepare,
     ):
         with pytest.raises(ProviderFailure) as exc:
-            _playwright_browser.fetch_html_with_playwright(
+            html_fetcher.fetch_browser_html(
                 [URL, URL + "/second"], publisher="wiley", config=config, wait_seconds=0
             )
     assert confirmed_paywall(exc.value)

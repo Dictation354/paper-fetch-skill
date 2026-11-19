@@ -11,7 +11,6 @@ from paper_fetch.runtime import RuntimeContext
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.supplementary import html_page
 
-
 DOI = "10.1093/bioinformatics/btaa161"
 URL = "https://academic.oup.com/bioinformatics/article/36/11/3409/5802463"
 META = {"doi": DOI, "title": "Attachment contract", "landing_page_url": URL}

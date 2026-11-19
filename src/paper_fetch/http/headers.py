@@ -2,8 +2,8 @@
 
 from __future__ import annotations
 
-from typing import Any
 from collections.abc import Mapping
+from typing import Any
 
 
 def header_value(headers: Mapping[str, Any] | None, key: str, default: str = "") -> str:
@@ -15,3 +15,6 @@ def header_value(headers: Mapping[str, Any] | None, key: str, default: str = "")
         if str(header_key).lower() == target:
             return str(value or "")
     return default
+
+
+__all__ = ["header_value"]
