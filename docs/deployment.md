@@ -499,7 +499,7 @@ Codex 用户级 skill 安装到 `~/.agents/skills/paper-fetch-skill`，项目级
 | `offline.yml` | Linux x86_64 和 macOS arm64 的 CPython 3.11–3.14、Windows x86_64 CPython 3.14；原生 build/install/upgrade/uninstall 验证 |
 | `release.yml` | 与项目版本一致的 `v*` tag 或明确手动发布；按版本冻结发布目标依赖、构建并核验 staging manifest/SBOM/evidence，再发布对应的安装包及 `SHA256SUMS` |
 
-v8.0.0 的稳定版目标为 Linux x86_64（CPython 3.11–3.14）和 Windows x86_64（CPython 3.14），共五个离线安装包。该版本的候选验证可手动执行 `ci.yml` 并设置 `verify_macos=false`，以及执行 `offline.yml` 并设置 `release_version=8.0.0`。
+[v8.0.0 Release](https://github.com/Dictation354/paper-fetch-skill/releases/tag/v8.0.0) 提供九个离线安装包，覆盖 Linux x86_64 和 macOS 15+ Apple Silicon 的 CPython 3.11–3.14，以及 Windows x86_64 的 CPython 3.14。四个 macOS 安装包从同一 v8.0.0 标签提交原生构建并补发，Release 的 `SHA256SUMS` 覆盖全部九个安装包。
 
 Release 不运行或等待普通 CI。wheel、sdist、merged dependency manifest、SBOM 和
 sidecar evidence 只用于构建期验证，不进入稳定版公开下载集合；资产集合由 workflow、

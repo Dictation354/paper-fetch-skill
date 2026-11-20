@@ -10,7 +10,7 @@
 
 ## 8.0.0 - 2026-11-19
 
-本次稳定版提供 Linux x86_64（CPython 3.11–3.14）和 Windows x86_64 离线安装包。
+本次稳定版提供 Linux x86_64 和 macOS 15+ Apple Silicon（均覆盖 CPython 3.11–3.14），以及 Windows x86_64（CPython 3.14）离线安装包。四个 macOS 安装包从原标签提交构建后补发至 v8.0.0。
 
 ### CLI、数据契约与缓存
 

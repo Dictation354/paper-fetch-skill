@@ -10,7 +10,7 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## 8.0.0 - 2026-11-19
 
-The stable release provides offline installers for Linux x86_64 (CPython 3.11–3.14) and Windows x86_64.
+The stable release provides offline installers for Linux x86_64 and macOS 15+ on Apple Silicon (CPython 3.11–3.14), and Windows x86_64 (CPython 3.14). The four macOS installers were added to the v8.0.0 release from the original tagged commit.
 
 ### CLI, contracts and caching
 

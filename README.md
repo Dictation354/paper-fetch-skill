@@ -118,7 +118,7 @@ agent 安装 skill 后，可以识别 Paper Fetch 的适用边界，按用户意
 - Linux：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-linux-x86_64-cp*.sh`
 - macOS 15+ Apple Silicon：与本机 CPython ABI 匹配的 `paper-fetch-skill-offline-macos-arm64-cp*.tar.gz`
 
-v8.0.0 提供 Windows 和 Linux 安装包。macOS 安装包见 [v7.7.2](https://github.com/Dictation354/paper-fetch-skill/releases/tag/v7.7.2)。
+Windows、Linux 和 macOS 安装包均可从 [v8.0.0 Release](https://github.com/Dictation354/paper-fetch-skill/releases/tag/v8.0.0) 下载。
 
 最新正式 Release 提供当前平台的安装包时，运行 `paper-fetch update` 可执行升级。Linux/macOS 自动安装，Windows 下载校验后打开安装向导并预选当前安装目录。同版或当前版本更新时直接退出。
 
