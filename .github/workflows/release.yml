@@ -7,12 +7,17 @@ on:
         description: Existing v8.0.0 tag to backfill
         required: true
         type: string
+      build_run:
+        description: Publish artifacts from the successful macOS build and attestation run
+        required: false
+        type: string
 
 permissions:
   contents: read
 
 jobs:
   verify-tag:
+    if: inputs.build_run == ''
     runs-on: ubuntu-latest
     outputs:
       version: ${{ steps.source.outputs.version }}
@@ -262,3 +267,306 @@ jobs:
           name: macos-backfill-checksums
           path: release-assets/SHA256SUMS
           if-no-files-found: error
+
+  publish-backfill:
+    if: inputs.tag == 'v8.0.0' && inputs.build_run == '44669022255'
+    runs-on: ubuntu-latest
+    permissions:
+      actions: read
+      attestations: read
+      contents: write
+    steps:
+      - name: Download attested packages and merged checksums
+        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
+        with:
+          github-token: ${{ github.token }}
+          run-id: ${{ inputs.build_run }}
+          pattern: '{offline-macOS-*,macos-backfill-checksums}'
+          path: ${{ runner.temp }}/release-${{ inputs.build_run }}
+      - name: Publish and verify public release assets
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          BUILD_RUN: ${{ inputs.build_run }}
+        run: |
+          python3 - <<'PYTHON'
+          from concurrent.futures import ThreadPoolExecutor
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import re
+          import subprocess
+          import tempfile
+          import time
+          from urllib.request import urlopen
+
+          repo = "Dictation354/paper-fetch-skill"
+          tag = "v8.0.0"
+          source_sha = "eb27ea4510d3191551397686dd476ab723c5489d"
+          root = Path(os.environ["RUNNER_TEMP"])
+          run_id = os.environ["BUILD_RUN"]
+          staging = root / f"release-{run_id}"
+          checksum_name = "SHA256SUMS"
+          macos_names = [
+              f"paper-fetch-skill-offline-macos-arm64-cp3{minor}.tar.gz"
+              for minor in range(11, 15)
+          ]
+          base_url = f"https://github.com/{repo}/releases/download/{tag}/"
+          old_intro = "本次稳定版提供 Linux x86_64（CPython 3.11–3.14）和 Windows x86_64 离线安装包。"
+          new_intro = (
+              "本次稳定版提供 Linux x86_64 和 macOS 15+ Apple Silicon（均覆盖 CPython 3.11–3.14），"
+              "以及 Windows x86_64（CPython 3.14）离线安装包。"
+              "四个 macOS 安装包从原标签提交构建后补发至 v8.0.0。"
+          )
+
+          original_assets = {
+              "paper-fetch-skill-offline-linux-x86_64-cp311.sh": {
+                  "id": 767395533,
+                  "digest": "sha256:6d5544c5d73237135e36ad39f09729a8117435e6379cb3ffab022cf92b34ae6c",
+                  "size": 298558018,
+              },
+              "paper-fetch-skill-offline-linux-x86_64-cp312.sh": {
+                  "id": 767395535,
+                  "digest": "sha256:5fedbbd13f40ab3aeb4109c8840b5fec12b5b38589e99520141f298433097aed",
+                  "size": 296286316,
+              },
+              "paper-fetch-skill-offline-linux-x86_64-cp313.sh": {
+                  "id": 767395528,
+                  "digest": "sha256:33ed98a52b9ff6daf606d58000f91d7ecf9767644f5dd8c61ae4167012bba933",
+                  "size": 296297036,
+              },
+              "paper-fetch-skill-offline-linux-x86_64-cp314.sh": {
+                  "id": 767395534,
+                  "digest": "sha256:9f8ed24b6f818044a7647d8e02c64262688b348d7a01a748c9bbb29e5078dff4",
+                  "size": 297492679,
+              },
+              "paper-fetch-skill-windows-x86_64-setup.exe": {
+                  "id": 767395593,
+                  "digest": "sha256:0d3f473591289408a119cd1ffa3fb612cb7b2e7f66c74e957d65ce027b3cb008",
+                  "size": 182145189,
+              },
+              "SHA256SUMS": {
+                  "id": 767395538,
+                  "digest": "sha256:62e223861916bb7b0c02f239038283384376ecfa0bb301d96282d0ec55d85dc6",
+                  "size": 565,
+              },
+          }
+
+
+          original_checksums = (
+              "6d5544c5d73237135e36ad39f09729a8117435e6379cb3ffab022cf92b34ae6c  paper-fetch-skill-offline-linux-x86_64-cp311.sh\n"
+              "5fedbbd13f40ab3aeb4109c8840b5fec12b5b38589e99520141f298433097aed  paper-fetch-skill-offline-linux-x86_64-cp312.sh\n"
+              "33ed98a52b9ff6daf606d58000f91d7ecf9767644f5dd8c61ae4167012bba933  paper-fetch-skill-offline-linux-x86_64-cp313.sh\n"
+              "9f8ed24b6f818044a7647d8e02c64262688b348d7a01a748c9bbb29e5078dff4  paper-fetch-skill-offline-linux-x86_64-cp314.sh\n"
+              "0d3f473591289408a119cd1ffa3fb612cb7b2e7f66c74e957d65ce027b3cb008  paper-fetch-skill-windows-x86_64-setup.exe\n"
+          )
+
+
+          def gh(*args, capture=False):
+              return subprocess.run(
+                  ["gh", *args], check=True, text=True, capture_output=capture
+              ).stdout
+
+
+          def gh_json(*args):
+              return json.loads(gh(*args, capture=True))
+
+
+          def assets(release):
+              result = {item["name"]: item for item in release["assets"]}
+              assert len(result) == len(release["assets"])
+              return result
+
+
+          def live_release():
+              result = gh_json("api", f"repos/{repo}/releases/tags/{tag}")
+              assert result["id"] == 451241963 and not result["immutable"]
+              assert not result["draft"] and not result["prerelease"]
+              return result
+
+
+          def verify_tag():
+              tag_ref = gh_json("api", f"repos/{repo}/git/ref/tags/{tag}")["object"]
+              assert tag_ref["type"] == "tag"
+              target = gh_json("api", f"repos/{repo}/git/tags/{tag_ref['sha']}")["object"]
+              assert target == {
+                  "sha": source_sha, "type": "commit",
+                  "url": f"https://api.github.com/repos/{repo}/git/commits/{source_sha}",
+              }, target
+
+
+          def file_digest(path):
+              with path.open("rb") as handle:
+                  return "sha256:" + hashlib.file_digest(handle, "sha256").hexdigest()
+
+
+          def sums(payload):
+              result = {}
+              for row in payload.decode("ascii").splitlines():
+                  match = re.fullmatch(r"([0-9a-f]{64})  ([^\s/]+)", row)
+                  assert match, row
+                  digest, name = match.groups()
+                  assert name not in result, name
+                  result[name] = "sha256:" + digest
+              return result
+
+
+          def retry(operation):
+              for delay in (0, 2, 5):
+                  if delay:
+                      time.sleep(delay)
+                  try:
+                      return operation()
+                  except (OSError, subprocess.CalledProcessError) as error:
+                      last_error = error
+              raise last_error
+
+
+          def require_old_packages(current):
+              for name, asset in original_assets.items():
+                  if name != checksum_name:
+                      assert all(current[name][field] == asset[field] for field in ("id", "digest", "size")), name
+
+
+          def public_bytes(name):
+              with urlopen(base_url + name, timeout=60) as response:
+                  return response.read()
+
+
+          def public_digest(name):
+              with urlopen(base_url + name, timeout=120) as response:
+                  digest = "sha256:" + hashlib.file_digest(response, "sha256").hexdigest()
+              return name, digest
+
+
+          def lookup_checksum(expected):
+              current = assets(live_release())[checksum_name]
+              assert current["state"] == "uploaded" and current["digest"] == expected, current
+
+
+          def upload(path, replace=False):
+              options = ["--clobber"] if replace else []
+              gh("release", "upload", tag, str(path), *options, "--repo", repo)
+
+
+          def replace_checksums(path, backup):
+              expected = file_digest(path)
+              original_digest = file_digest(backup)
+              for attempt in range(2):
+                  try:
+                      upload(path, replace=True)
+                      lookup_checksum(expected)
+                      return
+                  except (AssertionError, KeyError, subprocess.CalledProcessError) as error:
+                      print("Restoring backed up SHA256SUMS after replacement failure", flush=True)
+
+                      def restore():
+                          current = assets(live_release()).get(checksum_name)
+                          if current is None or current.get("digest") != original_digest:
+                              upload(backup, replace=current is not None)
+                          lookup_checksum(original_digest)
+
+                      retry(restore)
+                      if attempt == 1:
+                          raise error
+
+
+          def verify_public(expected, checksum_digest, notes):
+              verify_tag()
+              release = live_release()
+              current = assets(release)
+              require_old_packages(current)
+              assert set(current) == set(expected) | {checksum_name}, sorted(current)
+              assert release["body"].rstrip() == notes.rstrip()
+              public_sums = retry(lambda: public_bytes(checksum_name))
+              assert "sha256:" + hashlib.sha256(public_sums).hexdigest() == checksum_digest
+              assert current[checksum_name]["digest"] == checksum_digest
+              assert sums(public_sums) == expected
+              for name, digest in expected.items():
+                  assert current[name]["digest"] == digest, name
+                  assert current[name]["browser_download_url"] == base_url + name, name
+              with ThreadPoolExecutor(max_workers=4) as executor:
+                  for name, digest in executor.map(lambda name: retry(lambda: public_digest(name)), expected):
+                      assert digest == expected[name], (name, digest)
+                      print(f"{name} {digest}", flush=True)
+              print(f"{checksum_name} {checksum_digest}. Verified nine public packages.", flush=True)
+
+
+          def main():
+              run = gh_json("run", "view", run_id, "-R", repo, "--json", "conclusion,headSha,headBranch")
+              assert run["conclusion"] == "success" and run["headBranch"] == "release/v8.0.0-macos-backfill"
+              assert run["headSha"] == "c55fc07e66467b1260944ff83c6c1c8e950150c1"
+              with tempfile.TemporaryDirectory(prefix="backup-", dir=root) as backup_dir:
+                  backup = Path(backup_dir) / checksum_name
+                  backup.write_text(original_checksums)
+                  assert file_digest(backup) == original_assets[checksum_name]["digest"]
+
+                  verify_tag()
+                  original_notes = live_release()["body"].replace(new_intro, old_intro, 1)
+                  assert original_notes.count(old_intro) == 1
+                  notes = original_notes.replace(old_intro, new_intro, 1)
+                  (root / "release-notes.md").write_text(notes)
+
+                  checksum = staging / "macos-backfill-checksums" / checksum_name
+                  checksum_digest = file_digest(checksum)
+                  old = sums(backup.read_bytes())
+                  assert old == {
+                      name: asset["digest"] for name, asset in original_assets.items() if name != checksum_name
+                  }
+                  expected = sums(checksum.read_bytes())
+                  assert set(expected) == set(old) | set(macos_names)
+                  assert all(expected[name] == digest for name, digest in old.items())
+                  new_paths = {}
+                  for name in macos_names:
+                      matches = list(staging.glob(f"offline-macOS-*/{name}"))
+                      assert len(matches) == 1, name
+                      new_paths[name] = matches[0]
+                      assert file_digest(matches[0]) == expected[name], name
+
+                  attest_flags = (
+                      "--repo", repo, "--signer-workflow", f"{repo}/.github/workflows/release.yml",
+                      "--source-digest", run["headSha"], "--source-ref", f"refs/heads/{run['headBranch']}",
+                      "--deny-self-hosted-runners",
+                  )
+                  for path in [*new_paths.values(), checksum]:
+                      retry(lambda: gh("attestation", "verify", str(path), *attest_flags))
+
+                  current_release = live_release()
+                  current = assets(current_release)
+                  require_old_packages(current)
+                  assert current_release["body"] in {original_notes, notes}
+                  assert set(original_assets) <= set(current) <= set(expected) | {checksum_name}
+                  assert current[checksum_name]["digest"] in {file_digest(backup), checksum_digest}
+
+                  def publish_packages():
+                      current = assets(live_release())
+                      missing = []
+                      for name, path in new_paths.items():
+                          if name in current:
+                              asset = current[name]
+                              assert asset["state"] == "uploaded", asset
+                              assert asset["digest"] == expected[name], asset
+                          else:
+                              missing.append(path)
+                      if missing:
+                          gh("release", "upload", tag, *map(str, missing), "--repo", repo)
+
+                  retry(publish_packages)
+                  current = assets(live_release())
+                  require_old_packages(current)
+                  for name in macos_names:
+                      assert current[name]["digest"] == expected[name], current[name]
+                      assert current[name]["state"] == "uploaded", current[name]
+                      print(f"GitHub asset digest verified for {name}", flush=True)
+
+                  if current[checksum_name]["digest"] != checksum_digest:
+                      replace_checksums(checksum, backup)
+                  gh("release", "edit", tag, "--notes-file", str(root / "release-notes.md"), "--repo", repo)
+
+                  verify_public(expected, checksum_digest, notes)
+
+
+          if __name__ == "__main__":
+              main()
+          PYTHON
