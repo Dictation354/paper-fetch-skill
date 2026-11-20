@@ -1,12 +1,10 @@
-name: Stable release
+name: v8.0.0 macOS backfill
 
 on:
-  push:
-    tags: ["v*"]
   workflow_dispatch:
     inputs:
       tag:
-        description: Existing immutable v* tag to release
+        description: Existing v8.0.0 tag to backfill
         required: true
         type: string
 
@@ -34,33 +32,13 @@ jobs:
           DISPATCH_TAG: ${{ inputs.tag }}
         run: |
           set -euo pipefail
-          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-            tag="$GITHUB_REF_NAME"
-          else
-            tag="$DISPATCH_TAG"
-          fi
-          case "$tag" in
-            v*) ;;
-            *)
-              echo "Stable release tag must start with v: $tag" >&2
-              exit 1
-              ;;
-          esac
+          tag="$DISPATCH_TAG"
+          test "$tag" = "v8.0.0"
           git fetch --force --tags origin
           git cat-file -e "refs/tags/$tag^{tag}" 2>/dev/null || \
             git cat-file -e "refs/tags/$tag^{commit}"
           source_sha="$(git rev-parse "refs/tags/$tag^{commit}")"
-          if [[ ! "$source_sha" =~ ^[0-9a-f]{40}$ ]]; then
-            echo "Tag $tag did not peel to a full commit SHA." >&2
-            exit 1
-          fi
-          if [ "${GITHUB_REF_TYPE:-}" = "tag" ]; then
-            event_sha="$(git rev-parse "$GITHUB_SHA^{commit}")"
-            if [ "$event_sha" != "$source_sha" ]; then
-              echo "Push event SHA $event_sha does not match tagged commit $source_sha." >&2
-              exit 1
-            fi
-          fi
+          test "$source_sha" = "eb27ea4510d3191551397686dd476ab723c5489d"
           git checkout --detach "$source_sha"
           test "$(git rev-parse HEAD)" = "$source_sha"
           version="$(python3 -c 'import pathlib,tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
@@ -72,14 +50,9 @@ jobs:
           echo "version=$version" >> "$GITHUB_OUTPUT"
           echo "tag=$tag" >> "$GITHUB_OUTPUT"
           echo "source_sha=$source_sha" >> "$GITHUB_OUTPUT"
-          matrix="$(python3 scripts/prepare_release_assets.py matrix --version "$version")"
+          matrix="$(python3 scripts/prepare_release_assets.py matrix |
+            jq -ce '{include: [.include[] | select(.os == "macos-15")]} | select(.include | length == 4)')"
           echo "matrix=$matrix" >> "$GITHUB_OUTPUT"
-
-  package:
-    needs: verify-tag
-    uses: ./.github/workflows/package.yml
-    with:
-      ref: ${{ needs.verify-tag.outputs.source_sha }}
 
   resolve-dependencies:
     needs: verify-tag
@@ -183,13 +156,14 @@ jobs:
     with:
       ref: ${{ needs.verify-tag.outputs.source_sha }}
       frozen_dependencies: true
+      macos_backfill: true
       release_version: ${{ needs.verify-tag.outputs.version }}
 
-  publish:
-    needs: [verify-tag, package, merge-dependencies, offline]
+  attest-backfill:
+    needs: [verify-tag, offline]
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      contents: read
       id-token: write
       attestations: write
     steps:
@@ -207,82 +181,84 @@ jobs:
         run: |
           set -euo pipefail
           test "$(git rev-parse HEAD)" = "$SOURCE_SHA"
-          git fetch --force --tags origin
           test "$(git rev-parse "refs/tags/$TAG^{commit}")" = "$SOURCE_SHA"
-      - name: Download verified Python distributions
+      - name: Download verified macOS packages
         uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
         with:
-          name: python-distributions
-          path: release-inputs/python
-      - name: Download frozen offline targets and staged evidence
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          pattern: offline-*
-          path: release-inputs/offline
-      - name: Download merged dependency manifest
-        uses: actions/download-artifact@9000827ccba6bdab643e8b6fd33ac0654aef8333 # v8.0.2
-        with:
-          name: merged-dependency-manifest
-          path: release-inputs/dependencies
-      - name: Validate, flatten, and checksum the exact release asset set
+          pattern: offline-macOS-*
+          path: release-inputs
+      - name: Validate archive metadata and merge checksums
         shell: bash
         env:
+          SOURCE_SHA: ${{ needs.verify-tag.outputs.source_sha }}
           VERSION: ${{ needs.verify-tag.outputs.version }}
+          ORIGINAL_SUMS_SHA256: 62e223861916bb7b0c02f239038283384376ecfa0bb301d96282d0ec55d85dc6
         run: |
           set -euo pipefail
-          python scripts/prepare_release_assets.py prepare-stable \
-            --input-root release-inputs \
-            --output-dir release-assets \
-            --version "$VERSION"
-          test -f release-assets/SHA256SUMS
-      - name: Scan stable release artifacts for secret values
-        id: secret_scan_release_assets
+          curl --fail --silent --show-error --location --retry 3 \
+            "https://github.com/$GITHUB_REPOSITORY/releases/download/v$VERSION/SHA256SUMS" \
+            --output original.SHA256SUMS
+          echo "$ORIGINAL_SUMS_SHA256  original.SHA256SUMS" | sha256sum --check
+          mkdir release-assets
+          PYTHONPATH=scripts python3 - <<'PYTHON'
+          import hashlib
+          import json
+          import os
+          from pathlib import Path
+          import shutil
+          import tarfile
+
+          from prepare_release_assets import TARGET_ARTIFACTS, installer_asset_names
+
+          version = os.environ["VERSION"]
+          source_sha = os.environ["SOURCE_SHA"]
+          inputs = Path("release-inputs")
+          output = Path("release-assets")
+          originals = Path("original.SHA256SUMS").read_text().splitlines()
+          assert {line.split()[1] for line in originals} == installer_asset_names(version)
+          rows = []
+          for target, artifact, name in TARGET_ARTIFACTS:
+              if not target.startswith("macos-"):
+                  continue
+              abi = target.rsplit("-", 1)[1]
+              archive = inputs / artifact / name
+              with tarfile.open(archive, "r:gz") as bundle:
+                  member = bundle.extractfile(f"{name.removesuffix('.tar.gz')}/offline-manifest.json")
+                  assert member is not None, name
+                  manifest = json.load(member)
+              assert manifest["version"] == version, name
+              assert manifest["git_revision"] == source_sha, name
+              assert manifest["target"] == {
+                  "platform": "macos",
+                  "arch": "arm64",
+                  "python_tag": abi,
+                  "minimum_os_version": "15.0",
+              }, name
+              with archive.open("rb") as handle:
+                  digest = hashlib.file_digest(handle, "sha256").hexdigest()
+              rows.append(f"{digest}  {name}")
+              shutil.move(archive, output / name)
+              print(f"{name}: {source_sha}, arm64, {abi}, sha256:{digest}")
+
+          assert len(originals) == 5 and len(rows) == 4
+          assert not list(inputs.rglob("*.tar.gz"))
+          lines = sorted(originals + rows, key=lambda row: row.split()[1])
+          (output / "SHA256SUMS").write_text("\n".join(lines) + "\n")
+          PYTHON
+      - name: Scan backfill artifacts for secret values
         env:
           GITHUB_TOKEN: ${{ github.token }}
-          GH_TOKEN: ${{ github.token }}
         run: >-
           python scripts/scan_artifacts_for_secrets.py
           --env-var GITHUB_TOKEN
-          --env-var GH_TOKEN
           --root release-assets
-      - name: Attest release artifacts
-        if: ${{ steps.secret_scan_release_assets.outcome == 'success' }}
+      - name: Attest backfill artifacts
         uses: actions/attest-build-provenance@4d101475d8b20a2381f78447822ac1eab6504dd8 # v4.2.2
         with:
           subject-path: release-assets/**/*
-      - name: Write Chinese stable release notes
-        shell: bash
-        env:
-          VERSION: ${{ needs.verify-tag.outputs.version }}
-        run: |
-          set -euo pipefail
-          heading="## $VERSION - "
-          awk -v heading="$heading" '
-            index($0, heading) == 1 {
-              in_section = 1
-            }
-            in_section && /^## / && index($0, heading) != 1 {
-              exit
-            }
-            in_section {
-              print
-            }
-          ' CHANGELOG_CN.md > release-notes.md
-          if [ ! -s release-notes.md ]; then
-            echo "CHANGELOG_CN.md has no release notes for $VERSION." >&2
-            exit 1
-          fi
-      - name: Publish immutable release assets
-        if: ${{ steps.secret_scan_release_assets.outcome == 'success' }}
-        env:
-          GH_TOKEN: ${{ github.token }}
-          TAG: ${{ needs.verify-tag.outputs.tag }}
-        run: |
-          set -euo pipefail
-          mapfile -d '' assets < <(
-            find release-assets -maxdepth 1 -type f -print0 | sort -z
-          )
-          gh release create "$TAG" "${assets[@]}" \
-            --verify-tag \
-            --notes-file release-notes.md \
-            --title "$TAG"
+      - name: Upload attested checksums for publication
+        uses: actions/upload-artifact@cf430e030ddbb5b0abf93d22962f4752f3646cd9 # v7.0.2
+        with:
+          name: macos-backfill-checksums
+          path: release-assets/SHA256SUMS
+          if-no-files-found: error

@@ -12,6 +12,10 @@ on:
         required: false
         default: false
         type: boolean
+      macos_backfill:
+        description: Run only the four native Apple Silicon targets
+        default: false
+        type: boolean
       release_version:
         description: Apply the immutable source version's stable release scope
         required: false
@@ -45,14 +49,20 @@ jobs:
         shell: bash
         env:
           RELEASE_VERSION: ${{ inputs.release_version }}
+          MACOS_BACKFILL: ${{ inputs.macos_backfill }}
         run: |
           set -euo pipefail
           if [[ -n "$RELEASE_VERSION" ]]; then
             version="$(python3 -c 'import pathlib,tomllib; print(tomllib.loads(pathlib.Path("pyproject.toml").read_text(encoding="utf-8"))["project"]["version"])')"
             test "$version" = "$RELEASE_VERSION"
           fi
-          matrix="$(python3 scripts/prepare_release_assets.py matrix --version "$RELEASE_VERSION" |
-            jq -c '{include: [.include[] | select(.os != "windows-latest")]}')"
+          if [[ "$MACOS_BACKFILL" == "true" ]]; then
+            matrix="$(python3 scripts/prepare_release_assets.py matrix |
+              jq -ce '{include: [.include[] | select(.os == "macos-15")]} | select(.include | length == 4)')"
+          else
+            matrix="$(python3 scripts/prepare_release_assets.py matrix --version "$RELEASE_VERSION" |
+              jq -c '{include: [.include[] | select(.os != "windows-latest")]}')"
+          fi
           echo "posix_matrix=$matrix" >> "$GITHUB_OUTPUT"
 
   posix:
@@ -166,6 +176,7 @@ jobs:
           if-no-files-found: error
 
   windows:
+    if: ${{ !inputs.macos_backfill }}
     needs: plan
     runs-on: windows-latest
     steps:
