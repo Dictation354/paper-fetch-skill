@@ -110,7 +110,7 @@ def test_real_article_supplement_href_and_body_scope(provider, tmp_path):
             )
         else:
             assert urljoin(source_url, asset["source_href"]) == asset["url"]
-    if provider in {"mdpi", "annualreviews", "science", "wiley", "elsevier"}:
+    if provider in {"mdpi", "annualreviews", "rsc", "science", "wiley", "elsevier"}:
         assert supplements, "Known captured article must retain its attachments"
 
 

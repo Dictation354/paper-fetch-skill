@@ -8,6 +8,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.0 - 2026-11-22
+
+- 新增英国皇家化学会（RSC）期刊支持，识别 `10.1039/` DOI 和新旧两代文章 URL。先通过浏览器获取官方 HTML，必要时尝试同篇 PDF，可用 `paper-fetch auth rsc` 保存登录状态。
+- 提取 RSC 正文、图文摘要、参考文献和补充材料，保留合并表格单元格、化学结构图和公式编号。提取修订号升至 13，新请求按当前提取规则处理。
+- Linux 和 Windows x86-64 浏览器运行时升级至 InvisiblePlaywright 0.58.0 和 invisible-core 68.80.0。使用上游 POSIX 启动机制，并修复在新标签页打开 PDF 时的下载问题。
+- 刷新 Python、Byparr 和公式工具的锁定依赖。trafilatura 保持 2.2.0。Camoufox 分支的 Playwright 锁定 1.62.0，Linux 和 Windows x86-64 分支锁定 1.65.2。
+
 ## 8.0.0 - 2026-11-19
 
 本次稳定版提供 Linux x86_64 和 macOS 15+ Apple Silicon（均覆盖 CPython 3.11–3.14），以及 Windows x86_64（CPython 3.14）离线安装包。四个 macOS 安装包从原标签提交构建后补发至 v8.0.0。

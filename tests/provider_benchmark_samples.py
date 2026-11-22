@@ -232,6 +232,21 @@ PROVIDER_BENCHMARK_SAMPLES: dict[str, ProviderBenchmarkSample] = {
         fixture_name=golden_criteria_fixture("10.1098/rsta.2019.0558", "original.html"),
         fixture_kind="html",
     ),
+    "rsc": ProviderBenchmarkSample(
+        provider="rsc",
+        doi="10.1039/d5gc03562g",
+        year=2026,
+        title="Photocatalytic upcycling of PET into methane, hydrogen and high-value liquid products",
+        landing_url="https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+        accepted_sources=("rsc_html", "rsc_pdf"),
+        accepted_live_events_groups=(
+            (trace_event("fulltext", "rsc_html", "ok"),),
+            (trace_event("fulltext", "rsc_pdf_fallback", "ok"),),
+        ),
+        recommended_env=("CROSSREF_MAILTO",),
+        fixture_name=golden_criteria_fixture("10.1039/d5gc03562g", "original.html"),
+        fixture_kind="html",
+    ),
     "annualreviews": ProviderBenchmarkSample(
         provider="annualreviews",
         doi="10.1146/annurev-control-030123-013355",

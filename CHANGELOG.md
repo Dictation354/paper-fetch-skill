@@ -8,6 +8,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.0 - 2026-11-22
+
+- Add Royal Society of Chemistry journal support for `10.1039/` DOIs and both generations of article URLs. Fetch official HTML with a browser PDF fallback, and support saved sign-in via `paper-fetch auth rsc`.
+- Extract RSC article text, graphical abstracts, references and supplementary files. Preserve merged table cells, chemical structure images and numbered formulas. Advance the extraction revision to 13 so new requests use the current extraction rules.
+- Upgrade the Linux and Windows x86-64 browser runtime to InvisiblePlaywright 0.58.0 and invisible-core 68.80.0. Use the upstream POSIX launcher and preserve PDF downloads opened in a new tab.
+- Refresh locked Python, Byparr and formula-tool dependencies. Keep trafilatura at 2.2.0 and Playwright at 1.62.0 with Camoufox and 1.65.2 on Linux and Windows x86-64.
+
 ## 8.0.0 - 2026-11-19
 
 The stable release provides offline installers for Linux x86_64 and macOS 15+ on Apple Silicon (CPython 3.11–3.14), and Windows x86_64 (CPython 3.14). The four macOS installers were added to the v8.0.0 release from the original tagged commit.

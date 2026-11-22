@@ -5,6 +5,8 @@ from dataclasses import replace
 from pathlib import Path
 from unittest import mock
 
+import pytest
+
 import paper_fetch.delivery.fetch_cache as fetch_cache_module
 from paper_fetch.capability_scope import (
     BrowserStateCapabilityUse,
@@ -111,46 +113,38 @@ def test_malformed_exact_sidecar_does_not_hide_valid_superset(tmp_path: Path) ->
     resolver.assert_not_called()
 
 
+@pytest.mark.parametrize("stale_field", ["version", "extraction_revision"])
 def test_lightweight_header_filter_skips_envelope_deserialization(
     tmp_path: Path,
     monkeypatch,
+    stale_field: str,
 ) -> None:
     cache = FetchCache(tmp_path)
     private_scope = "credential:" + ("9" * 64)
-    # Write incompatible variants (wrong mode, wrong scope, and stale version)
+    # Write incompatible variants (wrong mode, wrong scope, and a stale header)
     # with deliberately broken payload bodies that would fail deserialization.
+    request = _request("markdown")
+    cache.write_fetch_envelope(sample_envelope(modes={"markdown"}, doi=DOI), request)
+    (stale_path,) = tmp_path.glob("*.fetch-envelope.json")
     FetchCache(tmp_path, credential_scope=private_scope).write_fetch_envelope(
-        sample_envelope(modes={"markdown"}, doi=DOI), _request("markdown")
+        sample_envelope(modes={"markdown"}, doi=DOI), request
     )
     cache.write_fetch_envelope(
         sample_envelope(modes={"metadata"}, doi=DOI), _request("metadata")
     )
     for bad_path in tmp_path.glob("*.fetch-envelope.json"):
         raw = json.loads(bad_path.read_text(encoding="utf-8"))
+        if bad_path == stale_path:
+            raw[stale_field] -= 1
         raw["payload"] = {"broken": True}
         bad_path.write_text(json.dumps(raw), encoding="utf-8")
-
-    stale = tmp_path / f"10.1000_variant-selection.{'f' * 64}.fetch-envelope.json"
-    stale.write_text(
-        json.dumps(
-            {
-                "version": 7,
-                "extraction_revision": 12,
-                "credential_scope": "public",
-                "request_fingerprint": "f" * 64,
-                "request": {},
-                "payload": {"broken": True},
-            }
-        ),
-        encoding="utf-8",
-    )
 
     decode_spy = mock.Mock(wraps=fetch_cache_module.envelope_from_payload)
     monkeypatch.setattr(fetch_cache_module, "envelope_from_payload", decode_spy)
 
     with RuntimeContext(env={}, download_dir=tmp_path) as context:
         loaded = cache.load_fetch_envelope(
-            _request("markdown"),
+            request,
             resolve_paper_fn=mock.Mock(),
             context=context,
         )
