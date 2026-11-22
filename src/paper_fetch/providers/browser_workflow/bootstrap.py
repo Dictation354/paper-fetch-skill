@@ -14,7 +14,6 @@ from ...quality.access_boundary import propagate_paywall
 from ...reason_codes import NOT_SUPPORTED
 from ...runtime import RuntimeContext
 from .._elsevier_html import browser_pdf_candidates as elsevier_pdf_extractor
-from .._pdf_candidates import extract_pdf_candidate_urls_from_html
 from ..base import ProviderFailure
 from ..browser_runtime.types import BrowserRuntimeFailure
 from . import html_extraction as _html_extraction
@@ -170,7 +169,7 @@ def bootstrap_browser_workflow(
             pdf_extractor = (
                 partial(elsevier_pdf_extractor, expected_doi=normalized_doi)
                 if client.name == "elsevier"
-                else extract_pdf_candidate_urls_from_html
+                else partial(client.pdf_candidates_from_html, doi=normalized_doi)
             )
             for pdf_candidate in reversed(
                 pdf_extractor(

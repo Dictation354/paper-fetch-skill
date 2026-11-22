@@ -56,7 +56,7 @@ from ..utils import (
     extend_unique,
     safe_text,
 )
-from .metadata import fetch_metadata_for_resolved_query
+from .metadata import fetch_metadata_for_resolved_query, metadata_from_resolution
 from .rendering import finalize_article
 from .resolution import resolve_paper
 from .routing import (
@@ -548,6 +548,22 @@ def fetch_article(
             "ambiguous",
             "Query resolution is ambiguous; choose one of the DOI candidates.",
             candidates=resolved.candidates,
+        )
+    if (access_failure := getattr(resolved, "access_failure", None)) is not None:
+        if not strategy.allow_metadata_only_fallback:
+            raise PaperFetchFailure.from_provider_failure(
+                access_failure
+            ) from access_failure
+        provider = access_failure.diagnostics.provider or resolved.provider_hint
+        assert provider is not None
+        metadata = metadata_from_resolution(resolved)
+        result = restricted_provider_result(provider, metadata, access_failure)
+        runtime.artifact_store.save_provider_html_payload(
+            provider, content=result.content, doi=resolved.doi, metadata=metadata
+        )
+        runtime.fetch_trace = merge_trace(events, result.article.trace)
+        return finalize_article(
+            result.article, warnings=result.warnings, trace=runtime.fetch_trace
         )
 
     runtime.raise_if_cancelled()

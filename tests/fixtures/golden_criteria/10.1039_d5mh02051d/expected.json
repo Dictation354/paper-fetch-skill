@@ -1,0 +1,80 @@
+{
+  "has": {
+    "title": true,
+    "authors": true,
+    "abstract": true,
+    "body": true,
+    "figures": true,
+    "references": true,
+    "data_availability": true,
+    "code_availability": false
+  },
+  "counts": {
+    "sections": 17,
+    "abstract_sections": 2,
+    "body_sections": 14,
+    "figures": 8,
+    "tables": 0,
+    "references": 47
+  },
+  "expected_content_kind": "fulltext",
+  "source_review": {
+    "sample_id": "10.1039_d5mh02051d",
+    "provider": "rsc",
+    "doi": "10.1039/d5mh02051d",
+    "original": "tests/fixtures/golden_criteria/10.1039_d5mh02051d/original.html",
+    "sha256": "8d60907984667780712c9b4c503bd664d4db6e3d38ae36c496cc39cf25bc0b30",
+    "format": "html",
+    "dimensions": {
+      "authors": {
+        "source_count": 2,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order"
+      },
+      "references": {
+        "source_count": 47,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi"
+      },
+      "prose": {
+        "source_count": 62,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order"
+      },
+      "figures": {
+        "source_count": 8,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions"
+      },
+      "tables": {
+        "source_count": 0,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells"
+      },
+      "notes_and_statements": {
+        "source_count": 1,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements"
+      },
+      "tex": {
+        "source_count": 0,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure"
+      },
+      "mathml": {
+        "source_count": 0,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts"
+      },
+      "citation_targets": {
+        "source_count": 0,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references"
+      },
+      "image_identity": {
+        "source_count": null,
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity"
+      }
+    },
+    "limitations": [
+      "Supplementary scope covers the article-owned entry and link; its payload is outside the review."
+    ],
+    "formula_audit": {
+      "selected": 0,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 0
+    }
+  }
+}

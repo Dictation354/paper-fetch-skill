@@ -167,6 +167,10 @@ def _html_paywall_diagnostics(
     from ..extraction.html._metadata import extract_doi_from_meta, parse_html_metadata
     from ..extraction.html.provider_rules import availability_rules_for_provider
 
+    rules = availability_rules_for_provider(provider)
+    if rules.paywall_hosts and urlsplit(source_url).hostname not in rules.paywall_hosts:
+        return {}
+
     meta: dict[str, list[str]] = {}
     for node in soup.find_all("meta"):
         key = str(node.get("name") or node.get("property") or "").lower()
@@ -227,7 +231,6 @@ def _html_paywall_diagnostics(
         if node is not None:
             received[field_name] = normalize_text(node.get("content"))
 
-    rules = availability_rules_for_provider(provider)
     visible = _visible_soup(html)
     if rules.paywall_remove_selectors:
         for node in visible.select(rules.paywall_remove_selectors):

@@ -1218,6 +1218,61 @@ BUILTIN_PROVIDER_DEFINITIONS = (
         rules_aliases=(),
         noise_profile="generic",
     ),
+    ProviderDefinition(
+        catalog=ProviderSpec(
+            name="rsc",
+            display_name="Royal Society of Chemistry",
+            official=True,
+            domains=("pubs.rsc.org",),
+            doi_prefixes=("10.1039/",),
+            publisher_aliases=(
+                "the royal society of chemistry",
+                "royal society of chemistry (rsc)",
+                "rsc publishing",
+            ),
+            asset_default="body",
+            probe_capability="routing_signal",
+            provider_managed_abstract_only=False,
+            status_order=20,
+            routes=(
+                ProviderRouteSpec(
+                    name="metadata", kind="metadata", source="crossref_metadata"
+                ),
+                ProviderRouteSpec(
+                    name="browser_html",
+                    kind="html",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="browser_pdf",
+                    kind="pdf",
+                    browser_required=True,
+                    browser_preflight=True,
+                    auth_supported=True,
+                    requires_playwright=True,
+                    requires_pdf_conversion=True,
+                    concurrency=1,
+                ),
+                ProviderRouteSpec(
+                    name="assets",
+                    kind="assets",
+                    browser_optional=True,
+                    requires_playwright=True,
+                    timeout_seconds=20,
+                    concurrency=2,
+                    transient_retries=0,
+                ),
+            ),
+        ),
+        implementation="paper_fetch.providers.rsc:PROVIDER_BUNDLE",
+        targets=("paper", "supplementary"),
+        sources=("rsc_html", "rsc_pdf"),
+        rules_name="rsc",
+    ),
 )
 
 validate_provider_definitions(BUILTIN_PROVIDER_DEFINITIONS)

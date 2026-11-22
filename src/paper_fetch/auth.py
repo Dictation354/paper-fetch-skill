@@ -82,6 +82,10 @@ AUTH_TARGETS: Mapping[str, AuthTarget] = {
         doi="10.1098/rsos.201200",
         url="https://royalsocietypublishing.org/doi/10.1098/rsos.201200",
     ),
+    "rsc": AuthTarget(
+        doi="10.1039/d5gc03562g",
+        url="https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+    ),
     "annualreviews": AuthTarget(
         doi="10.1146/annurev-control-030123-013355",
         url="https://www.annualreviews.org/content/journals/10.1146/annurev-control-030123-013355",

@@ -58,6 +58,8 @@ def fetch_supplementary(query, *, strategy, context, modes, resolve_paper_fn):
             candidates=resolved.candidates,
         )
     try:
+        if (access_failure := getattr(resolved, "access_failure", None)) is not None:
+            raise access_failure
         clients = context.get_clients()
         metadata, selected, metadata_trail = fetch_metadata_for_resolved_query(
             resolved,

@@ -33,6 +33,7 @@ REFERENCE_SELECTORS = {
     "plos": "ref-list ref",
     "pnas": '#bibliography [role="listitem"]',
     "royalsocietypublishing": ".ref-list .ref",
+    "rsc": ".widget-ArticleFulltext .js-splitview-ref-list .ref",
     "science": '#bibliography [role="listitem"]',
     "springer": ".c-article-references__item",
     "tandf": "ul.references.numeric-ordered-list > li",
@@ -283,6 +284,18 @@ def source_reference_text(fixture, node):
     if fixture.provider in {"pnas", "science"}:
         original = original.select_one(".citation-content") or original
     text = original.get_text(" ", strip=True)
+    if fixture.provider == "rsc":
+        group = node.find_parent(class_="ref-list")
+        if group and group.select_one(".ref") is node:
+            text = " ".join(
+                [
+                    *(
+                        p.get_text(" ", strip=True)
+                        for p in group.find_all("p", recursive=False)
+                    ),
+                    text,
+                ]
+            )
     if fixture.provider == "tandf" and str(original.get("id", "")).startswith("FN"):
         text = re.sub(r"^\d+\s+", "", text)
     for url in external_urls:
@@ -325,6 +338,7 @@ BODY_SELECTORS = {
     "plos": "body",
     "pnas": "#bodymatter",
     "royalsocietypublishing": ".article-body",
+    "rsc": ".widget-ArticleFulltext",
     "science": "#bodymatter",
     "springer": ".main-content",
     "tandf": ".hlFld-Fulltext",
@@ -339,6 +353,19 @@ def source_prose_blocks(fixture, soup):
         body = soup
     assert body is not None, (fixture.doi, BODY_SELECTORS[fixture.provider])
     body = deepcopy(body)
+    if fixture.provider == "rsc":
+        for node in body.select(
+            ".abstract, .graphical-abstract, .fig-section, .fig-modal, .table-wrap, "
+            ".formula-wrap, .js-splitview-ref-list, .backreferences-title, "
+            ".permissionstatement-section-wrapper, .article-metadata-panel"
+        ):
+            node.decompose()
+        preserve_dom_scripts(body)
+        return [
+            (node.name, [str(s) for s in node.strings if str(s).strip()])
+            for node in body.select("h2, h3, h4, h5, p, div.block-child-p")
+            if node.get_text(strip=True)
+        ]
     for node in list(
         body.select(
             "figure, fig, table, table-wrap, ref-list, bib-reference, .ref-list, "
@@ -518,6 +545,10 @@ def source_prose_blocks(fixture, soup):
 
 
 def source_tables(fixture, soup):
+    if fixture.provider == "rsc":
+        return soup.select(
+            ".widget-ArticleFulltext .table-wrap .table-overflow > table"
+        )
     if fixture.provider == "copernicus":
         # Empty table xrefs derive their text from the article's bibliography.
         source_copy = deepcopy(soup)
@@ -789,6 +820,7 @@ FIGURE_SELECTORS = {
     "plos": "body fig",
     "pnas": "#bodymatter figure.graphic",
     "royalsocietypublishing": ".article-body .fig",
+    "rsc": ".widget-ArticleFulltext .fig-section",
     "science": "#bodymatter figure.graphic",
     "springer": ".main-content figure",
     "tandf": ".hlFld-Fulltext .figureView",
@@ -932,6 +964,8 @@ def source_formulas(fixture, soup):
         if key not in seen:
             seen.add(key)
             result.append(node)
+    if fixture.provider == "rsc":
+        return result
     expected = source_object_expectations(fixture.doi, fixture.raw_path)
     by_hash = {entry["node_sha256"]: entry for entry in expected["mathml"]}
     for node in result:

@@ -82,6 +82,9 @@ from paper_fetch.providers import (
     royalsocietypublishing as royalsocietypublishing_provider,
 )
 from paper_fetch.providers import (
+    rsc as rsc_provider,
+)
+from paper_fetch.providers import (
     science as science_provider,
 )
 from paper_fetch.providers import (
@@ -487,6 +490,7 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         "mdpi": mdpi_provider.MdpiClient,
         "science": science_provider.ScienceClient,
         "pnas": pnas_provider.PnasClient,
+        "rsc": rsc_provider.RscClient,
         "wiley": wiley_provider.WileyClient,
     }
     client = client_map[fixture.provider](HttpTransport(), {})
@@ -575,6 +579,7 @@ def _build_browser_workflow_article(fixture: GoldenCorpusFixture):
         provider=fixture.provider,
         content=ProviderContent(
             route_kind="html",
+            route_name="browser_html" if fixture.provider == "rsc" else None,
             source_url=fixture.source_url,
             content_type="text/html",
             body=html_text.encode("utf-8"),
@@ -1577,6 +1582,21 @@ def golden_corpus_replay_inventory() -> GoldenCorpusReplayInventory:
 
 
 def _register_golden_corpus_adapters() -> None:
+    register_golden_corpus_adapter(
+        GoldenCorpusAdapter(
+            provider="rsc",
+            build_article=_build_browser_workflow_article,
+            lightweight_summary=lambda fixture: _article_model_positive_summary(
+                _build_browser_workflow_article(fixture), fixture
+            ),
+            primary_contract=ProviderGoldenContract(
+                route_kind="html",
+                content_prefix="text/html",
+                source="rsc_html",
+                primary_marker=trace_event("fulltext", "rsc_html", "ok"),
+            ),
+        )
+    )
     register_golden_corpus_adapter(
         GoldenCorpusAdapter(
             provider="acs",

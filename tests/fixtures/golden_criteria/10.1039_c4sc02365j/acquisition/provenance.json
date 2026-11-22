@@ -1,0 +1,1265 @@
+{
+  "records": [
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-ga.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-ga.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-ga.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-ga.png",
+      "size": 56750,
+      "sha256": "3cedf725fbd2612bfc0c918734e087429fad1826ec1e1dca3b9022540913d262",
+      "width": 520,
+      "height": 215,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s1.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-s1.png",
+      "size": 63918,
+      "sha256": "fdf37c41e50725dfc91f1a242c95654e43a9fe36b98d4427000828671c3faa46",
+      "width": 520,
+      "height": 369,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u1.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u1.png",
+      "size": 11480,
+      "sha256": "f986d557ee28af9c190e9f4669a29e1e6deea8cbde04d1889ecbfe1461baf317",
+      "width": 520,
+      "height": 77,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u2.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u2.png",
+      "size": 30028,
+      "sha256": "ea4d7da62d5a1d928fcefe859f8454d68e59ce8c9f3dccba242d7c03fee4bd8b",
+      "width": 520,
+      "height": 177,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u3.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u3.png",
+      "size": 14855,
+      "sha256": "8af98199ebac2efdc0688a0fba6780da453b5c847cc8cb3e204824956b512fa3",
+      "width": 520,
+      "height": 74,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u4.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u4.png",
+      "size": 2791,
+      "sha256": "ced5b38d41ffe1c56be01e44e6d3de23bd6fc689e1c67c056281c697498a528b",
+      "width": 235,
+      "height": 194,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u5.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u5.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u5.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u5.png",
+      "size": 4772,
+      "sha256": "d86d6ed4763f09affe21b5dfbf29ba92e86addb4fe65e7f06809200b023d9eff",
+      "width": 441,
+      "height": 203,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u6.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u6.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u6.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u6.png",
+      "size": 3970,
+      "sha256": "d98eff39a582562f46b5781a512348581f975ccb5d6d3ce14a2e5fdc7e91628a",
+      "width": 361,
+      "height": 212,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u7.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u7.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u7.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u7.png",
+      "size": 101243,
+      "sha256": "19f9950506080d59be804e7aa6f615192ba69abb0b439e8fd8a3aeac1c5eae4c",
+      "width": 520,
+      "height": 542,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u8.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u8.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u8.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u8.png",
+      "size": 3970,
+      "sha256": "ffa41f84d53dac760b82a4a5635adb94f09c316b1a417e926499d9350d411bef",
+      "width": 239,
+      "height": 288,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u9.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u9.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u9.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u9.png",
+      "size": 5780,
+      "sha256": "edec9d54e0196a0bc62f89d317cad11f1c1c8cff42a7d4ce3ddf0bdbc9c83b03",
+      "width": 412,
+      "height": 288,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u10.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u10.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u10.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u10.png",
+      "size": 5570,
+      "sha256": "0732b29dc79536989f2241983cca1222e4fd42a93c48bd2f84d084a00c5656d0",
+      "width": 369,
+      "height": 274,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u11.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u11.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u11.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u11.png",
+      "size": 18848,
+      "sha256": "c0605017212ce56867d95f01abc78aba461b9d404fb33b3c2a447cd3ccdd5682",
+      "width": 520,
+      "height": 259,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u12.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u12.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u12.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u12.png",
+      "size": 3726,
+      "sha256": "669497122ead2f39ddd769b4cbddfdbd3bf0d5f54987840e0d94123fc9dbfca5",
+      "width": 331,
+      "height": 217,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u13.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u13.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u13.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u13.png",
+      "size": 13954,
+      "sha256": "86d60267876c8f7d380aee3a7adc3e8b911d5ddae5c0108697b35c2cdee8cc67",
+      "width": 520,
+      "height": 205,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u14.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u14.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u14.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u14.png",
+      "size": 4214,
+      "sha256": "094255d0b245e27ddd02bf64f6998f12ac4b67720bc953e1b593d193f6236328",
+      "width": 410,
+      "height": 203,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u15.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u15.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u15.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u15.png",
+      "size": 14070,
+      "sha256": "6aa4da13605d038ec6a182ce6db214ccada7ceb1f266a20cae72e32df7fc0041",
+      "width": 520,
+      "height": 183,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u16.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u16.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u16.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:04+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u16.png",
+      "size": 3651,
+      "sha256": "98552087efc967abaa73b8a46c67a730cbe5bf4f48aa9a6430f5ba360db4de03",
+      "width": 319,
+      "height": 216,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u17.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u17.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u17.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u17.png",
+      "size": 14091,
+      "sha256": "fd7268db35638dda063cff5f8404b6504f4a98b60cfbd70338659e78d1dfab38",
+      "width": 520,
+      "height": 211,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u18.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u18.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u18.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u18.png",
+      "size": 2939,
+      "sha256": "ca86eb8608b3062cfaec85da65145928bbf787387113d2addf5647a10229f138",
+      "width": 229,
+      "height": 200,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u19.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u19.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u19.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u19.png",
+      "size": 4558,
+      "sha256": "ac0481905c05f0842c4fe4b09a9debf7f1dc6d7f26b8444bbe3be894898f2105",
+      "width": 433,
+      "height": 200,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u20.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u20.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u20.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u20.png",
+      "size": 3175,
+      "sha256": "bdc5f3aab6472f62185f51ea81e9d3c9817c9f676686cc062f567dc8d09db145",
+      "width": 297,
+      "height": 183,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u21.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u21.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u21.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u21.png",
+      "size": 4732,
+      "sha256": "cdae2f67a79631d8ce1a392c3f603d6c71d854a63db8c96c0033d7601a141b77",
+      "width": 478,
+      "height": 184,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u22.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u22.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u22.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u22.png",
+      "size": 16747,
+      "sha256": "81527a8df76307856af367e28f67ce8508ebace5090dc80e7953d3abbad7f754",
+      "width": 520,
+      "height": 86,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u23.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u23.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u23.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u23.png",
+      "size": 2912,
+      "sha256": "182feb3e3538730e55f101e24d86ef4310880b95cc9a49dcf8c2222b57f09bdc",
+      "width": 235,
+      "height": 225,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u24.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u24.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u24.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u24.png",
+      "size": 2553,
+      "sha256": "6e1a6aba5ddbf1df8789898bedadce24369d2548002e81b4d20523fdcc7f1788",
+      "width": 177,
+      "height": 268,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u25.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u25.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u25.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u25.png",
+      "size": 5457,
+      "sha256": "02dea9ca576c3786f0b1b3c6e9dd30ca9bfa25d5dc0fea9da41dbd9caa2da58f",
+      "width": 389,
+      "height": 313,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u26.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u26.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u26.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u26.png",
+      "size": 3974,
+      "sha256": "6027bb2e5d9f239c61570fbe18ec424bddb647fed1957edc3d44ffba90e0b712",
+      "width": 356,
+      "height": 212,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u27.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u27.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u27.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u27.png",
+      "size": 2833,
+      "sha256": "355edf168162582acd1aa558bd77942bcf0970d6b336b571d70cffc0aa5e7faf",
+      "width": 161,
+      "height": 282,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u28.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u28.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u28.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u28.png",
+      "size": 6647,
+      "sha256": "f081500dc3ea1560abcb9bacec69cb8a4925abc0540d6864b277c2700102f77b",
+      "width": 498,
+      "height": 269,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u29.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u29.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u29.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u29.png",
+      "size": 1792,
+      "sha256": "096bd9522fc526ff33abd60ebedcff5ff5b5589bdb453258104c80aec7c8a76c",
+      "width": 189,
+      "height": 151,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u30.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u30.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u30.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u30.png",
+      "size": 5670,
+      "sha256": "c8a92455e7b8c50392e354c89a06504ab0f8d2dd1afc5b2eb6b41dba547510b7",
+      "width": 473,
+      "height": 213,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u31.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u31.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u31.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u31.png",
+      "size": 5090,
+      "sha256": "6ce7f7e055dbed5b5527b849fee15e2abe4e3d3ef4a54b5e56326ed59ce96bf2",
+      "width": 350,
+      "height": 293,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u32.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u32.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u32.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u32.png",
+      "size": 8172,
+      "sha256": "026a56c920cbbdadd051bbb0fac1762530fadaf433e2dcd96b32246a6fdddc8a",
+      "width": 506,
+      "height": 324,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u33.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u33.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u33.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u33.png",
+      "size": 1549,
+      "sha256": "92ca4d2d37bbf4ce961d7e6f46f1052fc88df5f1f9e1e97b3124f09569819076",
+      "width": 155,
+      "height": 139,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u34.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u34.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u34.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u34.png",
+      "size": 14112,
+      "sha256": "aa1ca21abd822db766e2ba38addc8ccdfa409a9baace569d965c2f479ad4efe0",
+      "width": 520,
+      "height": 209,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u35.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u35.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u35.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u35.png",
+      "size": 2820,
+      "sha256": "375715354a8a05a37d888181b97756b70b1ac51dc4121a4e66e35ea9fb1298f9",
+      "width": 200,
+      "height": 192,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u36.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u36.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u36.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:05+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u36.png",
+      "size": 17169,
+      "sha256": "8915a5df75eb635e63d7107d8ecc29a5a3a2ece844deb3196255a70e6ef37c05",
+      "width": 520,
+      "height": 246,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u37.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u37.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u37.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u37.png",
+      "size": 2135,
+      "sha256": "9cbfa6b92cc83dcac0e2e8f7ec8ee91e87445ea641d30878d4f4df083858ecd4",
+      "width": 150,
+      "height": 198,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u38.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u38.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u38.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u38.png",
+      "size": 5864,
+      "sha256": "41e548e0937720cb5cec04d27f8a78ef590afe781735c5b7bf9fe79cadb3ea14",
+      "width": 498,
+      "height": 212,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u39.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u39.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u39.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u39.png",
+      "size": 3574,
+      "sha256": "1cb55fc3b9b05b4650f6b2bfa12f27d13d02289bfdb0a79dd26240d394d545fd",
+      "width": 319,
+      "height": 212,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u40.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u40.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u40.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u40.png",
+      "size": 2558,
+      "sha256": "6a1944e23d0ebcc6deef4a9100a75bcd4f3e8079ef77469e1e36574411477d95",
+      "width": 177,
+      "height": 268,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u41.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u41.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u41.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u41.png",
+      "size": 6295,
+      "sha256": "d3cc0955ea0cc8a6d498e26c203904c8e805617b06c8315ff88e5a381b1c6efc",
+      "width": 480,
+      "height": 323,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u42.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u42.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u42.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u42.png",
+      "size": 2834,
+      "sha256": "77c7504d147846bd391dbc01f18238c8bfbaca6aa37e8bf23cb9645ab57071a7",
+      "width": 161,
+      "height": 283,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u43.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u43.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u43.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u43.png",
+      "size": 6587,
+      "sha256": "53340d7c0d5cfa98edb7e3d41e58f47f613388342b2b16da19755026804f1ce9",
+      "width": 461,
+      "height": 284,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u44.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u44.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u44.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u44.png",
+      "size": 2740,
+      "sha256": "404200a9ba472f6d28f50071f9a6d19e11212014e1e1f11d495c0ec51b7fa53e",
+      "width": 205,
+      "height": 209,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u45.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u45.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u45.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u45.png",
+      "size": 16184,
+      "sha256": "fa8fb07b38b16e9ca5eb500c965fa326008de945ab2c16011a22276cc7370ddf",
+      "width": 520,
+      "height": 267,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u46.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u46.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u46.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u46.png",
+      "size": 1565,
+      "sha256": "8c6d3210d9df1c88f94c6e72f1ec57431fd1a3dd6f00a5ac8a73a5b04803530a",
+      "width": 155,
+      "height": 117,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u47.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u47.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u47.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u47.png",
+      "size": 4834,
+      "sha256": "9a3b8e285fb91c007eb302d3d4998562cd19f50089c86af80a4b6267f87b8444",
+      "width": 487,
+      "height": 212,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u48.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u48.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u48.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u48.png",
+      "size": 3676,
+      "sha256": "a227a93cbba259371774c1f0c8e852010a9367f4dcc7e26775be1a58c334832c",
+      "width": 330,
+      "height": 213,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u49.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u49.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u49.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u49.png",
+      "size": 3102,
+      "sha256": "84c2f815d9924e7e59c350e8e6ce04a290ca11ac809ebb3fdc3b0d19819b871e",
+      "width": 216,
+      "height": 221,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u50.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u50.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u50.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u50.png",
+      "size": 6273,
+      "sha256": "bf52a662f9962e854d69a65e947b4962cedcff10b18006cc52ba17ff489c34cb",
+      "width": 514,
+      "height": 262,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u51.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u51.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u51.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:06+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u51.png",
+      "size": 1566,
+      "sha256": "7aea0eae95260041ba7404cff45e0faee48f753edde38ebfda83165338249370",
+      "width": 155,
+      "height": 139,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u52.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u52.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u52.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u52.png",
+      "size": 4952,
+      "sha256": "dc51b85cf1e168580eb5e2ce7e8768fb459689f305d4f9836b57dc06224a7b45",
+      "width": 490,
+      "height": 205,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u53.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u53.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u53.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u53.png",
+      "size": 3285,
+      "sha256": "dd8a06219a5954d6fbc027cb99342d16a3589fea257a890b44758f4f41c8145f",
+      "width": 343,
+      "height": 200,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u54.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u54.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u54.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u54.png",
+      "size": 2622,
+      "sha256": "4eed2cba194e11302cf58b7f6cf9a4f6986c3e517bc73807d76e396f4f00cd9e",
+      "width": 150,
+      "height": 271,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u55.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u55.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u55.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u55.png",
+      "size": 6256,
+      "sha256": "3342f5ae52666e8eb467561ff28854e71fba43a10a4d38d0d45fcd9fc2dd4f41",
+      "width": 471,
+      "height": 269,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u56.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u56.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u56.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u56.png",
+      "size": 3909,
+      "sha256": "3c66e1e5b5e55514efeee552fb284a5faf8953bb6dd97b40b8b58b83035e83bc",
+      "width": 301,
+      "height": 228,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u57.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u57.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u57.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u57.png",
+      "size": 1663,
+      "sha256": "3d7a2076ef281faa349c868177f2af1b84b46e69c873e1a6171cf2e04a0d6e59",
+      "width": 161,
+      "height": 169,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "table",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u58.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u58.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-u58.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-u58.png",
+      "size": 5366,
+      "sha256": "0274dc14927ab7b1afe6d474e78f8bec5a0b00d004aa5df15d3a9476d2d3370c",
+      "width": 406,
+      "height": 256,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s2.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-s2.png",
+      "size": 37932,
+      "sha256": "5e508c00fa8d38089aa8d0cd8076685dcd43cd07a8e87ce9d936fd77eb26643a",
+      "width": 520,
+      "height": 290,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s3.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:07+00:00",
+      "body_file": "body_assets/m_c4sc02365j-s3.png",
+      "size": 37796,
+      "sha256": "ee6e443cadb2113f71787f5d7edcc56bbb8586a97b9500b1124592fc01c675b8",
+      "width": 520,
+      "height": 342,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s4.png",
+      "article_url": "https://pubs.rsc.org/sc/article/6/2/987/457243/Visible-light-C-H-amidation-of-heteroarenes-with",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/6/2/10.1039_c4sc02365j/2/m_c4sc02365j-s4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:08+00:00",
+      "body_file": "body_assets/m_c4sc02365j-s4.png",
+      "size": 53423,
+      "sha256": "29325115519e6404c63449e558768fdd3b59b2dd818c085df9d828e3d42f90b9",
+      "width": 520,
+      "height": 398,
+      "doi": "10.1039/c4sc02365j",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    }
+  ],
+  "html_capture_backend": "byparr"
+}

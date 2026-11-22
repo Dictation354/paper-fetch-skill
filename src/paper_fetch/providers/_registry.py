@@ -138,6 +138,7 @@ class ProviderBundle:
     render_policy: ProviderRenderPolicy | None = None
     browser_page_policy: BrowserPagePolicy = BrowserPagePolicy()
     browser_asset_policy: BrowserAssetPolicy = BrowserAssetPolicy()
+    browser_pdf_only: bool = False
 
     def __post_init__(self) -> None:
         if not self.catalog.name:

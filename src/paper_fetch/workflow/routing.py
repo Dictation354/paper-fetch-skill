@@ -27,6 +27,7 @@ from ..publisher_identity import (
     ordered_provider_candidate_evidence,
     ordered_provider_candidates,
 )
+from ..quality.access_boundary import CONFIRMED_PAYWALL
 from ..reason_codes import (
     ERROR,
     NO_ACCESS,
@@ -387,6 +388,15 @@ def probe_has_fulltext(
     evidence: list[str] = []
     title = normalize_text(resolved.title)
     doi = normalize_doi(safe_text(resolved.doi)) or None
+    if (access_failure := getattr(resolved, "access_failure", None)) is not None:
+        return HasFulltextProbeResult(
+            query=resolved.query,
+            doi=doi,
+            title=title,
+            state="unknown",
+            evidence=[CONFIRMED_PAYWALL],
+            warnings=[access_failure.message],
+        )
     crossref_metadata: ProviderMetadata | None = None
     crossref_client = client_registry.get("crossref")
 

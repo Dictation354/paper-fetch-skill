@@ -28,10 +28,12 @@ from . import html_extraction as _html_extraction
 def _cached_browser_workflow_assets(*args, **kwargs):
     client = args[0] if args else None
     provider_name = normalize_text(getattr(client, "name", "")).lower()
-    profile = publisher_profile(provider_name)
+    profile = getattr(client, "profile", None)
     kwargs.setdefault(
         "scoped_asset_extractor",
-        profile.scoped_asset_extractor or extract_scoped_html_assets,
+        getattr(profile, "scoped_asset_extractor", None)
+        or publisher_profile(provider_name).scoped_asset_extractor
+        or extract_scoped_html_assets,
     )
     return _html_extraction._cached_browser_workflow_assets(*args, **kwargs)
 

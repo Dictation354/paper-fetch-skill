@@ -1,0 +1,285 @@
+{
+  "records": [
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-ga.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-ga.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-ga.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-ga.png",
+      "size": 66992,
+      "sha256": "f882e421633e6f8f61de6f693023af4f497132bca4b28d0cb979200a2679effd",
+      "width": 520,
+      "height": 305,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f1.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f1.png",
+      "size": 124286,
+      "sha256": "f32682f85253ca41159f0763ba6c14e2dfe295a0a294eba24724f17820b7f297",
+      "width": 520,
+      "height": 366,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t1.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t1.png",
+      "size": 10795,
+      "sha256": "935dbcb91869b1f6109f6c6be323278e901dd8f23918cb0a41319d934c4f7941",
+      "width": 520,
+      "height": 203,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t2.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t2.png",
+      "size": 11343,
+      "sha256": "f89920900c9ab41e3f266a0204be3675d0610b6a83c0779b384ba6c0d2f8f127",
+      "width": 520,
+      "height": 110,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t3.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t3.png",
+      "size": 13554,
+      "sha256": "95b998484fb118466de3c54bebd2a4f7d22163ef56fd1adf76fcd058810b7622",
+      "width": 520,
+      "height": 154,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t4.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t4.png",
+      "size": 11547,
+      "sha256": "ad47b1441d0d5ddb715aa234b18487d55f9e7852cc8ac4a48ee0f057f04e7a55",
+      "width": 520,
+      "height": 81,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t5.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t5.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t5.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t5.png",
+      "size": 3227,
+      "sha256": "4897a6050f999fee4feeff85229071579498470416cf7360f5f3a4e11a62f3c3",
+      "width": 491,
+      "height": 141,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t6.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t6.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-t6.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:01+00:00",
+      "body_file": "body_assets/m_d5mh02051d-t6.png",
+      "size": 13643,
+      "sha256": "e23d4749a0d401c91a06aa194e52e94d6972859924cc39d752c252143cbc07d2",
+      "width": 520,
+      "height": 205,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f2.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:02+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f2.png",
+      "size": 93270,
+      "sha256": "4bd9c78fd25650269967b8811b489cca9e6afbd2aefb3c5bf739680bdefe5533",
+      "width": 520,
+      "height": 418,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f3.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:02+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f3.png",
+      "size": 191733,
+      "sha256": "2a1ed527537d81d4afe2ec98d41abca13b98a248d38a30fdf7daaab1eb94e2be",
+      "width": 520,
+      "height": 343,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f4.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f4.png",
+      "size": 344787,
+      "sha256": "81a1b8fe892bca6429273ffe162ad0175bd22fef4dbb3a15e1796954611f7644",
+      "width": 520,
+      "height": 516,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f5.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f5.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f5.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f5.png",
+      "size": 96569,
+      "sha256": "f8d951c4eb7f866a97d4b6eb357da2f85fb3133c109073764ba1f154ac697e63",
+      "width": 520,
+      "height": 548,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f6.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f6.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f6.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:02+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f6.png",
+      "size": 87786,
+      "sha256": "5e7aa1e01fd68caaa5967feb620a8c49af643db9b4163af06334e1ed15a05e7a",
+      "width": 520,
+      "height": 361,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f7.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f7.png",
+      "article_url": "https://pubs.rsc.org/mh/article/13/7/3419/897545/Harnessing-diffraction-with-metamaterial-noise",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/mh/13/7/10.1039_d5mh02051d/1/m_d5mh02051d-f7.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:03+00:00",
+      "body_file": "body_assets/m_d5mh02051d-f7.png",
+      "size": 121472,
+      "sha256": "a1ca41ac4fa64614ec46df886aee17bcde4f83a12502f0296d0669951e8ea14b",
+      "width": 520,
+      "height": 283,
+      "doi": "10.1039/d5mh02051d",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    }
+  ],
+  "html_capture_backend": "byparr"
+}

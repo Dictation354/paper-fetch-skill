@@ -135,7 +135,7 @@ def test_canonical_all_source_reference_text_and_doi(fixture, subtests):
                 source_reference_doi(fixture, node) or ""
             )
         actual = re.sub(
-            r"^(?:\d+\.|\[[^\]]+\])\s*",
+            r"^(?:\d+[a-z]?\.|\[[^\]]+\])\s*",
             "",
             reference.raw.replace(r"\[", "[").replace(r"\]", "]"),
         )
@@ -614,6 +614,10 @@ def test_canonical_registered_source_counts_and_hash(fixture):
         "prose": len(source_prose_blocks(fixture, soup)),
         "figures": len(source_figures(fixture, soup)),
         "tables": sum(
+            len(table.select("th, td")) for table in source_tables(fixture, soup)
+        )
+        if fixture.provider == "rsc"
+        else sum(
             len(cells)
             for table in source_tables(fixture, soup)
             for _, cells in source_table_grid(table)

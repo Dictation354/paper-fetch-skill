@@ -89,17 +89,19 @@ class ProviderBrowserProfile:
     shared_browser_image_fetcher: bool
     html_readiness: BrowserHtmlReadiness | None = None
     policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY
+    scoped_asset_extractor: Callable[..., list[dict[str, Any]]] | None = None
 
 
 def make_browser_profile(
     name: str,
     *,
     catalog: ProviderSpec,
-    fallback_author_extractor: Callable[[str], list[str]],
+    fallback_author_extractor: Callable[[str], list[str]] | None,
     html_readiness: BrowserHtmlReadiness | None = None,
     markdown_publisher: str | None = None,
     shared_browser_image_fetcher: bool = True,
     policy: BrowserWorkflowPolicy = DEFAULT_BROWSER_WORKFLOW_POLICY,
+    scoped_asset_extractor: Callable[..., list[dict[str, Any]]] | None = None,
 ) -> ProviderBrowserProfile:
     """Build catalog-owned routing fields plus provider-specific extraction hooks."""
 
@@ -116,6 +118,7 @@ def make_browser_profile(
         shared_browser_image_fetcher=shared_browser_image_fetcher,
         html_readiness=html_readiness,
         policy=policy,
+        scoped_asset_extractor=scoped_asset_extractor,
     )
 
 

@@ -15,6 +15,7 @@ from typing import Any
 from rapidfuzz.fuzz import ratio
 
 from .normalize_journal_name import normalize_journal_name
+from .rsc_url import is_rsc_journal_url, rsc_legacy_doi
 from .utils import normalize_text
 
 PUBLISHER_PROVIDER_MAP: dict[str, str] | None = None
@@ -246,6 +247,9 @@ def extract_doi_from_url(url: str | None) -> str | None:
         return extract_doi(url)
     if doi := nature_doi_from_article_url(url):
         return doi
+    if is_rsc_journal_url(url):
+        doi = rsc_legacy_doi(url) or extract_doi(_path_text_from_parsed_url(parsed))
+        return doi if doi and doi.startswith("10.1039/") else None
     provider = infer_provider_from_url(url)
     for _, value in urllib.parse.parse_qsl(parsed.query, keep_blank_values=False):
         query_doi = extract_doi(value)

@@ -18,6 +18,7 @@ from ..metadata.types import (
 )
 from ..providers.base import ProviderFailure
 from ..providers.protocols import MetadataProvider
+from ..rsc_url import is_rsc_journal_url
 from ..runtime import RuntimeContext
 from ..tracing import TraceEvent, extend_trace, metadata_event, route_event
 from ..utils import (
@@ -292,6 +293,12 @@ def fetch_metadata_for_resolved_query(
             metadata["official_provider"] = official_provider_value
         if not metadata.get("landing_page_url"):
             metadata["landing_page_url"] = resolved.landing_url
+        if (
+            resolved.provider_hint == "rsc"
+            and resolved.landing_url
+            and is_rsc_journal_url(resolved.landing_url)
+        ):
+            metadata["source_url"] = resolved.landing_url
         metadata = _merge_cached_landing_probe_links(
             metadata, resolved, context=context
         )

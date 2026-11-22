@@ -15,6 +15,7 @@ from .._pdf_common import (
     pdf_fetch_result_assets,
 )
 from .._pdf_fallback import PdfRequestContext
+from .._registry import provider_bundle
 from ..base import ProviderContent, RawFulltextPayload
 from .fetchers import _choose_browser_seed_url
 from .shared import BrowserWorkflowDeps, default_browser_workflow_deps
@@ -45,6 +46,10 @@ def fetch_seeded_browser_pdf_payload(
     if context is not None:
         context.raise_if_cancelled()
     active_deps = deps or default_browser_workflow_deps()
+    try:
+        browser_only = provider_bundle(provider).browser_pdf_only
+    except KeyError:
+        browser_only = False
     context_warmer = active_deps.warm_browser_context
     if active_deps.pdf_browser_context_seed is not active_deps.warm_browser_context:
         from ..browser_runtime.api import (
@@ -54,9 +59,9 @@ def fetch_seeded_browser_pdf_payload(
         if active_deps.warm_browser_context is default_warm_browser_context:
             context_warmer = active_deps.pdf_browser_context_seed
 
-    if provider == "elsevier":
-        # HTML already owns this Chrome session. Navigating a PDF merely to warm
-        # it can start a download before the PDF fetcher installs its listener.
+    if browser_only or provider == "elsevier":
+        # Reuse the HTML session and let the PDF fetcher install its listener
+        # before navigating to a URL that may start a download.
         pdf_context_seed = dict(browser_context_seed or {})
     else:
         pdf_context_seed = context_warmer(
@@ -77,7 +82,11 @@ def fetch_seeded_browser_pdf_payload(
         pdf_context_seed.get("browser_final_url"),
     )
     seeded_browser_cookies = list(pdf_context_seed.get("browser_cookies") or [])
-    seed_urls = None if seeded_browser_cookies else ([seed_url] if seed_url else None)
+    seed_urls = (
+        [seed_url]
+        if seed_url and not (browser_only or seeded_browser_cookies)
+        else None
+    )
     pdf_result = active_deps.fetch_pdf_with_browser(
         pdf_candidates,
         artifact_dir=runtime.artifact_dir / artifact_subdir,
@@ -98,6 +107,7 @@ def fetch_seeded_browser_pdf_payload(
             if doi or expected_title
             else None,
             runtime=context,
+            browser_only=browser_only,
         ),
     )
     if context is not None:

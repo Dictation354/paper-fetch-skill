@@ -1209,6 +1209,13 @@
         "reason": "最小片段、边界 mock 或流程契约，仅证明声明范围内的机制；不证明出版社原文完整性。"
       }
     },
+    "tests/unit/test_rsc_provider.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "RSC DOI and URL resolution, PDF candidate order, metadata fallback, and confirmed paywall stop.",
+        "reason": "Uses minimal article fragments and mocks the HTTP and browser boundaries."
+      }
+    },
     "tests/unit/test_royalsocietypublishing_provider.py": {
       "default": {
         "kind": "mechanism",
@@ -3287,6 +3294,19 @@
             "remaining": []
           }
         }
+      }
+    },
+    "tests/golden/test_rsc_provider.py": {
+      "default": {
+        "kind": "content",
+        "scope": "Four captured RSC HTML articles and their persisted Markdown, source order, merged table cells, figure and formula bytes, and supplementary ownership. Existing PDF replay checks identity and converter passthrough.",
+        "primary": [
+          "source"
+        ],
+        "auxiliary": [
+          "asset",
+          "snapshot"
+        ]
       }
     },
     "tests/golden/test_royalsocietypublishing_provider.py": {

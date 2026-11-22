@@ -1,0 +1,685 @@
+{
+  "records": [
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-ga.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-ga.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-ga.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-ga.png",
+      "size": 71724,
+      "sha256": "b18845acdda51e89ffe8a3d89ba5aa5105133210109f5b922e3d2a8d498dcaed",
+      "width": 520,
+      "height": 253,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f1.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f1.png",
+      "size": 64910,
+      "sha256": "8c0031418869a49fae106ccf6e0be47a6822119fc90ebfd487d2df78d4f63aa6",
+      "width": 520,
+      "height": 235,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t1.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t1.png",
+      "size": 2055,
+      "sha256": "ae24a33780cc9119a32ad4f4172579416db28535628a7c8b4681ac92976e8233",
+      "width": 366,
+      "height": 108,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t2.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t2.png",
+      "size": 9732,
+      "sha256": "63fe23051289df290f879c86dcf94bd1a47f6abfec8462cd842b44abdae4fc68",
+      "width": 520,
+      "height": 109,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t3.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t3.png",
+      "size": 10233,
+      "sha256": "296ab32455670d3d0c77469cda7ea7cd1404063289218fbe82df531efa621c49",
+      "width": 520,
+      "height": 108,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t4.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t4.png",
+      "size": 10968,
+      "sha256": "ed78d76bf9ebc42504dfa98e2ce00baf1802baef6d3efaa3806d453f95e61fc7",
+      "width": 520,
+      "height": 87,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t5.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t5.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t5.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t5.png",
+      "size": 665,
+      "sha256": "31cf1d4486b9e5a2790256a7ce4dd3334a2e34dd64a7778a066b553530c5aba1",
+      "width": 91,
+      "height": 91,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t6.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t6.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t6.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t6.png",
+      "size": 10022,
+      "sha256": "894c45150ef378bdcb70b156da0d2e0a38a00a3fe631661d8d65ef3939b3eac1",
+      "width": 520,
+      "height": 131,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t7.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t7.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t7.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t7.png",
+      "size": 3848,
+      "sha256": "92e3710c1bd643cec73ebca9daa24269d6cea27b8c593f860ecfe97864915feb",
+      "width": 483,
+      "height": 166,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t8.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t8.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t8.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:57+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t8.png",
+      "size": 1208,
+      "sha256": "8fbec04681098ef3dc2174ea65331bb41d3b048f53575b6892272b3fca053cb3",
+      "width": 200,
+      "height": 100,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t9.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t9.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t9.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t9.png",
+      "size": 7920,
+      "sha256": "1aeff2673611c1aa25be7fe87b302226d0c3e508face1c24e6ccd9a8829cba68",
+      "width": 520,
+      "height": 115,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t10.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t10.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t10.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t10.png",
+      "size": 8955,
+      "sha256": "5e6ae8b87c85c4ff8a6ab4a3a306c9c700f64b327b3a328c278c2f5b8eab55f1",
+      "width": 520,
+      "height": 72,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t11.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t11.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t11.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t11.png",
+      "size": 9492,
+      "sha256": "ba256f9519b2b5434daf4cb81634fcf088d8a8bb35c52216196026c48e6c9299",
+      "width": 520,
+      "height": 98,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t12.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t12.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t12.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t12.png",
+      "size": 833,
+      "sha256": "02208ada58325794dd8abe4f95a7aadfebecf9265ec21c6e22e19bd993680697",
+      "width": 100,
+      "height": 116,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t13.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t13.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t13.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t13.png",
+      "size": 9758,
+      "sha256": "2afecb5c9948d9609389691ec342ade4ad741bb62a2fb9113a64b34b0b508812",
+      "width": 520,
+      "height": 101,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t14.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t14.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t14.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t14.png",
+      "size": 11385,
+      "sha256": "c50585dae76cd7c0b9c87a13e41baaaebaced81ae46b1153ce2f4507b3f74e68",
+      "width": 520,
+      "height": 98,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t15.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t15.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t15.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t15.png",
+      "size": 10387,
+      "sha256": "1a662c20c712b80e8387e744fe9f2a27c4d0ad696fad87083a6193e0238dfc1e",
+      "width": 520,
+      "height": 79,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t16.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t16.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t16.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t16.png",
+      "size": 3093,
+      "sha256": "2e153a48287e6621457e1a1a4ac89a3e3b7a95bc8596bb0fb2197159c6124e5e",
+      "width": 300,
+      "height": 166,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t17.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t17.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t17.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t17.png",
+      "size": 833,
+      "sha256": "02208ada58325794dd8abe4f95a7aadfebecf9265ec21c6e22e19bd993680697",
+      "width": 100,
+      "height": 116,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t18.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t18.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t18.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:58+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t18.png",
+      "size": 1047,
+      "sha256": "fbe8d8ca28deb35e4fe77cbfc0a278631c3c81a6a6a52c3322304cc78054b221",
+      "width": 141,
+      "height": 116,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t19.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t19.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t19.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t19.png",
+      "size": 833,
+      "sha256": "02208ada58325794dd8abe4f95a7aadfebecf9265ec21c6e22e19bd993680697",
+      "width": 100,
+      "height": 116,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t20.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t20.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t20.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t20.png",
+      "size": 1047,
+      "sha256": "fbe8d8ca28deb35e4fe77cbfc0a278631c3c81a6a6a52c3322304cc78054b221",
+      "width": 141,
+      "height": 116,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t21.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t21.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t21.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t21.png",
+      "size": 2191,
+      "sha256": "56a241e152e1c07c601c49cec3f4f8225193d8273f2542241cdf18e2e22ae2cd",
+      "width": 233,
+      "height": 133,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t22.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t22.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t22.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t22.png",
+      "size": 10386,
+      "sha256": "f7930644e352a0022d4088f2a0c5f89c571eb74c3c61ea539d39ebd8bbf5895b",
+      "width": 520,
+      "height": 75,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "formula",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t23.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t23.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-t23.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-t23.png",
+      "size": 8296,
+      "sha256": "107502ff3b71473e5876d4ec4af9620c3a2134b926fd70c6c1ce0955d5a05ddc",
+      "width": 520,
+      "height": 64,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f2.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f2.png",
+      "size": 209836,
+      "sha256": "03f9a4e8bf1cc02aaf4848d0f3340a26abdff5c3083b6070cedae7aea03b15ee",
+      "width": 520,
+      "height": 223,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f3.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:25:59+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f3.png",
+      "size": 127625,
+      "sha256": "c6b0f664488e28111554e468d93947ecb4afe6a60e57b63d28b03c81731147b9",
+      "width": 520,
+      "height": 300,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f4.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f4.png",
+      "size": 55567,
+      "sha256": "ca144c0c8b13771d14371d90f5eb7fac1aadea6f7f56687edbebd44a204f2142",
+      "width": 520,
+      "height": 163,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f5.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f5.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f5.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f5.png",
+      "size": 35894,
+      "sha256": "9ac4c391dc2caced4f0718dce9736412e03f437bab59d60253a1446f02eca039",
+      "width": 520,
+      "height": 297,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f6.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f6.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f6.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f6.png",
+      "size": 90989,
+      "sha256": "b631f85748871c64b0a836b151b489cd9fab67d7ae9a5e8b6fdb655b9f5a8439",
+      "width": 520,
+      "height": 286,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f7.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f7.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f7.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f7.png",
+      "size": 102968,
+      "sha256": "6b928ad02a291f5044f7a431b3a65c3ca7bfc7baaf95c1c68a187b36dec54d1e",
+      "width": 520,
+      "height": 321,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f8.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f8.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f8.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f8.png",
+      "size": 58788,
+      "sha256": "71c61573089e50e64c179ab15ccb0917dae99c776cf2b705259aaf0b6759b2c7",
+      "width": 520,
+      "height": 201,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f9.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f9.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f9.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f9.png",
+      "size": 62241,
+      "sha256": "e2a9c66005b623bda305a99e6403847fa77a5fef9f7e15e3f17f6e0e2e4fbd0a",
+      "width": 520,
+      "height": 283,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f10.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f10.png",
+      "article_url": "https://pubs.rsc.org/sc/article/16/35/16027/910635/Navigating-chemical-space-multi-level-Bayesian",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/sc/16/35/10.1039_d5sc03855c/1/m_d5sc03855c-f10.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:00+00:00",
+      "body_file": "body_assets/m_d5sc03855c-f10.png",
+      "size": 29251,
+      "sha256": "4e9d2aaba2904da8b3a78b761f7f3aac6152c2c59d015ed63d9e031e75d26367",
+      "width": 520,
+      "height": 303,
+      "doi": "10.1039/d5sc03855c",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    }
+  ],
+  "html_capture_backend": "byparr"
+}

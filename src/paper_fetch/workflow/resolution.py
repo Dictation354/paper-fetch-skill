@@ -19,7 +19,10 @@ def resolve_paper(
     started = perf_counter()
     try:
         resolved = resolve_query(
-            query, transport=context.transport, env=context.env or build_runtime_env()
+            query,
+            transport=context.transport,
+            env=context.env or build_runtime_env(),
+            context=context,
         )
     except ProviderFailure as exc:
         event = resolve_event(

@@ -379,12 +379,8 @@ def _cached_browser_workflow_assets(
     )
 
     def extract_assets() -> list[dict[str, Any]]:
-        body_asset_html, supplementary_asset_html = (
-            extract_browser_workflow_asset_html_scopes(
-                html_text,
-                source_url,
-                client.name,
-            )
+        body_asset_html, supplementary_asset_html = client.extract_asset_html_scopes(
+            html_text, source_url
         )
         return scoped_asset_extractor(
             body_asset_html,

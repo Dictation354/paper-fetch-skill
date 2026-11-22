@@ -37,6 +37,7 @@ from ...reason_codes import (
 from ...runtime import RuntimeContext
 from ...tracing import download_event, fulltext_event, trace_event
 from ...utils import empty_asset_results, normalize_text, provider_display_name
+from .._pdf_candidates import extract_pdf_candidate_urls_from_html
 from .._pdf_common import PdfFetchFailure
 from .._waterfall import ProviderWaterfallStep, run_provider_waterfall
 from ..base import (
@@ -265,6 +266,20 @@ class BrowserWorkflowClient(ProviderClient):
             base_seed_url=crossref_pdf_url
             if profile.crossref_pdf_position == 0
             else None,
+        )
+
+    def pdf_candidates_from_html(
+        self, html_text: str, source_url: str, *, doi: str
+    ) -> list[str]:
+        return extract_pdf_candidate_urls_from_html(html_text, source_url)
+
+    def extract_asset_html_scopes(
+        self, html_text: str, source_url: str
+    ) -> tuple[str, str]:
+        from .html_extraction import extract_browser_workflow_asset_html_scopes
+
+        return extract_browser_workflow_asset_html_scopes(
+            html_text, source_url, self.name
         )
 
     def extract_markdown(

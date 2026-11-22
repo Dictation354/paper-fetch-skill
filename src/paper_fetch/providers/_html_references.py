@@ -161,8 +161,10 @@ def _clean_reference_text(text: str) -> str:
     return normalize_text(text)
 
 
-def _reference_text(node: Any) -> str:
-    content_node = _reference_content_node(node)
+def _reference_text(node: Any, *, content_selector: str | None = None) -> str:
+    content_node = node.select_one(content_selector) if content_selector else None
+    if content_node is None:
+        content_node = _reference_content_node(node)
     if not isinstance(content_node, Tag):
         return ""
     active_node = content_node
@@ -229,13 +231,15 @@ def extract_numbered_references_from_html(
     return extract_numbered_references_from_soup(soup)
 
 
-def extract_numbered_references_from_soup(soup: Any) -> list[dict[str, str | None]]:
+def extract_numbered_references_from_soup(
+    soup: Any, *, content_selector: str | None = None
+) -> list[dict[str, str | None]]:
     references: list[dict[str, str | None]] = []
     seen: set[tuple[str, str]] = set()
 
     for index, node in enumerate(_candidate_reference_nodes(soup), start=1):
         label = _reference_label(node, fallback_index=index)
-        raw = _reference_text(node)
+        raw = _reference_text(node, content_selector=content_selector)
         if not raw:
             continue
         key = (label or "", raw)

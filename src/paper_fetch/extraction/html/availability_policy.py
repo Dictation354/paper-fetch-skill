@@ -53,3 +53,4 @@ class AvailabilityPolicy:
     paywall_body_selector: str = ""
     paywall_paragraph_selector: str = "p"
     paywall_entitlement_signals: tuple[str, ...] = ()
+    paywall_hosts: tuple[str, ...] = ()

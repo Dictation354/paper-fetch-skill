@@ -6,6 +6,7 @@ import os
 import re
 import urllib.parse
 from collections.abc import Callable, Mapping
+from html import escape, unescape
 from pathlib import Path
 from typing import Any
 
@@ -226,6 +227,22 @@ def rewrite_markdown_asset_links(
         )
     )
 
+    def local_image(destination: str) -> tuple[str | None, Any | None]:
+        candidates = image_reference_candidates(destination)
+        for candidate in candidates:
+            if candidate in local_assets_by_reference:
+                return local_assets_by_reference[candidate]
+        for candidate in candidates:
+            if match := local_assets_by_candidate_basename.get(
+                image_reference_basename(candidate)
+            ):
+                return match
+        if match := local_assets_by_basename.get(
+            _remote_asset_basename(destination) or ""
+        ):
+            return match
+        return relative_asset_link(destination, target_path=target_path), None
+
     def rewrite_inline_match(match: re.Match[str]) -> str:
         prefix = match.group(1)
         destination = match.group(2)
@@ -288,30 +305,7 @@ def rewrite_markdown_asset_links(
                 relative_path=local_path,
                 title=image.title,
             )
-        destination_candidates = image_reference_candidates(destination)
-        relative_path: str | None = None
-        matched_asset: Any | None = None
-        for candidate in destination_candidates:
-            match_value = local_assets_by_reference.get(candidate)
-            if match_value is not None:
-                relative_path, matched_asset = match_value
-                break
-        if relative_path is None:
-            for candidate in destination_candidates:
-                match_value = local_assets_by_candidate_basename.get(
-                    image_reference_basename(candidate)
-                )
-                if match_value is not None:
-                    relative_path, matched_asset = match_value
-                    break
-        if relative_path is None:
-            match_value = local_assets_by_basename.get(
-                _remote_asset_basename(destination) or ""
-            )
-            if match_value is not None:
-                relative_path, matched_asset = match_value
-        if relative_path is None:
-            relative_path = relative_asset_link(destination, target_path=target_path)
+        relative_path, matched_asset = local_image(destination)
         if relative_path is None:
             if preserve_pdf:
                 return image.text
@@ -332,6 +326,15 @@ def rewrite_markdown_asset_links(
         )
 
     markdown = replace_markdown_images(markdown, rewrite_image)
+    if article.source == "rsc_html":
+        # Images in merged table cells use HTML so they render inside the table.
+        def rewrite_table_image(match: re.Match[str]) -> str:
+            path, _asset = local_image(unescape(match[2]))
+            return f'{match[1]}{escape(path, quote=True)}"' if path else match[0]
+
+        markdown = re.sub(
+            r'(<img\b[^>]*?\bsrc=")([^"]+)"', rewrite_table_image, markdown
+        )
     return re.sub(
         r"((?<!!)\[[^\]]*\]\()([^)]+)(\))",
         rewrite_inline_match,

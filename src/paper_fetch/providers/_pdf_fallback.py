@@ -124,6 +124,7 @@ class PdfRequestContext:
     deadline_monotonic: float | None = None
     provider_name: str | None = None
     allowed_hosts: tuple[str, ...] | None = None
+    browser_only: bool = False
 
     def with_deadline(self, deadline: float) -> PdfRequestContext:
         return replace(self, deadline_monotonic=deadline)
@@ -923,7 +924,8 @@ def _try_seeded_http_pdf_preflight(
     """Stage 1: Attempt direct browser-like HTTP PDF fetch before launching browser."""
 
     if (
-        not (run.browser_cookies or run.seed_urls)
+        run.request.browser_only
+        or not (run.browser_cookies or run.seed_urls)
         or run.browser_config.provider == "elsevier"
     ):
         return None, None
@@ -1185,19 +1187,17 @@ def _recover_pdf_after_download_timeout(
         and normalize_text(parsed_current.netloc)
         else url
     )
-    discovered = extract_pdf_candidate_urls_from_html(html, html_base_url)
-    http_retry_candidates = list(
-        dict.fromkeys(
-            normalized
-            for candidate in [
-                urllib.parse.urljoin(html_base_url or "", url),
-                *discovered,
-            ]
-            if (normalized := normalize_text(candidate))
+    if not run.request.browser_only and run.browser_config.provider != "elsevier":
+        http_retry_candidates = list(
+            dict.fromkeys(
+                normalized
+                for candidate in [
+                    urllib.parse.urljoin(html_base_url, url),
+                    *extract_pdf_candidate_urls_from_html(html, html_base_url),
+                ]
+                if (normalized := normalize_text(candidate))
+            )
         )
-    )
-
-    if http_retry_candidates and run.browser_config.provider != "elsevier":
         context_cookies = _export_context_cookies_for_url(
             browser_context, html_base_url, run.browser_cookies
         )

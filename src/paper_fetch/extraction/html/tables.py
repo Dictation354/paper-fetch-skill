@@ -353,6 +353,7 @@ def render_table_markdown(
     label: str,
     caption: str,
     render_inline_text: RenderInlineTextFn = render_table_inline_text,
+    render_inline_html: RenderInlineTextFn | None = None,
 ) -> str:
     table = table_node.find("table") if table_node.name != "table" else table_node
     if not isinstance(table, Tag):
@@ -367,6 +368,31 @@ def render_table_markdown(
         heading_parts.append(normalized_caption)
     heading_line = " ".join(heading_parts).strip()
     lines = [heading_line, ""] if heading_line else []
+    if render_inline_html is not None and table.select_one("[rowspan], [colspan], img"):
+        # Markdown pipe tables have no merged cells. Emit only semantic table
+        # markup and let the caller render the contents of each original cell.
+        def render_rows(container: Tag) -> list[str]:
+            rendered = []
+            for row in table_rows(container, render_inline_text=render_inline_html):
+                cells = []
+                for cell in row:
+                    tag = "th" if cell["is_header"] else "td"
+                    spans = "".join(
+                        f' {key}="{cell[key]}"'
+                        for key in ("rowspan", "colspan")
+                        if cell[key] > 1
+                    )
+                    cells.append(f"<{tag}{spans}>{cell['text']}</{tag}>")
+                rendered.append("<tr>" + "".join(cells) + "</tr>")
+            return rendered
+
+        lines.append("<table>")
+        for group in table.find_all(["thead", "tbody", "tfoot"], recursive=False):
+            lines.extend([f"<{group.name}>", *render_rows(group), f"</{group.name}>"])
+        if not table.find(["thead", "tbody", "tfoot"], recursive=False):
+            lines.extend(render_rows(table))
+        lines.append("</table>")
+        return "\n".join(lines)
     rows = table_rows(table, render_inline_text=render_inline_text)
     lifted_spanners, rows = leading_full_width_spanner_rows(rows)
     for spanner in lifted_spanners:

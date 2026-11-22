@@ -49,6 +49,35 @@ def row_matches(actual, expected, cells):
 def assert_source_tables(
     tables, markdown, subtests=None, *, prose_runs=None, provider=None
 ):
+    if provider == "rsc":
+        from bs4 import BeautifulSoup
+
+        from tests.support.canonical_content import text_key
+
+        def rows(table):
+            return [
+                (
+                    row.parent.name,
+                    [
+                        (
+                            cell.name,
+                            cell.get("rowspan"),
+                            cell.get("colspan"),
+                            text_key(cell.get_text()),
+                            [
+                                (n.name, text_key(n.get_text()))
+                                for n in cell.select("sup, sub, br")
+                            ],
+                        )
+                        for cell in row.find_all(["th", "td"], recursive=False)
+                    ],
+                )
+                for row in table.select("tr")
+            ]
+
+        rendered = BeautifulSoup(markdown, "lxml").select("table")
+        assert [rows(table) for table in tables] == [rows(table) for table in rendered]
+        return
     groups = rendered_tables(markdown)
     # MDPI captures main tables in a trailing gallery, after appendix tables.
     # The public renderer restores main tables before the appendix.

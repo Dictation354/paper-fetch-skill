@@ -8,8 +8,8 @@ import json
 import re
 import urllib.parse
 from collections.abc import Mapping
-from dataclasses import asdict, dataclass, field
-from typing import Any
+from dataclasses import asdict, dataclass, field, replace
+from typing import TYPE_CHECKING, Any
 
 from rapidfuzz import fuzz
 
@@ -37,7 +37,11 @@ from ..publisher_identity import (
     normalize_doi,
 )
 from ..reason_codes import ERROR, NO_RESULT, NOT_SUPPORTED
+from ..rsc_url import is_rsc_silverchair_article
 from ..utils import canonical_author_key, normalize_text
+
+if TYPE_CHECKING:
+    from ..runtime import RuntimeContext
 
 CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
@@ -103,10 +107,23 @@ class ResolvedQuery:
     title: str | None = None
     provider_identifiers: dict[str, str] = field(default_factory=dict)
     duration_ms: float | None = field(default=None, repr=False, compare=False)
+    access_details: Mapping[str, Any] | None = field(
+        default=None, repr=False, compare=False
+    )
+
+    @property
+    def access_failure(self) -> ProviderFailure | None:
+        if self.access_details is None:
+            return None
+        from ..quality.access_boundary import paywall_failure
+
+        details = dict(self.access_details)
+        return paywall_failure(details, body=details.pop("received_html", ""))
 
     def to_dict(self) -> dict[str, Any]:
-        payload = asdict(self)
+        payload = asdict(replace(self, access_details=None))
         del payload["duration_ms"]
+        del payload["access_details"]
         return payload
 
 
@@ -410,6 +427,7 @@ def resolve_query(
     *,
     transport: HttpTransport | None = None,
     env: Mapping[str, str] | None = None,
+    context: RuntimeContext | None = None,
 ) -> ResolvedQuery:
     request = StructuredResolveRequest.from_value(query)
     normalized_query = request.lookup_query
@@ -493,6 +511,9 @@ def resolve_query(
             "User-Agent": build_publisher_user_agent(active_env),
         }
         current_url = normalized_query
+        rsc_article = is_rsc_silverchair_article(current_url)
+        landing_fetch = None
+        landing_failure = None
         try:
             landing_fetch = fetch_landing_html(
                 current_url,
@@ -515,9 +536,37 @@ def resolve_query(
                     provider_hint=provider_hint,
                     confidence=1.0,
                 )
+            landing_failure = exc
+        if rsc_article:
+            from ..providers.rsc import resolve_article_page
+
+            identity = resolve_article_page(
+                current_url, landing=landing_fetch, env=active_env, context=context
+            )
+            if identity is not None:
+                return ResolvedQuery(
+                    query=normalized_query,
+                    query_kind="url",
+                    doi=identity.doi,
+                    landing_url=identity.url,
+                    provider_hint="rsc",
+                    confidence=0.95,
+                    title=identity.title,
+                    access_details=identity.access_failure.diagnostics.details
+                    if identity.access_failure is not None
+                    else None,
+                )
+            if landing_fetch is not None:
+                return ResolvedQuery(
+                    query=normalized_query,
+                    query_kind="url",
+                    landing_url=normalized_query,
+                    provider_hint="rsc",
+                )
+        if landing_fetch is None:
             raise ProviderFailure(
-                ERROR, f"Failed to fetch landing page: {exc}"
-            ) from exc
+                ERROR, f"Failed to fetch landing page: {landing_failure}"
+            ) from landing_failure
         response_url = landing_fetch.final_url
         html_metadata = landing_fetch.metadata
         landing_url = urllib.parse.urljoin(

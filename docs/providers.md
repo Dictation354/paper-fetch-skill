@@ -31,6 +31,7 @@ provider 能力、API 约束、路由和 waterfall 的文档说明集中在本�
 | `arxiv` | arXiv ID + 默认 Atom API enrichment | `ID 解析 -> arXiv official HTML -> direct HTTP PDF -> metadata fallback` | HTML 路线对每个正文 figure 优先尝试 arXiv e-print source 包中的官方源图，无法匹配或访问时才回退 official HTML rendition；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/`；`all` 另下载同版本官方 Ancillary files | 中 | HTML front matter 在主路径内合并；默认使用内部 arXiv Atom API client 在 HTML/PDF 主链结束后补齐 metadata，失败只追加 warning、不影响已得到的 fulltext payload；HTML 成功公开为 `arxiv_html`，PDF fallback 公开为 `arxiv_pdf`；可识别的 ID 形态（含 `vN` 版本、`10.48550/arXiv.*` 等）见后文 arXiv 小节 |
 | `copernicus` | 依赖 Crossref merge + landing metadata | `landing HTML / DOI-derived URL -> NLM/JATS XML -> direct HTTP PDF -> metadata fallback` | XML 路线支持 `none` / `body` / `all`，figure 从官方 JATS `graphic`/rendition 中选择最高质量候选；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | 开放获取 direct HTTP 路线，不需要登录态或本地浏览器运行时；XML 成功公开为 `copernicus_xml`，PDF fallback 公开为 `copernicus_pdf` |
 | `royalsocietypublishing` | Crossref/DOI browser HTML metadata merge | `selected-browser DOI HTML -> browser-seeded PDF -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | Royal Society Publishing 通过 `10.1098/` DOI 和 `royalsocietypublishing.org` 路由；HTML 成功公开为 `royalsocietypublishing_html`，PDF fallback 公开为 `royalsocietypublishing_pdf`；需要 Playwright/browser runtime；显式不把 `citation_xml_url` 当作 XML/JATS 路线 |
+| `rsc` | Crossref | `浏览器 HTML → 浏览器 PDF → metadata_only` | HTML 路线支持 `none` / `body` / `all`，`all` 包含论文补充材料。PDF 路线在允许落盘时支持提取正文图片 | 中 | Royal Society of Chemistry 期刊通过 `10.1039/`、`pubs.rsc.org` 和 Crossref 出版者名称路由。公开来源为 `rsc_html` 和 `rsc_pdf`，支持 `paper-fetch auth rsc`。详见 [RSC](#rsc) |
 | `annualreviews` | 依赖 Crossref routing | `selected-browser landing/full-text HTML -> browser-seeded PDF -> provider-managed abstract_only -> metadata fallback` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 中 | Annual Reviews 通过 `10.1146/` DOI 和 `annualreviews.org` 域名路由，排除 Knowable Magazine / 非 article 样本；HTML 成功公开为 `annualreviews_html`，PDF fallback 公开为 `annualreviews_pdf`；需要 Playwright/browser runtime |
 | `plos` | 依赖 Crossref routing | `public JATS XML -> direct HTTP PDF -> metadata fallback` | XML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | PLOS 通过 `10.1371/` DOI prefix 和 `journals.plos.org` 路由；XML 成功公开为 `plos_xml`，PDF fallback 公开为 `plos_pdf`；按 access review 不把 HTML 作为全文路线 |
 | `frontiers` | Frontiers domain / DOI routing | `canonical JATS XML -> canonical PDF -> landing discovery -> JATS XML/PDF -> metadata fallback` | XML 路线支持 `none` / `body` / `all`：正文图 direct-first；supplementary 仅在 `all` 归档，相对附件名通过同篇 supplemental-data 接口唯一匹配，无匹配时标为 `not_archived`；PDF fallback 可导出 PDF 图片 | 强 | Frontiers 通过 `10.3389/` DOI prefix 和 `www.frontiersin.org` 路由；XML 成功公开为 `frontiers_xml`，PDF fallback 公开为 `frontiers_pdf` |
@@ -302,7 +303,7 @@ resolve
 
 - 系统会先尽可能拿到 Crossref metadata。
 - `elsevier` 和 `arxiv` 会参加 provider metadata probe；`arxiv` 通过项目内部 Atom API client 调用官方 arXiv API，使用 catalog 编译出的 60 秒超时、2 次 transient retry 与跨 worker/同 scope 至少 1 秒 pacing。每个 scope 使用串行 start gate；迟到的 `Retry-After` 移动队首后，后续 waiter 仍按实际起点间隔一秒，而不是在 cooldown deadline 一起放行。该调用获取 title、authors、abstract、publication_dates、categories、arXiv DOI、abs URL 和 PDF URL。
-- `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `probe_has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
+- `springer`、`wiley`、`science`、`pnas`、`ieee`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`rsc`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 在 `probe_official_provider()` 和 `probe_has_fulltext()` 中都只依赖 Crossref / landing-page / DOI 信号，不调用 publisher metadata API。
 - 最终会合并 primary / secondary metadata，统一生成正文抓取需要的元数据。
 
 ### 3. provider 全文主路径
@@ -421,15 +422,15 @@ resolve
 - `plos`：完整路径、来源和资产行为见上文 [PLOS](#plos)。
 
 - `frontiers`：完整路径、来源和资产行为见上文 [Frontiers](#frontiers)。
-URL query 解析 DOI 时会优先使用 URL 专用抽取：先读取 query parameter 中的 DOI 值，再从 path 抽取 DOI，并根据 provider catalog 的 `{doi}` / `{doi_quoted}` path templates 剥离 DOI 后面的固定 route token 或扩展名，例如 Frontiers `/full` / `/pdf` / `/xml`、IOP `/pdf`、Wiley `/fullpdf`、Springer `.pdf`。无法从 provider catalog 或显式 override 识别的后缀会保留，避免把未知 DOI suffix 当成 URL route 误删。
+旧版 RSC 文章 URL 直接使用路径中的文章号。其他 URL 解析 DOI 时会优先使用 URL 专用抽取：先读取 query parameter 中的 DOI 值，再从 path 抽取 DOI，并根据 provider catalog 的 `{doi}` / `{doi_quoted}` path templates 剥离 DOI 后面的固定 route token 或扩展名，例如 Frontiers `/full` / `/pdf` / `/xml`、IOP `/pdf`、Wiley `/fullpdf`、Springer `.pdf`。无法从 provider catalog 或显式 override 识别的后缀会保留，避免把未知 DOI suffix 当成 URL route 误删。
 
 ### 4. abstract-only / metadata-only fallback
 
-如果命中了 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 之一：
+如果命中了 `elsevier`、`springer`、`wiley`、`science`、`pnas`、`ieee`、`arxiv`、`copernicus`、`ams`、`mdpi`、`royalsocietypublishing`、`rsc`、`annualreviews`、`plos`、`frontiers`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf` 之一：
 
 - 系统只会走该 provider 自己管理的 fulltext waterfall
 - provider 主链不可用或返回 `None` 后直接进入 metadata-only fallback
-- `springer` / `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` / `ieee` 如果只能确认摘要级内容，会返回 provider 自己的 `abstract_only` 结果，而不是再绕去通用 HTML；`mdpi`、`royalsocietypublishing`、`oxfordacademic`、`arxiv`、`copernicus`、`plos`、`frontiers` 与 `elsevier` 保持一致，HTML/XML/PDF 都不可用时进入通用 metadata-only fallback
+- `springer` / `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `tandf` / `ieee` 如果只能确认摘要级内容，会返回 provider 自己的 `abstract_only` 结果，而不是再绕去通用 HTML；`mdpi`、`royalsocietypublishing`、`rsc`、`oxfordacademic`、`arxiv`、`copernicus`、`plos`、`frontiers` 与 `elsevier` 保持一致，HTML/XML/PDF 都不可用时进入通用 metadata-only fallback
 
 如果没有命中这些 official provider：
 
@@ -441,7 +442,7 @@ URL query 解析 DOI 时会优先使用 URL 专用抽取：先读取 query param
 如果 provider 主链已经拿到 fulltext HTML：
 
 - provider fetch result 组装层会在构造 `ArticleModel` 前自动触发 HTML -> Markdown
-- `springer`、`wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`annualreviews`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf`、`ieee`、`arxiv` 会优先复用各自 provider 专用的 HTML 解析器；`copernicus`、`plos` 和 `frontiers` 只在 XML 主路径使用专用 XML 解析器
+- `springer`、`wiley`、`science`、`pnas`、`ams`、`mdpi`、`royalsocietypublishing`、`rsc`、`annualreviews`、`oxfordacademic`、`acs`、`iop`、`aip`、`tandf`、`ieee`、`arxiv` 会优先复用各自 provider 专用的 HTML 解析器；`copernicus`、`plos` 和 `frontiers` 只在 XML 主路径使用专用 XML 解析器
 - 通用 HTML 转换只作为“已确认 fulltext HTML 但 provider 没有提供 Markdown”的兜底，不会变成任意 URL 的全文 fallback
 
 如果 provider PDF fallback 已经下载到真实 PDF，但 PDF Markdown 转换失败或结果为空：
@@ -488,7 +489,7 @@ CLI、Python API 当前默认值如下：
 
 - `null` / omitted
   - 使用 provider default
-  - `springer` / `wiley` / `science` / `pnas` / `ieee` / `arxiv` / `copernicus` / `ams` / `mdpi` / `royalsocietypublishing` / `annualreviews` / `plos` / `frontiers` / `oxfordacademic` / `acs` / `iop` / `aip` / `tandf` 默认等价于 `body`
+  - `springer` / `wiley` / `science` / `pnas` / `ieee` / `arxiv` / `copernicus` / `ams` / `mdpi` / `royalsocietypublishing` / `rsc` / `annualreviews` / `plos` / `frontiers` / `oxfordacademic` / `acs` / `iop` / `aip` / `tandf` 默认等价于 `body`
   - 其他默认等价于 `none`
 - `none`
   - 不下载本地资产
@@ -901,6 +902,15 @@ Wiley、AMS 等 provider 的显式 profile 变量由[浏览器后端说明](brow
 - asset_profile: HTML 路线使用 browser-backed article-scoped body assets，并从 Silverchair `div.fig-section` 保留 figure caption；文章 HTML 中的 `DownloadImage.aspx`、原图 anchor 和高分辨率属性优先 direct 下载，`/view-large/figure/` 只在缺少直达原图时通过同一 runtime 的专用 page 串行发现，单页最多等待 2 秒并按 URL memoize，`m_*` preview 最后降级。`all` 额外保留 `/article-supplement/` supplementary 链接；PDF fallback 在 `body/all` 且允许 artifact 落盘时会保存 PDF 导出的正文图片。PDF 正文 Markdown 仍走共享转换，不做 provider-owned HTML/XML 级清洗。
 - Silverchair `DownloadImage.aspx` 内嵌原图只接受匹配当前 figure basename 的 Silverchair CDN URL；正文无匹配原图时保留查看器发现，失败后才用 preview。
 - status: 需要受管 browser runtime，不需要 provider credential；`citation_xml_url` 不作为 XML route 使用。
+
+<a id="rsc"></a>
+
+### Royal Society of Chemistry
+
+- DOI 和标题沿用现有解析器。旧版 `/en/content/articlehtml/`、`/articlelanding/` 和 `/articlepdf/` URL 直接从路径解析 DOI。新版 Silverchair 文章 URL 在 HTTP 取不到 DOI 时使用受管浏览器读取同站页面的 `citation_doi`。
+- 浏览器先打开官方文章页，必要时通过 DOI 跳转。Silverchair 正文段落、摘要、参考文献和补充材料分别从所属容器提取。
+- 文字摘要和图文摘要各呈现一次。正文表格保留合并单元格、结构图与表注。排版文字公式保留编号和上下标，行内及独立公式图随正文资产归档。Markdown 落盘时将成功下载的图件改写为本地链接。
+- HTML 不可用时，在浏览器中依次尝试同篇页面的 `citation_pdf_url`、Crossref 提供的 RSC 主 PDF 链接及从旧版文章路径得到的主 PDF URL。两条全文路线都失败时进入统一 `metadata_only`。确认同篇正文付费墙后立即停机，并保留已取得的摘要和元数据。
 
 <a id="annualreviews"></a>
 ### Annual Reviews

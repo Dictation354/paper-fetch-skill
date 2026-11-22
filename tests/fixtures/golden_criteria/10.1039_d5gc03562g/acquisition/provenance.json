@@ -1,0 +1,105 @@
+{
+  "records": [
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-ga.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-ga.png",
+      "article_url": "https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-ga.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:09+00:00",
+      "body_file": "body_assets/m_d5gc03562g-ga.png",
+      "size": 66496,
+      "sha256": "d9d2b8ef01f895905e7e066b0d3802d74016c46c322b2bba03399090a0b7eab6",
+      "width": 520,
+      "height": 253,
+      "doi": "10.1039/d5gc03562g",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f1.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f1.png",
+      "article_url": "https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f1.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:09+00:00",
+      "body_file": "body_assets/m_d5gc03562g-f1.png",
+      "size": 87637,
+      "sha256": "086b56ff0921b989117792d3ca15f6fb4ec4cef853a0cd5c0cb41d7b62daeeda",
+      "width": 520,
+      "height": 246,
+      "doi": "10.1039/d5gc03562g",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f2.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f2.png",
+      "article_url": "https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f2.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:09+00:00",
+      "body_file": "body_assets/m_d5gc03562g-f2.png",
+      "size": 33482,
+      "sha256": "43bda1f0b32921d14a6a1ddce2459ab070872d93de7625864ab764c3c95caa59",
+      "width": 520,
+      "height": 272,
+      "doi": "10.1039/d5gc03562g",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f3.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f3.png",
+      "article_url": "https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f3.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:09+00:00",
+      "body_file": "body_assets/m_d5gc03562g-f3.png",
+      "size": 65945,
+      "sha256": "10062b4aff9638748db981b0b929a314d5d94f116c6c7c985a94b09afe978177",
+      "width": 520,
+      "height": 336,
+      "doi": "10.1039/d5gc03562g",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    },
+    {
+      "capture_kind": "figure",
+      "requested_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f4.png",
+      "final_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f4.png",
+      "article_url": "https://pubs.rsc.org/gc/article/28/1/309/894100/Photocatalytic-upcycling-of-PET-into-methane",
+      "source_image_url": "https://rscj.silverchair-cdn.com/rscj/content_public/journal/gc/28/1/10.1039_d5gc03562g/1/m_d5gc03562g-f4.png",
+      "response_headers": {
+        "content-type": "image/png"
+      },
+      "captured_at": "2026-11-22T05:26:09+00:00",
+      "body_file": "body_assets/m_d5gc03562g-f4.png",
+      "size": 67580,
+      "sha256": "5ed2384de97c5815162f648c3cc770d24f6a96c62b53c112cd84a54d79db51b4",
+      "width": 520,
+      "height": 198,
+      "doi": "10.1039/d5gc03562g",
+      "provider": "rsc",
+      "status_code": 200,
+      "transport": "http"
+    }
+  ],
+  "html_capture_backend": "byparr"
+}
