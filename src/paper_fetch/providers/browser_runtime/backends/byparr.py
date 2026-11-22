@@ -50,8 +50,8 @@ from ..types import (
 
 BROWSER_STATUS_PROBE_ID = "probe://browser/status"
 _EXPECTED_PACKAGE_VERSIONS = {
-    "invisible_playwright": "0.49.1",
-    "invisible_core": "61.62.0",
+    "invisible_playwright": "0.58.0",
+    "invisible_core": "68.80.0",
     "camoufox": "0.5.9",
 }
 

@@ -17,7 +17,7 @@ from ....extraction.html.assets.state import AssetBinaryPayload, AssetFetchRespo
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
 from ..._registry import BrowserAssetPolicy, browser_asset_policy
-from ...browser_runtime.navigation import managed_action, navigate_page
+from ...browser_runtime.navigation import managed_action, navigate_page, navigator_for
 from .context import _browser_response_headers, _browser_response_status
 
 _CLICK_TIMEOUT_SECONDS = 60.0
@@ -108,6 +108,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
     phase = "article_not_ready"
     response = None
     pending_response = None
+    detached_response = None
     finished = set()
     downloads = []
     popups: list[Any] = []
@@ -393,12 +394,31 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                             return None
                         body = Path(path).read_bytes()
                     route["capture_event"] = "download"
-                elif "attachment" in headers.get("content-disposition", "").lower():
-                    # Do not treat an unfinished download as an inline response.
+                elif (
+                    response is detached_response
+                    or "attachment" in headers.get("content-disposition", "").lower()
+                ):
+                    # Wait for the download event within the existing deadline.
                     page.wait_for_timeout(min(50, remaining_ms()))
                     continue
                 else:
-                    body = response.body()
+                    inline_response = response
+                    try:
+                        body = inline_response.body()
+                    except Exception as exc:
+                        navigator = navigator_for(page)
+                        if (
+                            getattr(navigator, "_invisible_session", None) is None
+                            or not inline_response.request.is_navigation_request()
+                            or "Network.getResponseBody: ERROR: cannot find session"
+                            not in str(exc)
+                        ):
+                            raise
+                        # Invisible can close a popup's protocol session when
+                        # its navigation becomes a download. The opener receives
+                        # the download event after the popup is detached.
+                        detached_response = inline_response
+                        continue
                     route["capture_event"] = "inline_response"
                 remaining_ms()
                 reason = supplementary_response_block_reason(

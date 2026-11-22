@@ -5,7 +5,7 @@
 安装与预置见[部署指南](deployment.md#浏览器安装与准备)。
 
 `browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
-安装 InvisiblePlaywright 0.49.1、invisible-core 61.62.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
+安装 InvisiblePlaywright 0.58.0、invisible-core 68.80.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
 不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
 `>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
 x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
@@ -164,7 +164,7 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 `reason_code=aws_waf_challenge`、`status=challenge`，diagnostics 保留
 `challenge_provider=aws_waf` 。
 
-离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供 Playwright 1.62.0 与 Byparr 使用；`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。浏览器依赖为 InvisiblePlaywright 0.49.1 / invisible-core 61.62.0，pyee 保持 13.0.1。
+离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供各平台的 Playwright 与 Byparr 使用。`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。Windows/Linux x64 使用 InvisiblePlaywright 0.58.0 和 invisible-core 68.80.0。POSIX 上的 Invisible 浏览器由 invisible-core 原生启动。pyee 锁定为 13.0.1。
 
 ### AMS 认证前置
 

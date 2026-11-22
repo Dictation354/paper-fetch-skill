@@ -6,7 +6,7 @@ The verified component retains the complete upstream source and LICENSE. Its
 `.dockerignore` symlink is materialized from the in-archive `.gitignore`.
 
 The component and private pure-Python dependencies remain SHA-256 locked.
-InvisiblePlaywright 0.49.1 and its required invisible-core 61.62.0 are installed
+InvisiblePlaywright 0.58.0 and its required invisible-core 68.80.0 are installed
 with the browser/full extra. The core's release seal verifies its Firefox engine.
 Windows/Linux x64 use Invisible's native Python protocol transport. macOS and
 ARM retain Camoufox 0.5.9 and the host Playwright shared-browser transport; no
@@ -45,6 +45,6 @@ Existing readiness, request deadlines, asset policy and unified acceptance remai
 authoritative. Operation evidence distinguishes detection, solver invocation,
 actual clicks, automatic verification and real response/download success. A DOM
 transition without a successful response is `awaiting_response`, not `cleared`.
-POSIX uses a request-owned exec shim to map Juggler pipe descriptors after
-CPython closes unrelated descriptors; no existing parent descriptor is replaced.
+On POSIX, invisible-core launches the request-owned browser and maps its
+Juggler pipe descriptors.
 Raw HTTP statuses are retained. No external captcha API credentials are used.
