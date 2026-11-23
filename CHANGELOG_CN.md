@@ -8,6 +8,13 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.1 - 2026-11-23
+
+- 为成功、失败和取消的抓取逐条保存 `receipt.json`，使用 `--output -` 将正文写到 stdout 时也保留回执。文本进度显示回执目录，以及浏览器排队和执行耗时。
+- `paper-fetch lookup` 支持在多个输出目录中查找已验收全文。启用 `--include-legacy` 后，可回退读取旧版 v2 sidecar 中的全文，并标记为历史结果、未经当前验收。
+- 为 Wiley 公式图片资产记录从 1 开始的 Markdown 行号和列号，便于按阅读段落补取对应图片。
+- 在 Wiley TDM 和 Copernicus 直连 PDF 的诊断中记录下载耗时、转换耗时和 Markdown 缓存状态。
+
 ## 8.1.0 - 2026-11-22
 
 - 新增英国皇家化学会（RSC）期刊支持，识别 `10.1039/` DOI 和新旧两代文章 URL。先通过浏览器获取官方 HTML，必要时尝试同篇 PDF，可用 `paper-fetch auth rsc` 保存登录状态。

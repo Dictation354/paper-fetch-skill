@@ -8,6 +8,13 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.1 - 2026-11-23
+
+- Save a per-input `receipt.json` for successful, failed and cancelled fetches, including when stdout carries the article via `--output -`. Text progress shows the receipt directory and browser queue and execution timings.
+- Let `paper-fetch lookup` search multiple output directories for verified full text. The optional `--include-legacy` fallback can recover full text from older v2 sidecars and marks it as historically unverified.
+- Record one-based Markdown line and column positions for Wiley formula image assets, so readers can retrieve the assets for a selected passage.
+- Report PDF download and conversion times and the Markdown cache status for Wiley TDM and Copernicus direct PDF fetches.
+
 ## 8.1.0 - 2026-11-22
 
 - Add Royal Society of Chemistry journal support for `10.1039/` DOIs and both generations of article URLs. Fetch official HTML with a browser PDF fallback, and support saved sign-in via `paper-fetch auth rsc`.
