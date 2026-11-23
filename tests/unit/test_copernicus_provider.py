@@ -6,6 +6,7 @@ from pathlib import Path
 from unittest import mock
 
 from paper_fetch.http import DEFAULT_FULLTEXT_TIMEOUT_SECONDS, RequestFailure
+from paper_fetch.providers import _pdf_common
 from paper_fetch.providers._article_markdown_copernicus import parse_copernicus_xml
 from paper_fetch.providers._article_markdown_jats import parse_jats_xml
 from paper_fetch.providers.base import ProviderFailure
@@ -278,10 +279,6 @@ class CopernicusProviderTests(unittest.TestCase):
             [(call["method"], call["url"]) for call in transport.calls],
         )
 
-    @mock.patch(
-        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
-        new=lambda *a, **k: "Mock converter output. " * 120,
-    )
     def test_xml_failure_skips_landing_html_and_falls_back_to_pdf(self) -> None:
         html_body = (
             "<article><h1>Copernicus XML Test Article</h1>"
@@ -302,13 +299,44 @@ class CopernicusProviderTests(unittest.TestCase):
             }
         )
         client = CopernicusClient(transport, {})
+        request = transport.request
+        clock_ns = 0
+        markdown = "Mock converter output. " * 120
 
-        raw_payload = client.fetch_raw_fulltext(
-            DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
-        )
+        def timed_request(method, url, **kwargs):
+            nonlocal clock_ns
+            clock_ns += 18_000_000 if url == PDF_URL else 500_000_000
+            return request(method, url, **kwargs)
+
+        def convert(*args, **kwargs):
+            nonlocal clock_ns
+            clock_ns += 40_000_000
+            return markdown
+
+        with (
+            mock.patch.object(transport, "request", timed_request),
+            mock.patch.object(_pdf_common.time, "perf_counter_ns", lambda: clock_ns),
+            mock.patch.object(_pdf_common, "_render_default_pdf_markdown", convert),
+            mock.patch.object(
+                _pdf_common, "_pdf_markdown_render_cache", return_value=None
+            ),
+        ):
+            raw_payload = client.fetch_raw_fulltext(
+                DOI, {"doi": DOI, "landing_page_url": LANDING_URL}
+            )
         article = client.to_article_model({"doi": DOI}, raw_payload)
 
         self.assertEqual(raw_payload.content.route_kind, "pdf_fallback")
+        self.assertEqual(raw_payload.content.markdown_text, markdown)
+        self.assertEqual(
+            raw_payload.content.diagnostics["pdf_fallback"],
+            {
+                "candidates": [PDF_URL],
+                "download_ms": 18.0,
+                "conversion_ms": 40.0,
+                "pdf_markdown_cache": {"status": "disabled"},
+            },
+        )
         self.assertEqual(article.source, "copernicus_pdf")
         self.assertIn(
             trace_facts(trace_event("fulltext", "copernicus_xml", "fail")),

@@ -3,8 +3,10 @@
 from __future__ import annotations
 
 import math
+import time
 import urllib.parse
 from collections.abc import Mapping
+from dataclasses import replace
 from typing import Any
 
 from ..extraction.html.availability_policy import AvailabilityPolicy
@@ -47,6 +49,7 @@ from ._pdf_common import (
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
     pdf_fetch_result_from_response,
+    pdf_fetch_result_timings,
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, fetch_pdf_over_http
@@ -120,6 +123,7 @@ def _fetch_wiley_tdm_pdf_result(
             int(math.ceil(context.remaining_seconds(active_timeout))),
         )
     request_headers = {"Accept": PDF_ACCEPT_HEADER, **dict(headers)}
+    download_started_at = time.perf_counter_ns()
     try:
         response = transport.request(
             "GET",
@@ -140,6 +144,7 @@ def _fetch_wiley_tdm_pdf_result(
             },
         ) from exc
 
+    download_ms = (time.perf_counter_ns() - download_started_at) / 1_000_000
     response_headers = {
         str(key).lower(): str(value)
         for key, value in (response.get("headers") or {}).items()
@@ -148,7 +153,7 @@ def _fetch_wiley_tdm_pdf_result(
     location = normalize_text(response_headers.get("location"))
     if int(response.get("status_code") or 0) in REDIRECT_STATUS_CODES and location:
         redirected_url = urllib.parse.urljoin(api_url, location)
-        return PdfFallbackStrategy(
+        result = PdfFallbackStrategy(
             transport=transport,
             provider_name="wiley",
             headers=request_headers,
@@ -160,17 +165,22 @@ def _fetch_wiley_tdm_pdf_result(
             context=context,
             fetcher=fetch_pdf_over_http,
         ).fetch([redirected_url])
+        download_ms += result.diagnostics["download_ms"]
+    else:
+        result = pdf_fetch_result_from_response(
+            response,
+            artifact_dir=artifact_dir,
+            asset_profile=asset_profile,
+            asset_output_dir=asset_output_dir,
+            source_url=api_url,
+            final_url=final_url,
+            not_pdf_message="Wiley API PDF fallback did not return a PDF file.",
+            allow_pdf_only=True,
+            expected_identity=expected_identity,
+        )
 
-    return pdf_fetch_result_from_response(
-        response,
-        artifact_dir=artifact_dir,
-        asset_profile=asset_profile,
-        asset_output_dir=asset_output_dir,
-        source_url=api_url,
-        final_url=final_url,
-        not_pdf_message="Wiley API PDF fallback did not return a PDF file.",
-        allow_pdf_only=True,
-        expected_identity=expected_identity,
+    return replace(
+        result, diagnostics={**result.diagnostics, "download_ms": round(download_ms, 3)}
     )
 
 
@@ -367,11 +377,14 @@ class WileyClient(browser_workflow.BrowserWorkflowClient):
                     content_type=PDF_MIME_TYPE,
                     body=pdf_result.pdf_bytes,
                     markdown_text=pdf_result.markdown_text,
-                    diagnostics=(
-                        {"html_failure": dict(bootstrap.html_failure_diagnostics)}
-                        if bootstrap.html_failure_diagnostics
-                        else {}
-                    ),
+                    diagnostics={
+                        PDF_FALLBACK: pdf_fetch_result_timings(pdf_result),
+                        **(
+                            {"html_failure": dict(bootstrap.html_failure_diagnostics)}
+                            if bootstrap.html_failure_diagnostics
+                            else {}
+                        ),
+                    },
                     html_failure_reason=bootstrap.html_failure_reason,
                     html_failure_message=bootstrap.html_failure_message,
                     suggested_filename=pdf_result.suggested_filename,

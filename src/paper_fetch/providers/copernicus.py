@@ -74,6 +74,7 @@ from ._pdf_common import (
     pdf_asset_output_dir,
     pdf_asset_profile_from_context,
     pdf_fetch_result_assets,
+    pdf_fetch_result_timings,
     pdf_fetch_result_warnings,
 )
 from ._pdf_fallback import PdfFallbackStrategy, PdfFetchFailure, fetch_pdf_over_http
@@ -570,7 +571,12 @@ class CopernicusClient(ProviderClient):
             body=pdf_result.pdf_bytes,
             markdown_text=pdf_result.markdown_text,
             merged_metadata=attempt.merged_metadata,
-            diagnostics={PDF_FALLBACK: {"candidates": list(attempt.pdf_candidates)}},
+            diagnostics={
+                PDF_FALLBACK: {
+                    "candidates": list(attempt.pdf_candidates),
+                    **pdf_fetch_result_timings(pdf_result),
+                }
+            },
             reason="Downloaded full text from Copernicus PDF fallback after XML was not usable.",
             suggested_filename=pdf_result.suggested_filename,
             extracted_assets=pdf_fetch_result_assets(pdf_result),

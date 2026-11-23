@@ -2,7 +2,6 @@
 
 from __future__ import annotations
 
-import contextlib
 import json
 import os
 import tempfile
@@ -18,6 +17,7 @@ import paper_fetch.cli as cli_pkg
 
 from ..delivery.receipts import (
     receipt_from_record,
+    run_receipt_directory,
     save_reading_artifacts,
     target_satisfied,
 )
@@ -380,6 +380,7 @@ def _build_cli_manifest_record(
     error_payload: Mapping[str, Any] | None = None,
     diagnostic_artifacts: Sequence[Mapping[str, Any]] = (),
     aborted: bool = False,
+    requested_manifest: str | None = None,
 ) -> ManifestRecord:
     """Adapt CLI attempt facts to the sole PF-004 record builder."""
 
@@ -441,11 +442,8 @@ def _build_cli_manifest_record(
 
     delivery_dir: Path | None = None
     if plan.deliver_files:
-        delivery_dir = (
-            context.output_dir
-            / ".paper-fetch-results"
-            / str(context.run_id)
-            / str(attempt.index)
+        delivery_dir = run_receipt_directory(context.output_dir, context.run_id) / str(
+            attempt.index
         )
         artifacts = (
             *artifacts,
@@ -479,13 +477,19 @@ def _build_cli_manifest_record(
         completed_at=attempt.completed_at,
         deps=context.deps,
     )
+    if requested_manifest:
+        _write_single_cli_manifest(requested_manifest, record, overwrite=plan.overwrite)
     if delivery_dir is not None:
         path = delivery_dir / "manifest.json"
         cli_pkg.write_manifest_record(path, record, overwrite=True)
+        receipt_line = (
+            json.dumps(receipt_from_record(record, path), ensure_ascii=False) + "\n"
+        )
+        cli_pkg.ArtifactStore.from_download_dir(delivery_dir).write_text_file(
+            delivery_dir / "receipt.json", receipt_line
+        )
         if not (plan.output_is_explicit and plan.output == "-"):
-            cli_pkg.sys.stdout.write(
-                json.dumps(receipt_from_record(record, path), ensure_ascii=False) + "\n"
-            )
+            cli_pkg.sys.stdout.write(receipt_line)
             cli_pkg.sys.stdout.flush()
     return record
 
@@ -532,10 +536,18 @@ def _write_single_failure_manifest(
     deps: ManifestBuilderDependencies,
     progress: FetchProgress | None = None,
 ) -> None:
-    if not output_dir.is_dir():
+    if progress is None:
         output_dir = Path(tempfile.mkdtemp(prefix="paper-fetch-failure-"))
-    with progress.lock if progress is not None else contextlib.nullcontext():
-        if progress is not None and progress.is_cancelled(1):
+        progress = cli_pkg.FetchProgress(
+            command.options.progress,
+            run_id,
+            1,
+            receipt_dir=run_receipt_directory(output_dir, run_id)
+            if command.options.output_plan.deliver_files
+            else None,
+        )
+    with progress.lock:
+        if progress.is_cancelled(1):
             error = RequestCancelledError("Request cancelled.")
         record = _build_cli_manifest_record(
             CliManifestBuildContext(
@@ -562,8 +574,7 @@ def _write_single_failure_manifest(
                 record,
                 overwrite=command.options.output_plan.overwrite,
             )
-        if progress is not None:
-            progress.complete(1, lambda _cancelled: record)
+        progress.complete(1, lambda _cancelled: record)
 
 
 def exit_code_for_batch_results(results: Sequence[ManifestRecord]) -> int:

@@ -8,6 +8,7 @@ from unittest import mock
 
 from paper_fetch.http import RequestFailure
 from paper_fetch.providers import (
+    _pdf_common,
     _springer_authors,
     browser_runtime,
     browser_workflow,
@@ -1256,6 +1257,11 @@ class PublisherWaterfallTests(unittest.TestCase):
                         markdown_text=f"# {WILEY_PDF_SAMPLE.title}\n\n## Results\n\n"
                         + ("Body text " * 120),
                         suggested_filename="article.pdf",
+                        diagnostics={
+                            "download_ms": 5.0,
+                            "conversion_ms": 0,
+                            "pdf_markdown_cache": {"status": "hit"},
+                        },
                     ),
                 ) as mocked_api,
             ):
@@ -1265,6 +1271,14 @@ class PublisherWaterfallTests(unittest.TestCase):
         mocked_browser_pdf.assert_not_called()
         mocked_api.assert_called_once()
         self.assertEqual(_payload_route(raw_payload), "pdf_fallback")
+        self.assertEqual(
+            raw_payload.content.diagnostics["pdf_fallback"],
+            {
+                "download_ms": 5.0,
+                "conversion_ms": 0,
+                "pdf_markdown_cache": {"status": "hit"},
+            },
+        )
         self.assertEqual(article.source, "wiley_browser")
         self.assertIn(
             trace_facts(trace_event("fulltext", "wiley_pdf_api", "ok")),
@@ -1591,18 +1605,18 @@ class PublisherWaterfallTests(unittest.TestCase):
             trace_facts(article.trace),
         )
 
-    @mock.patch(
-        "paper_fetch.providers._pdf_common._render_default_pdf_markdown",
-        new=lambda *a, **k: "Mock converter output. " * 120,
-    )
-    def test_wiley_tdm_api_helper_follows_redirect_to_pdf_payload(self) -> None:
+    def test_wiley_tdm_api_measures_direct_redirect_and_cached_pdf(self) -> None:
         api_url = (
             "https://api.wiley.com/onlinelibrary/tdm/v1/articles/10.1111%2Fexample"
         )
         download_url = "https://alm.wiley.com/alm/api/v2/download/example"
+        pdf = fulltext_pdf_bytes()
+        markdown = "Mock converter output. " * 120
+        clock_ns = 0
 
         class RedirectingTransport(RecordedStreamTransport):
-            def __init__(self) -> None:
+            def __init__(self, *, redirect: bool) -> None:
+                self.redirect = redirect
                 self.calls: list[tuple[str, str, dict[str, str]]] = []
 
             def request(
@@ -1615,39 +1629,63 @@ class PublisherWaterfallTests(unittest.TestCase):
                 retry_on_transient=False,
                 **kwargs,
             ):
+                nonlocal clock_ns
                 self.calls.append((method, url, dict(headers or {})))
-                if url == api_url:
+                if url == api_url and self.redirect:
+                    clock_ns += 12_000_000
                     return {
                         "status_code": 302,
                         "headers": {"location": download_url},
                         "body": b"",
                         "url": api_url,
                     }
-                if url == download_url:
+                if url in {api_url, download_url}:
+                    clock_ns += 25_000_000
                     return {
                         "status_code": 200,
                         "headers": {
                             "content-type": "application/pdf",
                             "content-disposition": 'inline; filename="example.pdf"',
                         },
-                        "body": fulltext_pdf_bytes(),
-                        "url": download_url,
+                        "body": pdf,
+                        "url": url,
                     }
                 raise AssertionError(f"unexpected url {url}")
 
-        transport = RedirectingTransport()
-        result = wiley_provider._fetch_wiley_tdm_pdf_result(
-            transport,
-            api_url=api_url,
-            headers={"Wiley-TDM-Client-Token": "secret"},
-        )
+        def convert(*args, **kwargs):
+            nonlocal clock_ns
+            clock_ns += 80_000_000
+            return markdown
 
-        self.assertEqual(result.final_url, download_url)
-        self.assertEqual(result.suggested_filename, "example.pdf")
-        self.assertEqual(
-            [call[1] for call in transport.calls],
-            [api_url, download_url],
-        )
+        with (
+            mock.patch.object(_pdf_common.time, "perf_counter_ns", lambda: clock_ns),
+            mock.patch.object(_pdf_common, "_render_default_pdf_markdown", convert),
+            mock.patch.object(
+                _pdf_common, "_pdf_markdown_render_cache", return_value={}
+            ),
+        ):
+            for redirect, urls, download_ms, conversion_ms, cache_status in (
+                (False, [api_url], 25.0, 80.0, "miss"),
+                (True, [api_url, download_url], 37.0, 0, "hit"),
+            ):
+                transport = RedirectingTransport(redirect=redirect)
+                result = wiley_provider._fetch_wiley_tdm_pdf_result(
+                    transport,
+                    api_url=api_url,
+                    headers={"Wiley-TDM-Client-Token": "secret"},
+                )
+                self.assertEqual(result.final_url, urls[-1])
+                self.assertEqual(result.suggested_filename, "example.pdf")
+                self.assertEqual([call[1] for call in transport.calls], urls)
+                self.assertEqual(result.markdown_text, markdown)
+                self.assertEqual(
+                    _pdf_common.pdf_fetch_result_timings(result),
+                    {
+                        "download_ms": download_ms,
+                        "conversion_ms": conversion_ms,
+                        "pdf_markdown_cache": {"status": cache_status},
+                    },
+                )
 
     def test_elsevier_xml_route_populates_article_authors_from_author_groups(
         self,

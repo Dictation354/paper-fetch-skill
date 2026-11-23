@@ -44,7 +44,9 @@ if TYPE_CHECKING:
 
 
 def run_lookup_command(command: LookupCommand) -> int:
-    receipt = lookup_receipt(command.doi, command.output_dir)
+    receipt = lookup_receipt(
+        command.doi, command.output_dirs, include_legacy=command.include_legacy
+    )
     result = (
         receipt if receipt is not None else {"status": "not_found", "doi": command.doi}
     )

@@ -9,7 +9,7 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ## 最短阅读路径
 
-先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。只有 DOI 和任务目录时，先用 `paper-fetch lookup --doi DOI --output-dir ./papers` 找回已验收全文。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
+先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。只有 DOI 和任务目录时，先用 `paper-fetch lookup --doi DOI --output-dir ./papers` 找回已验收全文。有多个任务结果目录时重复传入 `--output-dir`。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
 
 只有缺少所需正文时才调用 `fetch`。需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。
 
@@ -21,7 +21,7 @@ paper-fetch fetch --progress text --query "10.1186/1471-2105-11-421"
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。
 
-只缺图片时，从已有 `image_index_path` 定位缺失项，用原 manifest 补取。可以一次传入多个 asset ID。
+只缺图片时，从已有 `image_index_path` 定位缺失项。Wiley HTML 公式图可按已读正文的行范围筛选 `body_positions`，再用原 manifest 补取对应的 `asset_id`。可以一次传入多个 ID。
 
 ```bash
 paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json \
@@ -41,8 +41,8 @@ paper-fetch fetch --progress text --target supplementary --query DOI --output-di
 ## 参数与边界
 
 - 尊重用户明确的来源、路径、资产范围及覆盖授权。默认预设只补全未指定选项。
-- 建库从 stdout 回执或最终 `batch-results.jsonl` 读取，按 DOI、已验证规范 URL、最后按 manifest 路径识别论文，保留实际获取状态。普通目录扫描排除 `.paper-fetch-results`，其中 `body.md` 是逐篇阅读快照，不是另一篇论文。
-- 多篇使用 `--query-file queries.txt --batch-concurrency 4`；逐篇回执按完成顺序输出，最终 `batch-results.jsonl` 按输入顺序保存。保存每篇身份、路径及实际阅读进度。
+- 建库从逐篇回执或最终 `batch-results.jsonl` 读取，按 DOI、已验证规范 URL、最后按 manifest 路径识别论文，保留实际获取状态。普通目录扫描排除 `.paper-fetch-results`，避免重复计入正文快照。
+- 同一任务的同出版社 DOI 一起交给 `--query-file`，由批内调度安排名额。批量 stdout 重定向至 `receipts.jsonl`。宿主截断输出后，从文本进度开头提示的运行目录读取 `<index>/receipt.json`。保存每篇身份、路径及实际阅读进度。
 - 仅解析用 `paper-fetch resolve --query ...`；仅探测用 `paper-fetch check --query ...`，都支持 query-file；探测不自动升级为抓取。
 - 依据 `target_satisfied`、acceptance 和实际文件判断交付，`status` 只表示任务生命周期。依据 acceptance 判断全文、摘要、元数据及降级。全文降级结果仍可成功；仅摘要、元数据或失败退出码为 1，保留文件回执；参数错误为 2。
 - AMS 联网正文、附件和补图必须先有 `paper-fetch auth ams` 成功且原生 profile 重开验证通过的状态。交互 CLI 缺少状态时先认证再继续；非交互及 `--control-stdin` 返回 `auth_required`。兼容缓存和已有本地文件可直接复用；resolve/check 不自动认证。

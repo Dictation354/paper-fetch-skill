@@ -13,6 +13,7 @@ import subprocess
 import sys
 import tempfile
 import threading
+import time
 import unicodedata
 import urllib.parse
 from collections.abc import Mapping, Sequence
@@ -57,6 +58,17 @@ def pdf_fetch_result_assets(pdf_result: Any) -> list[dict[str, Any]]:
         return [dict(item) for item in assets if isinstance(item, Mapping)]
     except TypeError:
         return []
+
+
+def pdf_fetch_result_timings(pdf_result: PdfFetchResult) -> dict[str, Any]:
+    diagnostics = getattr(pdf_result, "diagnostics", None)
+    if not isinstance(diagnostics, Mapping):
+        return {}
+    return {
+        key: diagnostics[key]
+        for key in ("download_ms", "conversion_ms", "pdf_markdown_cache")
+        if key in diagnostics
+    }
 
 
 def pdf_fetch_result_warnings(pdf_result: Any) -> list[str]:
@@ -131,6 +143,7 @@ class _PdfTextLayerStats:
 class PdfMarkdownRenderResult:
     markdown_text: str
     assets: list[dict[str, Any]] = field(default_factory=list)
+    conversion_ms: float = 0
 
 
 def _positive_int_env(name: str, default: int) -> int:
@@ -297,17 +310,19 @@ def _render_pdf_markdown_result_with_cache(
         if cached is not None:
             return _copy_pdf_markdown_render_result(cached), "hit"
 
+    started_at = time.perf_counter_ns()
     result = render_pdf_markdown_result(
         pdf_path,
         asset_profile=asset_profile,
         asset_output_dir=asset_output_dir,
         source_url=source_url,
     )
+    conversion_ms = round((time.perf_counter_ns() - started_at) / 1_000_000, 3)
     if cache is not None and cache_key is not None:
         with _PDF_MARKDOWN_RENDER_CACHE_LOCK:
             cache[cache_key] = _copy_pdf_markdown_render_result(result)
-        return result, "miss"
-    return result, "disabled"
+        return replace(result, conversion_ms=conversion_ms), "miss"
+    return replace(result, conversion_ms=conversion_ms), "disabled"
 
 
 def filename_from_headers(headers: Mapping[str, str] | None) -> str | None:
@@ -1036,7 +1051,7 @@ def pdf_fetch_result_from_bytes(
                     )
 
         warnings: list[str] = []
-        render_cache_status = "not_started"
+        conversion_started_at = time.perf_counter_ns()
         try:
             render_result, render_cache_status = _render_pdf_markdown_result_with_cache(
                 pdf_path,
@@ -1045,17 +1060,16 @@ def pdf_fetch_result_from_bytes(
                 asset_output_dir=asset_output_dir,
                 source_url=final_url or source_url,
             )
-        except PdfFetchFailure:
-            render_cache_status = "failed"
-            if not allow_pdf_only:
-                raise
-            render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
-            warnings.append(PDF_ONLY_MARKDOWN_WARNING)
         except Exception:
             render_cache_status = "failed"
             if not allow_pdf_only:
                 raise
-            render_result = PdfMarkdownRenderResult(markdown_text="", assets=[])
+            render_result = PdfMarkdownRenderResult(
+                markdown_text="",
+                conversion_ms=round(
+                    (time.perf_counter_ns() - conversion_started_at) / 1_000_000, 3
+                ),
+            )
             warnings.append(PDF_ONLY_MARKDOWN_WARNING)
         markdown_text = render_result.markdown_text
         if not normalize_text(markdown_text):
@@ -1092,6 +1106,7 @@ def pdf_fetch_result_from_bytes(
                     }
                 ),
                 "pdf_markdown_cache": {"status": render_cache_status},
+                "conversion_ms": render_result.conversion_ms,
                 "metadata": {
                     key: identity_evidence[key]
                     for key in ("title", "authors")

@@ -37,7 +37,7 @@ paper-fetch check --query-file queries.txt --batch-concurrency 4
 ## 5 批量本地归档
 
 ```bash
-paper-fetch fetch --progress text --preset archive --query-file queries.txt --output-dir ./papers --batch-concurrency 4
+paper-fetch fetch --progress text --preset archive --query-file queries.txt --output-dir ./papers --batch-concurrency 4 > receipts.jsonl
 ```
 
-每项有独立 manifest，最终汇总按输入顺序生成；有未满足目标的项返回非零。
+每项有独立 manifest 和 `receipt.json`。最终汇总按输入顺序生成，有未满足目标的项返回非零。

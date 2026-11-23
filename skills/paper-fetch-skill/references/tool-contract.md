@@ -4,7 +4,7 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 ## 文件回执
 
-默认及文件输出的 stdout 每篇一行 JSON，独立契约 `contract="paper-fetch/receipt"`、`schema_version=2`。回执包含以下字段。
+默认及文件输出的 stdout 每篇一行 JSON，独立契约 `contract="paper-fetch/receipt"`、`schema_version=2`。同一份回执在正文产物与 manifest 落盘后原子写入 `.paper-fetch-results/<run_id>/<index>/receipt.json`，覆盖成功、失败和协作取消。回执包含以下字段。
 
 - 原始 `index/query`、规范 `identity/doi`、生命周期 `status` 和与退出码判断一致的 `target_satisfied`。
 - `error`：无异常为 null；有异常时含 status、reason、provider、route、stage、http_status、retryable，沿用脱敏。
@@ -22,7 +22,7 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 `section_index_path` 指向 `sections.json`。其中 `sections` 每项含 `title`、`level`、`start_line`、`end_line`。行号对应 `body_path`，从 1 开始，两端包含；已完成的全文结果均具备经校验的 `body_path` 和 `section_index_path`。
 
-`lookup --doi DOI --output-dir DIR` 只读查找指定目录内未截断的验收全文，按完成时间优先返回最近且正文与章节索引快照均完好的结果。命中输出一行原结果回执并退出 0；无可用全文输出一行 `status=not_found` 的 JSON 并退出 1；参数错误退出 2。
+`lookup --doi DOI --output-dir DIR` 只读查找未截断的验收全文。`--output-dir` 可重复，按完成时间从新到旧核对正文与章节索引快照，同一时间按目录传入顺序。命中输出一行原结果回执并退出 0。所有目录均未命中且传入 `--include-legacy` 时，按目录顺序检查无指纹 v2 sidecar。历史命中输出 `paper-fetch/legacy-lookup` 并退出 0，回执含来源 `source`、绝对 `sidecar_path`、`sidecar_version`、正文指针 `body_json_pointer=/payload/markdown` 和 `acceptance=historical_unverified`。无可用全文时输出 `status=not_found` 并退出 1。参数错误退出 2。
 
 ## 正文导出
 

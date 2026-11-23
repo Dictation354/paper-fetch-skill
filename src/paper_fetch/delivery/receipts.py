@@ -3,10 +3,14 @@
 from __future__ import annotations
 
 import re
+from bisect import bisect_right
+from collections import defaultdict
 from dataclasses import asdict
 from pathlib import Path
 from typing import Any
+from uuid import UUID
 
+from ..acquisition import is_pdf_article
 from ..artifacts import ArtifactStore
 from ..manifest import (
     ManifestOutputArtifact,
@@ -14,9 +18,10 @@ from ..manifest import (
     ManifestRecord,
 )
 from ..models import TRUNCATION_WARNING, RenderOptions
+from ..models.markdown import iter_markdown_images
 from ..redaction import is_sensitive_configuration_name, redact_text_for_diagnostics
-from ..targeted_assets import context_from_envelope
-from ..workflow.rendering import rewrite_markdown_asset_links
+from ..targeted_assets import asset_urls, context_from_envelope
+from ..workflow.rendering import relative_asset_link, rewrite_markdown_asset_links
 from .acceptance_payloads import compact_acceptance_payload
 
 CLI_RECEIPT_SCHEMA_VERSION = 2
@@ -25,6 +30,10 @@ _CLOSING_HASHES = re.compile(r"(?:^|[ \t]+)#+[ \t]*$")
 _CODE_FENCE = re.compile(r" {0,3}(`{3,}|~{3,})(.*)")
 _SETEXT_UNDERLINE = re.compile(r" {0,3}(=+|-+)[ \t]*")
 _NON_PARAGRAPH = re.compile(r" {0,3}(?:[>#<]|(?:[-+*]|[0-9]{1,9}[.)])(?:[ \t]|$))")
+
+
+def run_receipt_directory(output_dir: Path, run_id: UUID) -> Path:
+    return output_dir / ".paper-fetch-results" / str(run_id)
 
 
 def section_index(markdown: str) -> dict[str, Any]:
@@ -110,6 +119,37 @@ def public_diagnostics(value: Any) -> Any:
     return value
 
 
+def _formula_body_positions(
+    assets: list[dict[str, Any]], markdown: str, *, body: Path
+) -> list[dict[str, Any]]:
+    by_reference: dict[str, set[int]] = defaultdict(set)
+    for index, asset in enumerate(assets):
+        if asset["kind"] != "formula":
+            continue
+        references = asset_urls(asset)
+        if local_link := relative_asset_link(asset.get("path"), target_path=body):
+            references.add(local_link)
+        for reference in references:
+            by_reference[reference].add(index)
+
+    if not by_reference:
+        return assets
+    line_starts = [0, *(match.end() for match in re.finditer("\n", markdown))]
+    positions: dict[int, list[dict[str, int]]] = defaultdict(list)
+    for image in iter_markdown_images(markdown):
+        matches = by_reference.get(image.url)
+        if not matches or len(matches) != 1:
+            continue
+        line = bisect_right(line_starts, image.start)
+        positions[next(iter(matches))].append(
+            {"line": line, "column": image.start - line_starts[line - 1] + 1}
+        )
+    return [
+        {**asset, "body_positions": positions[index]} if index in positions else asset
+        for index, asset in enumerate(assets)
+    ]
+
+
 def save_reading_artifacts(
     directory: Path,
     *,
@@ -119,8 +159,9 @@ def save_reading_artifacts(
     store = ArtifactStore.from_download_dir(directory)
     directory.mkdir(parents=True, exist_ok=True)
     artifacts: list[ManifestOutputArtifactSpec] = []
+    body = directory / "body.md"
+    markdown = None
     if envelope is not None and envelope.markdown is not None:
-        body = directory / "body.md"
         markdown = rewrite_markdown_asset_links(
             envelope.markdown, envelope, target_path=body, render=RenderOptions()
         )
@@ -140,6 +181,14 @@ def save_reading_artifacts(
         )
     if envelope is not None:
         state = context_from_envelope(envelope)
+        assets = state.assets
+        if (
+            markdown
+            and state.provider == "wiley"
+            and state.route_kind == "html"
+            and not is_pdf_article(envelope.article)
+        ):
+            assets = _formula_body_positions(assets, markdown, body=body)
         # These descriptors are sufficient for selective downloads; never persist browser seeds.
         index = store.write_json_file(
             directory / "images.json",
@@ -151,7 +200,7 @@ def save_reading_artifacts(
                 "metadata": state.metadata,
                 "route_kind": state.route_kind,
                 "discovery_complete": state.discovery_complete,
-                "assets": state.assets,
+                "assets": assets,
             },
         )
         artifacts.append(
@@ -284,6 +333,7 @@ __all__ = [
     "public_diagnostics",
     "reading_body_artifact",
     "receipt_from_record",
+    "run_receipt_directory",
     "save_reading_artifacts",
     "section_index",
     "section_index_artifact",

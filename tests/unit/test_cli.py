@@ -3095,11 +3095,10 @@ def test_cli_read_and_archive_presets_preserve_explicit_output_and_asset_options
     )
     output = capsys.readouterr()
     paths = list(archive.glob("*.md"))
-    assert (
-        len(paths) == 1
-        and str(paths[0]) in output.err
-        and json.loads(output.out)["contract"] == "paper-fetch/receipt"
-    )
+    receipt = json.loads(output.out)
+    assert len(paths) == 1 and str(paths[0]) in receipt["output_paths"]
+    assert receipt["contract"] == "paper-fetch/receipt"
+    assert f"receipts={Path(receipt['manifest_path']).parents[1]}" in output.err
     explicit = tmp_path / "chosen.json"
     assert (
         paper_fetch_cli.main(

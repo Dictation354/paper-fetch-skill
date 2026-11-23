@@ -7,6 +7,7 @@ import json
 import signal
 import threading
 from collections.abc import Callable, Iterator
+from pathlib import Path
 from typing import Any
 from uuid import UUID
 
@@ -14,12 +15,15 @@ import paper_fetch.cli as cli_pkg
 
 from ..manifest import ManifestRecord
 from ..manifest_writer import serialize_manifest_record
+from ..models import TRUNCATION_WARNING
 
 
 class FetchProgress:
     """CLI JSONL/text events and the opt-in stdin control channel (protocol 1)."""
 
-    def __init__(self, mode: str, run_id: UUID, count: int) -> None:
+    def __init__(
+        self, mode: str, run_id: UUID, count: int, *, receipt_dir: Path | None = None
+    ) -> None:
         self.mode = (
             ("text" if cli_pkg.sys.stderr.isatty() else "none")
             if mode == "auto"
@@ -34,6 +38,7 @@ class FetchProgress:
         # The same lock keeps concurrent stderr events whole and flushed.
         self.lock = threading.RLock()
         self.last_assets: dict[int, float] = {}
+        self.receipt_dir = receipt_dir
         self.emit("run_started", 0, total=count)
         for index in range(1, count + 1):
             self.emit("stage", index, stage="queued")
@@ -81,17 +86,19 @@ class FetchProgress:
                         else "metadata_only"
                     )
                     detail = f"{record['record_status']} acceptance={acceptance['overall']} scope={scope}"
-                    paths = [
-                        item["path"]
-                        for item in record.get("output_artifacts", [])
-                        if item.get("path")
-                    ]
-                    if paths:
-                        detail += " paths=" + ", ".join(paths)
+                    if TRUNCATION_WARNING in record["warnings"]:
+                        detail += " truncated"
                     if record.get("error"):
                         detail += ": " + str(record["error"].get("reason", ""))
                 else:
                     detail = str(data.get("stage") or data.get("status") or event)
+                    if event == "run_started" and self.receipt_dir is not None:
+                        detail += f" receipts={self.receipt_dir}"
+                    if detail in {"executing_browser", "browser_finished"}:
+                        if "queue_seconds" in data:
+                            detail += f" queue={data['queue_seconds']:.3f}s"
+                        if "execution_seconds" in data:
+                            detail += f" execution={data['execution_seconds']:.3f}s"
                 print(
                     f"[{index}/{self.count}] {detail}",
                     file=cli_pkg.sys.stderr,

@@ -411,7 +411,16 @@ def _build_parser_bundle() -> tuple[
     )
     lookup_parser.add_argument("--doi", required=True, help="DOI of the paper.")
     lookup_parser.add_argument(
-        "--output-dir", type=Path, required=True, help="Project directory to search."
+        "--output-dir",
+        type=Path,
+        action="append",
+        required=True,
+        help="Project directory to search. May be repeated.",
+    )
+    lookup_parser.add_argument(
+        "--include-legacy",
+        action="store_true",
+        help="Allow an unverified historical v2 sidecar if no verified result exists.",
     )
     subparsers["lookup"] = lookup_parser
 
@@ -650,10 +659,12 @@ def _command_from_namespace(ns: argparse.Namespace) -> CliCommand:
         doi = normalize_doi(ns.doi)
         if not (DOI_PATTERN.fullmatch(doi) or SICI_DOI_PATTERN.fullmatch(doi)):
             raise CliUsageError("--doi requires a valid DOI.", command="lookup")
-        output_dir = ns.output_dir.expanduser()
-        if output_dir.exists() and not output_dir.is_dir():
+        output_dirs = tuple(path.expanduser() for path in ns.output_dir)
+        if any(path.exists() and not path.is_dir() for path in output_dirs):
             raise CliUsageError("--output-dir must be a directory.", command="lookup")
-        return LookupCommand(doi=doi, output_dir=output_dir)
+        return LookupCommand(
+            doi=doi, output_dirs=output_dirs, include_legacy=ns.include_legacy
+        )
 
     if command_name in {"resolve", "check"}:
         mode = cast(ResolutionMode, command_name)

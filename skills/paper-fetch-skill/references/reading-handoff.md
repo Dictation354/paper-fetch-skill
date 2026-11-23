@@ -4,6 +4,8 @@
 
 优先打开同一任务交接记录中的本地图片。按 `image_index_path` 找到缺失图片的 asset ID，再用原 manifest 定向补取。
 
+Wiley HTML 公式图的 `body_positions` 指向落盘正文中图片标记的起点，行、列均从 1 开始。根据已读的行范围和行内位置筛选相关公式，同一个 `asset_id` 在范围内多次出现时只需传一次。
+
 ```bash
 paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --asset-id img_first --asset-id img_second
 paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --kind formula

@@ -1,22 +1,38 @@
 from __future__ import annotations
 
+import json
 import re
 import unittest
+from pathlib import Path
 from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup
 
+from paper_fetch.delivery.receipts import save_reading_artifacts
 from paper_fetch.extraction.html._runtime import body_metrics
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
+from paper_fetch.manifest import build_manifest_record
+from paper_fetch.manifest_writer import write_manifest_record
+from paper_fetch.models import Asset, FetchEnvelope, Metadata
 from paper_fetch.providers._html_references import extract_numbered_references_from_html
 from paper_fetch.providers.atypon_browser_workflow import (
     extract_atypon_browser_workflow_markdown,
 )
+from paper_fetch.providers.base import ProviderContent
+from paper_fetch.runtime import RuntimeContext
+from paper_fetch.targeted_assets import (
+    capture_asset_context,
+    context_from_manifest,
+    fetch_selected_assets,
+)
 from tests.golden_criteria import golden_criteria_asset
 from tests.paths import FIXTURE_DIR
 from tests.provider_benchmark_samples import provider_benchmark_sample
+from tests.support._paper_fetch_support import RecordingTransport, http_response
 from tests.support.canonical_content import comparable_cell
+from tests.support.fetch_fixtures import sample_article
 from tests.support.markdown_presentation import visible_markdown
+from tests.support.wiley_page_assets import png_bytes
 
 SCIENCE_SAMPLE = provider_benchmark_sample("science")
 WILEY_SAMPLE = provider_benchmark_sample("wiley")
@@ -30,6 +46,114 @@ SCIENCE_PERSPECTIVE_FIXTURE = golden_criteria_asset(
 SCIENCE_ADP0212_FIXTURE = golden_criteria_asset(
     "10.1126/science.adp0212", "original.html"
 )
+
+
+def test_wiley_formula_positions_and_selection_from_retained_body(tmp_path):
+    doi = "10.1111/gcb.15322"
+    source = f"https://onlinelibrary.wiley.com/doi/full/{doi}"
+    fixture = golden_criteria_asset(doi, "original.html").read_bytes()
+    markdown, _ = extract_atypon_browser_workflow_markdown(
+        fixture.decode("utf-8"), source, "wiley", metadata={"doi": doi}
+    )
+    asset_root = "https://onlinelibrary.wiley.com/cms/asset"
+    remote_url = (
+        f"{asset_root}/9841141f-ff64-4347-a2f1-c0fa2b92a994/gcb15322-math-0001.png"
+    )
+    local_url = (
+        f"{asset_root}/14d2ee09-ab40-4788-b91d-81bf2381e170/gcb15322-math-0002.png"
+    )
+    image_bytes = png_bytes(100, 100)
+    local_path = tmp_path / "math 2.png"
+    local_path.write_bytes(image_bytes)
+    article = sample_article()
+    article.doi = doi
+    article.source = "wiley_browser"
+    article.acquisition = None
+    article.metadata = Metadata(title="Wiley replay", landing_page_url=source)
+    article.assets = [
+        Asset(kind="formula", heading="", url=local_url, path=str(local_path))
+    ]
+    remote_image = f"![Formula]({remote_url})"
+    local_image = f"![Formula]({local_url})"
+    other_image = f"![Formula]({remote_url}?other=1)"
+    markdown = (
+        markdown.rstrip()
+        + f"\n\n式 {remote_image} {local_image} {remote_image} {other_image}\n"
+    )
+    transport = RecordingTransport(
+        {("GET", remote_url): http_response(remote_url, image_bytes, "image/png")}
+    )
+
+    with RuntimeContext(env={}, transport=transport, clients={}) as runtime:
+        capture_asset_context(
+            article,
+            ProviderContent(
+                route_kind="html",
+                source_url=source,
+                content_type="text/html",
+                body=fixture,
+            ),
+            provider="wiley",
+            client=None,
+            context=runtime,
+        )
+        envelope = FetchEnvelope(
+            doi=doi, source=article.source, article=article, markdown=markdown
+        )
+        delivery = tmp_path / "reading"
+        artifacts = save_reading_artifacts(delivery, envelope=envelope)
+        record = build_manifest_record(
+            tool_version="8.1.0",
+            index=1,
+            attempt=1,
+            query=doi,
+            request_parameters={},
+            asset_profile="none",
+            envelope=envelope,
+            output_artifacts=artifacts,
+        )
+        manifest = write_manifest_record(delivery / "manifest.json", record)
+        assets = json.loads((delivery / "images.json").read_text())["assets"]
+        remote = next(asset for asset in assets if asset["url"] == remote_url)
+        local = next(asset for asset in assets if asset["url"] == local_url)
+        assert all(
+            "body_positions" not in asset
+            for asset in assets
+            if asset["kind"] != "formula"
+        )
+
+        lines = (delivery / "body.md").read_text().splitlines()
+        original_line = next(
+            i for i, line in enumerate(lines, 1) if remote_image in line
+        )
+        last_line = lines[-1]
+        rewritten = "![Formula](../math%202.png)"
+        assert local_url not in last_line and rewritten in last_line
+        assert remote["body_positions"] == [
+            {
+                "line": original_line,
+                "column": lines[original_line - 1].index(remote_image) + 1,
+            },
+            {"line": len(lines), "column": 3},
+            {"line": len(lines), "column": last_line.rindex(remote_image) + 1},
+        ]
+        assert local["body_positions"][-1] == {
+            "line": len(lines),
+            "column": last_line.index(rewritten) + 1,
+        }
+        assert len(local["body_positions"]) == 2
+
+        restored = context_from_manifest(manifest)
+        result = fetch_selected_assets(
+            restored,
+            asset_ids=[remote["asset_id"]],
+            output_dir=str(tmp_path / "selected"),
+            runtime=runtime,
+        )
+    (selected,) = result["results"]
+    assert selected["asset_id"] == remote["asset_id"] and selected["status"] == "ok"
+    assert Path(selected["path"]).read_bytes() == image_bytes
+    assert [call["url"] for call in transport.calls] == [remote_url]
 
 
 class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):

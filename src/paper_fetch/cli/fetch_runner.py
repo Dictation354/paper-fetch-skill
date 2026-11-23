@@ -29,7 +29,7 @@ from ..capability_scope import (
     capability_scopes_for_query,
 )
 from ..delivery.fetch_cache import FetchCache
-from ..delivery.receipts import target_satisfied
+from ..delivery.receipts import run_receipt_directory, target_satisfied
 from ..delivery.requests import FetchPaperRequest
 from ..http import RequestCancelledError
 from ..http.transport import request_cancel_check
@@ -83,7 +83,6 @@ from .manifest_io import (
     _formatted_output_filename,
     _same_output_path,
     _validate_single_manifest_target,
-    _write_single_cli_manifest,
     _write_single_failure_manifest,
     exit_code_for_batch_results,
     prepare_output_dir,
@@ -91,7 +90,7 @@ from .manifest_io import (
     serialize_envelope,
     write_output,
 )
-from .progress import _cooperative_batch_cancel
+from .progress import FetchProgress, _cooperative_batch_cancel
 
 
 @dataclass(frozen=True, slots=True)
@@ -632,7 +631,14 @@ def run_batch_fetch(
         )
 
     active_run_id = run_id or deps.uuid_factory()
-    progress = cli_pkg.FetchProgress(options.progress, active_run_id, len(queries))
+    progress = cli_pkg.FetchProgress(
+        options.progress,
+        active_run_id,
+        len(queries),
+        receipt_dir=run_receipt_directory(output_dir, active_run_id)
+        if plan.deliver_files
+        else None,
+    )
     controlled = options.control_stdin
     if controlled:
         progress.start_control()
@@ -895,15 +901,22 @@ def run_single_fetch_command(command: SingleFetchCommand) -> int:
     manifest_run_id = manifest_deps.uuid_factory()
     manifest_tool_version = cli_pkg.package_version()
     manifest_started_at = manifest_deps.clock()
-    progress = cli_pkg.FetchProgress(options.progress, manifest_run_id, 1)
-    if options.control_stdin:
-        progress.start_control()
-
+    progress: FetchProgress | None = None
     output_dir: Path | None = None
     try:
         runtime_env = cli_pkg.build_runtime_env()
         output_dir = _resolve_fetch_output_dir(options, runtime_env)
         prepare_output_dir(output_dir)
+        progress = cli_pkg.FetchProgress(
+            options.progress,
+            manifest_run_id,
+            1,
+            receipt_dir=run_receipt_directory(output_dir, manifest_run_id)
+            if options.output_plan.deliver_files
+            else None,
+        )
+        if options.control_stdin:
+            progress.start_control()
         with cli_pkg.RuntimeContext(
             env=runtime_env,
             download_dir=output_dir,
@@ -940,13 +953,8 @@ def run_single_fetch_command(command: SingleFetchCommand) -> int:
                     completed_at=manifest_deps.clock(),
                 ),
                 result=result,
+                requested_manifest=command.manifest,
             )
-            if command.manifest:
-                _write_single_cli_manifest(
-                    command.manifest,
-                    record,
-                    overwrite=options.output_plan.overwrite,
-                )
             progress.complete(1, lambda _cancelled: record)
         if (
             result.envelope.target == "supplementary"

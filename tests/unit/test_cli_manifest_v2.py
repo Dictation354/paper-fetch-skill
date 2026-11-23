@@ -1231,6 +1231,39 @@ def test_text_progress_auto_and_asset_throttle(monkeypatch, capsys):
     assert capsys.readouterr().err == ""
 
 
+def test_text_progress_reports_profile_queue_and_browser_execution(
+    tmp_path, monkeypatch, capsys
+):
+    from paper_fetch.providers.browser_runtime import profile
+    from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
+
+    ticks = iter([10.0, 11.25, 11.25, 13.75])
+    monkeypatch.setattr(profile, "time", SimpleNamespace(monotonic=lambda: next(ticks)))
+    progress = cli.FetchProgress("text", RUN_ID, 1)
+    runtime = runtime_module.RuntimeContext(
+        env={}, progress_callback=lambda event, data: progress.emit(event, 1, **data)
+    )
+    manager = profile.PublisherProfileManager(
+        BrowserRuntimeConfig(
+            provider="wiley",
+            doi="10.1000/acceptance",
+            artifact_dir=tmp_path,
+            headless=True,
+            user_agent=None,
+            profile_dir=tmp_path / "profile",
+        ),
+        runtime_context=runtime,
+    )
+    manager._acquire()
+    manager.close()
+
+    assert capsys.readouterr().err.splitlines()[-3:] == [
+        "[1/1] waiting_profile",
+        "[1/1] executing_browser queue=1.250s",
+        "[1/1] browser_finished queue=1.250s execution=2.500s",
+    ]
+
+
 def test_cancellation_during_identity_closes_browser_on_owning_worker(
     tmp_path, monkeypatch, capsys
 ):

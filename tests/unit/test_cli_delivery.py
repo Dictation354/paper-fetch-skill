@@ -31,8 +31,11 @@ def isolated(monkeypatch):
 
 
 def test_default_receipt_delivers_retained_full_body(isolated, capsys):
-    assert cli.main(["fetch", "--query", "10.1000/acceptance"]) == 0
-    receipt = json.loads(capsys.readouterr().out)
+    assert (
+        cli.main(["fetch", "--query", "10.1000/acceptance", "--progress", "text"]) == 0
+    )
+    stdout, stderr = capsys.readouterr()
+    receipt = json.loads(stdout)
     assert (
         receipt["contract"] == "paper-fetch/receipt" and receipt["schema_version"] == 2
     )
@@ -41,7 +44,14 @@ def test_default_receipt_delivers_retained_full_body(isolated, capsys):
     for key in ("body_path", "manifest_path", "image_index_path", "section_index_path"):
         path = Path(receipt[key])
         assert path.is_absolute() and path.is_file()
-    manifest = json.loads(Path(receipt["manifest_path"]).read_text())
+    manifest_path = Path(receipt["manifest_path"])
+    manifest = json.loads(manifest_path.read_text())
+    assert manifest_path.with_name("receipt.json").read_text() == stdout
+    assert stderr.count(str(manifest_path.parents[1])) == 1
+    assert stderr.splitlines()[0].endswith(f"receipts={manifest_path.parents[1]}")
+    assert stderr.splitlines()[-1] == (
+        f"[1/1] {receipt['status']} acceptance={receipt['acceptance']['overall']} scope=fulltext"
+    )
     assert manifest["acceptance"]["identity"]["doi"] == "10.1000/acceptance"
     assert "markdown" not in receipt and "trace" not in receipt
     assert not list(
@@ -118,6 +128,34 @@ def test_receipt_v2_projects_compact_fields_across_lookup(
     assert json.loads(capsys.readouterr().out) == receipt
 
 
+def test_existing_extra_manifest_publishes_only_failure_receipt(
+    isolated, tmp_path, capsys
+):
+    extra_manifest = tmp_path / "existing.json"
+    extra_manifest.write_text("{}")
+    assert (
+        cli.main(
+            [
+                "fetch",
+                "--query",
+                "10.1000/acceptance",
+                "--output-dir",
+                str(tmp_path),
+                "--manifest",
+                str(extra_manifest),
+            ]
+        )
+        == 1
+    )
+    stdout = capsys.readouterr().out
+    receipt = json.loads(stdout)
+    assert receipt["status"] == "failed"
+    assert (
+        Path(receipt["manifest_path"]).with_name("receipt.json").read_text() == stdout
+    )
+    assert extra_manifest.read_text() == "{}"
+
+
 def test_section_index_uses_written_body_lines_and_leaves_stdout_export_intact(
     isolated, capsys, tmp_path, monkeypatch
 ):
@@ -171,6 +209,11 @@ def test_body_stdout_export_and_file_receipts(
             if output_format == "json"
             else json.loads(exported)["article"]
         )["doi"] == "10.1000/acceptance"
+    (receipt_path,) = tmp_path.glob(".paper-fetch-results/*/1/receipt.json")
+    retained = json.loads(receipt_path.read_text())
+    assert retained["contract"] == "paper-fetch/receipt"
+    assert retained["doi"] == "10.1000/acceptance"
+    assert Path(retained["manifest_path"]).is_file()
     assert (
         cli.main(args + ["--output", str(tmp_path / "explicit.out"), "--overwrite"])
         == 0
@@ -200,8 +243,12 @@ def test_partial_and_failure_keep_manifest_and_return_one(
 
     monkeypatch.setattr(cli, "fetch_paper", fetch)
     assert cli.main(["fetch", "--query", "10.1000/acceptance"]) == 1
-    receipt = json.loads(capsys.readouterr().out)
+    stdout = capsys.readouterr().out
+    receipt = json.loads(stdout)
     assert Path(receipt["manifest_path"]).is_file()
+    assert (
+        Path(receipt["manifest_path"]).with_name("receipt.json").read_text() == stdout
+    )
     assert not receipt["acceptance"]["has_fulltext"]
     assert receipt["target_satisfied"] is False
     assert (receipt["error"] is not None) == (kind == "failed")

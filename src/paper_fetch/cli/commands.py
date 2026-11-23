@@ -112,7 +112,8 @@ class LookupCommand:
     """CLI request to look up a retained accepted receipt by DOI."""
 
     doi: str
-    output_dir: Path
+    output_dirs: tuple[Path, ...]
+    include_legacy: bool = False
 
 
 @dataclass(frozen=True, slots=True)

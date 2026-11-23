@@ -1476,6 +1476,7 @@ def fetch_pdf_over_http(
         request, maximum_pdf_bytes=maximum_pdf_bytes
     )
     last_failure: PdfFetchFailure | None = None
+    download_ns = 0
 
     for attempt_index, url in enumerate(candidate_urls):
         try:
@@ -1489,6 +1490,13 @@ def fetch_pdf_over_http(
         cookie_header = _cookie_header_for_url(browser_cookies, url)
         if cookie_header:
             per_request_headers["Cookie"] = cookie_header
+        request_policy = replace(
+            route_policy.request_policy,
+            timeout_seconds=active_timeout,
+            max_response_bytes=maximum_pdf_bytes,
+            max_compressed_response_bytes=maximum_pdf_bytes,
+        )
+        download_started_at = time.perf_counter_ns()
         try:
             response = transport.request(
                 "GET",
@@ -1496,14 +1504,10 @@ def fetch_pdf_over_http(
                 headers=per_request_headers,
                 timeout=active_timeout,
                 retry_on_transient=True,
-                request_policy=replace(
-                    route_policy.request_policy,
-                    timeout_seconds=active_timeout,
-                    max_response_bytes=maximum_pdf_bytes,
-                    max_compressed_response_bytes=maximum_pdf_bytes,
-                ),
+                request_policy=request_policy,
             )
         except RequestFailure as exc:
+            download_ns += time.perf_counter_ns() - download_started_at
             error_url = str(exc.url or url)
             raise_for_api_entitlement(
                 exc.body,
@@ -1540,6 +1544,7 @@ def fetch_pdf_over_http(
                 break
             continue
 
+        download_ns += time.perf_counter_ns() - download_started_at
         try:
             _remaining_pdf_timeout_seconds(context, request_deadline, maximum=timeout)
         except PdfFetchFailure as exc:
@@ -1603,6 +1608,7 @@ def fetch_pdf_over_http(
                 budget_seconds=timeout,
                 started_at=request_started_at,
                 deadline=request_deadline,
+                extra={"download_ms": round(download_ns / 1_000_000, 3)},
             )
         except PdfFetchFailure as exc:
             propagate_paywall(exc)

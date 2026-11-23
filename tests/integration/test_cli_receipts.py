@@ -29,7 +29,7 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
     )
     monkeypatch.setattr(cli, "build_runtime_env", lambda: {})
 
-    def fetch():
+    def fetch(directory=project):
         assert (
             cli.main(
                 [
@@ -37,7 +37,7 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
                     "--query",
                     doi,
                     "--output-dir",
-                    str(project),
+                    str(directory),
                     "--overwrite",
                 ]
             )
@@ -45,7 +45,7 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
         )
         return json.loads(capsys.readouterr().out)
 
-    def lookup(query=doi, directory=project):
+    def lookup(*directories, query=doi, include_legacy=False):
         return subprocess.run(
             [
                 sys.executable,
@@ -54,8 +54,12 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
                 "lookup",
                 "--doi",
                 query,
-                "--output-dir",
-                str(directory),
+                *(
+                    arg
+                    for directory in directories or (project,)
+                    for arg in ("--output-dir", str(directory))
+                ),
+                *(["--include-legacy"] if include_legacy else []),
             ],
             cwd=tmp_path,
             env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
@@ -76,6 +80,50 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
 
     previous = fetch()
     current = fetch()
+    other_project = tmp_path / "another-project"
+    other_project.mkdir()
+    sidecar = other_project / "10.1000_example.fetch-envelope.json"
+    historical_data = {
+        "version": 2,
+        "extraction_revision": 2,
+        "request": {"max_tokens": "full_text"},
+        "payload": {
+            "doi": doi,
+            "source": "wiley_browser",
+            "markdown": "# Historical text",
+            "content_kind": "fulltext",
+            "has_fulltext": True,
+            "warnings": [],
+            "quality": {
+                "content_kind": "fulltext",
+                "has_fulltext": True,
+                "warnings": [],
+            },
+        },
+    }
+    sidecar.write_text(json.dumps(historical_data))
+    other = fetch(other_project)
+    assert (
+        json.loads(lookup(project, other_project, include_legacy=True).stdout) == other
+    )
+
+    other_manifest = Path(other["manifest_path"])
+    other_record = json.loads(other_manifest.read_text())
+    current_record = json.loads(Path(current["manifest_path"]).read_text())
+    for field in ("started_at", "completed_at"):
+        other_record[field] = current_record[field]
+    other_manifest.write_text(json.dumps(other_record))
+    assert json.loads(lookup(project, other_project).stdout) == current
+    assert json.loads(lookup(other_project, project).stdout) == other
+    assert (
+        json.loads(lookup(other_project, project, include_legacy=True).stdout) == other
+    )
+    Path(other["section_index_path"]).write_text("damaged index")
+    assert (
+        json.loads(lookup(other_project, project, include_legacy=True).stdout)
+        == current
+    )
+
     missing = fetch()
     Path(missing["body_path"]).unlink()
     envelope.quality.warnings.append(TRUNCATION_WARNING)
@@ -93,13 +141,38 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
     assert fallback.returncode == 0, fallback.stderr
     assert json.loads(fallback.stdout) == previous
 
-    elsewhere = lookup(directory=tmp_path / "another-project")
+    elsewhere = lookup(other_project)
     assert elsewhere.returncode == 1
     assert json.loads(elsewhere.stdout) == {"status": "not_found", "doi": doi}
     Path(previous["body_path"]).unlink()
     miss = lookup()
     assert miss.returncode == 1
     assert miss.stdout == elsewhere.stdout and len(miss.stdout.splitlines()) == 1
+
+    legacy = lookup(project, other_project, include_legacy=True)
+    assert legacy.returncode == 0, legacy.stderr
+    assert json.loads(legacy.stdout) == {
+        "schema_version": 1,
+        "contract": "paper-fetch/legacy-lookup",
+        "status": "found",
+        "doi": doi,
+        "source": "wiley_browser",
+        "sidecar_path": str(sidecar),
+        "sidecar_version": 2,
+        "body_json_pointer": "/payload/markdown",
+        "acceptance": "historical_unverified",
+    }
+    preferred_sidecar = project / sidecar.name
+    preferred_sidecar.write_text(sidecar.read_text())
+    assert json.loads(lookup(project, other_project, include_legacy=True).stdout)[
+        "sidecar_path"
+    ] == str(preferred_sidecar)
+    historical_data["payload"]["quality"]["warnings"] = [TRUNCATION_WARNING]
+    preferred_sidecar.write_text(json.dumps(historical_data))
+    assert json.loads(lookup(project, other_project, include_legacy=True).stdout)[
+        "sidecar_path"
+    ] == str(sidecar)
+
     invalid = lookup(query="not-a-doi")
     assert invalid.returncode == 2 and not invalid.stdout
 
@@ -269,23 +342,34 @@ def test_batch_manifest_is_readable_before_completion_and_after_cancel(tmp_path)
         text=True,
     )
     try:
-        first = json.loads(process.stdout.readline())
+        first_line = process.stdout.readline()
+        first = json.loads(first_line)
         assert first["index"] == 1
         assert process.poll() is None
         manifest = Path(first["manifest_path"])
+        assert manifest.with_name("receipt.json").read_text() == first_line
         assert json.loads(manifest.read_text())["request"]["query"] == "10.1000/first"
         assert Path(first["body_path"]).read_text()
         # The second logical input shares acquisition, while retaining its own identity/manifest.
-        duplicate = json.loads(process.stdout.readline())
+        duplicate_line = process.stdout.readline()
+        duplicate = json.loads(duplicate_line)
         assert (
             duplicate["index"] == 2
             and duplicate["manifest_path"] != first["manifest_path"]
+        )
+        assert (
+            Path(duplicate["manifest_path"]).with_name("receipt.json").read_text()
+            == duplicate_line
         )
         process.send_signal(signal.SIGINT)
         stdout, stderr = process.communicate(timeout=10)
         assert process.returncode == 1, stderr
         last = json.loads(stdout.strip())
         assert last["index"] == 3 and "request_cancelled" in last["failure_codes"]
+        assert (
+            Path(last["manifest_path"]).with_name("receipt.json").read_text() == stdout
+        )
+        assert manifest.with_name("receipt.json").read_text() == first_line
         assert manifest.is_file() and Path(first["body_path"]).is_file()
         summary = [
             json.loads(line)
