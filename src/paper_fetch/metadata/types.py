@@ -74,6 +74,7 @@ class HtmlLookupHints(TypedDict, total=False):
 class HtmlMetadata(ProviderMetadata, total=False):
     raw_meta: dict[str, list[str]]
     lookup_title: str | None
+    lookup_challenge_title: bool
     lookup_redirect_url: str | None
     identifier_value: str | None
 

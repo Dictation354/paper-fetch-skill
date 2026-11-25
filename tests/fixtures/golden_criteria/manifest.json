@@ -6420,6 +6420,17 @@
       },
       "fixture_family": "scenario"
     },
+    "scenario_legacy_lookup_v7_7_2": {
+      "doi": "scenario:legacy_lookup_v7_7_2",
+      "publisher": "generic",
+      "source_url": "scenario://legacy_lookup_v7_7_2",
+      "origin_kind": "synthetic",
+      "usage_kind": "infrastructure",
+      "assets": {
+        "manifest.json": "tests/fixtures/golden_criteria/_scenarios/legacy_lookup_v7_7_2/manifest.json"
+      },
+      "fixture_family": "scenario"
+    },
     "scenario_provider_dom_abstract_fallback": {
       "doi": "scenario:provider_dom_abstract_fallback",
       "publisher": "science",

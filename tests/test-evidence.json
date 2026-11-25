@@ -4798,6 +4798,20 @@
         "reason": "验证文件回执和逐项交付，不证明出版社抓取质量。"
       }
     },
+    "tests/integration/test_cli_resolution.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Resolve and check subprocess JSONL contracts",
+        "reason": "注入网络与可用性响应，验证 CLI 输出和结构化错误。"
+      }
+    },
+    "tests/unit/test_lookup.py": {
+      "default": {
+        "kind": "mechanism",
+        "scope": "Scoped lookup of historical receipt files",
+        "reason": "使用合成文件验证历史回查顺序、完整性条件和路径边界。"
+      }
+    },
     "tests/integration/test_nature_reading_delivery.py": {
       "default": {
         "kind": "mechanism",

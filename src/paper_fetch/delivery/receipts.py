@@ -5,8 +5,10 @@ from __future__ import annotations
 import re
 from bisect import bisect_right
 from collections import defaultdict
+from collections.abc import Iterator
 from dataclasses import asdict
 from pathlib import Path
+from string import ascii_letters, digits
 from typing import Any
 from uuid import UUID
 
@@ -20,7 +22,7 @@ from ..manifest import (
 from ..models import TRUNCATION_WARNING, RenderOptions
 from ..models.markdown import iter_markdown_images
 from ..redaction import is_sensitive_configuration_name, redact_text_for_diagnostics
-from ..targeted_assets import asset_urls, context_from_envelope
+from ..targeted_assets import IMAGE_KINDS, asset_urls, context_from_envelope
 from ..workflow.rendering import relative_asset_link, rewrite_markdown_asset_links
 from .acceptance_payloads import compact_acceptance_payload
 
@@ -36,6 +38,24 @@ def run_receipt_directory(output_dir: Path, run_id: UUID) -> Path:
     return output_dir / ".paper-fetch-results" / str(run_id)
 
 
+def _markdown_lines(
+    lines: list[str], *, offset: int = 0
+) -> Iterator[tuple[int, str | None]]:
+    fence = ""
+    for line_number, raw_line in enumerate(lines, offset + 1):
+        line = raw_line.removesuffix("\r")
+        marker = _CODE_FENCE.fullmatch(line)
+        if fence:
+            if marker and marker[1].startswith(fence) and not marker[2].strip():
+                fence = ""
+            yield line_number, None
+        elif marker and (marker[1][0] == "~" or "`" not in marker[2]):
+            fence = marker[1]
+            yield line_number, None
+        else:
+            yield line_number, line
+
+
 def section_index(markdown: str) -> dict[str, Any]:
     lines = markdown.removesuffix("\n").split("\n") if markdown else []
     body_start = 0
@@ -49,17 +69,9 @@ def section_index(markdown: str) -> dict[str, Any]:
             0,
         )
     sections: list[dict[str, Any]] = []
-    fence = ""
     paragraph: list[str] = []
-    for line_number, raw_line in enumerate(lines[body_start:], body_start + 1):
-        line = raw_line.removesuffix("\r")
-        marker = _CODE_FENCE.fullmatch(line)
-        if fence:
-            if marker and marker[1].startswith(fence) and not marker[2].strip():
-                fence = ""
-            continue
-        if marker and (marker[1][0] == "~" or "`" not in marker[2]):
-            fence = marker[1]
+    for line_number, line in _markdown_lines(lines[body_start:], offset=body_start):
+        if line is None:
             paragraph.clear()
             continue
         heading = _ATX_HEADING.fullmatch(line)
@@ -119,28 +131,49 @@ def public_diagnostics(value: Any) -> Any:
     return value
 
 
-def _formula_body_positions(
+_PERCENT_ESCAPE = re.compile(r"%([0-9a-fA-F]{2})")
+_UNRESERVED = frozenset(ascii_letters + digits + "-._~")
+_ESCAPE_PREFIX = re.compile(r"\\+$")
+
+
+def _normalized_image_reference(reference: str) -> str:
+    def replace_escape(match: re.Match[str]) -> str:
+        character = chr(int(match[1], 16))
+        return character if character in _UNRESERVED else match[0].upper()
+
+    return _PERCENT_ESCAPE.sub(replace_escape, reference)
+
+
+def _image_body_positions(
     assets: list[dict[str, Any]], markdown: str, *, body: Path
 ) -> list[dict[str, Any]]:
     by_reference: dict[str, set[int]] = defaultdict(set)
     for index, asset in enumerate(assets):
-        if asset["kind"] != "formula":
+        if asset["kind"] not in IMAGE_KINDS:
             continue
         references = asset_urls(asset)
         if local_link := relative_asset_link(asset.get("path"), target_path=body):
             references.add(local_link)
         for reference in references:
-            by_reference[reference].add(index)
+            by_reference[_normalized_image_reference(reference)].add(index)
 
     if not by_reference:
         return assets
     line_starts = [0, *(match.end() for match in re.finditer("\n", markdown))]
+    fenced = {
+        line for line, text in _markdown_lines(markdown.split("\n")) if text is None
+    }
     positions: dict[int, list[dict[str, int]]] = defaultdict(list)
     for image in iter_markdown_images(markdown):
-        matches = by_reference.get(image.url)
+        line = bisect_right(line_starts, image.start)
+        if line in fenced:
+            continue
+        escaped = _ESCAPE_PREFIX.search(markdown, line_starts[line - 1], image.start)
+        if escaped is not None and len(escaped[0]) % 2:
+            continue
+        matches = by_reference.get(_normalized_image_reference(image.url))
         if not matches or len(matches) != 1:
             continue
-        line = bisect_right(line_starts, image.start)
         positions[next(iter(matches))].append(
             {"line": line, "column": image.start - line_starts[line - 1] + 1}
         )
@@ -182,13 +215,8 @@ def save_reading_artifacts(
     if envelope is not None:
         state = context_from_envelope(envelope)
         assets = state.assets
-        if (
-            markdown
-            and state.provider == "wiley"
-            and state.route_kind == "html"
-            and not is_pdf_article(envelope.article)
-        ):
-            assets = _formula_body_positions(assets, markdown, body=body)
+        if markdown and not is_pdf_article(envelope.article):
+            assets = _image_body_positions(assets, markdown, body=body)
         # These descriptors are sufficient for selective downloads; never persist browser seeds.
         index = store.write_json_file(
             directory / "images.json",

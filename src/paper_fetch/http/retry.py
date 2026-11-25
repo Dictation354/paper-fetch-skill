@@ -22,6 +22,7 @@ from .errors import (
     is_retryable_network_error,
 )
 
+RETRYABLE_METHODS = frozenset({"GET", "HEAD"})
 DEFAULT_TRANSIENT_RETRIES = 2
 DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS = 0.5
 TRANSIENT_HTTP_STATUS_CODES = frozenset(range(500, 600))
@@ -47,7 +48,7 @@ def build_rate_limit_retry_policy(*, enabled: bool, retries: int) -> Retry:
     return Retry(
         total=total,
         status=total,
-        allowed_methods=frozenset({"GET", "HEAD"}),
+        allowed_methods=RETRYABLE_METHODS,
         status_forcelist={429},
         respect_retry_after_header=True,
         raise_on_status=False,
@@ -67,7 +68,7 @@ def build_transient_retry_policy(
         read=total,
         status=total,
         other=total,
-        allowed_methods=frozenset({"GET", "HEAD"}),
+        allowed_methods=RETRYABLE_METHODS,
         status_forcelist=TRANSIENT_HTTP_STATUS_CODES,
         backoff_factor=max(0.0, float(backoff_base_seconds)),
         respect_retry_after_header=False,
@@ -109,11 +110,10 @@ class RetryState:
         emit_logs: bool = True,
     ) -> RetryDecision:
         redacted_url = redact_url_for_cache(request_url)
-        retryable = method.upper() in {"GET", "HEAD"} and (
-            _retry_remaining(self.transient_policy) > 0
-            and (is_timeout or is_retryable_network_error(exc))
+        retryable = method.upper() in RETRYABLE_METHODS and (
+            is_timeout or is_retryable_network_error(exc)
         )
-        if retryable:
+        if retryable and _retry_remaining(self.transient_policy) > 0:
             if emit_logs:
                 emit_structured_log(
                     logger,
@@ -153,6 +153,7 @@ class RetryState:
             f"Network error for {redacted_url}: {detail}",
             url=redacted_url,
             error_category=classify_network_error(exc),
+            retryable=retryable,
         ) from exc
 
     def decide_http_failure(
@@ -269,6 +270,8 @@ class RetryState:
             headers=headers_map,
             url=redacted_error_url,
             retry_after_seconds=retry_after_seconds,
+            retryable=method.upper() in RETRYABLE_METHODS
+            and (status_code == 429 or is_transient_http_status(status_code)),
         )
 
 

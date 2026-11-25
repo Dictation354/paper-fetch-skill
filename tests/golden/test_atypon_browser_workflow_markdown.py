@@ -116,13 +116,15 @@ def test_wiley_formula_positions_and_selection_from_retained_body(tmp_path):
         assets = json.loads((delivery / "images.json").read_text())["assets"]
         remote = next(asset for asset in assets if asset["url"] == remote_url)
         local = next(asset for asset in assets if asset["url"] == local_url)
-        assert all(
-            "body_positions" not in asset
-            for asset in assets
-            if asset["kind"] != "formula"
-        )
 
         lines = (delivery / "body.md").read_text().splitlines()
+        figures = [asset for asset in assets if asset["kind"] == "figure"]
+        assert len(figures) == 4
+        for number, figure in enumerate(figures, 1):
+            image = f"![Figure {number}]({figure['url']})"
+            figure_line = lines.index(image) + 1
+            assert figure["body_positions"] == [{"line": figure_line, "column": 1}]
+
         original_line = next(
             i for i, line in enumerate(lines, 1) if remote_image in line
         )

@@ -17,6 +17,7 @@ import pytest
 from scripts.skill_integrity import build_skill_bundle_manifest
 
 from tests.support._installer_support import write_executable as _write_executable
+from tests.support._installer_support import write_posix_command_wrappers
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 LINUX_INSTALLER = REPO_ROOT / "install-offline.sh"
@@ -616,6 +617,117 @@ class OfflineInstallTests(unittest.TestCase):
                 self.assertEqual(removed.returncode, 0, removed.stderr)
                 self.assertFalse(target.exists())
                 self.assertTrue(legacy.exists())
+
+    def test_managed_user_launcher_runs_without_activation_and_is_uninstalled(
+        self,
+    ) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir).resolve()
+            bundle, fake_bin, home = self._create_bundle(root)
+            write_posix_command_wrappers(bundle)
+            _write_checksums(bundle)
+            install_root = root / 'runtime $HOME `test` "quoted"'
+            launcher = home / ".local/bin/paper-fetch"
+            interpreter = root / "recording-interpreter"
+            _write_executable(interpreter, '#!/bin/sh\nprintf "%s\\n" "$PATH" "$@"\n')
+
+            installed = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--skip-browser-prepare",
+                install_dir=install_root,
+            )
+            self.assertEqual(installed.returncode, 0, installed.stderr)
+            self.assertTrue(launcher.is_file())
+            self.assertFalse(launcher.is_symlink())
+            self.assertEqual(launcher.stat().st_mode & 0o777, 0o755)
+            self.assertEqual(
+                launcher.read_text(encoding="utf-8").splitlines()[:3],
+                [
+                    "#!/usr/bin/env bash",
+                    "# BEGIN paper-fetch offline managed",
+                    "# paper-fetch-user-launcher-v1",
+                ],
+            )
+            for entrypoint in (launcher, install_root / "bin/paper-fetch"):
+                with self.subTest(entrypoint=entrypoint):
+                    result = subprocess.run(
+                        [str(entrypoint), "--query", "two words"],
+                        env={
+                            "HOME": str(home),
+                            "PATH": "/usr/bin:/bin",
+                            "PAPER_FETCH_OFFLINE_PYTHON_BIN": str(interpreter),
+                        },
+                        text=True,
+                        capture_output=True,
+                        check=False,
+                        timeout=10,
+                    )
+                    self.assertEqual(result.returncode, 0, result.stderr)
+                    bundled_path = ":".join(
+                        str(install_root / part)
+                        for part in ("bin", "formula-tools/bin", "image-tools/bin")
+                    )
+                    path, *args = result.stdout.splitlines()
+                    self.assertEqual(path, f"{bundled_path}:/usr/bin:/bin")
+                    self.assertEqual(args[-2:], ["--query", "two words"])
+
+            removed = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--uninstall",
+                "--python",
+                str(root / "missing-python"),
+                install_dir=install_root,
+            )
+            self.assertEqual(removed.returncode, 0, removed.stderr)
+            self.assertFalse(launcher.exists())
+            self.assertFalse(launcher.is_symlink())
+
+    def test_launcher_management_preserves_unowned_files_and_symlinks(self) -> None:
+        for component in (None, ".local/bin/paper-fetch", ".local/bin", ".local"):
+            with (
+                self.subTest(component=component),
+                tempfile.TemporaryDirectory() as tmpdir,
+            ):
+                root = Path(tmpdir)
+                bundle, fake_bin, home = self._create_bundle(root)
+                launcher = home / ".local/bin/paper-fetch"
+                symlink = home / component if component else None
+                outside = root / "outside"
+                if symlink is not None:
+                    symlink.parent.mkdir(parents=True, exist_ok=True)
+                    is_directory = symlink != launcher
+                    if is_directory:
+                        outside.mkdir()
+                    symlink.symlink_to(outside, target_is_directory=is_directory)
+
+                marker = "# BEGIN paper-fetch offline managed"
+                content = (
+                    f"#!/usr/bin/env bash\n{marker}\n"
+                    '# paper-fetch-user-launcher-v1\nexec "/custom/bin/paper-fetch" "$@"\n'
+                    "# END paper-fetch offline managed\necho user-owned\n"
+                    if symlink is None
+                    else f"{marker}\n"
+                )
+                _write_file(outside if symlink == launcher else launcher, content)
+
+                installed = self._run_installer(
+                    bundle, fake_bin, home, "--skip-browser-prepare"
+                )
+                self.assertEqual(installed.returncode, 0, installed.stderr)
+                self.assertIn(f"Skipping {launcher}", installed.stderr)
+                self.assertEqual(launcher.read_text(encoding="utf-8"), content)
+                if symlink is not None:
+                    self.assertEqual(symlink.readlink(), outside)
+
+                removed = self._run_installer(bundle, fake_bin, home, "--uninstall")
+                self.assertEqual(removed.returncode, 0, removed.stderr)
+                self.assertEqual(launcher.read_text(encoding="utf-8"), content)
+                if symlink is not None:
+                    self.assertEqual(symlink.readlink(), outside)
 
     def test_install_dir_upgrade_cleans_old_payload_and_preserves_offline_env(
         self,
@@ -1217,6 +1329,8 @@ exec /bin/mv "$@"
             self.assertFalse((home / ".zshrc").exists())
             self.assertFalse((home / ".codex").exists())
             self.assertFalse((home / ".agents").exists())
+            self.assertFalse((home / ".local/bin").exists())
+            self.assertFalse((home / ".local/bin").is_symlink())
 
     def test_macos_checksum_failure_precedes_quarantine_check(self) -> None:
         with tempfile.TemporaryDirectory() as tmpdir:
@@ -1462,6 +1576,71 @@ exec /bin/mv "$@"
             self.assertTrue(
                 (home / ".agents/skills/paper-fetch-skill/SKILL.md").is_file()
             )
+
+    def test_reused_env_is_the_unactivated_default_until_normal_upgrade(self) -> None:
+        with tempfile.TemporaryDirectory() as tmpdir:
+            root = Path(tmpdir).resolve()
+            bundle, fake_bin, home = self._create_bundle(root)
+            write_posix_command_wrappers(bundle)
+            _write_checksums(bundle)
+            reused_env = root / 'shared $USER `test` "quoted" }' / "offline.env"
+            _write_file(reused_env, "ELSEVIER_API_KEY=existing\n")
+            install_root = root / "installed"
+            interpreter = root / "recording-interpreter"
+            _write_executable(
+                interpreter, '#!/bin/sh\nprintf "%s\\n" "$PAPER_FETCH_ENV_FILE"\n'
+            )
+            marker = install_root / "runtime/default-env-file"
+            launchers = (
+                home / ".local/bin/paper-fetch",
+                install_root / "bin/paper-fetch",
+            )
+
+            def assert_launchers(expected, **overrides):
+                for launcher in launchers:
+                    with self.subTest(launcher=launcher, expected=expected):
+                        result = subprocess.run(
+                            [str(launcher), "--help"],
+                            env={
+                                "HOME": str(home),
+                                "PATH": "/usr/bin:/bin",
+                                "PAPER_FETCH_OFFLINE_PYTHON_BIN": str(interpreter),
+                                **overrides,
+                            },
+                            capture_output=True,
+                            text=True,
+                            timeout=10,
+                            check=False,
+                        )
+                        self.assertEqual(result.returncode, 0, result.stderr)
+                        self.assertEqual(result.stdout, f"{expected}\n")
+
+            reused = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--skip-browser-prepare",
+                "--reuse-env-file",
+                str(reused_env),
+                install_dir=install_root,
+            )
+            self.assertEqual(reused.returncode, 0, reused.stderr)
+            self.assertEqual(marker.read_text(), f"{reused_env}\n")
+            assert_launchers(reused_env)
+            override = str(root / "override.env")
+            assert_launchers(override, PAPER_FETCH_ENV_FILE=override)
+
+            upgraded = self._run_installer(
+                bundle,
+                fake_bin,
+                home,
+                "--skip-browser-prepare",
+                install_dir=install_root,
+            )
+            self.assertEqual(upgraded.returncode, 0, upgraded.stderr)
+            self.assertFalse(marker.exists())
+            assert_launchers(install_root / "offline.env")
+            self.assertEqual(reused_env.read_text(), "ELSEVIER_API_KEY=existing\n")
 
     def test_reuse_env_file_keeps_file_untouched_and_activate_script_sets_runtime_dirs(
         self,

@@ -10,6 +10,7 @@ from typing import Any
 
 from ..artifacts import ArtifactStore
 from ..failure import FailureDiagnostics
+from ..http import RequestFailure
 from ..logging_utils import emit_structured_log
 from ..models import ArticleModel, AssetProfile, metadata_only_article
 from ..provider_catalog import (
@@ -21,6 +22,7 @@ from ..provider_catalog import (
 from ..providers.base import (
     ProviderFailure,
     ProviderFetchResult,
+    map_request_failure,
     restricted_provider_result,
 )
 from ..providers.protocols import FulltextProvider
@@ -293,6 +295,7 @@ def _try_official_provider(
                 warnings=warnings,
                 trace=merge_trace(events, workflow_trace),
             )
+        elapsed_ms = round((time.monotonic() - attempt_started_at) * 1000, 3)
         if article.quality.content_kind == FULLTEXT:
             emit_structured_log(
                 logger,
@@ -303,10 +306,13 @@ def _try_official_provider(
                 if provider_result.content is not None
                 else None,
                 status="success",
-                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                elapsed_ms=elapsed_ms,
                 attempt=1,
             )
-            extend_trace(events, [fulltext_event(provider_name, "article_ok")])
+            extend_trace(
+                events,
+                [fulltext_event(provider_name, "article_ok", duration_ms=elapsed_ms)],
+            )
             return finalize_article(
                 article,
                 warnings=warnings,
@@ -322,10 +328,13 @@ def _try_official_provider(
                 if provider_result.content is not None
                 else None,
                 status=ABSTRACT_ONLY,
-                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                elapsed_ms=elapsed_ms,
                 attempt=1,
             )
-            extend_trace(events, [fulltext_event(provider_name, ABSTRACT_ONLY)])
+            extend_trace(
+                events,
+                [fulltext_event(provider_name, ABSTRACT_ONLY, duration_ms=elapsed_ms)],
+            )
             if provider_name in provider_managed_abstract_only_names():
                 warnings.append(
                     "Official full text only contained abstract-level content; returning abstract-only provider result."
@@ -359,12 +368,19 @@ def _try_official_provider(
                     if provider_result.content is not None
                     else None,
                     status="pdf_only",
-                    elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                    elapsed_ms=elapsed_ms,
                     attempt=1,
                 )
                 extend_trace(
                     events,
-                    [fulltext_event(provider_name, "ok", route=PDF_FALLBACK)],
+                    [
+                        fulltext_event(
+                            provider_name,
+                            "ok",
+                            route=PDF_FALLBACK,
+                            duration_ms=elapsed_ms,
+                        )
+                    ],
                 )
                 return finalize_article(
                     article,
@@ -380,17 +396,29 @@ def _try_official_provider(
                 if provider_result.content is not None
                 else None,
                 status="not_usable",
-                elapsed_ms=round((time.monotonic() - attempt_started_at) * 1000, 3),
+                elapsed_ms=elapsed_ms,
                 attempt=1,
             )
-            extend_trace(events, [fulltext_event(provider_name, "not_usable")])
+            extend_trace(
+                events,
+                [fulltext_event(provider_name, "not_usable", duration_ms=elapsed_ms)],
+            )
         extend_unique(warnings, article.quality.warnings)
-    except ProviderFailure as exc:
+    except (ProviderFailure, RequestFailure) as error:
+        exc = (
+            map_request_failure(error, provider=provider_name, stage="fulltext")
+            if isinstance(error, RequestFailure)
+            else error
+        )
+        if exc.diagnostics.error_category and not exc.diagnostics.stage:
+            exc = exc.with_updates(
+                provider=exc.diagnostics.provider or provider_name, stage="fulltext"
+            )
         if provider_name == "ams" and exc.code == AUTH_REQUIRED:
-            raise PaperFetchFailure.from_provider_failure(exc) from exc
+            raise PaperFetchFailure.from_provider_failure(exc) from error
         if confirmed_paywall(exc):
             if not strategy.allow_metadata_only_fallback:
-                raise PaperFetchFailure.from_provider_failure(exc) from exc
+                raise PaperFetchFailure.from_provider_failure(exc) from error
             result = restricted_provider_result(
                 provider_name, {**metadata, "doi": doi}, exc
             )

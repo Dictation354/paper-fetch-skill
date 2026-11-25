@@ -9,7 +9,11 @@ from collections.abc import Mapping
 from html.parser import HTMLParser
 from typing import Any, cast
 
-from ...html_lookup import is_usable_html_lookup_title
+from ...html_lookup import (
+    is_html_lookup_challenge_title,
+    is_html_redirect_title,
+    is_usable_html_lookup_title,
+)
 from ...metadata.types import HtmlLookupHints, HtmlMetadata
 from ...models import normalize_text
 from ...publication_dates import normalize_publication_dates, publication_date
@@ -198,8 +202,12 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         parser.canonical_url or ""
     )
     html_title = normalize_text("".join(parser.title)) or None
-    if not is_usable_html_lookup_title(html_title):
-        html_title = lookup_hints.get("lookup_title")
+    lookup_title = lookup_hints.get("lookup_title")
+    challenge_title = is_html_lookup_challenge_title(html_title)
+    if lookup_title and lookup_hints.get("redirect_url"):
+        challenge_title = challenge_title or is_html_redirect_title(html_title)
+    if not html_title or challenge_title:
+        html_title = lookup_title
     title = first("citation_title", "dc.title", "og:title") or html_title or None
     abstract = first(*EXPLICIT_ABSTRACT_META_KEYS)
     journal_title = first(
@@ -248,7 +256,8 @@ def parse_html_metadata(html_text: str, source_url: str) -> HtmlMetadata:
         "doi": doi,
         "keywords": list(dict.fromkeys(keywords)),
         "raw_meta": parser.meta,
-        "lookup_title": lookup_hints.get("lookup_title"),
+        "lookup_title": lookup_title,
+        **({"lookup_challenge_title": True} if challenge_title else {}),
         "lookup_redirect_url": lookup_hints.get("redirect_url"),
         "identifier_value": lookup_hints.get("identifier_value"),
     }

@@ -120,7 +120,12 @@ def _safe_trace_target(value: str | None) -> tuple[str | None, str | None]:
 
 
 def provider_stage_event(
-    stage: str, provider_name: str, outcome: str = "info", *, route: str | None = None
+    stage: str,
+    provider_name: str,
+    outcome: str = "info",
+    *,
+    route: str | None = None,
+    duration_ms: float | None = None,
 ) -> TraceEvent:
     component = normalize_text(provider_name).lower()
     if route:
@@ -129,14 +134,22 @@ def provider_stage_event(
         stage,
         component,
         outcome,
-        context=TraceContext(provider=provider_name, route=route),
+        context=TraceContext(
+            provider=provider_name, route=route, duration_ms=duration_ms
+        ),
     )
 
 
 def fulltext_event(
-    provider_name: str, outcome: str = "info", *, route: str | None = None
+    provider_name: str,
+    outcome: str = "info",
+    *,
+    route: str | None = None,
+    duration_ms: float | None = None,
 ) -> TraceEvent:
-    return provider_stage_event("fulltext", provider_name, outcome, route=route)
+    return provider_stage_event(
+        "fulltext", provider_name, outcome, route=route, duration_ms=duration_ms
+    )
 
 
 def download_event(component: str, outcome: str = "info") -> TraceEvent:

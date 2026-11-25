@@ -6,6 +6,7 @@ import socket
 import ssl
 from collections.abc import Iterator, Mapping
 from enum import StrEnum
+from http.client import HTTPException, IncompleteRead, RemoteDisconnected
 
 import urllib3
 
@@ -15,6 +16,7 @@ from .cache import redact_url_for_cache
 class RequestErrorCategory(StrEnum):
     """Stable transport-level category for network failures."""
 
+    UNKNOWN = "unknown"
     NETWORK_ERROR = "network_error"
     TIMEOUT = "timeout"
     TLS_ERROR = "tls_error"
@@ -42,6 +44,7 @@ class RequestFailure(Exception):
         retry_after_seconds: int | None = None,
         error_category: RequestErrorCategory | str | None = None,
         reason_code: str | None = None,
+        retryable: bool | None = None,
     ) -> None:
         super().__init__(message)
         self.status_code = status_code
@@ -50,6 +53,7 @@ class RequestFailure(Exception):
         self.url = url
         self.retry_after_seconds = retry_after_seconds
         self.error_category = _normalize_request_error_category(error_category)
+        self.retryable = retryable
         # Additive detail for callers that expose machine-readable diagnostics.
         # General HTTP consumers can continue to use ``error_category``.
         self.reason_code = str(reason_code or "").strip()
@@ -123,21 +127,53 @@ def classify_network_error(exc: Exception) -> RequestErrorCategory:
     if any(isinstance(item, socket.gaierror) for item in causes):
         return RequestErrorCategory.DNS_ERROR
 
-    text = " ".join(str(item).lower() for item in causes if str(item).strip())
-    if "connection reset" in text:
+    if any(
+        isinstance(item, ConnectionResetError)
+        and not isinstance(item, RemoteDisconnected)
+        for item in causes
+    ):
         return RequestErrorCategory.CONNECTION_RESET
     if any(
-        token in text
-        for token in (
-            "remote end closed",
-            "connection aborted",
-            "connection broken",
-            "eof",
+        isinstance(
+            item,
+            IncompleteRead
+            | RemoteDisconnected
+            | urllib3.exceptions.IncompleteRead
+            | EOFError,
         )
+        for item in causes
     ):
         return RequestErrorCategory.CONNECTION_CLOSED
+
+    # urllib3 uses a generic "Connection aborted" wrapper even for malformed
+    # status lines and invalid URLs. A concrete HTTP parsing error takes precedence.
+    if any(
+        isinstance(item, HTTPException | urllib3.exceptions.LocationValueError)
+        for item in causes
+    ):
+        return RequestErrorCategory.UNKNOWN
+
+    text = " ".join(str(item).lower() for item in causes if str(item).strip())
+    if "connection reset" in text or "connectionreseterror" in text:
+        return RequestErrorCategory.CONNECTION_RESET
+    for item in causes:
+        if isinstance(item, urllib3.exceptions.ProtocolError) and any(
+            token in str(item).lower()
+            for token in (
+                "ended prematurely",
+                "premature eof",
+                "unexpected eof",
+                "incompleteread",
+                "connection broken",
+                "connection aborted",
+                "remote end closed",
+            )
+        ):
+            return RequestErrorCategory.CONNECTION_CLOSED
     if "temporary failure" in text and "name resolution" in text:
         return RequestErrorCategory.DNS_ERROR
+    if any(isinstance(item, urllib3.exceptions.ProtocolError) for item in causes):
+        return RequestErrorCategory.UNKNOWN
     return RequestErrorCategory.NETWORK_ERROR
 
 

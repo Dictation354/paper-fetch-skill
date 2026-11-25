@@ -2,7 +2,7 @@
 
 from __future__ import annotations
 
-from dataclasses import dataclass
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from ..failure import FailureDiagnostics
@@ -96,6 +96,7 @@ class RouteProbeResult:
     provider: str
     state: str
     metadata: ProviderMetadata | None = None
+    failure: ProviderFailure | None = None
 
 
 @dataclass(frozen=True)
@@ -107,8 +108,10 @@ class HasFulltextProbeResult:
     evidence: list[str]
     warnings: list[str]
 
+    probe_failures: list[FailureDiagnostics] = field(default_factory=list)
+
     def to_dict(self) -> dict[str, Any]:
-        return {
+        result: dict[str, Any] = {
             "query": self.query,
             "doi": self.doi,
             "title": self.title,
@@ -116,6 +119,18 @@ class HasFulltextProbeResult:
             "evidence": list(self.evidence),
             "warnings": list(self.warnings),
         }
+        if self.probe_failures:
+            result["probe_failures"] = [
+                {
+                    "provider": failure.provider,
+                    "stage": failure.stage,
+                    "http_status": failure.http_status,
+                    "error_category": failure.error_category,
+                    "retryable": failure.retryable,
+                }
+                for failure in self.probe_failures
+            ]
+        return result
 
 
 @dataclass(frozen=True)

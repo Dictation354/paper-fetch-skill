@@ -199,26 +199,31 @@ def _xml_image_assets(
 
     assets = []
     parents = {child: parent for parent in root.iter() for child in parent}
+
+    def image_kind(node):
+        kind = "figure"
+        while (node := parents.get(node)) is not None:
+            name = local_name(node)
+            if name in {"disp-formula", "inline-formula"}:
+                return "formula"
+            if name in {"table-wrap", "table"}:
+                kind = "table"
+        return kind
+
     for node in root.iter():
         name = local_name(node)
         if name == "fig":
             entry = _figure_entry(node, source_url)
             if entry:
+                entry["kind"] = image_kind(node)
                 assets.append(entry)
         elif name in {"graphic", "inline-graphic"}:
             href = node.get("{http://www.w3.org/1999/xlink}href") or node.get("href")
             if not href:
                 continue
-            ancestor = parents.get(node)
-            formula = False
-            while ancestor is not None:
-                if local_name(ancestor) in {"disp-formula", "inline-formula"}:
-                    formula = True
-                    break
-                ancestor = parents.get(ancestor)
             assets.append(
                 {
-                    "kind": "formula" if formula else "figure",
+                    "kind": image_kind(node),
                     "heading": node.get("id") or name,
                     "url": urljoin(source_url, href),
                     "section": "body",
@@ -549,12 +554,12 @@ def fetch_selected_assets(
 ) -> dict[str, Any]:
     if (
         sum(value is not None for value in (asset_ids, urls, kind)) != 1
-        or kind not in {None, "formula"}
+        or (kind is not None and kind not in IMAGE_KINDS)
         or asset_ids == []
         or urls == []
     ):
         raise ValueError(
-            "Choose exactly one nonempty selector: asset_ids, urls, or kind='formula'."
+            "Choose exactly one nonempty selector: asset_ids, urls, or kind (formula, figure, table)."
         )
     owns_runtime = runtime is None
     runtime = runtime or RuntimeContext(artifact_mode="none")
@@ -649,7 +654,10 @@ def fetch_selected_assets(
                             }
                         )
                         continue
+                    positions = asset.get("body_positions")
                     asset.update(successes[0])
+                    if positions is not None:
+                        asset["body_positions"] = positions
                     local = Path(asset["path"]).resolve()
                 path = local.resolve()
                 if output_dir:

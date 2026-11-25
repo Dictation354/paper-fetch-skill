@@ -49,7 +49,7 @@ class ImageTransport(RecordedStreamTransport):
             return {"status_code": 404, "url": url, "headers": {}, "body": b""}
         assert url in {
             SOURCE.replace("/article", name)
-            for name in ("/math-1.gif", "/math-2.gif", "/fig1.png")
+            for name in ("/math-1.gif", "/math-2.gif", "/fig1.png", "/table.png")
         }, url
         return {
             "status_code": 200,

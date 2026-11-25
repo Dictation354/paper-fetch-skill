@@ -9,14 +9,14 @@ from dataclasses import replace
 from time import perf_counter
 from typing import Any, cast
 
-from ..http import PDF_MIME_TYPE
+from ..http import PDF_MIME_TYPE, RequestFailure
 from ..metadata.types import (
     ProviderMetadata,
 )
 from ..metadata.types import (
     merge_primary_secondary_metadata as merge_metadata_layers_primary_secondary,
 )
-from ..providers.base import ProviderFailure
+from ..providers.base import ProviderFailure, map_request_failure
 from ..providers.protocols import MetadataProvider
 from ..rsc_url import is_rsc_journal_url
 from ..runtime import RuntimeContext
@@ -29,6 +29,7 @@ from ..utils import (
 )
 from .routing import (
     build_official_provider_candidates,
+    classify_probe_state,
     crossref_allowed_as_source,
     fetch_crossref_metadata_with_session_cache,
     get_cached_landing_page_citation_pdf_probe,
@@ -38,7 +39,7 @@ from .routing import (
     select_route_probe,
 )
 from .shared import events_for_failure
-from .types import FetchStrategy
+from .types import FetchStrategy, RouteProbeResult
 
 
 def merge_primary_secondary_metadata(
@@ -152,7 +153,7 @@ def fetch_metadata_for_resolved_query(
     crossref_result: ProviderMetadata | None = None
     crossref_failure: ProviderFailure | None = None
     crossref_duration_ms: float | None = None
-    initial_probe_results: dict[str, Any] = {}
+    initial_probe_results: dict[str, RouteProbeResult] = {}
 
     def fetch_crossref_metadata() -> ProviderMetadata | None:
         nonlocal crossref_duration_ms
@@ -163,14 +164,38 @@ def fetch_metadata_for_resolved_query(
                 crossref_client,
                 context=context,
             )
+        except RequestFailure as exc:
+            raise map_request_failure(
+                exc, provider="crossref", stage="metadata"
+            ) from exc
         finally:
             crossref_duration_ms = round((perf_counter() - started) * 1000, 3)
 
-    def run_probe(candidate_provider: str):
+    def run_probe(
+        candidate_provider: str,
+    ) -> tuple[RouteProbeResult, TraceEvent | None]:
         assert resolved.doi is not None
-        return probe_official_provider(
-            candidate_provider, doi=resolved.doi, clients=clients, context=context
-        )
+        try:
+            probe = probe_official_provider(
+                candidate_provider, doi=resolved.doi, clients=clients, context=context
+            )
+            return probe, (
+                events_for_failure("metadata", candidate_provider, probe.failure)
+                if probe.failure is not None
+                else None
+            )
+        except (ProviderFailure, RequestFailure) as exc:
+            failure = (
+                map_request_failure(exc, provider=candidate_provider, stage="metadata")
+                if isinstance(exc, RequestFailure)
+                else exc
+            )
+            return (
+                RouteProbeResult(
+                    provider=candidate_provider, state=classify_probe_state(failure)
+                ),
+                events_for_failure("metadata", candidate_provider, failure),
+            )
 
     if resolved.doi and (
         isinstance(crossref_client, MetadataProvider) or initial_probe_candidates
@@ -196,7 +221,10 @@ def fetch_metadata_for_resolved_query(
                 except ProviderFailure as exc:
                     crossref_failure = exc
             for candidate_provider, future in probe_futures.items():
-                initial_probe_results[candidate_provider] = future.result()
+                initial_probe, failure_event = future.result()
+                initial_probe_results[candidate_provider] = initial_probe
+                if failure_event is not None:
+                    events.append(failure_event)
 
     if crossref_result:
         routing_metadata = crossref_result
@@ -232,12 +260,9 @@ def fetch_metadata_for_resolved_query(
         ):
             probe = initial_probe_results.get(candidate_provider)
             if probe is None:
-                probe = probe_official_provider(
-                    candidate_provider,
-                    doi=resolved.doi,
-                    clients=clients,
-                    context=context,
-                )
+                probe, failure_event = run_probe(candidate_provider)
+                if failure_event is not None:
+                    events.append(failure_event)
             probes.append(probe)
             events.append(route_event(f"probe_{candidate_provider}", probe.state))
             if probe.state == "positive":
@@ -272,8 +297,13 @@ def fetch_metadata_for_resolved_query(
                 ),
             )
             events.append(metadata_event(provider_name, "ok"))
-        except ProviderFailure as exc:
-            events.append(events_for_failure("metadata", provider_name, exc))
+        except (ProviderFailure, RequestFailure) as exc:
+            failure = (
+                map_request_failure(exc, provider=provider_name, stage="metadata")
+                if isinstance(exc, RequestFailure)
+                else exc
+            )
+            events.append(events_for_failure("metadata", provider_name, failure))
 
     if official_metadata or crossref_metadata:
         if (

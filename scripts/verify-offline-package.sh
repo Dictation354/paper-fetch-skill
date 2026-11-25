@@ -553,6 +553,8 @@ if [ "$TARGET_PLATFORM" = "macos" ]; then
     || die "Quarantine rejection wrote the install directory."
   [ ! -d "$FAKE_HOME/.agents/skills/paper-fetch-skill" ] \
     || die "Quarantine rejection wrote a Codex skill."
+  [ ! -e "$FAKE_HOME/.local/bin/paper-fetch" ] && [ ! -L "$FAKE_HOME/.local/bin/paper-fetch" ] \
+    || die "Quarantine rejection wrote a user launcher."
   ! grep -F -q "# BEGIN paper-fetch offline managed" "$SHELL_STARTUP_EDIT_FILE" \
     || die "Quarantine rejection modified the Zsh startup target."
   ! grep -F -q "# BEGIN paper-fetch offline managed" "$USER_CONFIG_FILE" \
@@ -617,6 +619,18 @@ if grep -E -q '^[[:space:]]*PAPER_FETCH_BROWSER_USER_AGENT=' "$INSTALL_ROOT/offl
 fi
 
 log "Verifying user shell and skill integration"
+USER_LAUNCHER="$FAKE_HOME/.local/bin/paper-fetch"
+[ -f "$USER_LAUNCHER" ] && [ ! -L "$USER_LAUNCHER" ] && [ -x "$USER_LAUNCHER" ] \
+  || die "Installer did not create a regular executable user launcher."
+awk '
+  NR == 1 && $0 != "#!/usr/bin/env bash" { exit 1 }
+  NR == 2 && $0 != "# BEGIN paper-fetch offline managed" { exit 1 }
+  NR == 3 && $0 != "# paper-fetch-user-launcher-v1" { exit 1 }
+  NR == 4 && $0 !~ /^exec "\/.*\/bin\/paper-fetch" "\$@"$/ { exit 1 }
+  NR == 5 && $0 != "# END paper-fetch offline managed" { exit 1 }
+  END { if (NR != 5) exit 1 }
+' "$USER_LAUNCHER" || die "Installer generated an invalid user launcher."
+env PATH="/usr/bin:/bin" "$USER_LAUNCHER" --help >/dev/null
 [ ! -L "$SHELL_STARTUP_FILE" ] || [ "$TARGET_PLATFORM" = "macos" ] \
   || die "Unexpected shell startup symlink on non-macOS verifier."
 if [ "$TARGET_PLATFORM" = "macos" ]; then
@@ -750,6 +764,8 @@ printf '%s\n' legacy > "$FAKE_HOME/.codex/skills/paper-fetch-skill/SKILL.md"
 log "Verifying user-level uninstall"
 : > "$FAKE_CLI_LOG"
 PATH="$GUARD_DIR:$PATH" "$INSTALL_ROOT/install-offline.sh" --install-dir "$INSTALL_ROOT" --uninstall
+[ ! -e "$USER_LAUNCHER" ] && [ ! -L "$USER_LAUNCHER" ] \
+  || die "Uninstall left the managed user launcher behind."
 [ -f "$SHELL_STARTUP_FILE" ] || die "Shell startup file was removed."
 if grep -F -q "# BEGIN paper-fetch offline managed" "$SHELL_STARTUP_FILE"; then
   die "Managed shell block was not removed from $SHELL_STARTUP_FILE."

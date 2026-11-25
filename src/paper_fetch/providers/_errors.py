@@ -271,6 +271,26 @@ def summarize_capability_status(
 def map_request_failure(
     exc: RequestFailure,
     *,
+    provider: str | None = None,
+    stage: str | None = None,
+    no_result_status_codes: set[int] | frozenset[int] | None = None,
+    no_result_messages: Mapping[int, str] | None = None,
+) -> ProviderFailure:
+    failure = _map_request_failure(
+        exc,
+        no_result_status_codes=no_result_status_codes,
+        no_result_messages=no_result_messages,
+    )
+    return (
+        failure.with_updates(provider=provider, stage=stage)
+        if provider or stage
+        else failure
+    )
+
+
+def _map_request_failure(
+    exc: RequestFailure,
+    *,
     no_result_status_codes: set[int] | frozenset[int] | None = None,
     no_result_messages: Mapping[int, str] | None = None,
 ) -> ProviderFailure:
@@ -316,7 +336,7 @@ def map_request_failure(
             diagnostics=FailureDiagnostics(
                 http_status=status_code,
                 error_category=RATE_LIMITED,
-                retryable=True,
+                retryable=exc.retryable if exc.retryable is not None else True,
             ),
         )
     if status_code in {400, 406, 422}:
@@ -336,7 +356,9 @@ def map_request_failure(
             str(exc),
             diagnostics=FailureDiagnostics(
                 error_category=category,
-                retryable=category
+                retryable=exc.retryable
+                if exc.retryable is not None
+                else category
                 in {
                     "timeout",
                     "dns_error",
@@ -353,7 +375,7 @@ def map_request_failure(
             diagnostics=FailureDiagnostics(
                 http_status=status_code,
                 error_category=str(exc.error_category or "") or None,
-                retryable=True,
+                retryable=exc.retryable if exc.retryable is not None else True,
             ),
         )
     return ProviderFailure(

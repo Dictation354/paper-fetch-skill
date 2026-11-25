@@ -37,6 +37,7 @@ owned_staging_cleanup = true
 atomic_release_publish = true
 quarantine_fail_closed = true
 exact_payload_inventory = true
+# User launchers require the exact managed format and reject symlinked paths under ~/.local.
 reject_symlinks = true
 validated_purge_paths = true
 

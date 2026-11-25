@@ -111,9 +111,10 @@ class BatchFetchCommand:
 class LookupCommand:
     """CLI request to look up a retained accepted receipt by DOI."""
 
-    doi: str
-    output_dirs: tuple[Path, ...]
+    doi: str | None = None
+    output_dirs: tuple[Path, ...] = ()
     include_legacy: bool = False
+    queries: tuple[tuple[int, str], ...] = ()
 
 
 @dataclass(frozen=True, slots=True)
@@ -123,6 +124,7 @@ class ResolutionCommand:
     mode: ResolutionMode
     queries: tuple[str, ...]
     batch_concurrency: int = 4
+    progress: ProgressMode = "none"
 
 
 @dataclass(frozen=True, slots=True)
@@ -133,7 +135,7 @@ class FetchAssetsCommand:
     manifest: Path | None = None
     asset_ids: tuple[str, ...] | None = None
     urls: tuple[str, ...] | None = None
-    kind: Literal["formula"] | None = None
+    kind: Literal["formula", "figure", "table"] | None = None
     output_dir: str | None = None
     compact: bool = False
     overwrite: bool = False

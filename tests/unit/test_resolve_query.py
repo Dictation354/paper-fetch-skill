@@ -1,11 +1,258 @@
 from __future__ import annotations
 
 import json
+import time
 import unittest
 
+import pytest
+
+from paper_fetch.extraction.html._metadata import parse_html_metadata
+from paper_fetch.http import RequestCancelledError, RequestFailure
+from paper_fetch.providers.base import ProviderFailure
 from paper_fetch.resolve import query as resolve_query
+from paper_fetch.runtime import RuntimeContext
+from tests.golden_criteria import golden_criteria_scenario_asset
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.transport import RecordedStreamTransport
+
+
+@pytest.mark.parametrize(
+    ("html_title", "title", "interstitial"),
+    [
+        ("Redirecting to ScienceDirect...", "Stub Article Title", True),
+        ("Redirecting to ScienceDirect", "Stub Article Title", True),
+        ("Redirecting...", "Stub Article Title", True),
+        (
+            "Redirecting T Cells to Solid Tumors",
+            "Redirecting T Cells to Solid Tumors",
+            False,
+        ),
+    ],
+)
+def test_html_metadata_distinguishes_redirect_interstitials_from_article_titles(
+    html_title, title, interstitial
+):
+    html = golden_criteria_scenario_asset(
+        "generic_metadata_boundaries", "redirect_stub.html"
+    ).read_text(encoding="utf-8")
+    metadata = parse_html_metadata(
+        html.replace("<title>Redirecting</title>", f"<title>{html_title}</title>"),
+        "https://linkinghub.elsevier.com/retrieve/pii/S0034425725000525",
+    )
+    assert metadata["lookup_title"] == "Stub Article Title"
+    assert metadata["title"] == title
+    assert bool(metadata.get("lookup_challenge_title")) is interstitial
+
+
+@pytest.mark.parametrize(
+    ("url", "article_id", "database", "converter_error"),
+    [
+        ("https://pmc.ncbi.nlm.nih.gov/articles/pmc123/", "PMC123", "pmc", True),
+        ("https://www.ncbi.nlm.nih.gov/pmc/articles/PMC123", "PMC123", "pmc", False),
+        (
+            "https://pmc.ncbi.nlm.nih.gov/articles/PMC123/pdf/test.pdf",
+            "PMC123",
+            "pmc",
+            False,
+        ),
+        ("https://pubmed.ncbi.nlm.nih.gov/123/?query=1", "123", "pubmed", False),
+    ],
+)
+def test_ncbi_url_uses_official_ids_then_crossref(
+    url, article_id, database, converter_error
+):
+    converter = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
+    summary = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    crossref = "https://api.crossref.org/works/10.1016%2Fexample"
+    publisher = "https://www.sciencedirect.com/science/article/pii/example"
+    doi = "10.1016/EXAMPLE"
+
+    def response(endpoint, data):
+        return {"url": endpoint, "body": json.dumps(data).encode()}
+
+    responses = {
+        ("GET", converter): response(
+            converter,
+            {
+                "records": [
+                    {"doi": "10.1000/unrelated", "pmcid": "PMC999"},
+                    {
+                        "doi": "10.1000/error",
+                        "requested-id": article_id,
+                        "status": "error",
+                    },
+                    {"doi": doi, "requested-id": article_id.lower()},
+                ]
+            },
+        ),
+        ("GET", crossref): response(
+            crossref,
+            {
+                "message": {
+                    "DOI": doi,
+                    "title": ["Example article"],
+                    "resource": {"primary": {"URL": publisher}},
+                }
+            },
+        ),
+    }
+    if converter_error or database == "pubmed":
+        responses["GET", converter] = (
+            RequestFailure(
+                None, "Connection closed", error_category="connection_closed"
+            )
+            if converter_error
+            else response(converter, {"records": [{}]})
+        )
+        responses["GET", summary] = response(
+            summary,
+            {
+                "result": {
+                    "123": {
+                        "articleids": [
+                            {"idtype": "pmid", "value": "123"},
+                            {"idtype": "doi", "value": doi},
+                        ]
+                    },
+                }
+            },
+        )
+    transport = RecordingTransport(responses)
+    result = resolve_query.resolve_query(
+        url, transport=transport, env={"CROSSREF_MAILTO": "reader@example.test"}
+    )
+    assert (
+        result.query_kind,
+        result.doi,
+        result.title,
+        result.landing_url,
+        result.provider_hint,
+        result.confidence,
+    ) == ("url", doi.lower(), "Example article", publisher, "elsevier", 1.0)
+    assert transport.calls[0]["query"] == {
+        "ids": article_id,
+        "format": "json",
+        "tool": "paper-fetch",
+    }
+    assert transport.calls[0]["retry_on_transient"] is True
+    if ("GET", summary) in responses:
+        assert transport.calls[1]["query"] == {
+            "db": database,
+            "id": "123",
+            "retmode": "json",
+            "tool": "paper-fetch",
+        }
+    assert transport.calls[-1]["url"] == crossref
+    assert all(call["timeout"] == 15 for call in transport.calls)
+    assert "reader@example.test" not in str([call["query"] for call in transport.calls])
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Please wait while we check your browser",
+        "One moment while we are preparing your request",
+        "Verifying you because attention required",
+        "Checking your connection in a security check",
+        "Bot check before you may continue browsing",
+    ],
+)
+def test_challenge_title_does_not_trigger_bibliographic_search(title):
+    url = "https://pubmed.ncbi.nlm.nih.gov/123/"
+    converter = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
+    summary = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
+    transport = RecordingTransport(
+        {
+            ("GET", converter): {"url": converter, "body": b'{"records": []}'},
+            ("GET", summary): {"url": summary, "body": b'{"result": {}}'},
+            ("GET", url): {
+                "url": url,
+                "status_code": 200,
+                "headers": {"content-type": "text/html"},
+                "body": f"<html><title>{title}</title></html>".encode(),
+            },
+        }
+    )
+    result = resolve_query.resolve_query(url, transport=transport, env={})
+    assert result.doi is None and result.title is None and result.landing_url is None
+    assert [call["url"] for call in transport.calls] == [converter, summary, url]
+
+
+@pytest.mark.parametrize(
+    "url",
+    [
+        "https://pubmed.ncbi.nlm.nih.gov/123/not-a-page",
+        "https://pmc.ncbi.nlm.nih.gov/articles/PMC123/figures/",
+        "https://www.ncbi.nlm.nih.gov/pmc/articles/PMC123/pdf/path/file.pdf",
+        "https://pmc.ncbi.nlm.nih.gov.evil.test/articles/PMC123/",
+    ],
+)
+def test_ncbi_rejects_non_article_id_paths(url):
+    assert resolve_query._ncbi_article_id(url) is None
+
+
+@pytest.mark.parametrize("stage", ["initial", "esummary", "crossref"])
+@pytest.mark.parametrize("cancelled", [True, False])
+def test_ncbi_context_is_checked_before_each_network_operation(stage, cancelled):
+    url = "https://pubmed.ncbi.nlm.nih.gov/123/"
+    converter = resolve_query._PMC_ID_CONVERTER
+    calls = []
+    state = {"cancelled": False}
+
+    def stop():
+        if cancelled:
+            state["cancelled"] = True
+        else:
+            context.deadline_monotonic = time.monotonic() - 1
+
+    class InjectedTransport:
+        def request(self, method, endpoint, **kwargs):
+            calls.append(endpoint)
+            assert endpoint == converter
+            assert 0 < kwargs["timeout"] <= 10
+            stop()
+            records = (
+                [{"pmid": "123", "doi": "10.1016/example"}]
+                if stage == "crossref"
+                else []
+            )
+            return {"url": endpoint, "body": json.dumps({"records": records}).encode()}
+
+    transport = InjectedTransport()
+    with RuntimeContext(
+        env={}, transport=transport, cancel_check=lambda: state["cancelled"]
+    ) as context:
+        context.initialize_deadline(10)
+        if stage == "initial":
+            stop()
+        with pytest.raises(RequestCancelledError if cancelled else ProviderFailure):
+            resolve_query.resolve_query(
+                url, transport=transport, context=context, env={}
+            )
+    assert calls == ([] if stage == "initial" else [converter])
+
+
+@pytest.mark.parametrize(
+    "title",
+    [
+        "Checking Your Privilege: A Survey of Discourse",
+        "Securing Your Browser Against Timing Attacks",
+        "Cookie Preferences and Privacy Expectations",
+    ],
+)
+def test_real_titles_with_challenge_words_are_kept(title):
+    url = "https://example.test/article"
+    transport = RecordingTransport(
+        {
+            ("GET", url): {
+                "url": url,
+                "status_code": 200,
+                "body": f"<title>{title}</title><meta name='citation_doi' content='10.1016/example'>".encode(),
+            },
+        }
+    )
+    result = resolve_query.resolve_query(url, transport=transport, env={})
+    assert result.title == title and result.landing_url == url
 
 
 class ResolveQueryTests(unittest.TestCase):
@@ -527,7 +774,7 @@ class ResolveQueryTests(unittest.TestCase):
                     "headers": {"content-type": "text/html"},
                     "body": (
                         b"<html><head>"
-                        b"<title>Redirecting</title>"
+                        b"<title>Redirecting to ScienceDirect...</title>"
                         b'<meta http-equiv="refresh" content="2; url=\'/retrieve/articleSelectSinglePerm\'" />'
                         b"</head><body>"
                         b'<input type="hidden" name="redirectURL" value="https%3A%2F%2Fwww.sciencedirect.com%2Fscience%2Farticle%2Fpii%2FS0034425725000525" />'

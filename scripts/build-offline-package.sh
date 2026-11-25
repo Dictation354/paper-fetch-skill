@@ -591,8 +591,13 @@ EOF
 set -euo pipefail
 
 INSTALL_ROOT="$(cd "$(dirname "${BASH_SOURCE[0]}")/.." && pwd)"
+export PATH="$INSTALL_ROOT/bin:$INSTALL_ROOT/formula-tools/bin:$INSTALL_ROOT/image-tools/bin${PATH:+:$PATH}"
 if [ -z "${PAPER_FETCH_ENV_FILE:-}" ]; then
-  export PAPER_FETCH_ENV_FILE="$INSTALL_ROOT/offline.env"
+  default_env_file="$INSTALL_ROOT/runtime/default-env-file"
+  if [ -f "$default_env_file" ] && [ ! -L "$default_env_file" ]; then
+    IFS= read -r PAPER_FETCH_ENV_FILE < "$default_env_file" || true
+  fi
+  export PAPER_FETCH_ENV_FILE="${PAPER_FETCH_ENV_FILE:-$INSTALL_ROOT/offline.env}"
 fi
 exec "$INSTALL_ROOT/runtime/paper-fetch-python" -X utf8 -m paper_fetch.cli "$@"
 EOF

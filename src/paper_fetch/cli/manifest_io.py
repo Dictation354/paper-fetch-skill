@@ -6,7 +6,7 @@ import json
 import os
 import tempfile
 from collections.abc import Callable, Mapping, Sequence
-from dataclasses import dataclass
+from dataclasses import asdict, dataclass
 from datetime import datetime
 from hashlib import sha256
 from pathlib import Path
@@ -262,7 +262,7 @@ def _error_payload(error: Exception) -> dict[str, Any]:
             "retry_after_seconds": error.retry_after_seconds,
             "details": error.diagnostics.details,
             "warnings": error.warnings,
-            "events": error.trace,
+            "events": [asdict(event) for event in error.trace],
         }
     if isinstance(error, ProviderFailure):
         return {
@@ -277,7 +277,7 @@ def _error_payload(error: Exception) -> dict[str, Any]:
             "retry_after_seconds": error.retry_after_seconds,
             "details": error.diagnostics.details,
             "warnings": error.warnings,
-            "events": error.trace,
+            "events": [asdict(event) for event in error.trace],
         }
     return {"status": ERROR, "reason": str(error)}
 

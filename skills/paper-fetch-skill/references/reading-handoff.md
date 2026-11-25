@@ -4,7 +4,7 @@
 
 优先打开同一任务交接记录中的本地图片。按 `image_index_path` 找到缺失图片的 asset ID，再用原 manifest 定向补取。
 
-Wiley HTML 公式图的 `body_positions` 指向落盘正文中图片标记的起点，行、列均从 1 开始。根据已读的行范围和行内位置筛选相关公式，同一个 `asset_id` 在范围内多次出现时只需传一次。
+有 `body_positions` 的公式图、插图和表格图可按位置筛选。行、列均从 1 开始，指向落盘正文中图片标记的起点。同一个 `asset_id` 在范围内多次出现时只需传一次。
 
 ```bash
 paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json --asset-id img_first --asset-id img_second
@@ -37,3 +37,5 @@ PYTHON
 ```
 
 Windows 可将同一段 Python 保存为脚本，再用 `& 'C:\actual\install\runtime\python.exe' script.py` 执行。打开生成的 Markdown，按 reader 的实际返回范围续读；不对转换结果清洗或修复。
+
+需要在离线安装的私有 Python（`runtime/paper-fetch-python`）中渲染或裁剪本地 PDF 页面时，使用随包提供的 PyMuPDF（`import pymupdf`），包内没有 PIL/Pillow。

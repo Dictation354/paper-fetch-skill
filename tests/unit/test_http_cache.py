@@ -10,6 +10,7 @@ import threading
 import unittest
 import urllib.error
 import urllib.parse
+from http.client import BadStatusLine, IncompleteRead, RemoteDisconnected
 from unittest import mock
 
 import urllib3
@@ -26,6 +27,176 @@ def lower_header_map(headers: dict[str, str]) -> dict[str, str]:
 
 
 class HttpTransportCacheTests(unittest.TestCase):
+    def test_midstream_incomplete_read_retries_and_reports_exhaustion(self):
+        transport = http_module.HttpTransport()
+        self.addCleanup(transport.close)
+        url = "https://example.test/incomplete"
+
+        def incomplete():
+            response = FakeHTTPResponse(b"", url)
+            response.read = mock.Mock(side_effect=IncompleteRead(b"partial", 20))
+            return response
+
+        broken = incomplete()
+        with mock.patch.object(
+            transport,
+            "_perform_request",
+            side_effect=[broken, FakeHTTPResponse(b"complete", url)],
+        ) as dispatch:
+            response = transport.request(
+                "GET",
+                url,
+                retry_on_transient=True,
+                request_policy=http_module.HttpRequestPolicy(
+                    transient_backoff_base_seconds=0
+                ),
+            )
+        self.assertEqual(response["body"], b"complete")
+        self.assertTrue(broken.closed and broken.released)
+        self.assertEqual(dispatch.call_count, 2)
+
+        with (
+            mock.patch.object(
+                transport,
+                "_perform_request",
+                side_effect=lambda *a, **kw: incomplete(),
+            ) as dispatch,
+            self.assertRaises(http_module.RequestFailure) as caught,
+        ):
+            transport.request(
+                "GET",
+                url + "-exhausted",
+                retry_on_transient=True,
+                transient_retries=1,
+                request_policy=http_module.HttpRequestPolicy(
+                    transient_backoff_base_seconds=0
+                ),
+            )
+        self.assertEqual(dispatch.call_count, 2)
+        self.assertEqual(caught.exception.error_category, "connection_closed")
+        self.assertIs(caught.exception.retryable, True)
+
+    def test_incomplete_read_classification(self):
+        for error in (
+            IncompleteRead(b"data"),
+            urllib3.exceptions.IncompleteRead(4, 20),
+            RemoteDisconnected("Remote end closed the connection"),
+            urllib3.exceptions.ProtocolError("Response ended prematurely"),
+            urllib3.exceptions.ProtocolError("Read aborted", EOFError()),
+            urllib3.exceptions.ProtocolError(
+                "Connection broken", IncompleteRead(b"data")
+            ),
+        ):
+            with self.subTest(error=error):
+                self.assertEqual(
+                    http_module.classify_network_error(error), "connection_closed"
+                )
+                self.assertTrue(http_module.is_retryable_network_error(error))
+
+    def test_protocol_error_only_retries_confirmed_transient_failures(self):
+        transport = http_module.HttpTransport()
+        self.addCleanup(transport.close)
+        for error, category, retryable in (
+            (
+                urllib3.exceptions.ProtocolError(
+                    "Connection broken: ConnectionResetError(104)"
+                ),
+                "connection_reset",
+                True,
+            ),
+            (urllib3.exceptions.ProtocolError("aborted"), "unknown", False),
+            (BadStatusLine("NOT_HTTP"), "unknown", False),
+            (
+                urllib3.exceptions.ProtocolError(
+                    "Connection aborted.", BadStatusLine("NOT_HTTP")
+                ),
+                "unknown",
+                False,
+            ),
+            (
+                urllib3.exceptions.ProtocolError(
+                    urllib3.exceptions.LocationParseError("garbage")
+                ),
+                "unknown",
+                False,
+            ),
+        ):
+            with self.subTest(error=error):
+                self.assertEqual(http_module.classify_network_error(error), category)
+                self.assertEqual(
+                    http_module.is_retryable_network_error(error), retryable
+                )
+                with (
+                    mock.patch.object(
+                        transport, "_perform_request", side_effect=error
+                    ) as send,
+                    self.assertRaises(http_module.RequestFailure) as caught,
+                ):
+                    transport.request(
+                        "GET",
+                        "https://example.test/malformed",
+                        retry_on_transient=True,
+                        transient_retries=1,
+                        request_policy=http_module.HttpRequestPolicy(
+                            transient_backoff_base_seconds=0
+                        ),
+                    )
+                self.assertEqual(send.call_count, 2 if retryable else 1)
+                self.assertEqual(caught.exception.error_category, category)
+                self.assertIs(caught.exception.retryable, retryable)
+
+    def test_truncated_error_body_keeps_status_retry_after_and_method_policy(self):
+        transport = http_module.HttpTransport()
+        self.addCleanup(transport.close)
+        url = "https://example.test/truncated"
+        for method, status, expected_attempts, retryable in (
+            ("GET", 401, 1, False),
+            ("GET", 403, 1, False),
+            ("GET", 404, 1, False),
+            ("GET", 429, 2, True),
+            ("GET", 503, 2, True),
+            ("POST", 503, 1, False),
+            ("POST", 200, 1, False),
+        ):
+            with self.subTest(method=method, status=status):
+
+                def incomplete(*args, status=status, **kwargs):
+                    response = FakeHTTPResponse(
+                        b"", url, status=status, headers={"Retry-After": "0"}
+                    )
+                    response.read = mock.Mock(
+                        side_effect=urllib3.exceptions.ProtocolError(
+                            "Connection broken", IncompleteRead(b"partial")
+                        )
+                    )
+                    return response
+
+                with (
+                    mock.patch.object(
+                        transport, "_perform_request", side_effect=incomplete
+                    ) as send,
+                    self.assertRaises(http_module.RequestFailure) as caught,
+                ):
+                    transport.request(
+                        method,
+                        url,
+                        retry_on_rate_limit=True,
+                        rate_limit_retries=1,
+                        retry_on_transient=True,
+                        transient_retries=1,
+                        request_policy=http_module.HttpRequestPolicy(
+                            transient_backoff_base_seconds=0
+                        ),
+                    )
+                self.assertEqual(send.call_count, expected_attempts)
+                self.assertEqual(
+                    caught.exception.status_code, status if status >= 400 else None
+                )
+                self.assertEqual(
+                    caught.exception.retry_after_seconds, 0 if status >= 400 else None
+                )
+                self.assertIs(caught.exception.retryable, retryable)
+
     def test_discarded_response_is_closed_and_returned_to_the_pool(self) -> None:
         transport = http_module.HttpTransport()
         response = FakeHTTPResponse(b"redirect", "https://example.test/redirect")

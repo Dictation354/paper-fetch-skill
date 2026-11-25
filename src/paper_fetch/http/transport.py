@@ -4,18 +4,23 @@ from __future__ import annotations
 
 import contextlib
 import logging
+import socket
 import threading
 import time
 import urllib.error
 import urllib.parse
-from collections.abc import Callable, Mapping
+from collections.abc import Callable, Iterator, Mapping
 from contextlib import nullcontext
 from contextvars import ContextVar
 from dataclasses import dataclass, field
+from functools import partial
+from http.client import BadStatusLine, IncompleteRead, InvalidURL, RemoteDisconnected
+from http.client import HTTPResponse as StandardHTTPResponse
 from pathlib import Path
 from typing import Any, Literal, TypeVar
 
 import urllib3
+from urllib3.connection import HTTPConnection, HTTPSConnection
 
 from ..logging_utils import emit_structured_log
 from ..timeouts import (
@@ -23,6 +28,7 @@ from ..timeouts import (
 )
 from .body import (
     DEFAULT_MAX_RESPONSE_BYTES,
+    STREAM_CHUNK_BYTES,
     STREAM_PREVIEW_BYTES,
     read_bounded_response_body,
     read_raw_response_bytes,
@@ -42,11 +48,13 @@ from .errors import (
     RequestFailure,
     build_network_error_detail,
     classify_network_error,
+    is_retryable_network_error,
 )
 from .rate_limit import RequestRateGate
 from .retry import (
     DEFAULT_TRANSIENT_BACKOFF_BASE_SECONDS,
     DEFAULT_TRANSIENT_RETRIES,
+    RETRYABLE_METHODS,
     RetryDecision,
     RetryState,
     build_rate_limit_retry_policy,
@@ -56,6 +64,9 @@ from .url_policy import DEFAULT_SAFE_REMOTE_URL_POLICY, SafeRemoteUrlPolicy
 
 request_cancel_check: ContextVar[Callable[[], bool] | None] = ContextVar(
     "paper_fetch_request_cancel_check", default=None
+)
+request_timeout_limit: ContextVar[Callable[[], float] | None] = ContextVar(
+    "paper_fetch_request_timeout_limit", default=None
 )
 
 DEFAULT_TIMEOUT_SECONDS = 20
@@ -74,9 +85,78 @@ logger = logging.getLogger("paper_fetch.http")
 _T = TypeVar("_T")
 _NETWORK_RETRY_EXCEPTIONS = (
     urllib3.exceptions.HTTPError,
+    IncompleteRead,
+    RemoteDisconnected,
     urllib.error.URLError,
     TimeoutError,
+    OSError,
 )
+
+
+class _SocketReadGuard:
+    """Update the deadline for each receive inside a buffered read."""
+
+    def __init__(self, sock: socket.socket, before_read: Callable[[], None]) -> None:
+        self.sock = sock
+        self.before_read = before_read
+
+    def recv_into(self, buffer: Any) -> int:
+        self.before_read()
+        return self.sock.recv_into(buffer)
+
+    def __getattr__(self, name: str) -> Any:
+        return getattr(self.sock, name)
+
+
+@contextlib.contextmanager
+def _guard_socket_reads(
+    socket_io: Any, sock: socket.socket, before_read: Callable[[], None]
+) -> Iterator[None]:
+    socket_io._sock = _SocketReadGuard(sock, before_read)
+    try:
+        yield
+    finally:
+        socket_io._sock = sock
+
+
+class _DeadlineHTTPResponse(StandardHTTPResponse):
+    def begin(self) -> None:
+        raw = getattr(self.fp, "raw", None)
+        sock = getattr(raw, "_sock", None)
+        if (
+            request_timeout_limit.get() is None
+            or not isinstance(raw, socket.SocketIO)
+            or sock is None
+        ):
+            super().begin()
+            return
+        idle_timeout = sock.gettimeout()
+
+        def before_read() -> None:
+            remaining = HttpTransport._remaining_request_time()
+            sock.settimeout(
+                remaining if idle_timeout is None else min(idle_timeout, remaining)
+            )
+
+        # http.client can read multiple packets before completing one header line.
+        with _guard_socket_reads(raw, sock, before_read):
+            super().begin()
+
+
+class _DeadlineHTTPConnection(HTTPConnection):
+    response_class = _DeadlineHTTPResponse
+
+
+class _DeadlineHTTPSConnection(HTTPSConnection):
+    response_class = _DeadlineHTTPResponse
+
+
+class _DeadlineHTTPPool(urllib3.HTTPConnectionPool):
+    ConnectionCls = _DeadlineHTTPConnection
+
+
+class _DeadlineHTTPSPool(urllib3.HTTPSConnectionPool):
+    ConnectionCls = _DeadlineHTTPSConnection
 
 
 def _header_values(headers: Any, name: str) -> tuple[str, ...]:
@@ -170,7 +250,7 @@ class _EffectiveRequestConfig:
     headers: dict[str, str]
     prepared: _PreparedRequest
     policy: HttpRequestPolicy
-    timeout: int
+    timeout: float
     response_limit: int
     compressed_response_limit: int | None
     host_semaphore: threading.BoundedSemaphore | None
@@ -269,6 +349,10 @@ class HttpTransport:
             maxsize=self.pool_maxsize,
             block=True,
         )
+        self._pool.pool_classes_by_scheme = {
+            "http": _DeadlineHTTPPool,
+            "https": _DeadlineHTTPSPool,
+        }
 
     @property
     def _cache_body_bytes(self) -> int:
@@ -291,10 +375,27 @@ class HttpTransport:
         if self.cancelled:
             raise RequestCancelledError("Request cancelled.")
 
+    @staticmethod
+    def _remaining_request_time() -> float:
+        timeout_limit = request_timeout_limit.get()
+        remaining = timeout_limit() if timeout_limit is not None else float("inf")
+        if remaining <= 0:
+            raise RequestFailure(
+                None,
+                "Request deadline exceeded.",
+                error_category=RequestErrorCategory.TIMEOUT,
+                retryable=False,
+            )
+        return remaining
+
     def sleep_with_cancel(self, seconds: float) -> None:
         """Sleep for ``seconds`` while polling cooperative cancellation checks."""
 
-        if self._cancel_check is None and request_cancel_check.get() is None:
+        if (
+            self._cancel_check is None
+            and request_cancel_check.get() is None
+            and request_timeout_limit.get() is None
+        ):
             time.sleep(max(0.0, seconds))
             return
         deadline = time.monotonic() + max(0.0, seconds)
@@ -303,7 +404,7 @@ class HttpTransport:
             remaining = deadline - time.monotonic()
             if remaining <= 0:
                 return
-            time.sleep(min(remaining, 0.1))
+            time.sleep(min(remaining, self._remaining_request_time(), 0.1))
 
     def _cancellable_sleep(self, seconds: float) -> None:
         self.sleep_with_cancel(seconds)
@@ -352,7 +453,7 @@ class HttpTransport:
         url: str,
         headers: Mapping[str, str] | None,
         query: Mapping[str, str] | None = None,
-        timeout: int | None = None,
+        timeout: float | None = None,
         retry_on_rate_limit: bool | None = None,
         rate_limit_retries: int | None = None,
         max_rate_limit_wait_seconds: int | float | None = None,
@@ -404,7 +505,7 @@ class HttpTransport:
             headers=request_headers,
             prepared=prepared,
             policy=policy,
-            timeout=int(
+            timeout=(
                 timeout
                 if timeout is not None
                 else policy.timeout_seconds or DEFAULT_TIMEOUT_SECONDS
@@ -449,7 +550,7 @@ class HttpTransport:
         )
 
     def _execute_pool_request(
-        self, request: _PreparedRequest, *, timeout: int
+        self, request: _PreparedRequest, *, timeout: float
     ) -> _PoolCallResult:
         current_url = request.full_url
         current_method = request.method
@@ -482,17 +583,30 @@ class HttpTransport:
                 current_headers = dict(
                     request.request_headers_provider(current_url, current_headers)
                 )
+            timeout_limit = request_timeout_limit.get()
+            hop_timeout = min(timeout, self._remaining_request_time())
+            socket_timeout = urllib3.Timeout(
+                connect=hop_timeout,
+                read=hop_timeout,
+                total=hop_timeout if timeout_limit else None,
+            )
             connect_started_at = time.monotonic()
             try:
                 response = self._pool.request(
                     current_method,
                     current_url,
                     headers=current_headers,
-                    timeout=urllib3.Timeout(connect=timeout, read=timeout),
+                    timeout=socket_timeout,
                     preload_content=False,
                     retries=False,
                     redirect=False,
                 )
+                if timeout_limit is not None:
+                    try:
+                        self._remaining_request_time()
+                    except BaseException:
+                        self._close_response(response)
+                        raise
             finally:
                 timing_seconds["connect_to_headers"] += max(
                     0.0, time.monotonic() - connect_started_at
@@ -565,11 +679,11 @@ class HttpTransport:
             redirects_followed += 1
             current_url = target_url
 
-    def _perform_request(self, request: _PreparedRequest, *, timeout: int) -> Any:
+    def _perform_request(self, request: _PreparedRequest, *, timeout: float) -> Any:
         return self._execute_pool_request(request, timeout=timeout).response
 
     def _dispatch_pool_request(
-        self, request: _PreparedRequest, *, timeout: int
+        self, request: _PreparedRequest, *, timeout: float
     ) -> _PoolCallResult:
         if (
             "_perform_request" not in self.__dict__
@@ -613,6 +727,65 @@ class HttpTransport:
             release_conn = getattr(response, "release_conn", None)
             if callable(release_conn):
                 release_conn()
+
+    def _read_response_chunk(
+        self, response: Any, limit: int, *, timeout: float
+    ) -> bytes:
+        self._check_cancelled()
+        timeout_limit = request_timeout_limit.get()
+        if timeout_limit is not None:
+            self._remaining_request_time()
+        if isinstance(response, urllib3.HTTPResponse):
+            # read1 returns after one buffered read, even if only one byte arrived.
+            with self._bound_socket_reads(response, timeout=timeout):
+                chunk = response.read1(limit, decode_content=False) or b""
+        else:
+            chunk = read_raw_response_bytes(response, limit)
+        self._check_cancelled()
+        if timeout_limit is not None:
+            self._remaining_request_time()
+        return chunk
+
+    @contextlib.contextmanager
+    def _bound_socket_reads(
+        self, response: urllib3.HTTPResponse, *, timeout: float
+    ) -> Iterator[None]:
+        if request_timeout_limit.get() is None:
+            yield
+            return
+        # http.client can detach a connection-close socket after headers.
+        raw = getattr(getattr(response._fp, "fp", None), "raw", None)
+        sock = getattr(raw, "_sock", None) or getattr(response.connection, "sock", None)
+        if sock is None:
+            yield
+            return
+
+        def before_read() -> None:
+            self._check_cancelled()
+            sock.settimeout(min(timeout, self._remaining_request_time()))
+
+        before_read()
+        if not (response.chunked and isinstance(raw, socket.SocketIO)):
+            yield
+            return
+        # A chunk size or trailer line can need multiple receives before read1 returns.
+        with _guard_socket_reads(raw, sock, before_read):
+            yield
+
+    def _read_response_body(
+        self, response: Any, limit: int, *, timeout: float
+    ) -> bytes:
+        if not isinstance(response, urllib3.HTTPResponse):
+            return self._read_response_chunk(response, limit, timeout=timeout)
+        body = bytearray()
+        while len(body) < limit:
+            chunk = self._read_response_chunk(
+                response, min(STREAM_CHUNK_BYTES, limit - len(body)), timeout=timeout
+            )
+            if not chunk:
+                break
+            body.extend(chunk)
+        return bytes(body)
 
     def _apply_retry_decision(
         self,
@@ -710,6 +883,14 @@ class HttpTransport:
                             attempt=attempt,
                         )
                         continue
+                    except (BadStatusLine, InvalidURL) as exc:
+                        raise RequestFailure(
+                            None,
+                            f"Network error for {redacted_url}: {exc}",
+                            url=redacted_url,
+                            error_category=RequestErrorCategory.UNKNOWN,
+                            retryable=False,
+                        ) from exc
 
                     response = pool_result.response
                     response_url = pool_result.final_url or config.url
@@ -719,8 +900,8 @@ class HttpTransport:
                     }
                     status_code = int(response.status)
 
-                    try:
-                        if status_code >= 400:
+                    if status_code >= 400:
+                        try:
                             if error_body_mode == "bounded":
                                 error_body = read_bounded_response_body(
                                     response,
@@ -731,31 +912,42 @@ class HttpTransport:
                                     ),
                                     max_response_bytes=config.response_limit,
                                     max_compressed_response_bytes=config.compressed_response_limit,
+                                    read_body=partial(
+                                        self._read_response_body,
+                                        response,
+                                        timeout=config.timeout,
+                                    ),
                                 )
                                 self._release_response(response)
                             else:
-                                error_body = read_raw_response_bytes(
-                                    response, STREAM_PREVIEW_BYTES
-                                )[:STREAM_PREVIEW_BYTES]
+                                error_body = self._read_response_body(
+                                    response,
+                                    STREAM_PREVIEW_BYTES,
+                                    timeout=config.timeout,
+                                )
                                 self._close_response(response)
-                            response = None
-                            decision = retry_state.decide_http_failure(
-                                method=config.method,
-                                request_url=config.url,
-                                error_url=response_url,
-                                status_code=status_code,
-                                body=error_body,
-                                headers_map=headers_map,
-                                started_at=request_started_at,
-                                attempt=attempt,
-                            )
-                            self._apply_retry_decision(
-                                decision,
-                                cooldown_key=config.cooldown_key,
-                                host_semaphore=config.host_semaphore,
-                            )
-                            continue
+                        except _NETWORK_RETRY_EXCEPTIONS:
+                            error_body = b""
+                            self._close_response(response)
+                        response = None
+                        decision = retry_state.decide_http_failure(
+                            method=config.method,
+                            request_url=config.url,
+                            error_url=response_url,
+                            status_code=status_code,
+                            body=error_body,
+                            headers_map=headers_map,
+                            started_at=request_started_at,
+                            attempt=attempt,
+                        )
+                        self._apply_retry_decision(
+                            decision,
+                            cooldown_key=config.cooldown_key,
+                            host_semaphore=config.host_semaphore,
+                        )
+                        continue
 
+                    try:
                         result = on_success(
                             _AttemptSuccessContext(
                                 pool_result=pool_result,
@@ -770,11 +962,19 @@ class HttpTransport:
                         return result
                     except _NETWORK_RETRY_EXCEPTIONS as exc:
                         if not retry_body_errors:
+                            if isinstance(exc, OSError) and not isinstance(
+                                exc,
+                                ConnectionError | TimeoutError | urllib.error.URLError,
+                            ):
+                                # Streaming can also fail while writing the staging file.
+                                raise
                             raise RequestFailure(
                                 None,
                                 f"Network error for {redacted_url}: {build_network_error_detail(exc)}",
                                 url=redacted_url,
                                 error_category=classify_network_error(exc),
+                                retryable=config.method.upper() in RETRYABLE_METHODS
+                                and is_retryable_network_error(exc),
                             ) from exc
                         self._close_response(response)
                         response = None
@@ -800,7 +1000,7 @@ class HttpTransport:
         *,
         headers: Mapping[str, str] | None = None,
         query: Mapping[str, str] | None = None,
-        timeout: int | None = None,
+        timeout: float | None = None,
         retry_on_rate_limit: bool | None = None,
         rate_limit_retries: int | None = None,
         max_rate_limit_wait_seconds: int | None = None,
@@ -843,6 +1043,9 @@ class HttpTransport:
                 content_encoding=ctx.headers_map.get("content-encoding"),
                 max_response_bytes=config.response_limit,
                 max_compressed_response_bytes=config.compressed_response_limit,
+                read_body=lambda limit: self._read_response_body(
+                    response, limit, timeout=config.timeout
+                ),
             )
             set_cookie_values = list(_header_values(response.headers, "set-cookie"))
             response_payload: dict[str, Any] = {
@@ -904,7 +1107,6 @@ class HttpTransport:
         def consume_stream(ctx: _AttemptSuccessContext) -> dict[str, Any]:
             response = ctx.pool_result.response
             stats = stream_bounded_response_to_file(
-                response,
                 destination,
                 request_url=config.url,
                 response_url=ctx.response_url,
@@ -912,7 +1114,9 @@ class HttpTransport:
                 headers_map=ctx.headers_map,
                 response_limit=config.response_limit,
                 compressed_limit=config.stream_compressed_limit,
-                check_cancelled=self._check_cancelled,
+                read_chunk=lambda limit: self._read_response_chunk(
+                    response, limit, timeout=config.timeout
+                ),
                 on_content_length=options.on_content_length,
                 on_chunk=options.on_chunk,
             )
@@ -956,4 +1160,5 @@ __all__ = [
     "_PreparedRequest",
     "logger",
     "request_cancel_check",
+    "request_timeout_limit",
 ]

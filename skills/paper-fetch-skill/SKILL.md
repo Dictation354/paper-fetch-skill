@@ -7,28 +7,29 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 获取已知论文并继续完成用户要求的阅读、总结、比较或翻译。优先使用用户指定文件或已有结果；身份不明时先消歧。搜索摘要和网页片段不能当作论文全文。
 
-## 最短阅读路径
+## 核心流程
 
-先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。只有 DOI 和任务目录时，先用 `paper-fetch lookup --doi DOI --output-dir ./papers` 找回已验收全文。有多个任务结果目录时重复传入 `--output-dir`。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
+先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。用 `paper-fetch lookup --doi <DOI> --output-dir <DIR>` 查单篇，用 `paper-fetch lookup --query-file <FILE> --output-dir <DIR>` 查一批 DOI。可重复传入 `--output-dir`。允许使用历史正文时，加 `--include-legacy` 回退到 v8/v2 sidecar、缺少 `sections.json` 的旧 manifest 或带受管 frontmatter 的 `.md` 文件。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
 
 只有缺少所需正文时才调用 `fetch`。需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。
 
 ```bash
 paper-fetch fetch --progress text --query "10.1186/1471-2105-11-421"
+paper-fetch fetch --query-file queries.txt --output-dir ./papers --batch-concurrency 3
 ```
 
-从 stdout 读取 JSON 回执，进度见 stderr。通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认正文及索引保存在独立系统临时目录，命令退出后仍可读取。从 `section_index_path` 取得所需章节的行范围，再按范围读取 `body_path`。Nature 文章的无标题引言可从 `Main` 起读。
+从 stdout 读取 JSON 回执，进度见 stderr。通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认紧凑回执 `paper-fetch/receipt` 在顶层提供 `body_path`、`section_index_path` 和 `image_index_path`。直接用这些字段定位文件，完整产物清单见逐篇 manifest 的 `output_artifacts`。默认正文及索引保存在独立系统临时目录，命令退出后仍可读取。从 `section_index_path` 取得章节行范围，再按范围读取 `body_path`。Nature 文章的无标题引言可从 `Main` 起读。
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。
 
-只缺图片时，从已有 `image_index_path` 定位缺失项。Wiley HTML 公式图可按已读正文的行范围筛选 `body_positions`，再用原 manifest 补取对应的 `asset_id`。可以一次传入多个 ID。
+只缺图片时，从已有 `image_index_path` 定位缺失项。图片有 `body_positions` 时，可按已读正文的行范围筛选，再用原 manifest 补取对应的 `asset_id`。可以一次传入多个 ID。
 
 ```bash
 paper-fetch fetch-assets --compact --manifest /absolute/path/manifest.json \
   --asset-id img_first --asset-id img_second
 ```
 
-`--kind` 只接受 `formula`。需要公式图片组时，用 `--kind formula` 代替 `--asset-id`。从回执的 `results` 打开成功项的实际图片路径，并把 asset ID 和路径记入交接记录。需要跨会话保留新下载的图片时，将 `--output-dir` 指向任务输出目录。
+`--kind {formula,figure,table}` 按类型补取图片。从回执的 `results` 打开成功项的实际图片路径，并把 asset ID 和路径记入交接记录。需要跨会话保留新下载的图片时，将 `--output-dir` 指向任务输出目录。
 
 只要补充材料时：
 

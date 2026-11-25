@@ -176,6 +176,130 @@ def test_lookup_cli_recovers_verified_receipts_and_requires_section_index(
     invalid = lookup(query="not-a-doi")
     assert invalid.returncode == 2 and not invalid.stdout
 
+    Path(without_sections["section_index_path"]).unlink()
+    historical = json.loads(lookup(include_legacy=True).stdout)
+    assert historical["manifest_path"] == str(no_sections_manifest_path)
+    assert historical["body_path"] == without_sections["body_path"]
+    assert historical["source"] == without_sections["source"]
+    assert historical["acceptance"] == "historical_unverified"
+    body = Path(historical["body_path"])
+    body.write_text("Replaced body", encoding="utf-8")
+    assert lookup(include_legacy=True).returncode == 1
+
+
+def test_lookup_query_file_preserves_input_order_and_exit_status(tmp_path):
+    project = tmp_path / "project"
+    project.mkdir()
+    (project / "paper.md").write_text(
+        "---\ndoi: 10.1000/found\ncontent_kind: fulltext\n---\n# Article\n\nBody text.",
+        encoding="utf-8",
+    )
+    queries = tmp_path / "queries.txt"
+    command = [
+        sys.executable,
+        "-m",
+        "paper_fetch.cli",
+        "lookup",
+        "--query-file",
+        str(queries),
+        "--output-dir",
+        str(project),
+        "--include-legacy",
+    ]
+
+    def lookup(text):
+        queries.write_text(text, encoding="utf-8")
+        return subprocess.run(
+            command,
+            cwd=tmp_path,
+            env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
+            capture_output=True,
+            text=True,
+            timeout=10,
+        )
+
+    process = lookup(
+        "# retained\n\n10.1000/FOUND\nnot-a-doi\n10.1000/missing\n10.1000/found"
+    )
+    assert process.returncode == 1 and not process.stderr
+    first, invalid, missing, last = map(json.loads, process.stdout.splitlines())
+    assert first["status"] == "found" and first["index"] == 3
+    assert invalid == {
+        "schema_version": 2,
+        "contract": "paper-fetch/receipt",
+        "index": 4,
+        "query": "not-a-doi",
+        "doi": None,
+        "status": "invalid_doi",
+    }
+    assert missing == {
+        "schema_version": 2,
+        "contract": "paper-fetch/receipt",
+        "index": 5,
+        "doi": "10.1000/missing",
+        "status": "not_found",
+    }
+    assert last == {**first, "index": 6}
+    process = lookup("10.1000/found\n")
+    assert process.returncode == 0
+    assert json.loads(process.stdout) == {**first, "index": 1}
+
+
+def test_lookup_query_file_replaces_retained_batch_index(tmp_path, monkeypatch, capsys):
+    from paper_fetch import cli
+    from tests.support.fetch_fixtures import sample_envelope, sample_resolved_query
+
+    doi = "10.1000/example"
+    project = tmp_path / "papers"
+    fetch_queries = tmp_path / "fetch.txt"
+    fetch_queries.write_text("".join(f"10.1000/other-{i}\n" for i in range(4)) + doi)
+    monkeypatch.setattr(
+        cli,
+        "fetch_paper",
+        lambda query, **kwargs: sample_envelope(
+            modes={"article", "markdown"}, doi=query
+        ),
+    )
+    monkeypatch.setattr(
+        cli, "resolve_paper", lambda query, **kwargs: sample_resolved_query(query)
+    )
+    monkeypatch.setattr(cli, "build_runtime_env", lambda: {})
+    assert (
+        cli.main(
+            ["fetch", "--query-file", str(fetch_queries), "--output-dir", str(project)]
+        )
+        == 0
+    )
+    receipts = [json.loads(line) for line in capsys.readouterr().out.splitlines()]
+    receipt = receipts[4]
+    assert receipt["doi"] == doi and receipt["index"] == 5
+    assert json.loads(Path(receipt["manifest_path"]).read_text())["schema_version"] == 3
+
+    lookup_queries = tmp_path / "lookup.txt"
+    lookup_queries.write_text(f"{doi}\n# ignored\n{doi.upper()}\n")
+    process = subprocess.run(
+        [
+            sys.executable,
+            "-m",
+            "paper_fetch.cli",
+            "lookup",
+            "--query-file",
+            str(lookup_queries),
+            "--output-dir",
+            str(project),
+        ],
+        cwd=tmp_path,
+        env={**os.environ, "PYTHONPATH": str(REPO_ROOT / "src")},
+        capture_output=True,
+        text=True,
+        timeout=10,
+    )
+    assert process.returncode == 0, process.stderr
+    assert [json.loads(line) for line in process.stdout.splitlines()] == [
+        {**receipt, "index": 1},
+        {**receipt, "index": 3},
+    ]
+
 
 def _auth_process(script, path):
     return subprocess.Popen(

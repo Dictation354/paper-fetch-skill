@@ -78,23 +78,34 @@ def parse_positive_int_arg(value: str) -> int:
     return parsed
 
 
-def read_query_file(path: Path) -> list[str]:
+def _read_indexed_query_file(path: Path) -> list[tuple[int, str]]:
     try:
         lines = path.read_text(encoding="utf-8").splitlines()
     except OSError as exc:
         raise ValueError(f"could not read query file {path}: {exc}") from exc
 
     queries = []
-    for line in lines:
+    for index, line in enumerate(lines, 1):
         query = line.strip()
         if not query or query.startswith("#"):
             continue
-        queries.append(query)
+        queries.append((index, query))
     if not queries:
         raise ValueError(
             "query file did not contain any queries after filtering blank lines and comments."
         )
     return queries
+
+
+def read_query_file(path: Path) -> list[str]:
+    return [query for _, query in _read_indexed_query_file(path)]
+
+
+def load_query_file(path: str, *, command: str) -> tuple[str, ...]:
+    try:
+        return tuple(read_query_file(Path(path)))
+    except ValueError as exc:
+        raise CliUsageError(str(exc), command=command) from exc
 
 
 def _doctor_provider(value: str) -> str:
@@ -409,7 +420,13 @@ def _build_parser_bundle() -> tuple[
         "lookup",
         help="Find a retained, accepted full-text result by DOI in a project.",
     )
-    lookup_parser.add_argument("--doi", required=True, help="DOI of the paper.")
+    lookup_queries = lookup_parser.add_mutually_exclusive_group(required=True)
+    lookup_queries.add_argument("--doi", metavar="DOI", help="DOI of the paper.")
+    lookup_queries.add_argument(
+        "--query-file",
+        metavar="PATH",
+        help="UTF-8 text file with one DOI per line (blank lines and # comments ignored).",
+    )
     lookup_parser.add_argument(
         "--output-dir",
         type=Path,
@@ -420,7 +437,7 @@ def _build_parser_bundle() -> tuple[
     lookup_parser.add_argument(
         "--include-legacy",
         action="store_true",
-        help="Allow an unverified historical v2 sidecar if no verified result exists.",
+        help="Allow historical full text if no verified result exists.",
     )
     subparsers["lookup"] = lookup_parser
 
@@ -437,6 +454,9 @@ def _build_parser_bundle() -> tuple[
         resolution_parser.add_argument(
             "--batch-concurrency", type=parse_batch_concurrency, default=4
         )
+        resolution_parser.add_argument(
+            "--progress", choices=("auto", "text", "jsonl", "none"), default="none"
+        )
         subparsers[name] = resolution_parser
 
     assets_parser = subparsers_action.add_parser(
@@ -452,7 +472,7 @@ def _build_parser_bundle() -> tuple[
     selectors = assets_parser.add_mutually_exclusive_group(required=True)
     selectors.add_argument("--asset-id", action="append", dest="asset_ids")
     selectors.add_argument("--asset-url", action="append", dest="urls")
-    selectors.add_argument("--kind", choices=["formula"])
+    selectors.add_argument("--kind", choices=("formula", "figure", "table"))
     assets_parser.add_argument(
         "--output-dir", help="Archive images; otherwise retain files in system temp."
     )
@@ -638,10 +658,7 @@ def _command_from_namespace(ns: argparse.Namespace) -> CliCommand:
             )
         options = resolve_fetch_options(ns, deliver_files=True)
         if ns.query_file is not None:
-            try:
-                queries = tuple(read_query_file(Path(ns.query_file)))
-            except ValueError as exc:
-                raise CliUsageError(str(exc), command="fetch") from exc
+            queries = load_query_file(ns.query_file, command="fetch")
             return BatchFetchCommand(
                 queries=queries,
                 options=options,
@@ -656,30 +673,41 @@ def _command_from_namespace(ns: argparse.Namespace) -> CliCommand:
         )
 
     if command_name == "lookup":
-        doi = normalize_doi(ns.doi)
-        if not (DOI_PATTERN.fullmatch(doi) or SICI_DOI_PATTERN.fullmatch(doi)):
+        doi = normalize_doi(ns.doi) if ns.doi is not None else None
+        if doi is not None and not (
+            DOI_PATTERN.fullmatch(doi) or SICI_DOI_PATTERN.fullmatch(doi)
+        ):
             raise CliUsageError("--doi requires a valid DOI.", command="lookup")
         output_dirs = tuple(path.expanduser() for path in ns.output_dir)
         if any(path.exists() and not path.is_dir() for path in output_dirs):
             raise CliUsageError("--output-dir must be a directory.", command="lookup")
+        try:
+            lookup_queries = (
+                tuple(_read_indexed_query_file(Path(ns.query_file)))
+                if ns.query_file is not None
+                else ()
+            )
+        except ValueError as exc:
+            raise CliUsageError(str(exc), command="lookup") from exc
         return LookupCommand(
-            doi=doi, output_dirs=output_dirs, include_legacy=ns.include_legacy
+            doi=doi,
+            output_dirs=output_dirs,
+            include_legacy=ns.include_legacy,
+            queries=lookup_queries,
         )
 
     if command_name in {"resolve", "check"}:
         mode = cast(ResolutionMode, command_name)
-        try:
-            queries = (
-                tuple(read_query_file(Path(ns.query_file)))
-                if ns.query_file
-                else (str(ns.query),)
-            )
-        except ValueError as exc:
-            raise CliUsageError(str(exc), command=mode) from exc
+        queries = (
+            load_query_file(ns.query_file, command=mode)
+            if ns.query_file is not None
+            else (str(ns.query),)
+        )
         return ResolutionCommand(
             mode=mode,
             queries=queries,
             batch_concurrency=int(ns.batch_concurrency),
+            progress=cast(ProgressMode, ns.progress),
         )
 
     if command_name == "fetch-assets":
@@ -688,7 +716,7 @@ def _command_from_namespace(ns: argparse.Namespace) -> CliCommand:
             manifest=Path(ns.manifest) if ns.manifest else None,
             asset_ids=tuple(ns.asset_ids) if ns.asset_ids is not None else None,
             urls=tuple(ns.urls) if ns.urls is not None else None,
-            kind=cast(Literal["formula"] | None, ns.kind),
+            kind=cast(Literal["formula", "figure", "table"] | None, ns.kind),
             output_dir=ns.output_dir or None,
             compact=bool(ns.compact),
             overwrite=bool(ns.overwrite),

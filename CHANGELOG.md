@@ -8,6 +8,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.2 - 2026-11-25
+
+- Add batch DOI lookup with `lookup --query-file`. With `--include-legacy`, recover historical full text from v8 and v2 sidecars, older manifests and Markdown with managed frontmatter. Historical results retain their unverified status.
+- Record Markdown positions for formula, figure and table images. Filter `fetch-assets --kind` by any of these types and include source line numbers in compact receipts when available.
+- Resolve PubMed and PubMed Central links through NCBI, and exclude browser challenge titles from article identity matching. Report provider, stage, HTTP status, error category and retryability for failed `check` probes.
+- Apply request deadlines across HTTP header and body reads, and record elapsed time for full-text attempts. Bound Elsevier XML reference DOI completion, retain matches found before the deadline and use stronger journal citation evidence. Advance the extraction revision to 14.
+- Add a managed `~/.local/bin/paper-fetch` launcher for Linux and macOS offline installations. Both offline CLI entry points load the external environment file selected by `--reuse-env-file` by default, including in a shell that has not activated the installation.
+
 ## 8.1.1 - 2026-11-23
 
 - Save a per-input `receipt.json` for successful, failed and cancelled fetches, including when stdout carries the article via `--output -`. Text progress shows the receipt directory and browser queue and execution timings.

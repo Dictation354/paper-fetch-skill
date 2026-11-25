@@ -5,7 +5,7 @@
 | 命令 | 用途 |
 | --- | --- |
 | fetch | 单篇或 query-file 批量抓取正文、归档或附件 |
-| lookup | 按 DOI 查找指定项目中已有的验收全文 |
+| lookup | 按单个 DOI 或 DOI 文件查找指定项目中已有的验收全文 |
 | resolve | 独立身份解析与消歧，支持单篇和批量 |
 | check | 仅探测全文可用性，支持单篇和批量 |
 | fetch-assets | 按 manifest 或 query 定向补图 |
@@ -51,13 +51,14 @@ fetch 默认为 temporary_read。完整 Markdown、逐篇 schema-v3 manifest、�
 
 ```bash
 paper-fetch lookup --doi DOI --output-dir ./papers --output-dir ./archive
+paper-fetch lookup --query-file dois.txt --output-dir ./papers --include-legacy
 ```
 
-命令只读扫描各指定目录的 `.paper-fetch-results` 下逐篇 schema-v3 manifest。按完成时间从新到旧检查验收通过且未截断的全文，同一时间优先选择先传入的目录。核验 `body.md` 与 `sections.json` 的大小和哈希，损坏或缺失时继续检查下一条。命中时输出一行 v2 `paper-fetch/receipt` 并退出 0。
+`lookup (--doi DOI | --query-file PATH) --output-dir DIR [--output-dir DIR ...] [--include-legacy]` 只读扫描各指定目录的 `.paper-fetch-results` 下逐篇 schema-v3 manifest。按完成时间从新到旧检查验收通过且未截断的全文，同一时间优先选择先传入的目录。核验 `body.md` 与 `sections.json` 的大小和哈希，损坏或缺失时继续检查下一条。命中返回 v2 `paper-fetch/receipt`。
 
-传入 `--include-legacy` 且所有目录均未命中时，才按目录传入顺序查找无指纹的 v2 `<doi>.fetch-envelope.json`。DOI 匹配、全文标记有效、Markdown 非空且未截断时，输出一行 `paper-fetch/legacy-lookup`（`schema_version=1`、`status=found`、`acceptance=historical_unverified`）并退出 0。`source` 为历史来源，`sidecar_path` 为绝对路径，`sidecar_version` 为旧 sidecar 版本，`body_json_pointer` 为 `/payload/markdown`。
+所有目录均无现行命中时，`--include-legacy` 按传入的目录顺序查找历史 v8/v2 sidecar、旧 manifest 或带受管 frontmatter 的 Markdown。独立 Markdown 须包含正文，有正数 `token_estimate` 时还会用它检查摘要和正文是否被截断。历史回执为 `paper-fetch/legacy-lookup`（`schema_version=1`、`status=found`、`acceptance=historical_unverified`）。sidecar 回执提供绝对 `sidecar_path`、`sidecar_version` 和 `body_json_pointer=/payload/markdown`。旧 manifest 和 Markdown 回执提供绝对 `body_path`，由 manifest 命中时还提供 `manifest_path`。
 
-无可用结果时输出一行含 `status=not_found` 和 `doi` 的 JSON 并退出 1。参数错误退出 2。
+单篇输出一个 JSON 对象。批量读取 UTF-8 文件中的 DOI，每行一个，跳过空行和 `#` 注释，按输入顺序输出 JSONL。`lookup --query-file` 各项的 `index` 始终为该 DOI 在查询文件中的行号，从 1 开始。无可用结果时返回 `status=not_found` 和 `doi`，批量中的无效 DOI 返回 `status=invalid_doi`。全部命中退出 0，任一项未命中或批量 DOI 无效退出 1，参数错误退出 2。
 
 ## 批量抓取
 
@@ -84,13 +85,13 @@ paper-fetch fetch-assets --manifest /absolute/path/manifest.json --kind formula
 paper-fetch fetch-assets --query DOI --asset-url https://example.org/figure.png
 ```
 
-`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind formula`，三种选择器互斥。`fetch-assets` 从 v3 manifest 恢复论文身份和已有图片索引。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
+`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind {formula,figure,table}`，三种选择器互斥。`fetch-assets` 从 v3 manifest 恢复论文身份和已有图片索引。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
 
-Wiley HTML 正文的公式图匹配到 `images.json` 中的资产后，该项带有 `body_positions`。每个 `{line, column}` 从 1 开始，指向落盘 Markdown 图片标记的起点。远程 URL 和改写后的本地链接均可匹配，重复出现时记录全部位置。按正文行范围选取已有 `asset_id`，再用原 manifest 补取。
+公式图、插图和表格图匹配到 `images.json` 中的资产后，该项带有 `body_positions`。每个 `{line, column}` 从 1 开始，指向落盘 Markdown 图片标记的起点。远程 URL 和改写后的本地链接均可匹配，重复出现时记录全部位置。按正文行范围选取已有 `asset_id`，再用原 manifest 补取。
 
 默认 stdout 返回详细 JSON。`--compact` 输出一行 JSON，包含 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、总体 `status`、逐项 `results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`。失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。总体结果为 `ok`、`partial` 或 `error`。命令级错误使用相应的错误状态和简短、脱敏的 `reason`，且 `results` 为空。无法确定 DOI 时 `doi` 为 `null`。
 
-紧凑模式每次调用原子保存一份独立的脱敏明细，其中保留图注和逐项诊断。`details_path` 为明细的绝对路径，跟随 `--output-dir` 或本次保留的临时目录。明细写入失败时，`details_path` 为 `null`，stderr 给出简短提示，回执仍包含实际文件路径和下载结果。
+使用 `--manifest PATH --compact` 时，若成功项有 `body_positions`，其回执还提供 `kind` 和去重、升序的 `lines`。紧凑模式每次调用原子保存一份独立的脱敏明细，保留完整 `body_positions`、图注和逐项诊断。`details_path` 为明细的绝对路径，跟随 `--output-dir` 或本次保留的临时目录。明细写入失败时，`details_path` 为 `null`，stderr 给出简短提示，回执仍包含实际文件路径和下载结果。
 
 全部成功退出 0，部分成功或失败退出 1，参数错误退出 2。参数错误由命令行解析器报告。
 
@@ -108,7 +109,9 @@ paper-fetch fetch --target supplementary --preset archive --query DOI --output-d
 
 ## 实时进度与机器取消
 
---progress auto/text/jsonl/none 将进度写到 stderr。JSONL progress protocol_version=1，以 run_id/index 标识事件。--control-stdin 要求 --progress jsonl，stdin 每行 JSON：
+`resolve` 和 `check` 当前仅解析 `--progress {auto,text,jsonl,none}`，stdout 始终为 JSONL。`check` 的探测遇到 HTTP 或网络失败时，`probe_failures` 记录 `provider`、`stage`、`http_status`、`error_category` 和 `retryable`。
+
+`fetch --progress {auto,text,jsonl,none}` 将进度写到 stderr。JSONL 进度的 `protocol_version=1`，以 `run_id/index` 标识事件。`--control-stdin` 要求 `--progress jsonl`，stdin 逐行接收 JSON 命令。
 
 ```json
 {"protocol_version":1,"run_id":"<run_id>","command":"cancel","index":1}

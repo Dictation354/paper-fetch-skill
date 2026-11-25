@@ -356,6 +356,11 @@ def test_final_acquisition_routes_preserve_statements_abstracts_keywords_and_doi
                 and index not in matches
             ):
                 pass
+            elif doi == "10.1016/j.envres.2018.12.059" and node.get("id") == "bib5":
+                assert node.find("edited-book") is not None
+                assert web_link is not None
+                assert actual.doi is None
+                assert index not in matches
             elif web_link is not None:
                 assert actual.doi
                 assert actual.doi.casefold() in web_link["href"].casefold() or re.sub(

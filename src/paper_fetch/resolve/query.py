@@ -24,13 +24,16 @@ from ..config import build_publisher_user_agent, build_runtime_env
 from ..elsevier_identifiers import extract_elsevier_pii_from_url
 from ..errors import ProviderFailure
 from ..extraction.html.landing import fetch_landing_html
-from ..html_lookup import is_usable_html_lookup_title
-from ..http import HttpTransport, RequestFailure
+from ..html_lookup import is_html_lookup_challenge_title, is_usable_html_lookup_title
+from ..http import HttpTransport, RequestFailure, decode_json_object_response
 from ..mdpi_url import mdpi_doi_from_landing_url
 from ..metadata.crossref import CrossrefLookupClient
 from ..metadata.types import CrossrefMetadata
+from ..providers.base import map_request_failure
 from ..publication_dates import publication_years
 from ..publisher_identity import (
+    DOI_PATTERN,
+    SICI_DOI_PATTERN,
     extract_doi,
     extract_doi_from_url,
     infer_provider_from_signals,
@@ -47,6 +50,8 @@ CONFIDENT_SCORE_MIN = 0.90
 CONFIDENT_MARGIN_MIN = 0.05
 MIN_HTML_TITLE_LOOKUP_CHARS = 24
 MAX_URL_REDIRECTS = 3
+_PMC_ID_CONVERTER = "https://pmc.ncbi.nlm.nih.gov/tools/idconv/api/v1/articles/"
+_NCBI_ESUMMARY = "https://eutils.ncbi.nlm.nih.gov/entrez/eutils/esummary.fcgi"
 FORMAL_PUBLICATION_RELAXED_SCORE_MIN = 0.84
 FORMAL_PUBLICATION_FORMAL_MARGIN_MIN = 0.10
 FORMAL_PUBLICATION_PREPRINT_SCORE_GAP_MAX = 0.20
@@ -130,6 +135,101 @@ class ResolvedQuery:
 def is_url(value: str) -> bool:
     parsed = urllib.parse.urlparse(value)
     return parsed.scheme in {"http", "https"} and bool(parsed.netloc)
+
+
+def _ncbi_article_id(url: str) -> tuple[str, str] | None:
+    parsed = urllib.parse.urlsplit(url)
+    if parsed.hostname == "pubmed.ncbi.nlm.nih.gov":
+        match = re.fullmatch(r"/([0-9]+)/?", parsed.path)
+        return ("pubmed", match[1]) if match else None
+    if parsed.hostname == "pmc.ncbi.nlm.nih.gov":
+        prefix = r"/(?:pmc/)?articles/"
+    elif parsed.hostname in {"ncbi.nlm.nih.gov", "www.ncbi.nlm.nih.gov"}:
+        prefix = "/pmc/articles/"
+    else:
+        return None
+    match = re.fullmatch(
+        rf"{prefix}(PMC[0-9]+)(?:/(?:pdf(?:/[^/]*)?)?)?", parsed.path, re.IGNORECASE
+    )
+    return ("pmc", match[1].upper()) if match else None
+
+
+def _ncbi_timeout(context: RuntimeContext | None) -> float:
+    if context is None:
+        return 15.0
+    context.raise_if_cancelled()
+    remaining = context.remaining_seconds(15.0)
+    if remaining <= 0:
+        raise ProviderFailure(
+            ERROR, "Request deadline exceeded during NCBI resolution."
+        ).with_updates(
+            provider="resolver",
+            stage="identity",
+            error_category="timeout",
+            retryable=False,
+        )
+    return remaining
+
+
+def _ncbi_doi(
+    database: str,
+    article_id: str,
+    *,
+    transport: HttpTransport,
+    context: RuntimeContext | None,
+) -> str | None:
+    def fetch(url: str, query: dict[str, str]) -> dict[str, Any]:
+        timeout = _ncbi_timeout(context)
+        try:
+            response = transport.request(
+                "GET",
+                url,
+                query={**query, "tool": "paper-fetch"},
+                timeout=timeout,
+                retry_on_transient=True,
+            )
+            result = decode_json_object_response(response, label="NCBI")
+        except RequestFailure:
+            result = {}
+        _ncbi_timeout(context)
+        return result
+
+    def canonical(value: Any) -> str | None:
+        doi = normalize_doi(value) if isinstance(value, str) else ""
+        return (
+            doi
+            if DOI_PATTERN.fullmatch(doi) or SICI_DOI_PATTERN.fullmatch(doi)
+            else None
+        )
+
+    records = fetch(_PMC_ID_CONVERTER, {"ids": article_id, "format": "json"}).get(
+        "records"
+    )
+    if isinstance(records, list):
+        for record in records:
+            if (
+                isinstance(record, Mapping)
+                and str(record.get("status", "")).casefold() != "error"
+                and any(
+                    str(record.get(key, "")).casefold() == article_id.casefold()
+                    for key in ("pmcid", "pmid", "requested-id")
+                )
+                and (doi := canonical(record.get("doi")))
+            ):
+                return doi
+
+    uid = article_id.removeprefix("PMC")
+    result = fetch(_NCBI_ESUMMARY, {"db": database, "id": uid, "retmode": "json"}).get(
+        "result"
+    )
+    summary = result.get(uid) if isinstance(result, Mapping) else None
+    article_ids = summary.get("articleids") if isinstance(summary, Mapping) else None
+    if isinstance(article_ids, list):
+        for item in article_ids:
+            if isinstance(item, Mapping) and item.get("idtype") == "doi":
+                if doi := canonical(item.get("value")):
+                    return doi
+    return None
 
 
 def _ams_sici_doi_from_url(value: str) -> str | None:
@@ -458,11 +558,54 @@ def resolve_query(
             confidence=1.0,
         )
 
-    active_transport = transport or HttpTransport()
+    active_transport = (
+        transport
+        or (context.transport if context is not None else None)
+        or HttpTransport()
+    )
     active_env = env or build_runtime_env()
     crossref = CrossrefLookupClient(active_transport, active_env)
 
     if is_url(normalized_query):
+        ncbi_id = _ncbi_article_id(normalized_query)
+        if ncbi_id is not None and (
+            doi := _ncbi_doi(*ncbi_id, transport=active_transport, context=context)
+        ):
+            timeout = _ncbi_timeout(context)
+            ncbi_crossref = CrossrefLookupClient(
+                active_transport,
+                {
+                    key: value
+                    for key, value in active_env.items()
+                    if key != "CROSSREF_MAILTO"
+                },
+            )
+            try:
+                ncbi_metadata = ncbi_crossref.fetch_metadata(
+                    {"doi": doi}, timeout=timeout
+                )
+            except (ProviderFailure, RequestFailure):
+                ncbi_metadata = None
+            _ncbi_timeout(context)
+            landing_url = (ncbi_metadata or {}).get("landing_page_url")
+            if landing_url and _ncbi_article_id(landing_url) is not None:
+                landing_url = None
+            provider_hint = infer_provider_from_signals(
+                doi=doi
+            ) or infer_provider_from_signals(
+                landing_urls=[landing_url],
+                publishers=[(ncbi_metadata or {}).get("publisher")],
+            )
+            return ResolvedQuery(
+                query=normalized_query,
+                query_kind="url",
+                doi=doi,
+                title=(ncbi_metadata or {}).get("title"),
+                landing_url=landing_url,
+                provider_hint=provider_hint,
+                confidence=1.0,
+            )
+
         mdpi_doi = mdpi_doi_from_landing_url(normalized_query)
         if mdpi_doi:
             return ResolvedQuery(
@@ -556,7 +699,9 @@ def resolve_query(
                     if identity.access_failure is not None
                     else None,
                 )
-            if landing_fetch is not None:
+            if landing_fetch is not None and not landing_fetch.metadata.get(
+                "lookup_challenge_title"
+            ):
                 return ResolvedQuery(
                     query=normalized_query,
                     query_kind="url",
@@ -564,6 +709,13 @@ def resolve_query(
                     provider_hint="rsc",
                 )
         if landing_fetch is None:
+            if landing_failure is not None:
+                raise map_request_failure(
+                    landing_failure, provider="resolver", stage="identity"
+                ).with_updates(
+                    code=ERROR,
+                    message=f"Failed to fetch landing page: {landing_failure}",
+                ) from landing_failure
             raise ProviderFailure(
                 ERROR, f"Failed to fetch landing page: {landing_failure}"
             ) from landing_failure
@@ -595,7 +747,12 @@ def resolve_query(
             min_normalized_chars=MIN_HTML_TITLE_LOOKUP_CHARS,
         ):
             title_for_lookup = lookup_title
-        selected_title = html_title or title_for_lookup
+        selected_title = (
+            html_title if is_usable_html_lookup_title(html_title) else title_for_lookup
+        )
+        challenge_title = html_metadata.get(
+            "lookup_challenge_title"
+        ) or is_html_lookup_challenge_title(html_title)
         url_candidates: list[dict[str, Any]] = []
         confidence = 1.0 if direct_doi else (0.95 if resolved_doi else 0.0)
         if title_for_lookup and (not resolved_doi or provider_hint is None):
@@ -619,7 +776,9 @@ def resolve_query(
             query=normalized_query,
             query_kind="url",
             doi=resolved_doi,
-            landing_url=landing_url,
+            landing_url=None
+            if challenge_title and not resolved_doi and not selected_title
+            else landing_url,
             provider_hint=provider_hint,
             confidence=confidence,
             candidates=url_candidates,

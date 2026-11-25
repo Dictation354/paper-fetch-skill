@@ -96,8 +96,8 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-# 7.5.1 preserves additional HTML/XML content and publisher table structure.
-EXTRACTION_REVISION = 13
+# 8.1.2 changes DOI matching for Elsevier XML references.
+EXTRACTION_REVISION = 14
 
 
 @dataclass

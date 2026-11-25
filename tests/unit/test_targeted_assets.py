@@ -7,6 +7,8 @@ from pathlib import Path
 import pytest
 
 from paper_fetch import targeted_assets as assets
+from paper_fetch.cli.subcommands import _compact_asset_receipt
+from paper_fetch.delivery.receipts import _image_body_positions
 from paper_fetch.providers.base import ProviderContent
 from paper_fetch.runtime import RuntimeContext
 from tests.support.asset_delivery_scenarios import (
@@ -27,6 +29,85 @@ def test_html_index_formula_gif_deduplicates_and_ids_are_stable():
     assert sorted(a["kind"] for a in state.assets) == ["figure", "formula", "formula"]
     assert len({a["asset_id"] for a in state.assets}) == 3
     assert state.assets == asset_state().assets
+
+
+@pytest.mark.parametrize("kind", ["formula", "figure", "table"])
+def test_body_positions_index_all_image_kinds(kind, tmp_path):
+    body = tmp_path / "body.md"
+    image = tmp_path / "image.png"
+    image.touch()
+    (indexed,) = _image_body_positions(
+        [{"kind": kind, "path": str(image), "url": "https://example.test/image.png"}],
+        "# Body\n\nAn ![image](image.png) and ![copy](https://example.test/image.png)\n",
+        body=body,
+    )
+    assert indexed["body_positions"] == [
+        {"line": 3, "column": 4},
+        {"line": 3, "column": 28},
+    ]
+    state = asset_state()
+    state.assets = assets.image_index([indexed])
+    try:
+        with runtime(ImageTransport()) as context:
+            result = assets.fetch_selected_assets(state, kind=kind, runtime=context)
+        (selected,) = result["results"]
+        assert selected["status"] == "ok" and selected["kind"] == kind
+        assert selected["body_positions"] == indexed["body_positions"]
+    finally:
+        state.close()
+
+
+def test_body_positions_skip_fences_and_escaped_images_and_normalize_unreserved_urls(
+    tmp_path,
+):
+    reference = "https://example.test/~reader/image%2Fone.png"
+    markdown = "\n".join(
+        [
+            "```md",
+            f"![code]({reference})",
+            "```",
+            "~~~~",
+            f"![code]({reference})",
+            "~~~",
+            f"![still fenced]({reference})",
+            "~~~~",
+            rf"\![escaped]({reference})",
+            "![reserved slash](https://example.test/~reader/image/one.png)",
+            r"\\![real](https://example.test/%7ereader/image%2fone.png)",
+            f"![real]({reference})",
+        ]
+    )
+    (asset,) = _image_body_positions(
+        [{"kind": "figure", "url": reference}], markdown, body=tmp_path / "body.md"
+    )
+    assert asset["body_positions"] == [
+        {"line": 11, "column": 3},
+        {"line": 12, "column": 1},
+    ]
+
+
+@pytest.mark.parametrize(
+    ("positions", "lines"),
+    [
+        (True, []),
+        (b"invalid", []),
+        ("invalid", []),
+        ({"line": 1}, []),
+        ([{"line": True}, {"line": 0}, {"line": -3}, {"line": "2"}, None], []),
+        (({"line": 3}, {"line": 2}, {"line": 3}, {"line": False}, []), [2, 3]),
+    ],
+)
+def test_compact_asset_receipt_only_emits_valid_body_lines(tmp_path, positions, lines):
+    result = {"status": "ok", "asset_id": "img_1", "path": "figure.png"}
+    payload = {
+        "status": "ok",
+        "doi": "10.1000/example",
+        "results": [{**result, "kind": "figure", "body_positions": positions}],
+    }
+    receipt = _compact_asset_receipt(payload, output_dir=str(tmp_path), state=None)
+    if lines:
+        result.update(kind="figure", lines=lines)
+    assert receipt["results"] == [result]
 
 
 @pytest.mark.parametrize("route", ["xml", "official"])

@@ -12,7 +12,7 @@ from pathlib import Path
 import pytest
 
 from tests.paths import REPO_ROOT
-from tests.support.asset_delivery_scenarios import GIF, SOURCE, asset_state
+from tests.support.asset_delivery_scenarios import GIF, PNG, SOURCE, asset_state
 
 SETUP = textwrap.dedent("""
     from paper_fetch import targeted_assets, service
@@ -205,7 +205,7 @@ def test_compact_invalid_kind_is_a_usage_error(tmp_path):
         "--query",
         "10.1000/example",
         "--kind",
-        "figure",
+        "supplementary",
         "--compact",
     )
     assert process.returncode == 2
@@ -215,13 +215,31 @@ def test_compact_invalid_kind_is_a_usage_error(tmp_path):
 
 def test_cli_manifest_images_do_not_fetch_source_again(tmp_path):
     # First process produces the durable identity/index; the next only downloads selected images.
-    seed = SETUP + textwrap.dedent("""
+    seed = SETUP + textwrap.dedent(r"""
         import sys
         from paper_fetch import cli
+        from paper_fetch.providers.base import ProviderContent
         from tests.support.fetch_fixtures import sample_envelope
         def fetch(*args, **kwargs):
             envelope = sample_envelope(modes={"article", "markdown"})
             envelope._asset_context = asset_state()
+            envelope._asset_context.assets = targeted_assets.image_index([
+                *envelope._asset_context.assets,
+                *targeted_assets.discover_content_images(
+                    ProviderContent(
+                        route_kind="xml", content_type="application/xml", source_url=SOURCE,
+                        body=b'<article><body><table-wrap><graphic href="table.png"/></table-wrap></body></article>',
+                    ),
+                    provider="",
+                ),
+            ])
+            envelope.markdown = (
+                "# Example Article\n"
+                "![Equation](https://example.test/math-1.gif)\n"
+                "![Figure](https://example.test/fig1.png) ![Figure](https://example.test/fig1.png)\n"
+                "![Table](https://example.test/table.png)\n"
+                "![Figure](https://example.test/fig1.png)\n"
+            )
             for asset in envelope._asset_context.assets:
                 asset["caption"] = (asset["asset_id"] + " long caption. ") * 100
             return envelope
@@ -273,3 +291,31 @@ def test_cli_manifest_images_do_not_fetch_source_again(tmp_path):
     assert [item["caption"] for item in read_details(receipt)["results"]] == [
         item["caption"] for item in selected
     ]
+    formula, other_formula = receipt["results"]
+    assert formula["kind"] == "formula" and formula["lines"] == [2]
+    assert set(other_formula) == {"asset_id", "path", "status"}
+
+    for kind, lines in (("figure", [3, 5]), ("table", [4])):
+        process = run_cli(
+            tmp_path,
+            "fetch-assets",
+            "--manifest",
+            paper["manifest_path"],
+            "--compact",
+            "--kind",
+            kind,
+            script=fetch + CLI_ENTRY,
+        )
+        compact = compact_receipt(process, 0)
+        (item,) = compact["results"]
+        (full,) = read_details(compact)["results"]
+        indexed = next(asset for asset in index["assets"] if asset["kind"] == kind)
+        assert item == {
+            "asset_id": indexed["asset_id"],
+            "kind": kind,
+            "lines": lines,
+            "status": "ok",
+            "path": full["path"],
+        }
+        assert full["body_positions"] == indexed["body_positions"]
+        assert Path(item["path"]).read_bytes() == PNG

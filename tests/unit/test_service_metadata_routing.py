@@ -1,6 +1,10 @@
 from __future__ import annotations
 
+from unittest.mock import Mock
+
+from paper_fetch.http import RequestFailure
 from paper_fetch.providers.base import ProviderContent
+from paper_fetch.providers.protocols import MetadataProvider
 from paper_fetch.tracing import trace_event
 from tests.support._service_support import *
 from tests.support.trace import trace_facts
@@ -9,6 +13,29 @@ from tests.support.trace import trace_facts
 
 
 class ServiceMetadataRoutingTests(unittest.TestCase):
+    def test_metadata_request_failures_survive_parallel_provider_probes(self):
+        doi = "10.1016/example"
+        provider_clients = {}
+        for name in ("elsevier", "crossref"):
+            client = Mock(spec=MetadataProvider)
+            client.fetch_metadata.side_effect = RequestFailure(
+                None, "Interrupted", error_category="connection_closed", retryable=True
+            )
+            provider_clients[name] = client
+        metadata, _, events = paper_fetch.fetch_metadata_for_resolved_query(
+            paper_fetch.ResolvedQuery(
+                query=doi, query_kind="doi", doi=doi, provider_hint="elsevier"
+            ),
+            clients=provider_clients,
+            strategy=paper_fetch.FetchStrategy(),
+        )
+        assert metadata["doi"] == doi
+        assert {
+            (event.provider, event.stage, event.retryable)
+            for event in events
+            if event.error_category == "connection_closed"
+        } == {("crossref", "metadata", True), ("elsevier", "metadata", True)}
+
     def test_fetch_metadata_uses_crossref_signal_without_public_crossref_source(
         self,
     ) -> None:

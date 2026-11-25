@@ -138,3 +138,33 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("-m paper_fetch.image_tools.install", script)
         self.assertIn("--offline-bundle", script)
         self.assertIn('--repo-root "$REPO_DIR"', script)
+
+    def test_offline_cli_launcher_prepends_bundled_tool_paths(self) -> None:
+        script = LINUX_OFFLINE_BUILD.read_text(encoding="utf-8")
+        launcher = script.split('cat > "$bin/paper-fetch"', 1)[1].split("\nEOF", 1)[0]
+        self.assertIn(
+            'export PATH="$INSTALL_ROOT/bin:$INSTALL_ROOT/formula-tools/bin:'
+            '$INSTALL_ROOT/image-tools/bin${PATH:+:$PATH}"',
+            launcher,
+        )
+
+    def test_offline_cli_reads_only_regular_default_env_binding(self) -> None:
+        script = LINUX_OFFLINE_BUILD.read_text(encoding="utf-8")
+        launcher = script.split('cat > "$bin/paper-fetch"', 1)[1].split("\nEOF", 1)[0]
+        self.assertIn(
+            'default_env_file="$INSTALL_ROOT/runtime/default-env-file"', launcher
+        )
+        self.assertIn(
+            '[ -f "$default_env_file" ] && [ ! -L "$default_env_file" ]', launcher
+        )
+        self.assertIn("IFS= read -r PAPER_FETCH_ENV_FILE", launcher)
+
+    def test_user_launcher_is_installed_after_validation_and_shell_integration(
+        self,
+    ) -> None:
+        script = LINUX_INSTALLER.read_text(encoding="utf-8")
+        main = script.split("main() {", 1)[1]
+        launcher = main.index("\n  install_user_launcher\n")
+        self.assertLess(main.index("\n  check_macos_quarantine\n"), launcher)
+        self.assertLess(main.index("\n  install_runtime_payload\n"), launcher)
+        self.assertIn("\n  write_shell_startup_file\n  install_user_launcher\n", main)

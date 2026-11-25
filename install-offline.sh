@@ -131,7 +131,7 @@ Options:
   --skip-smoke            Skip local command smoke checks after installation.
   --non-interactive       Skip optional configuration; prepare browsers without system installs or elevation.
   --skip-browser-prepare  Skip installer browser preparation; runtime remains on demand.
-  --uninstall             Remove user-level shell and skill integration without deleting the install directory.
+  --uninstall             Remove user-level launcher, shell and skill integration without deleting the install directory.
   --purge                 Remove user-level integration and delete the install directory.
   -h, --help              Show this help.
 
@@ -872,6 +872,79 @@ write_shell_startup_file() {
   log "Updated shell startup file at $SHELL_STARTUP_TARGET"
 }
 
+user_launcher_is_owned() {
+  local target="$1"
+  [ ! -L "$target" ] && [ -f "$target" ] || return 1
+  LC_ALL=C awk -v begin="$MANAGED_BEGIN" -v end="$MANAGED_END" '
+    function quoted_path(value) {
+      return value ~ /^"\/([^"\\$`[:cntrl:]]|\\["\\$`])*"$/
+    }
+    BEGIN {
+      env_prefix = ": \"${PAPER_FETCH_ENV_FILE:="
+      env_suffix = "}\""
+      exec_suffix = " \"$@\""
+      exec_line = 4
+    }
+    NR == 1 && $0 != "#!/usr/bin/env bash" { exit 1 }
+    NR == 2 && $0 != begin { exit 1 }
+    NR == 3 && $0 != "# paper-fetch-user-launcher-v1" { exit 1 }
+    NR == 4 && index($0, env_prefix) == 1 {
+      if (substr($0, length($0) - length(env_suffix) + 1) != env_suffix ||
+          !quoted_path(substr($0, length(env_prefix) + 1, length($0) - length(env_prefix) - length(env_suffix)))) exit 1
+      exec_line = 6
+      next
+    }
+    NR == 5 && exec_line == 6 && $0 != "export PAPER_FETCH_ENV_FILE" { exit 1 }
+    NR == exec_line {
+      if (index($0, "exec ") != 1 ||
+          substr($0, length($0) - length(exec_suffix) + 1) != exec_suffix) exit 1
+      path = substr($0, 6, length($0) - 5 - length(exec_suffix))
+      if (!quoted_path(path) || path !~ /\/bin\/paper-fetch"$/) exit 1
+    }
+    NR == exec_line + 1 && $0 != end { exit 1 }
+    END { if (NR != exec_line + 1) exit 1 }
+  ' "$target"
+}
+
+install_user_launcher() (
+  [ -n "${HOME:-}" ] || die "HOME is required to install the user launcher."
+
+  local user_local="$HOME/.local"
+  local user_bin="$user_local/bin"
+  local target="$user_bin/paper-fetch"
+  local dir tmp
+  for dir in "$user_local" "$user_bin"; do
+    if [ -L "$dir" ] || { [ -e "$dir" ] && [ ! -d "$dir" ]; }; then
+      warn "Skipping $target because $dir is a symbolic link or is not a directory."
+      return 0
+    fi
+  done
+  if [ -L "$target" ]; then
+    warn "Skipping $target because symbolic links are not overwritten."
+    return 0
+  fi
+  if [ -e "$target" ] && ! user_launcher_is_owned "$target"; then
+    warn "Skipping $target because an unowned file already exists."
+    return 0
+  fi
+
+  mkdir -p "$user_bin"
+  tmp="$(mktemp "$user_bin/.paper-fetch.XXXXXX")"
+  trap 'rm -f -- "$tmp"' EXIT
+  {
+    printf '%s\n' '#!/usr/bin/env bash' "$MANAGED_BEGIN" '# paper-fetch-user-launcher-v1'
+    if [ "$REUSE_ENV_FILE" = "1" ]; then
+      printf ': "${PAPER_FETCH_ENV_FILE:=%s}"\n' "$(quote_env_value "$OFFLINE_ENV_FILE")"
+      printf '%s\n' 'export PAPER_FETCH_ENV_FILE'
+    fi
+    printf 'exec %s "$@"\n' "$(quote_env_value "$INSTALL_ROOT/bin/paper-fetch")"
+    printf '%s\n' "$MANAGED_END"
+  } > "$tmp"
+  chmod 0755 "$tmp"
+  mv -f -- "$tmp" "$target"
+  log "Installed user launcher at $target"
+)
+
 remove_managed_block_from_file() {
   local target="$1"
   local remove_if_empty="${2:-0}"
@@ -934,10 +1007,21 @@ remove_installed_skills() {
   log "Removed Antigravity skill at $antigravity_skill"
 }
 
+remove_user_launcher() {
+  [ -n "${HOME:-}" ] || die "HOME is required for --uninstall."
+
+  local target="$HOME/.local/bin/paper-fetch"
+  [ ! -L "$HOME/.local" ] && [ ! -L "$HOME/.local/bin" ] || return 0
+  user_launcher_is_owned "$target" || return 0
+  rm -f -- "$target"
+  log "Removed user launcher at $target"
+}
+
 uninstall_user_integrations() {
   remove_installed_skills
   remove_shell_startup_blocks
   remove_user_config_blocks
+  remove_user_launcher
 
   echo
   echo "Offline user-level integration removed."
@@ -1343,6 +1427,19 @@ install_runtime_payload() (
     "$INSTALL_ROOT" "$INSTALL_ROOT/skills/$SKILL_NAME" "installed runtime"
   run_smoke_checks
 
+  local default_env_file="$INSTALL_ROOT/runtime/default-env-file"
+  if [ "$REUSE_ENV_FILE" = "1" ]; then
+    (
+      local tmp
+      tmp="$(mktemp "$INSTALL_ROOT/runtime/.default-env-file.XXXXXX")"
+      trap 'rm -f -- "$tmp"' EXIT
+      printf '%s\n' "$OFFLINE_ENV_FILE" > "$tmp"
+      mv -f -- "$tmp" "$default_env_file"
+    )
+  else
+    rm -f -- "$default_env_file"
+  fi
+
   # Commit only after required validation and enabled smoke checks succeed.
   # Source/build leftovers are removed only on a successful replacement.
   if [ -n "$transaction_root" ]; then
@@ -1428,6 +1525,7 @@ main() {
     "$(antigravity_home)/skills/$SKILL_NAME" \
     "Antigravity post-install"
   write_shell_startup_file
+  install_user_launcher
 
   prepare_browsers
   run_optional_configuration

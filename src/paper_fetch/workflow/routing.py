@@ -18,7 +18,7 @@ from ..provider_catalog import (
     provider_metadata_probe_short_circuit,
     provider_supports_metadata_api_probe,
 )
-from ..providers.base import ProviderFailure
+from ..providers.base import ProviderFailure, map_request_failure
 from ..providers.protocols import MetadataProvider
 from ..publisher_identity import (
     ProviderIdentityCandidate,
@@ -140,6 +140,17 @@ def classify_probe_state(failure: ProviderFailure) -> str:
     if failure.code == NO_RESULT:
         return "negative"
     return "unknown"
+
+
+def _probe_failure(
+    exc: ProviderFailure | RequestFailure, *, provider: str, stage: str = "metadata"
+) -> ProviderFailure:
+    if isinstance(exc, RequestFailure):
+        return map_request_failure(exc, provider=provider, stage=stage)
+    return exc.with_updates(
+        provider=exc.diagnostics.provider or provider,
+        stage=exc.diagnostics.stage or stage,
+    )
 
 
 def _is_unknown_has_fulltext_probe_failure(error: ProviderFailure) -> bool:
@@ -308,9 +319,12 @@ def probe_official_provider(
     if short_circuit is not None:
         try:
             metadata = short_circuit(doi)
-        except ProviderFailure as exc:
+        except (ProviderFailure, RequestFailure) as exc:
+            failure = _probe_failure(exc, provider=provider_name)
             return RouteProbeResult(
-                provider=provider_name, state=classify_probe_state(exc)
+                provider=provider_name,
+                state=classify_probe_state(failure),
+                failure=failure,
             )
         if metadata:
             return RouteProbeResult(
@@ -328,8 +342,11 @@ def probe_official_provider(
             clients=clients,
             context=context,
         )
-    except ProviderFailure as exc:
-        return RouteProbeResult(provider=provider_name, state=classify_probe_state(exc))
+    except (ProviderFailure, RequestFailure) as exc:
+        failure = _probe_failure(exc, provider=provider_name)
+        return RouteProbeResult(
+            provider=provider_name, state=classify_probe_state(failure), failure=failure
+        )
     if probe_metadata:
         return RouteProbeResult(
             provider=provider_name,
@@ -425,7 +442,7 @@ def probe_has_fulltext(
         )
 
     landing_probe_by_url: dict[str, LandingPageCitationPdfProbeResult] = {}
-    landing_probe_errors: dict[str, RequestFailure] = {}
+    landing_probe_errors: dict[str, ProviderFailure] = {}
     provider_probe_metadata: dict[str, ProviderMetadata] = {}
     provider_probe_errors: dict[str, ProviderFailure] = {}
     metadata_probe_provider_order: list[str] = list(initial_metadata_probe_providers)
@@ -459,20 +476,24 @@ def probe_has_fulltext(
         if crossref_future is not None:
             try:
                 crossref_metadata = crossref_future.result()
-            except ProviderFailure as exc:
-                crossref_error = exc
+            except (ProviderFailure, RequestFailure) as exc:
+                crossref_error = _probe_failure(exc, provider="crossref")
         for provider_name, future in provider_probe_futures.items():
             try:
                 metadata = future.result()
                 if metadata:
                     provider_probe_metadata[provider_name] = metadata
-            except ProviderFailure as exc:
-                provider_probe_errors[provider_name] = exc
+            except (ProviderFailure, RequestFailure) as exc:
+                provider_probe_errors[provider_name] = _probe_failure(
+                    exc, provider=provider_name
+                )
         if landing_future is not None and initial_landing_url:
             try:
                 landing_probe_by_url[initial_landing_url] = landing_future.result()
-            except RequestFailure as exc:
-                landing_probe_errors[initial_landing_url] = exc
+            except (ProviderFailure, RequestFailure) as exc:
+                landing_probe_errors[initial_landing_url] = _probe_failure(
+                    exc, provider="landing", stage="landing_probe"
+                )
 
     if crossref_metadata:
         title = normalize_text(crossref_metadata.get("title")) or title
@@ -507,8 +528,10 @@ def probe_has_fulltext(
                 metadata = fetch_provider_probe_metadata(provider_name)
                 if metadata:
                     provider_probe_metadata[provider_name] = metadata
-            except ProviderFailure as exc:
-                provider_probe_errors[provider_name] = exc
+            except (ProviderFailure, RequestFailure) as exc:
+                provider_probe_errors[provider_name] = _probe_failure(
+                    exc, provider=provider_name
+                )
 
     for provider_name in metadata_probe_provider_order:
         metadata = provider_probe_metadata.get(provider_name)
@@ -537,8 +560,10 @@ def probe_has_fulltext(
         ):
             try:
                 landing_probe_by_url[landing_url] = fetch_landing_probe(landing_url)
-            except RequestFailure as exc:
-                landing_probe_errors[landing_url] = exc
+            except (ProviderFailure, RequestFailure) as exc:
+                landing_probe_errors[landing_url] = _probe_failure(
+                    exc, provider="landing", stage="landing_probe"
+                )
         if landing_url in landing_probe_by_url:
             landing_probe = landing_probe_by_url[landing_url]
             if landing_probe.has_citation_pdf_url:
@@ -555,6 +580,11 @@ def probe_has_fulltext(
                 ],
             )
 
+    failures = [
+        crossref_error,
+        *provider_probe_errors.values(),
+        *landing_probe_errors.values(),
+    ]
     state = "likely_yes" if evidence else "unknown"
     return HasFulltextProbeResult(
         query=resolved.query,
@@ -563,4 +593,14 @@ def probe_has_fulltext(
         state=state,
         evidence=evidence,
         warnings=warnings,
+        probe_failures=[
+            failure.diagnostics
+            for failure in failures
+            if failure is not None
+            and (
+                failure.diagnostics.http_status is not None
+                or failure.diagnostics.error_category is not None
+                or failure.diagnostics.retryable is not None
+            )
+        ],
     )

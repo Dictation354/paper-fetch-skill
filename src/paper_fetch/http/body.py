@@ -80,8 +80,14 @@ def read_bounded_response_body(
     content_encoding: str | None = None,
     max_response_bytes: int = DEFAULT_MAX_RESPONSE_BYTES,
     max_compressed_response_bytes: int | None = None,
+    read_body: Callable[[int], bytes] | None = None,
 ) -> bytes:
     """Read and optionally gzip-decompress a response body within byte ceilings."""
+
+    if read_body is None:
+
+        def read_body(limit: int) -> bytes:
+            return read_raw_response_bytes(response, limit)
 
     body_limit = max(0, int(max_response_bytes))
     normalized_encoding = normalize_content_encoding(content_encoding)
@@ -91,7 +97,7 @@ def read_bounded_response_body(
             if max_compressed_response_bytes is None
             else max(0, int(max_compressed_response_bytes))
         )
-        body = read_raw_response_bytes(response, compressed_limit + 1)
+        body = read_body(compressed_limit + 1)
         if len(body) > compressed_limit:
             raise RequestFailure(
                 status_code,
@@ -110,7 +116,7 @@ def read_bounded_response_body(
             max_response_bytes=body_limit,
         )
 
-    body = read_raw_response_bytes(response, body_limit + 1)
+    body = read_body(body_limit + 1)
     if len(body) > body_limit:
         raise RequestFailure(
             status_code,
@@ -166,7 +172,6 @@ def validate_stream_response_headers(
 
 
 def stream_bounded_response_to_file(
-    response: Any,
     destination: Path,
     *,
     request_url: str,
@@ -175,7 +180,7 @@ def stream_bounded_response_to_file(
     headers_map: Mapping[str, str],
     response_limit: int,
     compressed_limit: int,
-    check_cancelled: Callable[[], None],
+    read_chunk: Callable[[int], bytes],
     on_content_length: Callable[[int | None], None] | None = None,
     on_chunk: Callable[[int], None] | None = None,
 ) -> StreamedBodyStats:
@@ -227,8 +232,7 @@ def stream_bounded_response_to_file(
         with destination.open("xb") as stream:
             destination_created = True
             while True:
-                check_cancelled()
-                raw_bytes = read_raw_response_bytes(response, STREAM_CHUNK_BYTES)
+                raw_bytes = read_chunk(STREAM_CHUNK_BYTES)
                 if not raw_bytes:
                     break
                 compressed_read += len(raw_bytes)

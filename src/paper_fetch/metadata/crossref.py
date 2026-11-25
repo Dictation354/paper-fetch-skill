@@ -51,7 +51,9 @@ class CrossrefLookupClient:
             params["mailto"] = self.mailto
         return params
 
-    def fetch_metadata(self, query: Mapping[str, str | None]) -> CrossrefMetadata:
+    def fetch_metadata(
+        self, query: Mapping[str, str | None], *, timeout: float | None = None
+    ) -> CrossrefMetadata:
         doi = normalize_doi(query.get("doi"))
         article_title = (query.get("article_title") or "").strip()
         journal_title = (query.get("journal_title") or "").strip()
@@ -65,6 +67,7 @@ class CrossrefLookupClient:
                     headers=self.headers(),
                     query=self.query_params(),
                     request_policy=provider_request_policy("crossref", "metadata"),
+                    timeout=timeout,
                 )
             except RequestFailure as exc:
                 raise _map_crossref_request_failure(exc) from exc

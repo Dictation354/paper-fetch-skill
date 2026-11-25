@@ -22,7 +22,13 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 `section_index_path` 指向 `sections.json`。其中 `sections` 每项含 `title`、`level`、`start_line`、`end_line`。行号对应 `body_path`，从 1 开始，两端包含；已完成的全文结果均具备经校验的 `body_path` 和 `section_index_path`。
 
-`lookup --doi DOI --output-dir DIR` 只读查找未截断的验收全文。`--output-dir` 可重复，按完成时间从新到旧核对正文与章节索引快照，同一时间按目录传入顺序。命中输出一行原结果回执并退出 0。所有目录均未命中且传入 `--include-legacy` 时，按目录顺序检查无指纹 v2 sidecar。历史命中输出 `paper-fetch/legacy-lookup` 并退出 0，回执含来源 `source`、绝对 `sidecar_path`、`sidecar_version`、正文指针 `body_json_pointer=/payload/markdown` 和 `acceptance=historical_unverified`。无可用全文时输出 `status=not_found` 并退出 1。参数错误退出 2。
+## 已有正文查找
+
+`lookup (--doi DOI | --query-file PATH) --output-dir DIR [--output-dir DIR ...] [--include-legacy]` 只读查找未截断的验收全文。按完成时间从新到旧核对正文与章节索引快照，同一时间按目录传入顺序。单篇命中返回原回执，未命中返回含 DOI 的 `status=not_found` 对象。
+
+批量按输入顺序返回 JSONL，每条带 `index`。`lookup --query-file` 各项的 `index` 始终为该 DOI 在查询文件中的行号，从 1 开始。无效输入返回 `status=invalid_doi`、原 `query` 和 `doi=null`，有效 DOI 未命中时返回 `status=not_found` 和规范 DOI。全部命中退出 0，任一项未命中或 DOI 无效退出 1，命令参数错误退出 2。
+
+所有目录均无现行命中时，`--include-legacy` 按目录顺序检查历史结果。命中返回 `paper-fetch/legacy-lookup`（`schema_version=1`、`status=found`、`acceptance=historical_unverified`），并提供 `source`。v8/v2 sidecar 提供绝对 `sidecar_path`、`sidecar_version` 和 `body_json_pointer=/payload/markdown`。旧 manifest 或带受管 frontmatter 的 Markdown 提供绝对 `body_path`，来自 manifest 时还提供 `manifest_path`。
 
 ## 正文导出
 
@@ -30,13 +36,13 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 ## 补图与探测
 
-`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind formula` 三者之一。命令从 v3 manifest 复用论文身份和图片索引。
+`fetch-assets --manifest PATH` 与 `--query` 互斥。选择器为重复 `--asset-id`、重复 `--asset-url` 或 `--kind {formula,figure,table}` 三者之一。命令从 v3 manifest 复用论文身份和图片索引。
 
-Skill 调用 `fetch-assets` 时显式传 `--compact`。stdout 的单行 JSON 包括 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、`status`、`results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`，失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。命令级错误提供脱敏的 `status` 和简短 `reason`，`results` 为空。普通调用直接输出详细 JSON。
+Skill 调用 `fetch-assets` 时显式传 `--compact`。stdout 的单行 JSON 包括 `schema_version=1`、`contract=paper-fetch/asset-receipt`、`doi`、`status`、`results` 和 `details_path`。成功项包含 `status=ok`、`asset_id` 和绝对 `path`，有 `body_positions` 时还包含 `kind` 和去重、升序的 `lines`。失败项包含 `status=failed`、`asset_id` 或未匹配的 `selector`，以及 `reason`。命令级错误提供脱敏的 `status` 和简短 `reason`，`results` 为空。普通调用直接输出详细 JSON。
 
-`details_path` 指向同次调用原子保存的脱敏明细，含图注和逐项诊断。明细随显式输出目录或本次保留的临时目录存放。明细写入失败时该字段为 `null`，stderr 给出提示，仍按回执交付实际下载结果。
+`details_path` 指向同次调用原子保存的脱敏明细，含图注和逐项诊断。`formula`、`figure`、`table` 的完整 `body_positions` 见 `images.json` 和下载明细，`line`、`column` 均从 1 开始。明细随显式输出目录或本次保留的临时目录存放。明细写入失败时该字段为 `null`，stderr 给出提示，仍按回执交付实际下载结果。
 
-resolve 和 check 均接受 --query 或 --query-file；check 只探测。歧义时根据候选消歧后重试，不把候选当作已确认论文。
+`resolve` 和 `check` 均接受 `--query` 或 `--query-file`，stdout 始终为 JSONL。当前 `--progress {auto,text,jsonl,none}` 只做参数解析。`check` 只探测。歧义时根据候选消歧后重试。
 
 ## 退出码
 

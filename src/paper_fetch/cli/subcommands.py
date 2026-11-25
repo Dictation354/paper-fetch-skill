@@ -5,7 +5,7 @@ from __future__ import annotations
 import contextlib
 import json
 import tempfile
-from collections.abc import Mapping
+from collections.abc import Mapping, Sequence
 from pathlib import Path
 from typing import TYPE_CHECKING, Any
 from uuid import uuid4
@@ -20,8 +20,9 @@ from ..browser_preflight import (
     browser_preflight_next_action,
 )
 from ..catalog_payload import provider_catalog_payload
-from ..delivery.lookup import lookup_receipt
-from ..delivery.receipts import public_diagnostics
+from ..delivery.lookup import lookup_receipt, lookup_receipts
+from ..delivery.receipts import CLI_RECEIPT_SCHEMA_VERSION, public_diagnostics
+from ..publisher_identity import DOI_PATTERN, SICI_DOI_PATTERN, normalize_doi
 from ..reason_codes import ERROR
 from ..utils import provider_display_name
 from ..workflow.batch_routing import expected_doi_from_query
@@ -44,14 +45,50 @@ if TYPE_CHECKING:
 
 
 def run_lookup_command(command: LookupCommand) -> int:
-    receipt = lookup_receipt(
-        command.doi, command.output_dirs, include_legacy=command.include_legacy
+    if command.queries:
+        misses = False
+        queries = [
+            (index, query, normalize_doi(query)) for index, query in command.queries
+        ]
+        valid = {
+            doi
+            for _, _, doi in queries
+            if DOI_PATTERN.fullmatch(doi) or SICI_DOI_PATTERN.fullmatch(doi)
+        }
+        receipts = lookup_receipts(
+            tuple(valid), command.output_dirs, include_legacy=command.include_legacy
+        )
+        for index, query, doi in queries:
+            result: dict[str, Any] = {
+                "schema_version": CLI_RECEIPT_SCHEMA_VERSION,
+                "contract": "paper-fetch/receipt",
+                "index": index,
+            }
+            if doi not in valid:
+                result.update(query=query, doi=None, status="invalid_doi")
+                misses = True
+            elif receipt := receipts.get(doi):
+                result = {**receipt, "index": index}
+            else:
+                result.update(doi=doi, status="not_found")
+                misses = True
+            cli_pkg.sys.stdout.write(json.dumps(result, ensure_ascii=False) + "\n")
+        return int(misses)
+
+    single_receipt = (
+        lookup_receipt(
+            command.doi, command.output_dirs, include_legacy=command.include_legacy
+        )
+        if command.doi is not None
+        else None
     )
     result = (
-        receipt if receipt is not None else {"status": "not_found", "doi": command.doi}
+        single_receipt
+        if single_receipt is not None
+        else {"status": "not_found", "doi": command.doi}
     )
     cli_pkg.sys.stdout.write(json.dumps(result, ensure_ascii=False) + "\n")
-    return 0 if receipt is not None else 1
+    return 0 if single_receipt is not None else 1
 
 
 def run_resolution_command(command: ResolutionCommand) -> int:
@@ -118,7 +155,23 @@ def _compact_asset_receipt(
             # Local paths can contain URL punctuation and must still open on disk.
             item["path"] = original["path"]
         if item["status"] == "ok":
-            results.append({key: item[key] for key in ("status", "asset_id", "path")})
+            result = {key: item[key] for key in ("status", "asset_id", "path")}
+            positions = item.get("body_positions")
+            if isinstance(positions, Sequence) and not isinstance(
+                positions, (str, bytes)
+            ):
+                lines = sorted(
+                    {
+                        pos["line"]
+                        for pos in positions
+                        if isinstance(pos, Mapping)
+                        and type(pos.get("line")) is int
+                        and pos["line"] >= 1
+                    }
+                )
+                if lines:
+                    result.update(kind=item["kind"], lines=lines)
+            results.append(result)
         else:
             identity = "asset_id" if "asset_id" in item else "selector"
             results.append({key: item[key] for key in ("status", identity, "reason")})

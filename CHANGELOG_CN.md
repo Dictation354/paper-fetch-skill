@@ -8,6 +8,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.1.2 - 2026-11-25
+
+- `lookup --query-file` 支持批量查找 DOI。启用 `--include-legacy` 后，可从 v8 和 v2 sidecar、旧 manifest 及带受管 frontmatter 的 Markdown 找回历史全文。历史结果仍标记为未经当前验收。
+- 为公式图、插图和表格图记录 Markdown 位置。`fetch-assets --kind` 可按这三类图片筛选，紧凑回执在有位置记录时返回对应正文行号。
+- 通过 NCBI 解析 PubMed 和 PubMed Central 链接，识别论文时排除浏览器验证页标题。`check` 探测失败时报告 provider、阶段、HTTP 状态、错误分类及是否可重试。
+- HTTP 响应头和正文读取共用请求期限，全文抓取各次尝试记录耗时。为 Elsevier XML 参考文献 DOI 补全设定时限，保留到期前找到的匹配，并使用更严格的期刊引文证据。提取修订号升至 14。
+- Linux 和 macOS 离线安装新增受管的 `~/.local/bin/paper-fetch` 启动器。指定 `--reuse-env-file` 后，两个离线 CLI 入口默认读取选定的外部环境文件，未激活安装环境的 shell 也适用。
+
 ## 8.1.1 - 2026-11-23
 
 - 为成功、失败和取消的抓取逐条保存 `receipt.json`，使用 `--output -` 将正文写到 stdout 时也保留回执。文本进度显示回执目录，以及浏览器排队和执行耗时。
