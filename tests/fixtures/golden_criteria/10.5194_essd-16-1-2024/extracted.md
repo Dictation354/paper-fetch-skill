@@ -3,12 +3,12 @@ title: "A merged continental planetary boundary layer height dataset based on hi
 authors: "Jianping Guo, Jian Zhang, Jia Shao, Tianmeng Chen, Kaixu Bai, Yuping Sun, Ning Li, Jingyan Wu, Rui Li, Jian Li, Qiyun Guo, Jason B. Cohen, Panmao Zhai, Xiaofeng Xu, Fei Hu"
 journal: "Earth System Science Data"
 doi: "10.5194/essd-16-1-2024"
-publication_dates: [{"kind": "unspecified", "value": "2024-January-4", "source": "jats:pub-date:unspecified"}]
+publication_dates: [{"kind": "unspecified", "value": "2024-01-04", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 9993
+token_estimate: 9915
 ---
 
 # A merged continental planetary boundary layer height dataset based on high-resolution radiosonde measurements, ERA5 reanalysis, and GLDAS
@@ -101,16 +101,19 @@ Table 3
 
 Basic information on evaluation indices. MSE, mean squared error; RMSE, root mean square error; ABSmean, mean of the absolute bias; STD, standard derivation; RMS, root mean square.
 
-|                                                     |         |         |         |         |
-| --------------------------------------------------- | ------- | ------- | ------- | ------- |
-| Evaluation indices of the training set and test set |         |         |         |         |
-|                                                     | MSE     | RMSE    | Mean    | ABSmean |
-| Training set                                        | 59 176  | 243     | $- 0.2$ | 152     |
-| Predicting set                                      | 136 971 | 370     | $- 2.8$ | 204     |
-| Evaluation indices of PBLH bias                     |         |         |         |         |
-|                                                     | Mean    | ABSmean | STD     | RMS     |
-| PBLH$_{\mathrm{RS}}$ – PBLH$_{\mathrm{ERA}5}$       | 95.7    | 260     | 472     | 481     |
-| PBLH$_{\mathrm{RS}}$ – PBLH$_{\mathrm{merged}}$     | $- 0.9$ | 168     | 241     | 287     |
+Evaluation indices of the training set and test set
+
+|                | MSE     | RMSE | Mean    | ABSmean |
+| -------------- | ------- | ---- | ------- | ------- |
+| Training set   | 59 176  | 243  | $- 0.2$ | 152     |
+| Predicting set | 136 971 | 370  | $- 2.8$ | 204     |
+
+Evaluation indices of PBLH bias
+
+|                                                 | Mean    | ABSmean | STD | RMS |
+| ----------------------------------------------- | ------- | ------- | --- | --- |
+| PBLH$_{\mathrm{RS}}$ – PBLH$_{\mathrm{ERA}5}$   | 95.7    | 260     | 472 | 481 |
+| PBLH$_{\mathrm{RS}}$ – PBLH$_{\mathrm{merged}}$ | $- 0.9$ | 168     | 241 | 287 |
 
 ![Figure 4](https://essd.copernicus.org/articles/16/1/2024/essd-16-1-2024-f04.png)
 

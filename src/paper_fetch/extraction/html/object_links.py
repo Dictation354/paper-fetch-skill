@@ -67,13 +67,17 @@ def prepare_retained_object_links(
             if alias:
                 targets[alias] = identity
         # The image/viewer and its visible owner share an explicit data-target.
-        for viewer in node.select("[data-target]"):
+        if node.name not in {"figure", "table"}:
+            continue
+        for viewer in node.select("[data-target]:not(a)"):
             if viewer.find_parent(["figure", "table"]) is node:
                 targets[str(viewer["data-target"]).lstrip("#")] = identity
     for viewer in root.select("[data-target]"):
         if viewer.name == "a":
             continue
-        owner = viewer.find_parent(attrs={"id": True})
+        owner = viewer.find_parent(["figure", "table"], id=True)
+        if owner is None and (wrapper := viewer.find_parent(class_="figure-wrap")):
+            owner = wrapper.find(["figure", "table"], id=True, recursive=False)
         if owner is not None:
             targets.setdefault(str(viewer["data-target"]).lstrip("#"), str(owner["id"]))
     targets.update(aliases or {})

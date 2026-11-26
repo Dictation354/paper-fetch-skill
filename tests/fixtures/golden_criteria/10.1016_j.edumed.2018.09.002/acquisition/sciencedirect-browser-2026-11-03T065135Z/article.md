@@ -1,6 +1,7 @@
 ---
 title: "Simulación de la cesárea perimortem , más allá del «saber qué»"
 authors: "Jorge Norvey Alvarez Ríos, Juan Felipe Valencia Ríos, Laura Alarcón Hernández"
+doi: "10.1016/j.edumed.2018.09.002"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"
@@ -78,7 +79,7 @@ Una vez identificado el paro cardiorrespiratorio, es necesario empezar las manio
 
 Se procede a la cesárea *perimortem* si no existe retorno de la circulación espontánea. Es recomendable que el niño nazca un minuto después de haber dado inicio a la cirugía. Muchos autores recomiendan la incisión infraumbilical, lo cual permite un acceso más rápido a la cavidad abdominal: proponen dejarlo a elección del médico. No se recomienda perder tiempo en la auscultación de los latidos fetales porque esto retrasa el procedimiento. Cuando la condición de la madre es evidentemente no viable (por ejemplo, casos de traumatismo), se podrá realizar sin esperar los 4 a 5 min[3](#elsevier-sbref0130), [5](#elsevier-sbref0140) ([fig. 1](#elsevier-fig0005)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr1_lrg.jpg)
+![Figura 1](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr1_lrg.jpg)
 
 <a id="elsevier-fig0005"></a>Figura 1. Protocolo de parto *perimortem.*
 
@@ -134,7 +135,7 @@ Fuente: Elaboración propia.
 
 Se analizó el nivel de pensamiento crítico (alto, medio y bajo) (Facione y Olivares) en las respectivas etapas planteadas en el proceso de simulación clínica[<sup>11</sup>](#elsevier-sbref0170) ([fig. 2](#elsevier-fig0010)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr2_lrg.jpg)
+![Figura 2](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr2_lrg.jpg)
 
 <a id="elsevier-fig0010"></a>Figura 2. Niveles de pensamiento crítico en el diagnóstico, intervención y reflexión.
 
@@ -166,7 +167,7 @@ Los participantes señalan las dificultades de desarrollar el procedimiento fuer
 
 Según la rúbrica aplicada y los resultados obtenidos, se identifica de manera general que la fortaleza desde los niveles de pensamiento crítico está centrada en la intervención. Los participantes lograron interpretar y aplicar los protocolos con reflexiones constantes alrededor de las guías. Finalmente, se concluye que el nivel más bajo de pensamiento crítico se da en la reflexión: se dificulta de manera significativa reconocer los errores ([fig. 3](#elsevier-fig0015)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr3_lrg.jpg)
+![Figura 3](https://ars.els-cdn.com/content/image/1-s2.0-S1575181318302614-gr3_lrg.jpg)
 
 <a id="elsevier-fig0015"></a>Figura 3. Integración de pensamiento crítico en la simulación clínica.
 

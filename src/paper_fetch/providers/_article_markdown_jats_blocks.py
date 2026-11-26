@@ -5,7 +5,7 @@ from __future__ import annotations
 import urllib.parse
 import xml.etree.ElementTree as ET
 from collections.abc import Callable
-from dataclasses import dataclass
+from dataclasses import dataclass, replace
 from typing import Any
 
 from ..extraction.markdown_render import MarkdownList, render_list
@@ -228,7 +228,42 @@ def _render_structured_table_groups(
         table,
         render_cell_text=render_cell,
     )
-    return [_render_parsed_structured_table(parsed) for parsed in parsed_groups]
+    if not any(xml_local_name(child.tag) == "tgroup" for child in table):
+        return [_render_parsed_structured_table(group) for group in parsed_groups]
+    results = []
+    for parsed in parsed_groups:
+        rows = parsed.rows
+
+        def full_width(row, width=parsed.declared_width):
+            return (
+                len(row.cells) == 1
+                and row.cells[0].colspan == width
+                and row.cells[0].colspan > 1
+            )
+
+        if (
+            not rows
+            or rows[0].role != "header"
+            or not full_width(rows[0])
+            or len(rows) < 3
+            or rows[1].role == "header"
+        ):
+            results.append(_render_parsed_structured_table(parsed))
+            continue
+        starts = [i for i, row in enumerate(rows) if full_width(row)]
+        for start, end in zip(starts, [*starts[1:], len(rows)], strict=True):
+            group = list(rows[start:end])
+            if len(group) > 2:
+                group[1] = replace(group[1], role="header")
+                if (
+                    any(c.colspan > 1 for c in group[1].cells)
+                    and not group[2].cells[0].text
+                ):
+                    group[2] = replace(group[2], role="header")
+            results.append(
+                _render_parsed_structured_table(replace(parsed, rows=tuple(group)))
+            )
+    return results
 
 
 def _table_footnotes(table_wrap: ET.Element) -> list[str]:

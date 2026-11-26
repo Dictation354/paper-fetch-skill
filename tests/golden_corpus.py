@@ -142,6 +142,9 @@ class GoldenCorpusFixture:
 
     @property
     def source_url(self) -> str:
+        binding = self.sample.get("baseline_input")
+        if binding and not self.sample.get("captured_source_path"):
+            return str(binding["source_url"])
         return str(
             self.sample.get("source_url") or self.sample.get("landing_url") or ""
         )
@@ -154,6 +157,9 @@ class GoldenCorpusFixture:
 
     @property
     def route_kind(self) -> str:
+        binding = self.sample.get("baseline_input")
+        if binding and not self.sample.get("captured_source_path"):
+            return str(binding["route_kind"])
         return str(self.sample.get("route_kind") or "")
 
     @property
@@ -162,6 +168,10 @@ class GoldenCorpusFixture:
 
     @property
     def raw_path(self) -> Path:
+        if binding := self.sample.get("baseline_input"):
+            from tests.paths import REPO_ROOT
+
+            return REPO_ROOT / binding["path"]
         pdf_path = golden_criteria_asset(self.doi, "original.pdf")
         if self.route_kind == "pdf_fallback" and pdf_path.exists():
             return pdf_path
@@ -398,7 +408,10 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
     from tests.support.springer_table_pages import captured_table_pages
 
     captured = captured_table_pages(fixture)
-    if not list(fixture.raw_path.parent.glob("table*.html")) and not captured:
+    if (
+        not list(golden_criteria_dir_for_doi(fixture.doi).glob("table*.html"))
+        and not captured
+    ):
         return _build_springer_inline_article(fixture)
     import re
     from urllib.parse import urljoin
@@ -420,7 +433,7 @@ def _build_springer_article(fixture: GoldenCorpusFixture):
         target = urljoin(fixture.source_url, str(anchor["href"]))
         match = re.search(r"/tables/(\d+)(?:$|[?#])", target)
         if match:
-            capture = fixture.raw_path.parent / f"table{match[1]}.html"
+            capture = golden_criteria_dir_for_doi(fixture.doi) / f"table{match[1]}.html"
             if capture.exists():
                 responses[target] = {
                     "body": capture.read_bytes(),
@@ -610,6 +623,10 @@ def _captured_body_assets(
     fixture_dir = (
         golden_criteria_dir_for_doi(fixture.doi)
         if fixture.sample.get("baseline_completion")
+        or (
+            fixture.sample.get("baseline_input")
+            and not fixture.sample.get("captured_source_path")
+        )
         else fixture.raw_path.parent
     )
     provenance_path = fixture_dir / "acquisition/provenance.json"
@@ -621,7 +638,12 @@ def _captured_body_assets(
 
     responses = {}
     records = json.loads(provenance_path.read_text()).get("records", [])
-    by_file = {record["body_file"]: record for record in records}
+    by_file = {
+        name: record
+        for record in records
+        for name in (record["body_file"], record.get("original_body_file"))
+        if name
+    }
     # Some historical bytes have no HTTP envelope. The manifest separately
     # records their validated same-paper URL binding; retain that evidence.
     for target in (fixture.sample.get("asset_collection") or {}).get("targets", []):
@@ -666,13 +688,29 @@ def _captured_body_assets(
         for url in (record.get("requested_url"), record.get("final_url")):
             if url:
                 responses[identity(url)] = (path, record, media_type)
+    viewer_urls = {asset.get("figure_page_url") for asset in extracted_assets}
+    originals = {}
+    if fixture.provider in {"oxfordacademic", "royalsocietypublishing"}:
+        from paper_fetch.extraction.html.assets.figures import (
+            extract_full_size_figure_image_url,
+        )
+
+        for record in records:
+            url = record.get("final_url")
+            if not url or url not in viewer_urls:
+                continue
+            path = fixture_dir / record["body_file"]
+            if path.suffix == ".html" and path.is_file():
+                assert hashlib.sha256(path.read_bytes()).hexdigest() == record["sha256"]
+                candidate = extract_full_size_figure_image_url(path.read_text(), url)
+                if candidate and identity(candidate) in responses:
+                    originals[url] = candidate
     downloaded = []
     for item in extracted_assets:
+        if original := originals.get(item.get("figure_page_url")):
+            item = {**item, "full_size_url": original}
+
         if item.get("kind") not in {"figure", "table", "formula"}:
-            continue
-        if fixture.provider == "annualreviews" and item.get("kind") == "formula":
-            # Formula filenames carry distinct source occurrence identities,
-            # even when historical acquisition deduplicated identical bytes.
             continue
         for key in ("full_size_url", "url", "preview_url"):
             url = item.get(key)

@@ -67,7 +67,11 @@ def test_acs_silverchair_structure_fixture_extracts_complete_current_article() -
     assert "Skip to fig share navigation" not in markdown
     assert len(extraction["references"]) == 45
     assert extraction["references"][0]["year"] == "2018"
-    assert sum(asset["kind"] == "figure" for asset in assets) == 10
+    graphic = soup.select_one(".graphical-abstract .fig-graphic img")
+    assert [a["url"] for a in assets if a["heading"] == "Visual Abstract"] == [
+        graphic.get("data-src") or graphic["src"]
+    ]
+    assert sum(asset["kind"] == "figure" for asset in assets) == 11
     figures = [asset for asset in assets if asset.get("dom_id", "").startswith("fig")]
     table_graphics = [
         asset for asset in assets if asset.get("dom_id") in {"gr8", "gr9"}

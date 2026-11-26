@@ -62,10 +62,8 @@ def test_nwae442_source_and_final_markdown_contract():
     assert not re.search(r"(?m)^- Figure \d", markdown)
     for _, caption in captions:
         assert markdown.count(caption) == 1
-    assert re.search(
-        r"\[nwae442\\_Supplemental\\_File\]\(https://oup\.silverchair-cdn\.com/[^\n]+\.docx\?",
-        markdown,
-    )
+    file = soup.select_one(".dataSuppLink a[href]")["href"].split("?")[0]
+    assert markdown.count(file) == 1
     assert "Equally contributed to this work." in markdown
     assert not re.search(r"[^\n]+: Equally contributed to this work\.", markdown)
     references = article.references

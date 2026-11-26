@@ -6,7 +6,7 @@ source: "iop_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 13882
+token_estimate: 13876
 ---
 
 # Calibration of two mass standards with the LNE Kibble balance in 2024
@@ -263,8 +263,6 @@ Results for DB1 calibration are presented on figure [6](https://iopscience.iop.o
 
 **Table 1.** Main uncertainty contributions to the measurements of DB1 masse (*k* = 1).
 
-**Table**
-
 | Contributions                 | Relative uncertainty    |
 | ----------------------------- | ----------------------- |
 | Current correction            | $5 \cdot {10^{ - 9}}$   |
@@ -307,8 +305,6 @@ The W1 measurement campaign started on 17 September 2024 and ended on 11 Novembe
 Results for W1 calibration are presented on figure [6](https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc#metae1dfcf6). The relative Type A standard uncertainty is $2.2 \times {10^{ - 8}}$. The combined relative uncertainty is $3.5 \times {10^{ - 8}}$. All the contributions are summarized in table [2](https://iopscience.iop.org/article/10.1088/1681-7575/ae1dfc#metae1dfct2), and the uncertainty budget being detailed in the next section.
 
 **Table 2.** Main uncertainty contributions to the measurements of W1 masse (*k* = 1).
-
-**Table**
 
 | Contributions                | Relative uncertainty    |
 | ---------------------------- | ----------------------- |

@@ -313,7 +313,7 @@ resolve
   - 直接输入 LinkingHub 或 ScienceDirect 的 `/pii/{PII}` URL 时，resolve 阶段会提取 PII 并跳过 publisher landing 抓取；metadata 阶段改用 Elsevier Abstract PII API 补 DOI，再进入官方全文主路径。
   - PII XML/API fallback 只在 DOI XML/API 出现 transient / rate-limit 类失败，且 merged metadata 中能从 LinkingHub 或 ScienceDirect URL 提取 PII 时启用；它仍使用 Elsevier 官方 Article API。HTML 由 Elsevier 自行编排的 browser workflow 获取。
   - XML/API 成功时公开 `source="elsevier_xml"`；ScienceDirect HTML 成功时公开 `source="elsevier_html"`。浏览器引擎按平台选择，见[浏览器后端](browser-backends.md)。
-  - XML 通过全文与身份验收后，缺失的参考文献 DOI 按 Crossref 父论文参考文献、Crossref 书目查询、同篇 ScienceDirect 网页参考文献依次补全。父论文优先复用会话记录；reference key 关联必须无书目冲突，无可靠 key 时要求完整题名、首作者、年份一致，并核对可用卷页，只接受唯一匹配。网页需再次核验论文 DOI，并排除推荐文章。只填空缺并更新引用显示文本，不改变条目数量、编号或顺序；来源与匹配证据记录在 `reference_doi_completion` diagnostics 和 trace。使用当前请求剩余期限，补全失败保留 XML，不触发 PDF fallback；显式取消继续传播。模型转换不发起网络请求。
+  - XML 通过全文与身份验收后，只用 Crossref 补全缺失的参考文献 DOI。先匹配父论文书目（优先复用会话记录），再对有完整题名、首作者和年份的期刊条目按题名查询。只接受唯一且无书目冲突的匹配：父书目可按可靠 reference key 关联，按书目信息匹配时要求完整题名、首作者和年份一致，并核对可用卷页。保留 XML 引文文本、编号、顺序及已有 DOI，新增 DOI 附入原引文，来源与依据记入 `reference_doi_completion` diagnostics 和 trace。正常零命中记为 `info`，全文照常验收；服务故障或超时且零新增时记为 `unavailable`，验收为 `degraded`。部分命中保留成果，故障记入诊断。补全故障仍交付已验收的 XML 全文。补全最多使用 15 秒，受请求剩余期限约束，显式取消继续传播。模型转换只读取已记录的匹配。
   - HTML 候选优先已知 PII 页面，再尝试 landing URL 与 DOI resolver。正文导航正常加载图片、字体和媒体，headed/headless 策略一致。专用解析器保留作者、摘要、Highlights、关键词、`#body` 章节、附录、声明、图表、参考文献及补充材料；MathJax 原始 MathML 在页面准备钩子中绑定回对应渲染节点，再交共享转换器。
   - 浏览器 PDF 优先当前论文页面的下载控件，再尝试同 PII `/pdfft`；排除参考文献与推荐论文链接。HTML、图片、附件和 PDF 复用同一请求上下文。页面/CDN 不携带 API key；资产默认为 `none`。
   - CALS 表格通过共享 XML/grid normalizer 解析 `colspec`、多层 `<thead>`、`colname`、`namest/nameend` 和 `morerows`；同一表题下的多个 `tgroup` 使用各自列定义独立解析并按源顺序输出多个网格。可安全展开的跨度只记录正常规范化，不触发布局降级；仅冲突/不规则的分组退成可读列表，并按真实失败分组分别聚合 fallback/layout 质量信号。
@@ -649,7 +649,7 @@ CLI、Python API 当前默认值如下：
 - 公式工具和离线包固定携带 MathJax 4.1.3、既有扩展、`bbm`、`textcomp` 和本地 bbm 字形。worker 按文档维护并清理宏；`quality.semantic_losses.formula_diagnostics` 记录原 TeX、最终 LaTeX、错误、后端和样式降级，复用 fallback 计数与 warning。LitRoot 与独立检查器使用 paper-fetch 唯一引擎源码的同步副本，不通过命令替换或删除括号修复源 TeX。
 - HTML references 会去除 publisher 链接 chrome，如 `Google Scholar`、`Crossref`、`Green Version`、相关链接和隐藏文本，并优先保留用户可见 citation body。
 - 默认 reference 组装规则是：fulltext provider 已经从 HTML / XML / 出版社 REST 显式提供非空 references 时，最终 `ArticleModel.references` 和 Markdown references 以这些全文/出版社 references 为准；metadata / Crossref references 只在 provider references 为空、失败或不可用时兜底，不允许追加未匹配的 metadata-only 条目。
-- Elsevier XML references 优先从结构化 bibliography 构建，保留编号、作者、题名、来源、页码、年份和 DOI；缺字段时保留原始 citation text 或显式 `[Reference text unavailable]` 占位。全文验收后只对空缺 DOI 执行上述补全，不用 Crossref 或网页列表替换 XML bibliography。
+- Elsevier XML references 优先从结构化 bibliography 构建，保留编号、作者、题名、来源、页码、年份和 DOI；缺字段时保留原始 citation text 或显式 `[Reference text unavailable]` 占位。全文验收后只对空缺 DOI 执行上述补全，保留 XML bibliography 的条目与顺序。
 
 ## 配置文件与环境变量入口
 

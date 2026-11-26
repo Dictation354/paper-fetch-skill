@@ -1,6 +1,7 @@
 ---
 title: "Patterns and Trends in Northern Hemisphere River Ice Phenology from 2000 to 2021"
 authors: "Xinchi Wang, Lian Feng"
+doi: "10.1016/j.rse.2024.114346"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

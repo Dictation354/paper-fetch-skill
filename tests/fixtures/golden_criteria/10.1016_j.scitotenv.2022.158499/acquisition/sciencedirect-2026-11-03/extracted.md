@@ -12,7 +12,7 @@ Drought–land cover change (D-LCC) is considered to be an important stress fact
 
 <a id="elsevier-f0045"></a>
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S004896972205598X-ga1_lrg.jpg)
+![Figure 0045](https://ars.els-cdn.com/content/image/1-s2.0-S004896972205598X-ga1_lrg.jpg)
 
 
 ## 1. Introduction

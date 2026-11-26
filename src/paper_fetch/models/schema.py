@@ -96,8 +96,8 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
-# 8.1.2 changes DOI matching for Elsevier XML references.
-EXTRACTION_REVISION = 14
+# Increment when extraction changes invalidate previously cached articles.
+EXTRACTION_REVISION = 15
 
 
 @dataclass

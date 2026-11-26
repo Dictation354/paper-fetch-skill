@@ -7,6 +7,7 @@ import re
 from collections.abc import Mapping
 from functools import partial
 from typing import Any
+from urllib.parse import urljoin
 
 from bs4 import BeautifulSoup, NavigableString, Tag
 
@@ -286,8 +287,22 @@ def extract_asset_html_scopes(
         if normalize_text(node.get_text(" ", strip=True))
     )
     _restore_silverchair_figure_download_links(body_container, raw_body_container)
+    graphics = []
+    for wrapper in supplementary_source.select(".graphical-abstract"):
+        graphic = wrapper.select_one(".fig-graphic")
+        label = wrapper.select_one(".graphical-abstract-label")
+        if graphic and label:
+            graphic = copy.deepcopy(graphic)
+            graphic.name = "figure"
+            graphic["data-acs-visual-abstract"] = ""
+            caption = BeautifulSoup("", choose_parser()).new_tag("figcaption")
+            caption.string = label.get_text(" ", strip=True)
+            graphic.append(caption)
+            graphics.append(str(graphic))
     return (
-        content_fragment_html(body_container, publisher=publisher),
+        "\n".join(
+            [content_fragment_html(body_container, publisher=publisher), *graphics]
+        ),
         supplementary_html,
     )
 
@@ -378,8 +393,24 @@ def finalize_extraction(
     *,
     metadata: Mapping[str, Any] | None = None,
 ) -> tuple[str, dict[str, Any]]:
-    del source_url, metadata
+    del metadata
     finalized = dict(extraction)
+    abstracts = list(finalized.get("abstract_sections") or [])
+    for node in BeautifulSoup(html_text, choose_parser()).select(".graphical-abstract"):
+        label = node.select_one(".graphical-abstract-label")
+        image = node.select_one(".fig-graphic img")
+        url = (image.get("data-src") or image.get("src")) if image else None
+        if label and url:
+            abstracts.append(
+                {
+                    "heading": label.get_text(" ", strip=True),
+                    "kind": "abstract",
+                    "text": f"![Visual Abstract]({urljoin(source_url, str(url))})",
+                    "order": len(abstracts),
+                }
+            )
+    if abstracts:
+        finalized["abstract_sections"] = abstracts
     markdown_text = _clean_acs_markdown_chrome(markdown_text)
     extracted_authors = extract_authors(html_text)
     if extracted_authors:
@@ -414,6 +445,11 @@ def scoped_asset_extractor(
             )
             graphic.name = "figure"
 
+    # Run abstract figures in their own scope. Silverchair's main-figure
+    # download controls are positional and apply only to the body set.
+    visual_figures = [
+        node.extract() for node in soup.select("[data-acs-visual-abstract]")
+    ]
     assets = merge_assets_by_identity(
         extract_scoped_html_assets(
             promote_silverchair_srcset_originals(str(soup)),
@@ -426,6 +462,11 @@ def scoped_asset_extractor(
     for asset in assets:
         if table_info := table_graphics.get(asset.get("dom_id", "")):
             asset["heading"], asset["caption"] = table_info
+    if kwargs.get("asset_profile") != "none":
+        from ..extraction.html.assets.figures import extract_figure_assets
+
+        for graphic in visual_figures:
+            assets.extend(extract_figure_assets(str(graphic), source_url))
     return assets
 
 

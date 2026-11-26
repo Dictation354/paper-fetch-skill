@@ -154,3 +154,63 @@ def test_springer_methods_ethics_full_source_paragraph_and_order(doi, heading):
         assert "Australian Bird and Bat Banding Scheme" in section.text
     else:
         assert "AHAUXMSQ2024053" in section.text
+
+
+@pytest.mark.parametrize("suffix", ["abg9690", "abj3309"])
+def test_science_baseline_is_bound_to_the_complete_reviewed_source(suffix):
+    from hashlib import sha256
+
+    from tests.golden_corpus import golden_corpus_fixture_for_doi
+    from tests.support.replay import build_article_from_fixture
+
+    fixture = golden_corpus_fixture_for_doi("10.1126/sciadv." + suffix)
+    binding = fixture.sample["baseline_input"]
+    partial = fixture.sample["source_selection"]
+    assert sha256(fixture.raw_path.read_bytes()).hexdigest() == binding["sha256"]
+    source = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
+    partial_path = REPO_ROOT / partial["source"]
+    captured = BeautifulSoup(partial_path.read_text(), "lxml")
+    assert sha256(partial_path.read_bytes()).hexdigest() != binding["sha256"]
+    article = build_article_from_fixture(fixture)
+    if suffix == "abg9690":
+        assert len(captured.select(".citations[id]")) == 41
+        assert (
+            len(source.select("#bibliography .citations[id]"))
+            == len(article.references)
+            == 60
+        )
+    else:
+        assert len(captured.select("table")) == 3
+        assert len(source.select("table")) >= 4
+        assert article.references
+        assert "**Table 4." in article.to_ai_markdown(max_tokens="full_text")
+
+
+@pytest.mark.parametrize(
+    "doi,child",
+    [
+        ("10.1126/science.abp8622", "This PDF file includes:"),
+        ("10.1126/sciadv.aax6869", "Resources"),
+    ],
+)
+def test_supplementary_children_are_delivered_with_their_parent(doi, child):
+    from tests.golden_corpus import golden_corpus_fixture_for_doi
+    from tests.support.replay import build_article_from_fixture
+
+    fixture = golden_corpus_fixture_for_doi(doi)
+    article = build_article_from_fixture(fixture)
+    soup = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
+    container = soup.select_one(".core-supplementary-materials")
+    owner = container.find(["h2", "h3"]).get_text(" ", strip=True)
+    assert child in [h.get_text(" ", strip=True) for h in container.select("h3, h4")]
+    for profile in ("none", "body", "all"):
+        markdown = article.to_ai_markdown(
+            include_refs="none", asset_profile=profile, max_tokens="full_text"
+        )
+        headings = [line for line in markdown.splitlines() if line.startswith("#")]
+        assert ("### " + child in headings) == (profile == "all")
+        if profile == "all":
+            assert headings.index("## " + owner) < headings.index("### " + child)
+        assert not any(h.startswith("## References") for h in headings)
+        if child == "Resources":
+            assert ("### Summary" in headings) == (profile == "all")

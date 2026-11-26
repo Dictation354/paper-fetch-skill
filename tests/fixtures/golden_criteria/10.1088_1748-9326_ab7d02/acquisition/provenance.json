@@ -831,5 +831,21 @@
       "former_body_file": "acquisition/network-repair/ERL_15_5_054014_suppdata.pdf",
       "retention": "removed_at_user_request_supplementary_payload"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/network-repair/iop-fetch.md",
+      "source_sha256": "49d3d42c28383c5129228b9b416a3ca753828866dbe866eeb5d26acade24afe5",
+      "path": "derived/readable/acquisition/network-repair/iop-fetch.md",
+      "sha256": "3b5a8a7154bdc35b13c0fbc06a30eb1f733ed6655d1b3feec2b297e9ab716d46",
+      "image_references": 5
+    },
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/49311adc9873-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md",
+      "source_sha256": "49311adc9873a131d7dba91ddeb2e39176a806a265d03965d60e273aab1a75f2",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/49311adc9873-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md",
+      "sha256": "6f18fb5bde7f40a7f4339bc3da8354d8cae0272859a0838fc219b7eaa2309105",
+      "image_references": 5
+    }
   ]
 }

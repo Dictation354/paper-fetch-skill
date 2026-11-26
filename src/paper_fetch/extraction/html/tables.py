@@ -355,7 +355,23 @@ def render_table_markdown(
     render_inline_text: RenderInlineTextFn = render_table_inline_text,
     render_inline_html: RenderInlineTextFn | None = None,
 ) -> str:
-    table = table_node.find("table") if table_node.name != "table" else table_node
+    if table_node.name != "table":
+        tables = [
+            node
+            for node in table_node.find_all("table")
+            if node.find_parent("table") is table_node.find_parent("table")
+        ]
+        return "\n\n".join(
+            render_table_markdown(
+                node,
+                label=label if i == 0 else "",
+                caption=caption if i == 0 else "",
+                render_inline_text=render_inline_text,
+                render_inline_html=render_inline_html,
+            )
+            for i, node in enumerate(tables)
+        )
+    table = table_node
     if not isinstance(table, Tag):
         return ""
 

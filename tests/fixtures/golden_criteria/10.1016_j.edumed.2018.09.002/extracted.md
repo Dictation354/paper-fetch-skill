@@ -6,30 +6,30 @@ source: "elsevier_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 4875
+token_estimate: 4874
 ---
 
 # Simulación de la cesárea perimortem, más allá del «saber qué»
 
-## Abstract
+## Resumen
 
 <a id="elsevier-abst0005"></a>
 
 Introducción La simulación clínica ha sido uno de los principales avances en la didáctica para la formación de profesionales de la salud. Diferentes autores identifican la necesidad del fortalecimiento de las *habilidades* en el recurso humano, entendidas estas como la transferencia del conocimiento en escenarios reales o simulados; además, muestran a través de la evidencia científica y desde una postura crítica la necesidad de avanzar más allá de la *capacidad*.
 
-#### Objetivo
+### Objetivo
 
 <a id="elsevier-abst0010"></a>
 
 Valorar el desarrollo de pensamiento crítico a partir de la simulación clínica de la cesárea *perimortem* en cada una de sus etapas (diagnóstico, intervención y reflexión).
 
-#### Materiales y métodos
+### Materiales y métodos
 
 <a id="elsevier-abst0015"></a>
 
 Estudio cualitativo comprensivo. Se diseña una rúbrica y se aplica a un equipo de respuesta de un hospital de tercer nivel de la ciudad de Manizales (Colombia), con el fin de valorar el desarrollo del pensamiento crítico. A partir de la observación y el uso del *debriefing*, se identificaron los niveles bajo, medio y alto de la competencia del equipo (23 personas del equipo de salud).
 
-#### Resultados
+### Resultados
 
 <a id="elsevier-abst0020"></a>
 
@@ -37,25 +37,25 @@ Se identifica que el nivel de pensamiento crítico se encuentra entre «alto» y
 
 ## Abstract
 
-#### Introduction
+### Introduction
 
 <a id="elsevier-abst0025"></a>
 
 The clinical simulation has become one of the main advances in didactics for training health professionals. The necessity to strengthen skills of health providers has been identified from different perspectives. Skills have been understood as the transfer of knowledge in real or simulated scenarios. Furthermore, using the scientific evidence, they show the necessity to move beyond capacity.
 
-#### Objective
+### Objective
 
 <a id="elsevier-abst0030"></a>
 
 To assess the development of critical thinking based on clinical simulation of a peri-mortem caesarean section in each of its stages (diagnosis, intervention, and debriefing).
 
-#### Material and method
+### Material and method
 
 <a id="elsevier-abst0035"></a>
 
 A comprehensive qualitative study carried out with a pilot scenario designed and applied to a response team of a high complexity hospital in the city of Manizales, Colombia. Different levels of technical competences were identified based on the evaluation of the scenario and the use of debriefing (23 people of the health team).
 
-#### Results
+### Results
 
 <a id="elsevier-abst0040"></a>
 

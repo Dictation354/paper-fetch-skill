@@ -3,12 +3,12 @@ title: "A Generalized Simplest Equation Method and Its Application to the Boussi
 authors: "Bilige Sudao, Xiaomin Wang"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0126635"
-publication_dates: [{"kind": "collection", "value": "2015", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2015-5-14", "source": "jats:pub-date:epub"}]
+publication_dates: [{"kind": "collection", "value": "2015", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2015-05-14", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 8927
+token_estimate: 9081
 ---
 
 # A Generalized Simplest Equation Method and Its Application to the Boussinesq-Burgers Equation
@@ -464,6 +464,24 @@ As application of our method, a great number of new exact solutions of the Bouss
 We have also tested other several commonly used auxiliary equations, such as Riccati equation \[10, 11\], the auxiliary equation of F-expansion method \[12\], to get exact solutions of the Boussinesq-Burgers equation in the frame of our method. Unfortunately, we can not get the results presented in the paper. What’s more, the relationship between the Boussinesq-Burgers equation and the linear heat equation can not be found. Hence the auxiliary Eq (3) has its own advantages which are not admitted by other auxiliary equations.
 
 In addition, the true idea of our method makes one further consider finding more general exact solutions of other NLEEs by developing the existing methods, such as Tanh-method, the simplest equation method, etc, or designing new method, in which a connection between the constraint equation and other easily solved equation may be set up. It is an excellent topic for further research.
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Author contributions
+
+Conceived and designed the experiments: BS. Performed the experiments: BS XW. Analyzed the data: BS XW. Contributed reagents/materials/analysis tools: XW. Wrote the paper: BS. Designed the software used in analysis: BS.
+
+## Funding
+
+This work is supported by Natural Science Foundation of Inner Mongolia Autonomous Region of China (2014MS0114, 2014BS0105) and High Education Science Research Program of Inner Mongolia of China (NJZY12056). The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+
+## Data availability
+
+All relevant data are within the paper.
+
+## Acknowledgments
 
 This work is supported by Natural Science Foundation of Inner Mongolia Autonomous Region of China (2014MS0114, 2014BS0105), High Education Science Research Program of Inner Mongolia of China (NJZY12056).
 

@@ -8,7 +8,7 @@ source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 46704
+token_estimate: 46867
 ---
 
 # Maximizing the number of $q$-colorings
@@ -1222,6 +1222,21 @@ $$
 $$
 
 It remains to show that this is strictly less than the number of colorings of $T_{q-1}(n)$, which Lemma [B.4](https://arxiv.org/html/0811.2625v2#A2.Thmtheorem4) calculated to be $q!\cdot\big[(q-1+r)2^{s-1}-q+2\big]=(1-o(1))\cdot q!\cdot 2^{s}\cdot\frac{q-1+r}{2}$. Here, the $o(1)$ term tends to zero as $n$ grows (and $s=\big\lfloor\frac{n}{q-1}\big\rfloor$ grows). Recall that $0\leq r<q-1$, so when $r\geq 1$ and $q\geq 4$ we always have $2^{\frac{r}{q-1}}<2^{1}\leq\frac{q-1+r}{2}$, giving the desired result. On the other hand, when $r=0$, the result follows from $2^{\frac{r}{q-1}}=2^{0}<\frac{3}{2}\leq\frac{q-1+r}{2}$. $\Box$
+
+## Author notes
+
+Po-Shen Loh: Department of Mathematics,
+Princeton University, Princeton, NJ 08544. E-mail:
+ploh@math.princeton.edu.
+Research supported in part by a Fannie and John Hertz Foundation Fellowship, an NSF Graduate
+Research Fellowship, and a Princeton Centennial Fellowship.
+
+Oleg Pikhurko: Department of Mathematical Sciences, Carnegie Mellon University, Pittsburgh, PA 15123. E-mail: pikhurko@andrew.cmu.edu.
+Research supported in part by NSF grant DMS-0758057.
+
+Benny Sudakov: Department of Mathematics, UCLA, Los Angeles, CA 90095. E-mail:
+bsudakov@math.ucla.edu.
+Research supported in part by NSF CAREER award DMS-0812005, and a USA-Israeli BSF grant.
 
 ## References (39 total, showing 39)
 

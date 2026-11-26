@@ -327,6 +327,10 @@ def _render_arxiv_table_cell(node: Any) -> str:
 def _render_arxiv_table_block(node: Any) -> tuple[str, bool, bool]:
     if not isinstance(node, Tag):
         return "", False, False
+    notes = []
+    for note in node.select("figcaption p[data-paper-fetch-markdown]"):
+        notes.append(render_clean_text_from_html(note))
+        note.decompose()
     label, caption = _arxiv_caption_label_and_text(node, default_label="Table")
     if label == "Table" and not caption:
         label = ""
@@ -336,6 +340,7 @@ def _render_arxiv_table_block(node: Any) -> tuple[str, bool, bool]:
         caption=caption,
         render_inline_text=_render_arxiv_table_cell,
     )
+    markdown = "\n\n".join([markdown, *notes])
     rendered = _arxiv_table_markdown_has_body(markdown)
     return (
         normalize_markdown_text(markdown),

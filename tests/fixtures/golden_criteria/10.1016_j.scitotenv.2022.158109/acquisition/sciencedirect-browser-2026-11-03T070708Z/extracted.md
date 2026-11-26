@@ -12,7 +12,7 @@ Flash drought is a type of drought with rapid onset and great destructiveness, w
 
 <a id="elsevier-f0050"></a>
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0048969722052081-ga1_lrg.jpg)
+![Figure 0050](https://ars.els-cdn.com/content/image/1-s2.0-S0048969722052081-ga1_lrg.jpg)
 
 
 ## 1. Introduction

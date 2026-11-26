@@ -47,3 +47,17 @@ def test_subpanels_share_viewer_but_keep_binary_object_identities():
     ]
     merged = _merge_oxford_assets(panels, downloaded)
     assert merged == downloaded
+
+
+def test_viewer_without_a_rendition_is_a_page_link():
+    from paper_fetch.providers._oxfordacademic_html import extract_markdown
+
+    url = "https://academic.oup.com/journal/article/1"
+    viewer = "https://academic.oup.com/view-large/figure/123"
+    html = f'<div class="widget-ArticleFulltext"><h2>Results</h2><div class="fig fig-section"><span class="fig-label">Fig. 1.</span><a href="{viewer}">View large</a></div></div>'
+    result = extract_markdown(html, url, metadata={"doi": "10.1093/example"})
+    assert f"[Fig. 1.]({viewer})" in result.markdown_text
+    assert "![" not in result.markdown_text
+    assert any(
+        asset.get("figure_page_url") == viewer for asset in result.extracted_assets
+    )

@@ -198,6 +198,14 @@ The authors are not aware of any affiliations, memberships, funding, or financia
 
 <sup>3</sup> Diameter less than ∼1.5 μm, with the possible exception of thin apical trunks (and very proximal basal segments).
 
+## Supplementary Materials
+
+- [Supplemental Material](https://www.annualreviews.org/deliver/fulltext/neuro/36/1/ne36_schiller_supmat.pdf?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1): Download all Supplemental Material as one PDF. Includes links to Supplemental Videos 1-4 (videos embedded below), Supplemental Figures 1-6, and a Supplemental Discussion.
+- [Supplemental Video 1](https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video1.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1): Supplemental Video 1 : g max AMPA = 2.1 × leak (subthreshold). Download video file (MPG)
+- [Supplemental Video 2](https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video2.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1): Supplemental Video 2 : g max AMPA = 2.2 × leak (suprathreshold). Download video file (MPG)
+- [Supplemental Video 3](https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video3.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1): Supplemental Video 3 : g max AMPA = 1.37 × leak (subthreshold). Download video file (MPG)
+- [Supplemental Video 4](https://www.annualreviews.org/deliver/fulltext/neuro/36/1/schiller_video4.mpg?itemId=/content/suppdata/10.1146/annurev-neuro-062111-150343/1): Supplemental Video 4 : g max AMPA = 1.38 × leak (suprathreshold). Download video file (MPG)
+
 ## References (151 total, showing 151)
 
 1. Agmon-Snir H, Segev I. 1993. Signal delay and input synchronization in passive dendritic structures. J. Neurophysiol. 70: 2066– 85

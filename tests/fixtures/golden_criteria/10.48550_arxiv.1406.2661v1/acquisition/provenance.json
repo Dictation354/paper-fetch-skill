@@ -418,5 +418,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/13fdf37674ea-unknown_unknown_10.48550_arxiv.1406.2661v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md",
+      "source_sha256": "606f9e3ffe60d4728fc04b96fbee2971d50eb87225604855388d0130d659a46d",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md",
+      "sha256": "4d2b7e9dcda9a0fb95c2cf8a0378205a066ddf224d7c7290687017626135d07e",
+      "image_references": 16
+    }
   ]
 }

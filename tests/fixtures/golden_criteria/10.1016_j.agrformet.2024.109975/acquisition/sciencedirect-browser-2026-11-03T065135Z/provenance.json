@@ -325,8 +325,8 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.agrformet.2024.109975/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
-      "size": 65674,
-      "sha256": "9e27ae7b594ee77c2f55e9a1eea5842b5e66a5d8fb5dd39a5eb9296ebf8396c6"
+      "size": 65713,
+      "sha256": "8fb2b736490b62dcc062f06bcc2e45b162bd1b54a6a85a6307a605b0481018ca"
     }
   ]
 }

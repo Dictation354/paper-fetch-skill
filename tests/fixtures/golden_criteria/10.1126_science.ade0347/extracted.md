@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 5252
+token_estimate: 5165
 ---
 
 # Magma accumulation at depths of prior rhyolite storage beneath Yellowstone Caldera
@@ -74,6 +74,8 @@ This project benefited greatly from discussions with A. Ficthner, F.-C. Lin, and
 ## Data and materials availability
 
 All data used in this study are available through the IRIS DMC ([https://ds.iris.edu/ds/nodes/dmc](https://ds.iris.edu/ds/nodes/dmc/)) by using the metadata in table S1. The codes used for ambient noise signal processing are available at [https://gitlab.com/rmaguire/ambient2](https://gitlab.com/rmaguire/ambient2).
+
+## Supplementary Materials
 
 ### This PDF file includes:
 

@@ -690,5 +690,14 @@
       "transport": "existing paper-fetch provider; observation only",
       "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/b75563cefc27-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.md",
+      "source_sha256": "b75563cefc27a65705cd1e92a7fd0dd065c5233236d73e13bf8450ad49259db6",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b75563cefc27-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.md",
+      "sha256": "51d999f5dd6d37375fabe6d08733847bf82dd017931961fa205b08f7722efba4",
+      "image_references": 5
+    }
   ]
 }

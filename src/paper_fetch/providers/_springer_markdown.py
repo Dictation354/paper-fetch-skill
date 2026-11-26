@@ -3,7 +3,7 @@
 from __future__ import annotations
 
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup
 
@@ -94,6 +94,21 @@ def extract_html_payload(
     *,
     title: str | None = None,
 ) -> dict[str, Any]:
+    parsed_url = urlsplit(source_url)
+    if (
+        parsed_url.hostname in {"nature.com", "www.nature.com"}
+        and "error=cookies_not_supported" in parsed_url.query
+    ):
+        canonical = BeautifulSoup(html_text, choose_parser()).select_one(
+            "link[rel~=canonical][href]"
+        )
+        if canonical:
+            target = urlsplit(urljoin(source_url, str(canonical["href"])))
+            if (
+                target.hostname == parsed_url.hostname
+                and target.path == parsed_url.path
+            ):
+                source_url = target.geturl()
     extraction_sidecars = extract_html_extraction_sidecars(
         html_text, source_url, title=title
     )

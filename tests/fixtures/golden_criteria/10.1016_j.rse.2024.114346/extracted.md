@@ -307,6 +307,16 @@ The authors declare that they have no known competing financial interests or per
 
 The authors thank Google Earth Engine for providing large-scale data sets and processing power. L.F. was supported by the National Natural Science Foundation of China (NOs: 42271322 and 42321004), the Guangdong Basic and Applied Basic Research Foundation (2023B1515120061) and the Shenzhen Science and Technology Program (No. KCXFZ20201221173007020). We also acknowledge the extensive comments and suggestions from three anonymous reviewers.
 
+## Appendix A Supplementary data
+
+<a id="elsevier-s0130"></a>
+
+Supplementary data to this article can be found online at https://doi.org/10.1016/j.rse.2024.114346.
+
+## Supplementary Materials
+
+- [Image 1](https://api.elsevier.com/content/object/eid/1-s2.0-S003442572400364X-mmc1.docx?httpAccept=%2A%2F%2A): This supplementary material includes the supporting table and figures referenced in the main text.
+
 ## References (73 total, showing 73)
 
 1. <a id="elsevier-bb0005"></a>G.H. Allen, T.M. Pavelsky. 2018. Global extent of rivers and streams. Science, 361: 585-587 [Allen and Pavelsky, 2018]

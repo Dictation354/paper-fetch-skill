@@ -325,8 +325,8 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.rse.2025.114648/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
-      "size": 88789,
-      "sha256": "c6279b1403b2cd96bf4e4f7104358c55c287ed6ea41649e9165d57ef19eddc34"
+      "size": 88822,
+      "sha256": "13ab6989667928ee7d1ba146aa1968cd945cf0cb9e775eb94fc8add3a6a91244"
     }
   ]
 }

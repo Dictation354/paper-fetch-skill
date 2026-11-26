@@ -396,9 +396,10 @@ def test_tandf_multilingual_fixture_is_authentic_and_keeps_parallel_abstracts() 
     assert visible_markdown("I would like to thank Jill Sterrett") in visible_markdown(
         rendered
     )
-    assert visible_markdown("## References (87 total, showing 87)") in visible_markdown(
-        rendered
-    )
+    assert "## References" not in rendered
+    assert "## Notes" in rendered
+    soup = BeautifulSoup(_fixture_path(MULTILINGUAL_DOI).read_text(), "lxml")
+    assert len(soup.select("#inline_frontnotes + .summation-section > [id^=FN]")) == 87
     assert visible_markdown(
         "1. The first quotation in the abstract comes from"
     ) in visible_markdown(rendered)

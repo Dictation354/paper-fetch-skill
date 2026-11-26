@@ -123,3 +123,45 @@ def test_filtered_mdpi_appendix_leaves_an_official_table_target():
     markdown = article.to_ai_markdown(include_refs="none", max_tokens=6000)
     assert "**Table A4.**" not in markdown
     assert f"[Table A4]({source_url}#mathematics-11-00657-t0A4)" in markdown
+
+
+@pytest.mark.parametrize(
+    "suffix",
+    [
+        "sciadv.abf8021",
+        "sciadv.abj3309",
+        "sciadv.adl6155",
+        "sciadv.adm9732",
+        "science.adp0212",
+    ],
+)
+def test_science_viewer_callouts_keep_their_source_object(suffix):
+    import re
+    from urllib.parse import urlsplit
+
+    from markdown_it import MarkdownIt
+
+    from tests.golden_corpus import golden_corpus_fixture_for_doi
+    from tests.golden_criteria import golden_criteria_asset
+
+    fixture = golden_corpus_fixture_for_doi("10.1126/" + suffix)
+    soup = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
+    markdown = golden_criteria_asset(fixture.doi, "extracted.md").read_text()
+    rendered = BeautifulSoup(
+        MarkdownIt("commonmark", {"html": True}).render(markdown), "lxml"
+    )
+    source = {}
+    for a in soup.select('a[data-target^="core-fv-"]'):
+        label = a.get_text(" ", strip=True)
+        if re.fullmatch(r"(?:Fig\.|Table)\s+\d+", label):
+            target = a["data-target"].removeprefix("core-fv-")
+            assert soup.find(id=target)
+            assert source.setdefault(label, target) == target
+    assert source
+    for label, target in source.items():
+        links = [
+            a
+            for a in rendered.select("a[href]")
+            if a.get_text(" ", strip=True) == label
+        ]
+        assert links and all(urlsplit(a["href"]).fragment == target for a in links)

@@ -453,7 +453,19 @@ class RegressionSampleTests(unittest.TestCase):
                 direct_heading.decompose()
             expected.append(
                 (
-                    heading.get_text(" ", strip=True) if heading else "Abstract",
+                    heading.get_text(" ", strip=True)
+                    if heading
+                    else (
+                        "Resumen"
+                        if abstract.get(
+                            "xml:lang",
+                            abstract.find_parent(attrs={"xml:lang": True}).get(
+                                "xml:lang"
+                            ),
+                        )
+                        == "es"
+                        else "Abstract"
+                    ),
                     _words(clone.get_text("", strip=False)),
                 )
             )

@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 22454
+token_estimate: 22345
 ---
 
 # Hyaluronic acid and tissue mechanics orchestrate mammalian digit tip regeneration
@@ -38,8 +38,6 @@ Our findings identify ECM composition and mechanics as a primary mechanism gover
 ![Figure](https://www.science.org/cms/10.1126/science.ady3136/asset/1391fa54-f442-44d5-9198-0f43e3eaecba/assets/images/large/science.ady3136-fa.jpg)
 
 The ECM and tissue mechanics direct wound healing outcomes after digit amputations. Mouse digit amputations provide side-by-side models of multitissue fibrosis and regeneration depending on the amputation level. In proximal amputations, collagenous ECM accumulation and stiff tissue mechanics drive scarring. Distal amputations regenerate through the actions of HA–rich, soft, and fluid ECM. Targeting the scarring ECM and its mechanical properties restores the digit. \[Figure created with BioRender.com\]
-
-The ECM and tissue mechanics direct wound healing outcomes after digit amputations.
 
 ## Main Text
 
@@ -242,6 +240,8 @@ K.J.C. is a cofounder of StemBond Technologies and cofounder and CSO of Cyclana 
 ### Data, code, and materials availability:
 
 All raw scRNA-seq expression matrices generated from this project are available in the NCBI Gene Expression Omnibus under the accession number GSE274858. Datasets include single-cell transcriptomic profiles of nonregenerative digits after amputation, with or without inhibition of HA. This study also analyzed publicly available datasets, which are described in the supplementary materials. Code is available at Github ([https://github.com/JosephJYW/HA\_TissueMechanics\_Science2026](https://github.com/JosephJYW/HA_TissueMechanics_Science2026)) and has been deposited on Zenodo ([*71*](https://www.science.org/doi/full/10.1126/science.ady3136#R71)). All other data are in the main paper or supplementary materials. The lentiviral vector used to overexpress HAPLN1 in our study, pLV\[Exp\]-EF1A-mHapln1-mCherry, and the scrambled control vector, pLV\[Exp\]-EF1A-Scramble-mCherry, were constructed and packaged by VectorBuilder. The vector IDs are VB230522-1759vcu and VB010000-9390nka and are available upon request.
+
+## Supplementary Materials
 
 ### The PDF file includes:
 

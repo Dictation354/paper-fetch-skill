@@ -89,6 +89,17 @@ def test_original_source_contains_the_complete_discovered_collection(row):
         )
         for t in row["targets"]
     }
+    if row["provider"] == "acs" and row["include_body"]:
+        from bs4 import BeautifulSoup
+
+        source = BeautifulSoup((REPO_ROOT / row["source_input"]).read_bytes(), "lxml")
+        for graphic in source.select(".graphical-abstract .fig-graphic img"):
+            url = capture_url_identity(
+                graphic.get("data-src") or graphic["src"], provider="acs"
+            )
+            # The recorded collection predates discovery of the visual abstract.
+            assert url not in actual
+            actual.add(url)
     assert actual == expected
 
 
@@ -342,3 +353,77 @@ def test_removed_supplementary_files_are_absent_from_fixture_catalog():
             continue  # Scratch directories are not part of the portable fixture contract.
         assert record["former_path"] not in catalog
         assert not (REPO_ROOT / path).exists()
+
+
+def test_historical_readable_copies_restore_original_bytes_and_image_identity():
+    from urllib.parse import unquote
+
+    from paper_fetch.models.markdown import iter_markdown_images
+
+    deduplicated = {}
+    copies = 0
+    images = 0
+    papers = set()
+    for sample in golden_criteria_manifest()["samples"].values():
+        for key, path in sample["assets"].items():
+            if not key.startswith("derived/readable/"):
+                continue
+            derived = REPO_ROOT / path
+            paper = derived.parents[len(Path(key).parts) - 1]
+            provenance = json.loads((paper / "acquisition/provenance.json").read_text())
+            record = next(
+                r for r in provenance["readable_derivatives"] if r["path"] == key
+            )
+            original = paper / record["source"]
+            old = original.read_bytes()
+            new = derived.read_bytes()
+            assert hashlib.sha256(old).hexdigest() == record["source_sha256"]
+            assert hashlib.sha256(new).hexdigest() == record["sha256"]
+            original_images = list(iter_markdown_images(old.decode()))
+            derived_images = list(iter_markdown_images(new.decode()))
+            restored = new.decode()
+            count = 0
+            for before, after in reversed(
+                list(zip(original_images, derived_images, strict=True))
+            ):
+                if before.url == after.url:
+                    continue
+                actual = (derived.parent / unquote(after.url)).resolve()
+                if sample["doi"] == "10.1080/17538947.2022.2137254":
+                    for source, stored in [
+                        ("0001-22.png", "0001-17.png"),
+                        ("0001-24.png", "0001-20.png"),
+                    ]:
+                        if before.url.endswith(source):
+                            assert actual.name.endswith(stored)
+                            deduplicated[source] = stored
+                matches = [
+                    r
+                    for r in provenance["records"]
+                    if (paper / r["body_file"]).resolve() == actual
+                    and any(
+                        Path(name).parts[:2] == Path(record["source"]).parts[:2]
+                        and (
+                            Path(name).name == Path(before.url).name
+                            or Path(name).name.endswith("-" + Path(before.url).name)
+                        )
+                        for name in [r.get("original_body_file", ""), r["body_file"]]
+                    )
+                ]
+                assert matches and {r["sha256"] for r in matches} == {
+                    hashlib.sha256(actual.read_bytes()).hexdigest()
+                }
+                start = restored.index(
+                    after.url, after.start + after.text.index("](") + 2, after.end
+                )
+                restored = (
+                    restored[:start] + before.url + restored[start + len(after.url) :]
+                )
+                count += 1
+            assert restored.encode() == old
+            assert count == record["image_references"]
+            copies += 1
+            images += count
+            papers.add(sample["doi"])
+    assert len(deduplicated) == 2
+    assert (len(papers), copies, images) == (27, 29, 337)

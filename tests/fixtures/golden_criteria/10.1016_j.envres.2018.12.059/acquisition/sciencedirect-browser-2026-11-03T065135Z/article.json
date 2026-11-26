@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.envres.2018.12.059",
   "source": "elsevier_html",
   "metadata": {
     "title": "New approach to identifying proper thresholds for a heat warning system using health risk increments",
@@ -11,7 +11,9 @@
     "abstract": "<a id=\"elsevier-ab0010\"></a>\n\n### Background\n\n<a id=\"elsevier-sect0010\"></a><a id=\"elsevier-abs0010\"></a>\n\nA critical adaptation strategy for reducing heat-related health risk under climate change is to establish a heat warning system with a proper threshold that requires evaluation of heat-health relationships using empirical data.\n\n### Objectives\n\n<a id=\"elsevier-sect0015\"></a><a id=\"elsevier-abs0015\"></a>\n\nThis work presents a new approach to selecting proper health-based thresholds for a heat warning system which are different from thresholds of heat-health relationship.\n\n### Methods\n\n<a id=\"elsevier-sect0020\"></a><a id=\"elsevier-abs0020\"></a>\n\nThe proposed approach examined heat-health relationships through analyzing 15 years of health records with a modified generalized additive model (GAM), compared risk ratio increments (RRIs) of threshold candidates against a reference, assessed frequency of days above these candidates, and presented results graphically for easy communication. The candidate with the maximum RRI and proper occurring frequency is potentially the best threshold. Three heat indicators, including wet-bulb globe temperature (WBGT), temperature (T), and apparent temperature (AT), as well as three health outcomes, including all-cause mortality, heat-related hospital admissions, and heat-related emergency visits were evaluated.\n\n### Results\n\n<a id=\"elsevier-sect0025\"></a><a id=\"elsevier-abs0025\"></a>\n\nRisk ratios for all three health outcomes showed a consistent rising trend with increasing threshold candidates for all three heat indicators among different age and gender groups. WBGT had the most obvious increasing trend of RRIs with the three health outcomes. The maximum RRI was observed in heat-related emergency visits (242%), followed by heat-related hospital admissions (73%), and all-cause mortality (9%). The RRIs assessed for the three health outcomes pointed to the same thresholds, 33.0 °C, 34.0 °C, and 37.5 °C for WBGT, T, and AT, respectively. The number of days above these thresholds and for warning to be issued ranged between 0 and 7 days during 2000–2014.\n\n### Discussion\n\n<a id=\"elsevier-sect0030\"></a><a id=\"elsevier-abs0030\"></a>\n\nThis study demonstrated a new approach to determining heat-warning thresholds with different heat indicators and health outcomes. The proposed approach provides a straightforward, feasible, and flexible scientific tool that assists the authorities around the world in selecting a proper threshold for a heat warning system.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Health adaptation strategy",
       "Heat-health relationship",
@@ -458,9 +460,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 627,
       "body": 22296,
@@ -675,10 +674,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -694,7 +691,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -706,7 +702,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -718,7 +713,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -730,7 +724,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -742,7 +735,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -753,13 +745,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

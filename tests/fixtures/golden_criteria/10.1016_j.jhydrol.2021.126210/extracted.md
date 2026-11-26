@@ -168,7 +168,7 @@ To further investigate other drought-related variables (e.g., potential evapotra
 
 <a id="elsevier-s0055"></a>
 
-By combining the Q<sub>80</sub> threshold (i.e. a threshold above which 80% of the data falls) level with the run theory, as mentioned in *step 2*, the hydrological drought events and evolution properties, including the development and recovery information, for each hydrologic station in the study area were identified. The time series of hydrological drought intensity is provided in Fig. S1 (Supporting Information), and the boxplots of the development and recovery time for the six hydrometric stations are shown in [Fig. 3](#elsevier-f0015) . The average *HDDDs* for the Yuecheng, Jiuzhou, USGS 02372250, USGS 02361000, ID 419005, and ID 419,016 stations are 2.56, 2.85, 2.60, 3.73, 2.74, and 2.69 months, respectively. The average <em>HDRD</em>s for the same stations are 1.69, 2.08, 2.40, 1.64, 1.91, and 2.31 months, respectively. The average *HDRD* is considerably shorter than the average *HDDD* at each hydrologic station. These results are consistent with previous studies (Parry et al., 2016b; Wu et al., 2018a). The reasons for the different patterns of hydrological drought development and recovery are explained below.
+By combining the Q<sub>80</sub> threshold (i.e. a threshold above which 80% of the data falls) level with the run theory, as mentioned in *step 2*, the hydrological drought events and evolution properties, including the development and recovery information, for each hydrologic station in the study area were identified. The time series of hydrological drought intensity is provided in [Fig. S1](#elsevier-s0100) ([Supporting Information](#elsevier-s0100)), and the boxplots of the development and recovery time for the six hydrometric stations are shown in [Fig. 3](#elsevier-f0015) . The average *HDDDs* for the Yuecheng, Jiuzhou, USGS 02372250, USGS 02361000, ID 419005, and ID 419,016 stations are 2.56, 2.85, 2.60, 3.73, 2.74, and 2.69 months, respectively. The average <em>HDRD</em>s for the same stations are 1.69, 2.08, 2.40, 1.64, 1.91, and 2.31 months, respectively. The average *HDRD* is considerably shorter than the average *HDDD* at each hydrologic station. These results are consistent with previous studies (Parry et al., 2016b; Wu et al., 2018a). The reasons for the different patterns of hydrological drought development and recovery are explained below.
 
 ![Figure 3](https://api.elsevier.com/content/object/eid/1-s2.0-S0022169421002572-gr3_lrg.jpg?httpAccept=%2A%2F%2A)
 
@@ -248,6 +248,20 @@ The authors declare that they have no known competing financial interests or per
 ## Acknowledgements
 
 The research is financially supported by the National Key Research and Development Program of China (Grant No. 2016YFA0601703), the Research Start-up Fund of NUIST (2020r086), and the National Natural Science Foundation of China (Grant No. U1911204, 51861125203, 42075191).
+
+## Appendix A Supplementary data
+
+<a id="elsevier-s0095"></a>
+
+Supplementary data to this article can be found online at https://doi.org/10.1016/j.jhydrol.2021.126210.
+
+<a id="elsevier-s0100"></a>
+
+The following are the Supplementary data to this article:
+
+## Supplementary Materials
+
+- [Supplementary data 1](https://api.elsevier.com/content/object/eid/1-s2.0-S0022169421002572-mmc1.doc?httpAccept=%2A%2F%2A)
 
 ## References (59 total, showing 59)
 

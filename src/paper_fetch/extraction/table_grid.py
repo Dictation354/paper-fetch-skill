@@ -385,6 +385,43 @@ def normalize_table(
                 continue
             break
 
+    # Two source fields can divide the same three-slot parent 1+2 in
+    # the header and 2+1 in the body. The middle slot then has no field
+    # identity of its own. An independent third source cell vetoes projection.
+    if len(resolved_header_indices) >= 2:
+        parent = matrix[resolved_header_indices[-2]]
+        leaves = matrix[resolved_header_indices[-1]]
+        body = [
+            row
+            for i, row in enumerate(matrix)
+            if i not in resolved_header_indices and i not in full_width_groups
+        ]
+        redundant = set()
+        for i in range(1, width - 1):
+            if not (parent[i - 1] is parent[i] is parent[i + 1]):
+                continue
+            if (i >= 2 and parent[i - 2] is parent[i]) or (
+                i + 2 < width and parent[i + 2] is parent[i]
+            ):
+                continue
+            if leaves[i - 1] is leaves[i + 1] or (
+                leaves[i] is not leaves[i - 1] and leaves[i] is not leaves[i + 1]
+            ):
+                continue
+            leaf_spans_left = leaves[i] is leaves[i - 1]
+            if any((row[i] is row[i - 1]) != leaf_spans_left for row in body) and all(
+                row[i - 1] is not row[i + 1]
+                and (row[i] is row[i - 1] or row[i] is row[i + 1])
+                for row in body
+            ):
+                redundant.add(i)
+        if redundant:
+            matrix = tuple(
+                tuple(cell for i, cell in enumerate(row) if i not in redundant)
+                for row in matrix
+            )
+            width -= len(redundant)
+
     headers = (
         flatten_header_rows([matrix[index] for index in resolved_header_indices])
         if resolved_header_indices

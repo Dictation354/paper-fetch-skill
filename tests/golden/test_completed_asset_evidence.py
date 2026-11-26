@@ -101,9 +101,26 @@ def test_p05_all_original_signed_objects_assemble_with_real_entities(doi, tmp_pa
     assert article.quality.has_fulltext
     assert len(downloaded) == len(historical["mappings"]) == SIGNED_COUNTS[doi]
     assert not any(mapping["old_url"] in markdown for mapping in historical["mappings"])
-    assert _archivable_body_discovered(article) == SIGNED_COUNTS[doi]
+    additional = int(historical["provider"] == "acs")
+    if additional:
+        assert acceptance.asset.remote_only_count == additional
+        visual = [
+            asset for asset in article.assets if asset.heading == "Visual Abstract"
+        ]
+        assert len(visual) == 1 and not visual[0].path
+        assert (
+            len(
+                [
+                    image
+                    for image in iter_markdown_images(markdown)
+                    if image.alt == "Visual Abstract"
+                ]
+            )
+            == 1
+        )
+    assert _archivable_body_discovered(article) == SIGNED_COUNTS[doi] + additional
     assert acceptance.asset.local == SIGNED_COUNTS[doi]
-    assert acceptance.asset.local_body_assets_satisfied
+    assert acceptance.asset.local_body_assets_satisfied == (additional == 0)
 
 
 @pytest.mark.parametrize(

@@ -1,6 +1,7 @@
 ---
 title: "Land-atmosphere feedback exacerbated the mega heatwave and drought over the Yangtze River Basin of China during summer 2022"
 authors: "Xiao Chen, Jialin Wang, Feifei Pan, Yu Song, Ju Liang, Na Huang, Kang Jiang, Riping Gao, Jingyu Men, Pengshuai Bi, Fangxiao Zhang, Zhanrui Huang, Binxiang Huang, Zhihua Pan"
+doi: "10.1016/j.agrformet.2024.110321"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

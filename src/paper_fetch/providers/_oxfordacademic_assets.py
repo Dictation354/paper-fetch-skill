@@ -4,13 +4,16 @@ from __future__ import annotations
 
 from copy import deepcopy
 from typing import Any
+from urllib.parse import urljoin, urlsplit
 
-from bs4 import Tag
+from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.asset_fields import PREVIEW_IMAGE_ATTRS
 from ..extraction.html.assets.figures import (
     SILVERCHAIR_FIGURE_CONTAINER_SELECTORS,
     _figure_assets_from_soup_node,
+    _figure_full_size_url_from_soup,
+    _figure_page_url_from_soup,
     _image_is_formula_asset,
     _is_silverchair_figure_node,
 )
@@ -33,6 +36,41 @@ def extract_inline_figures(body: Tag, source_url: str) -> list[dict[str, Any]]:
         images = [
             img for img in node.find_all("img") if not _image_is_formula_asset(img)
         ]
+        if not images and not node.find("img"):
+            scope = deepcopy(node)
+            viewer = _figure_page_url_from_soup(scope, source_url)
+            page = urlsplit(viewer)
+            original = _figure_full_size_url_from_soup(scope, source_url)
+            if (
+                page.hostname == "academic.oup.com"
+                and any(
+                    part in page.path
+                    for part in ("/view-large/figure/", "/article/figure/")
+                )
+                and original in {"", viewer}
+            ):
+                # A viewer without a captured rendition remains a navigable
+                # page. Keep the source label even when the reader drops UI.
+                label = node.select_one(".fig-label, .label")
+                text = label.get_text(" ", strip=True) if label else "Figure page"
+                link = BeautifulSoup("", "html.parser").new_tag("a", href=viewer)
+                link.string = text
+                paragraph = Tag(name="p")
+                paragraph.append(link)
+                for control in list(node.select("a[href]")):
+                    if urljoin(source_url, str(control["href"])) == viewer:
+                        control.decompose()
+                node.insert_after(paragraph)
+                caption_only.append(
+                    {
+                        "kind": "figure",
+                        "heading": text,
+                        "section": "body",
+                        "figure_page_url": viewer,
+                        "render_state": "inline",
+                    }
+                )
+                continue
         # The shared single-image helper may inspect its parent. Enclosing
         # scopes are visited separately here; isolate this scope so one panel
         # cannot borrow a sibling panel's full-size attribute or link.

@@ -1179,5 +1179,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md",
+      "source_sha256": "f1ef5c35174187a96e3e955d60c033bf1f973bf6bec15059936517936b39eeab",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md",
+      "sha256": "0ff87071eaa2b1f8431103e9da852869f076d9a12b20ae783e17cdd1351ce18d",
+      "image_references": 33
+    }
   ]
 }

@@ -32,3 +32,40 @@ def test_every_source_equation_gif_has_one_discovered_asset():
         image["src"].startswith("https://")
         for image in BeautifulSoup(cleaned, "lxml").select("img.inline-formula[src]")
     )
+
+
+def test_persisted_formula_positions_resolve_to_their_own_capture():
+    import hashlib
+    import json
+    from pathlib import Path
+    from urllib.parse import urlsplit
+
+    from paper_fetch.models.markdown import iter_markdown_images
+
+    source = BeautifulSoup(
+        golden_criteria_asset(DOI, "original.html").read_text(), "lxml"
+    )
+    urls = [node["src"] for node in source.select('img[src*="/eq-075625-"]')]
+    records = json.loads(
+        golden_criteria_asset(DOI, "acquisition/provenance.json").read_text()
+    )["records"]
+    baseline = golden_criteria_asset(DOI, "extracted.md")
+    images = [
+        i for i in iter_markdown_images(baseline.read_text()) if i.alt == "Formula"
+    ]
+    hashes = set()
+    for url, image in zip(urls, images, strict=True):
+        name = Path(urlsplit(url).path).name
+        matches = {
+            r["sha256"]
+            for r in records
+            if Path(r.get("original_body_file") or r["body_file"]).name.endswith(name)
+            or any(
+                Path(urlsplit(str(r.get(k) or "")).path).name == name
+                for k in ("requested_url", "final_url")
+            )
+        }
+        digest = hashlib.sha256((baseline.parent / image.url).read_bytes()).hexdigest()
+        assert matches == {digest}, name
+        hashes.add(digest)
+    assert (len(images), len(hashes)) == (128, 94)

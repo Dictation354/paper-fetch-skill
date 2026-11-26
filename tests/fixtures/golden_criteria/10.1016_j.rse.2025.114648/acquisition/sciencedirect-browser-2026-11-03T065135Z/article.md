@@ -1,6 +1,7 @@
 ---
 title: "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations"
 authors: "Jiaqi Tian, Xiangzhong Luo, Weile Wang, Liyao Yu, Diane Tan Ting Ng, Kazuhito Ichii, Yao Zhang, Xiaoyang Zhang"
+doi: "10.1016/j.rse.2025.114648"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

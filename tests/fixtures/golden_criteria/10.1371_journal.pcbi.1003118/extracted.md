@@ -3,12 +3,12 @@ title: "Software for Computing and Annotating Genomic Ranges"
 authors: "Michael Lawrence, Wolfgang Huber, Hervé Pagès, Patrick Aboyoun, Marc Carlson, Robert Gentleman, Martin T. Morgan, Vincent J. Carey"
 journal: "PLoS Computational Biology"
 doi: "10.1371/journal.pcbi.1003118"
-publication_dates: [{"kind": "collection", "value": "2013-8", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2013-8-8", "source": "jats:pub-date:epub"}]
+publication_dates: [{"kind": "collection", "value": "2013-08", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2013-08-08", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 10414
+token_estimate: 10556
 ---
 
 # Software for Computing and Annotating Genomic Ranges
@@ -351,6 +351,18 @@ Categories are biocViews terms. Up to 4 packages were randomly sampled from Bioc
 ## Availability and Future Directions
 
 All of the packages described, including *IRanges*, *GenomicRanges* and *GenomicFeatures*, form the core infrastructure for sequence analysis in Bioconductor and are available from the project website: [http://bioconductor.org](http://bioconductor.org) (see also Software S1-S3). We aim to continue to support scientists in their drive to further science by asking increasingly complex and integrative questions about increasingly complex and heterogeneous data. For example, we are working towards better support for detecting alternative and novel splicing, measuring isoform-specific expression, annotating sequence variants, mapping between genome, transcript and protein coordinate spaces, and integrating transcript annotations with gene-level metadata. There is also an unmet need in the visualization of genomic ranges. In particular, we need better visualizations for relating RNA-seq coverage and junction counts to transcript structures, and for diagnosing read alignments in the context of variant calling. Finally, as datasets continue to expand in size, we continue to seek more efficient algorithms and data structures, and we are vigilant for opportunities to leverage parallel computing.
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Author contributions
+
+Analyzed the data: ML VJC. Contributed reagents/materials/analysis tools: ML HP PA MC MTM. Wrote the paper: ML WH RG MTM VJC.
+
+## Funding
+
+This work was funded by the National Institutes of Health, National Human Genome Research Group through grants P41 HG004059 and U41 HG004059 and (for VJC) by National Heart, Lung and Blood Institute grants R01 HL086601, R01 HL093076 and R01 HL094635. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
 
 ## Supplementary Materials
 

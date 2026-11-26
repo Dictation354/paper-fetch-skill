@@ -8,7 +8,7 @@ source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 2325
+token_estimate: 2204
 ---
 
 # Embodied Idealism: Merleau-Ponty's Transcendental Philosophy
@@ -44,7 +44,3 @@ Despite the rich analysis Berendzen offers, he focuses primarily on Merleau-Pont
 A second point of concern revolves around whether a transcendental approach can fully do justice to the deeply pre-reflective and often opaque nature of perception. Merleau-Ponty repeatedly argued that much of our experience is not neatly articulable through conceptual frameworks. Berendzen recognizes this but does not extensively examine how Merleau-Ponty's desire to preserve the primacy of embodied, pre-reflective perception might place limits on any systematic transcendental analysis. The risk, as Merleau-Ponty saw it, was lapsing back into “intellectualism”—the very stance he aimed to dislodge.
 
 Ultimately, *Embodied Idealism* is a significant addition to Merleau-Ponty scholarship. Berendzen engages in deep analysis and provides outstanding material for any reader interested in phenomenology, idealism, or philosophy of embodiment. However, the unresolved tensions between embodiment and transcendental analysis (and especially the later works) suggest that more could be done to lay out the implications of embodied transcendental idealism. Despite these limitations, the book is worthwhile: It sheds light on the development of Merleau-Ponty's thought and invites readers to probe deeper into his evolving philosophy.
-
-© The Author(s) 2025. Published by Oxford University Press on behalf of The Scots Philosophical Association and the University of St Andrews.
-
-This article is published and distributed under the terms of the Oxford University Press, Standard Journals Publication Model ([https://academic.oup.com/journals/pages/open\_access/funder\_policies/chorus/standard\_publication\_model](https://academic.oup.com/journals/pages/open_access/funder_policies/chorus/standard_publication_model))

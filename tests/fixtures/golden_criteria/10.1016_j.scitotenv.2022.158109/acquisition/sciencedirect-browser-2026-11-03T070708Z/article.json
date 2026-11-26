@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.scitotenv.2022.158109",
   "source": "elsevier_html",
   "metadata": {
     "title": "Land-atmosphere coupling speeds up flash drought onset",
@@ -10,7 +10,9 @@
     "abstract": "<a id=\"elsevier-ab0005\"></a>\n\nFlash drought is a type of drought with rapid onset and great destructiveness, which poses a serious threat to agriculture, ecosystem, and environment without sufficient early warning. The rapid onset is a unique feature that distinguishes flash drought from conventional dry conditions, but its underlying mechanism remains unclear. With the 42-years reanalysis data, we compared the differences in convective triggering potential and atmospheric humidity indices between flash drought onset and conventional dry conditions over China. We found that the dry land-atmospheric coupling can speed up flash drought onset by suppressing precipitation and increasing evapotranspiration. Results show that the increase of sensible heat transport during flash drought onset can intensify the heating of atmosphere, and enhance the lifting condensation level deficit which efficiently inhibits the convective precipitation. Meanwhile, the atmospheric drying significantly increases the evapotranspiration demand and decreases soil moisture, thus speeds up the drought onset. In this regard, the drier land surface makes the atmosphere drier through land-atmosphere coupling, and the rapid drought onset can be maintained via the positive feedback. Although the contribution of precipitation deficit averaged over China is 92 %, the evapotranspiration excess is also critical for increasing the onset speed especially over South China where the flash drought hotspot exists. With the contribution of evapotranspiration increased by about 26 %, the flash drought onset speed over China almost doubled. This study highlights the importance of dry land-atmospheric coupling for speeding up flash drought onset and provides insights for flash drought diagnosis and prediction.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Flash drought",
       "Land-atmosphere coupling",
@@ -31,7 +33,7 @@
       "heading": "Graphical abstract",
       "level": 2,
       "kind": "body",
-      "text": "<a id=\"elsevier-ab0010\"></a>\n\n<a id=\"elsevier-f0050\"></a>\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0048969722052081-ga1_lrg.jpg)"
+      "text": "<a id=\"elsevier-ab0010\"></a>\n\n<a id=\"elsevier-f0050\"></a>\n\n![Figure 0050](https://ars.els-cdn.com/content/image/1-s2.0-S0048969722052081-ga1_lrg.jpg)"
     },
     {
       "heading": "1. Introduction",
@@ -475,9 +477,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 448,
       "body": 9138,
@@ -557,10 +556,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -576,7 +573,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -588,7 +584,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -600,7 +595,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -612,7 +606,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -624,7 +617,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -635,13 +627,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

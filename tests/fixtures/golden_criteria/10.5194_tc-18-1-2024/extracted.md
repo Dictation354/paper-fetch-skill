@@ -3,12 +3,12 @@ title: "Assessment of rock glaciers and their water storage in Guokalariju, Tibe
 authors: "Mengzhen Li, Yanmin Yang, Zhaoyu Peng, Gengnian Liu"
 journal: "The Cryosphere"
 doi: "10.5194/tc-18-1-2024"
-publication_dates: [{"kind": "unspecified", "value": "2024-January-2", "source": "jats:pub-date:unspecified"}]
+publication_dates: [{"kind": "unspecified", "value": "2024-01-02", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 14255
+token_estimate: 14168
 ---
 
 # Assessment of rock glaciers and their water storage in Guokalariju, Tibetan Plateau
@@ -201,15 +201,14 @@ Table 4
 
 Ice volumes (km$^{3}$) and corresponding WVEQs (km$^{3}$) calculated using the empirical area-thickness formula (Brenning, 2005a) for sub-regions and Guokalariju-wide (All).
 
-|                  |                           |                      |                      |                      |                           |
-| ---------------- | ------------------------- | -------------------- | -------------------- | -------------------- | ------------------------- |
-| Brenning (2005a) |                           |                      |                      |                      |                           |
-| Region           | Glacier – WVEQ (km$^{3}$) | RG – WVEQ (km$^{3}$) | RG – WVEQ (km$^{3}$) | RG – WVEQ (km$^{3}$) | RG $:$ glacier WVEQ ratio |
-|                  |                           | 40 %                 | 50 %                 | 60 %                 |                           |
-| All              | 3.95                      | 3.46                 | 4.32                 | 5.19                 | $1.1:1$                   |
-| Western          | 0.06                      | 0.31                 | 0.38                 | 0.46                 | $6.33:1$                  |
-| Central          | 2.65                      | 2.78                 | 3.48                 | 4.17                 | $1.31:1$                  |
-| Eastern          | 1.24                      | 0.37                 | 0.46                 | 0.55                 | $1:2.7$                   |
+Brenning (2005a)
+
+| Region  | Glacier – WVEQ (km$^{3}$) | RG – WVEQ (km$^{3}$) / 40 % | RG – WVEQ (km$^{3}$) / 50 % | RG – WVEQ (km$^{3}$) / 60 % | RG $:$ glacier WVEQ ratio |
+| ------- | ------------------------- | --------------------------- | --------------------------- | --------------------------- | ------------------------- |
+| All     | 3.95                      | 3.46                        | 4.32                        | 5.19                        | $1.1:1$                   |
+| Western | 0.06                      | 0.31                        | 0.38                        | 0.46                        | $6.33:1$                  |
+| Central | 2.65                      | 2.78                        | 3.48                        | 4.17                        | $1.31:1$                  |
+| Eastern | 1.24                      | 0.37                        | 0.46                        | 0.55                        | $1:2.7$                   |
 
 WVEQ: water volume equivalent.
 

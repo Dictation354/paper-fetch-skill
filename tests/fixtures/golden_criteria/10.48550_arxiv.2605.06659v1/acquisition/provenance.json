@@ -146,5 +146,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/cc33c8739539-unknown_unknown_10.48550_arxiv.2605.06659v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/858b05700e07-Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md",
+      "source_sha256": "858b05700e0709e75bf7db7553d027959d3785d796171b30aebe7adc7e14e2c5",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/858b05700e07-Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md",
+      "sha256": "9f153584a14de1bba4c85c864bc81e8ef427d007fca348b85f78dc76f3cdfae9",
+      "image_references": 1
+    }
   ]
 }

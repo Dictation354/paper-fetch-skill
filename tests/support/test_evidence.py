@@ -201,6 +201,7 @@ def asset_role(path):
     if name in {
         "expected.json",
         "article.json",
+        "acceptance.json",
         "fetch.manifest.json",
         "provenance.json",
         "capture.json",

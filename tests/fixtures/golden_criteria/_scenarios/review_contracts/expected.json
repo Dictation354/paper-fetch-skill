@@ -5635,7 +5635,7 @@
         "inline": 3122,
         "display": 37,
         "container_sha256": "5c52b48ed205908093a32bbbe789910ddd57e219800d02b45cfa1a49834fc4b7",
-        "baseline_sha256": "9f5291054124c7b3d1dae1ba0f1c933056905c086aa3cf5903f4ff9cb7b71de7"
+        "baseline_sha256": "94f5d9d36877d11b62cc94c240681d4050648eec3371351a1495db9d7e2e474e"
       }
     },
     "10.48550_arxiv.2605.06556v1": {
@@ -6071,7 +6071,7 @@
         "inline": 105,
         "display": 10,
         "container_sha256": "6a0495ce110aee2c66d0d9f31df264ce884ee8b59941dc9c3dee52752befada0",
-        "baseline_sha256": "e74b13df610d3a24ef2d9d716a97da884f3c38870b09e1fb2eef0d829c28ce6a"
+        "baseline_sha256": "c9248891640254508e40f7240e2374758b728e32a1aedcd5a19b1d779323495b"
       }
     }
   },

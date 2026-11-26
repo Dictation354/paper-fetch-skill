@@ -1,6 +1,7 @@
 ---
 title: "New approach to identifying proper thresholds for a heat warning system using health risk increments"
 authors: "Yu-Ting Cheng, Shih-Chun Candice Lung, Jing-Shiang Hwang"
+doi: "10.1016/j.envres.2018.12.059"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

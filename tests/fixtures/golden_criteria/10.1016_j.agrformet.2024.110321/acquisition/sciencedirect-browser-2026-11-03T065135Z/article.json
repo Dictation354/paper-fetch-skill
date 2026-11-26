@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.agrformet.2024.110321",
   "source": "elsevier_html",
   "metadata": {
     "title": "Land-atmosphere feedback exacerbated the mega heatwave and drought over the Yangtze River Basin of China during summer 2022",
@@ -22,7 +22,9 @@
     "abstract": "<a id=\"elsevier-abs0002\"></a>\n\nIn the summer of 2022, a record-breaking heatwave and drought event occurred in the Yangtze River (YR) Basin of China, causing great damage to the society and ecosystem. However, the role of land-atmosphere (LA) interactions in driving and reinforcing this event has not been fully studied. In this study, using air temperature, soil moisture (SM), surface sensible heat fluxes, surface latent heat fluxes and radiation fluxes data from ERA5, we analyze the process of this event and reveal the contribution of the LA feedbacks. The results indicate that during the 2022 YR Basin heatwave and drought event, the regional average maximum air temperature and SM reached unprecedented levels of 2.7 standard deviations (SDs) and −3.5 SDs, respectively, compared to the climatology from 1980 to 2021. In August 2022, SM rapidly declined, pushing the region into a rare \"dry\" state. The dry soil increased the sensitivity of daily maximum air temperature to SM, intensifying the occurrence of heatwaves in the area. Simultaneously, increased downward solar radiation reached surface and most of that converted to sensible heat fluxes due to low soil moisture limitations leading to elevated air temperatures. While similar events have been reported multiple times in regions like Europe and western North America, their occurrence in the \"moist\" region of the YR Basin of China is exceptionally rare, which suggests an increasing likelihood of such extreme events in this region. Land-atmosphere interactions play an increasingly crucial role in exacerbating extreme conditions, and therefore, more studies such as this are needed for improving predictability of extreme events on a sub-seasonal time scale.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Land-atmosphere feedback",
       "Climate extremes",
@@ -553,9 +555,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 433,
       "body": 10867,
@@ -905,10 +904,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -924,7 +921,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -936,7 +932,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -948,7 +943,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -960,7 +954,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -972,7 +965,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -983,13 +975,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

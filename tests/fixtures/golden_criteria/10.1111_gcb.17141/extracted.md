@@ -6,7 +6,7 @@ source: "wiley_browser"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 15175
+token_estimate: 15223
 ---
 
 # Declining coupling between vegetation and drought over the past three decades
@@ -47,11 +47,15 @@ Here, drought timescales were first identified for each month (Vicente-Serrano e
 
 **Equation 1.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/706e7906-a8b5-41cd-bbd3-e12a0590b9ff/gcb17141-math-0001.png)
+$$
+{R}_{i,j}=\mathrm{corr}\ \left({\mathrm{NDVI}}_i,{\mathrm{SPEI}}_{i,j}\right)\ 1\le i\le 12,1\le j\le 24,
+$$
 
 **Equation 2.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/6e18577e-7540-4925-8dec-bd0f694bae51/gcb17141-math-0002.png)
+$$
+{R}_{\mathrm{max}}=\max\ \left({R}_{i,j}\right)\ 1\le i\le 12,1\le j\le 24,
+$$
 
 where corr is the Pearson correlation; *i* represents the <em>i</em>th month, ranging from 1 to 12 months; *j* is the drought timescale, ranging from 1 to 24 months; NDVI<sub><em>i</em></sub> is the <em>i</em>th month NDVI series; SPEI<sub><em>i</em>,<em>j</em></sub> is the <em>i</em>th month drought index with timescale of *j* months; *R*<sub><em>i</em>,<em>j</em></sub> is the Pearson correlation of NDVI<sub><em>i</em></sub> and SPEI<sub><em>i</em>,<em>j</em></sub>; *R*<sub>max</sub> is the maximum correlation coefficient. The *j* corresponding to the highest correlation coefficient was identified as the optimal drought timescales (TS<sub>d</sub>), and this *R*<sub>max</sub> served as the vegetation–drought coupling (*R*<sub>d</sub>).
 

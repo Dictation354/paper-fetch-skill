@@ -320,13 +320,13 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
-      "size": 71629,
-      "sha256": "b5598b7b5410f909404e071b500095819c8d47a30d56e9a77709c65239ee2a10"
+      "size": 71645,
+      "sha256": "b126aa3308d2ebfb7bb40972b2a342652d0c26a6775beb80712553d246b107b0"
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
-      "size": 72077,
-      "sha256": "e242d6c7ac49b3c595e34646ef9a0515eaa2ed69deb667a7a20146140895e2d6"
+      "size": 72130,
+      "sha256": "f300255b241b87f78aea460d3e1c8e8bf369c3ef965c79f4036cae939580c40d"
     }
   ]
 }

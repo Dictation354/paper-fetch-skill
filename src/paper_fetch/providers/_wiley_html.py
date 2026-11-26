@@ -50,6 +50,8 @@ from ._html_authors import (
     extract_selector_authors,
 )
 from ._html_references import extract_numbered_references_from_html
+from .browser_workflow.mathjax import prepare_browser_page as prepare_browser_page
+from .browser_workflow.mathjax import restore_runtime_mathml
 
 
 def prepare_source_images(container: Any, source_url: str) -> None:
@@ -431,16 +433,10 @@ def _drop_abstract_sections_from_body_container(container: Any) -> None:
 
 
 def wiley_before_block_normalization(container: Any) -> None:
-    from ._html_section_markdown import render_heading_text_from_html
+    restore_runtime_mathml(container)
 
     for paragraph in container.select("div.paragraph-element"):
         paragraph["role"] = "paragraph"
-    for heading in container.select("h2, h3, h4, h5, h6"):
-        if heading.find(["sup", "sub"]) is not None:
-            text = render_heading_text_from_html(heading)
-            heading.clear()
-            heading.append(text)
-            heading["data-paper-fetch-markdown"] = "1"
     for footnotes in list(container.select(".article-section__table-footnotes")):
         from ._html_section_markdown import render_retained_text_from_html
 

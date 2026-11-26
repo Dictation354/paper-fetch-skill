@@ -376,12 +376,14 @@ def render_elsevier_blocks(
             if title_node is None:
                 title_node = first_child(child, "title")
             title = render_inline_text(title_node)
-            if should_ignore_elsevier_section_title(title):
+            if should_ignore_elsevier_section_title(title) and not (
+                inside_appendix and title.casefold() == "supplementary data"
+            ):
                 continue
             title = combine_elsevier_section_title(child_text(child, "label"), title)
             child_lines = render_elsevier_blocks(
                 child,
-                heading_level=heading_level + 1,
+                heading_level=heading_level + bool(title),
                 figure_lookup=lookup,
                 figure_entries=entries,
                 used_figure_keys=used_keys,
@@ -879,6 +881,14 @@ def elsevier_figure_registry(
 def elsevier_supplement_entries(
     root: ET.Element, assets: list[dict[str, Any]], markdown_path: Path
 ) -> list[dict[str, Any]]:
+    index = build_elsevier_object_index(root)
+    appendix_components = {
+        id(node)
+        for appendix in root.iter()
+        if xml_local_name(appendix.tag) in {"appendix", "appendices"}
+        for node in appendix.iter()
+        if xml_local_name(node.tag) == "e-component"
+    }
     supplementary_assets: dict[str, dict[str, Any]] = {}
     for asset in assets:
         if asset.get("asset_type") != "supplementary" or not asset.get("path"):
@@ -886,7 +896,7 @@ def elsevier_supplement_entries(
         source_ref = (asset.get("source_ref") or "").strip()
         if source_ref:
             supplementary_assets[source_ref] = asset
-            supplementary_assets[normalize_text(source_ref)] = asset
+            supplementary_assets[infer_elsevier_asset_group_key(source_ref)] = asset
 
     entries: list[dict[str, Any]] = []
     used_paths: set[str] = set()
@@ -907,6 +917,22 @@ def elsevier_supplement_entries(
         matched_asset = supplementary_assets.get(locator) or supplementary_assets.get(
             normalize_text(locator)
         )
+        if not matched_asset and id(component) in appendix_components:
+            remote = index.get(locator) or {}
+            url = remote.get("source_url")
+            if url and url not in used_paths:
+                used_paths.add(url)
+                entries.append(
+                    {
+                        **remote,
+                        "link": url,
+                        "heading": label
+                        or child_text(component, "alt-text")
+                        or locator,
+                        "caption": caption,
+                        "section": "supplementary",
+                    }
+                )
         if not matched_asset or matched_asset["path"] in used_paths:
             continue
         used_paths.add(matched_asset["path"])

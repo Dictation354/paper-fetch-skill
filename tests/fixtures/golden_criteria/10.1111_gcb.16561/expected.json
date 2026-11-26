@@ -10,15 +10,924 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 20,
+    "sections": 22,
     "abstract_sections": 1,
-    "body_sections": 18,
+    "body_sections": 20,
     "figures": 0,
     "tables": 0,
     "references": 111
   },
   "expected_content_kind": "fulltext",
   "source_review": {
+    "sample_id": "10.1111_gcb.16561",
+    "provider": "wiley",
+    "doi": "10.1111/gcb.16561",
+    "original": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+    "sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 4,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 111,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 56,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 7,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 42,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": [
+      {
+        "provenance": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/provenance.json",
+        "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+        "capture_kind": "browser_rendered_dom",
+        "captured_at_utc": "2026-09-18T02:26:54.201463+00:00",
+        "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16561",
+        "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16561",
+        "status_code": 403
+      }
+    ],
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 42,
+      "tex_checked": 0,
+      "mathml_checked": 42,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_gcb.16561/original.html",
+      "sha256": "838d60f958878ebed5dca1d4263d5fca52d3981c2e7203009165b90378199ece",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": []
+    },
+    {
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "a7bec9e29a0e4631fd1f1323290765c1498a72f6528d0354ab09caff3fb4140d",
+          "numbers": "0.610817.27237.317.27237.3",
+          "minimum": {
+            "_": 2,
+            "^": 2
+          },
+          "identifiers": [
+            "VPD",
+            "e",
+            "T",
+            "T",
+            "e",
+            "T",
+            "d",
+            "T",
+            "d"
+          ],
+          "operators": [
+            "=",
+            "/",
+            "+",
+            "-",
+            "/",
+            "+"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "2bd0676693767bb8d1ba24fb3643039c532a7ebf2167687e4456c1d8319ed774",
+          "numbers": "213",
+          "minimum": {
+            "_": 1,
+            "^": 3,
+            "\\frac": 1
+          },
+          "identifiers": [
+            "RC",
+            "CLI",
+            "δ",
+            "LAI",
+            "S",
+            "δ",
+            "LAI",
+            "S",
+            "S"
+          ],
+          "operators": [
+            "=",
+            "-"
+          ]
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "06b9a0d5a4c1287835ec4a0ed4cd7d7b8dfe1e4b241a0bc9ff81a8d1696bfd34",
+          "numbers": "",
+          "minimum": {
+            "_": 1,
+            "^": 1
+          },
+          "identifiers": [
+            "δ",
+            "LAI",
+            "CLI",
+            "RC",
+            "CLI"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "51786aa7d0deab7963b9eb697814a31e5d86ec565e134c7fdae31909bffbdba3",
+          "numbers": "0",
+          "minimum": {
+            "_": 3,
+            "\\frac": 4
+          },
+          "identifiers": [
+            "ET",
+            "β",
+            "∂ET",
+            "∂LAI",
+            "LAI",
+            "∂ET",
+            "∂",
+            "T",
+            "T",
+            "∂ET",
+            "∂",
+            "P",
+            "P",
+            "∂ET",
+            "∂",
+            "R",
+            "s",
+            "R",
+            "s"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "6e85aea62cc0e93f741f0de6c34844d4dba9ab2d9c593d1dbf9a6c18e28105a0",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "1c77a09ba52ce8a1ca0b6182846a802ff5cc17e0adb2dd798084bf9caf9e530f",
+          "numbers": "",
+          "minimum": {
+            "^": 3,
+            "\\frac": 1
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI",
+            "∂ET",
+            "∂LAI",
+            "δ",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "3f188928c8a9f00d49ac414d86956e86759a50cb2b921c1c86685a0bfee48b1e",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "a36c474176439bd6b4e348a14c1fe112baf46dd338fee9ec1c23501d78395fe3",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "f684b54acc2e91f9237cb3beba4bf53f5efd9ecc5c566dc6ecb61c884fcbc52a",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "8e1a644bbfa89851905c716d49ea153b50efc1775d04db97b970dcd526150c12",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "218aeb2eca578190503527af27bce11cae7e2f03bdbe1b1ea1b353e9f7192719",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 11,
+          "id": null,
+          "node_sha256": "97a75d5a38d9d3a5098db6eff6a1829f77339acdc9f69ec4a3e6f5e16ad74750",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 12,
+          "id": null,
+          "node_sha256": "14857ab8684631e4f380edd2ca8da020541409f11162aa2ab0c79730c51d5d70",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 13,
+          "id": null,
+          "node_sha256": "46e048c5b6758f0bea04ffcab71e5fb06d600cb708781ee406746c9df9f1b9b8",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 14,
+          "id": null,
+          "node_sha256": "eeb7d004297f0108ae835e0bec801f0666e26904039acc20afd96c753d10fb01",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 15,
+          "id": null,
+          "node_sha256": "1be94a863dc26a875cdf7e9e8cca7da20ca3bb037cb7b8fe029932b2cddd6797",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 16,
+          "id": null,
+          "node_sha256": "3fe78984dbc266ff3b8c0b9c7e729cc6cdfd3ff82fcf3967cd1e98245962cd7e",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 17,
+          "id": null,
+          "node_sha256": "e0d748981672a12e1f4636f6d7de79e14a3abee8ffd75c92c54610ad8f5aad9d",
+          "numbers": "",
+          "minimum": {
+            "_": 2,
+            "^": 2,
+            "\\frac": 3
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D",
+            "∂ET",
+            "∂",
+            "T",
+            "δ",
+            "T",
+            "∂ET",
+            "∂",
+            "P",
+            "δ",
+            "P",
+            "∂ET",
+            "∂",
+            "R",
+            "s",
+            "δ",
+            "R",
+            "s"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 18,
+          "id": null,
+          "node_sha256": "dd305a341c9e994d0177555f4993093746fe0d5ec670a9e899c1f8cf446f28c9",
+          "numbers": "",
+          "minimum": {
+            "^": 5
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "δ",
+            "ET",
+            "LAI",
+            "CLI",
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": [
+            "=",
+            "+"
+          ]
+        },
+        {
+          "object_index": 19,
+          "id": null,
+          "node_sha256": "d43321b7dc504fe993737919fab7dc3eae0fbd16af0641dbb36d1f69175c4c77",
+          "numbers": "",
+          "minimum": {
+            "^": 6
+          },
+          "identifiers": [
+            "δ",
+            "WA",
+            "CLI",
+            "δ",
+            "P",
+            "δ",
+            "ET",
+            "CLI",
+            "δ",
+            "P",
+            "δ",
+            "ET",
+            "CLI",
+            "D",
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "=",
+            "-",
+            "=",
+            "-",
+            "-"
+          ]
+        },
+        {
+          "object_index": 20,
+          "id": null,
+          "node_sha256": "cbed2d55d138428326e8bb4b90238805a2f49cb384945c284a50ef10f3ab2e6a",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 21,
+          "id": null,
+          "node_sha256": "4a6a02e8dccd958407ed5755ebaa03b54854c2d58be89e934664e1b708e6699a",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 22,
+          "id": null,
+          "node_sha256": "76754b51199852bdcc17c497d8d5b0eab8f05a421bed18cf93e9fbcc3f886c06",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 23,
+          "id": null,
+          "node_sha256": "9d281f9186635cb63657200bc2ffa2b97c75aa634c26ae5a452e22415711ab94",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 24,
+          "id": null,
+          "node_sha256": "8b349058648aaaea3e9838598223fa6d4b9b5f854743180a86180e06a50ccda1",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 25,
+          "id": null,
+          "node_sha256": "616038f8ab6c6f5ebf0ea9b358c08fdaa557cec56dfe31ba9accb49744321377",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 26,
+          "id": null,
+          "node_sha256": "39b445ee22bbccba4f1e6daadd85af953248b34ae8f0f0e32a73a8db3ff4fc72",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 27,
+          "id": null,
+          "node_sha256": "72925931f7a6f11e42e2e53da19055b0a0d9d33d6a59b6af3d3f7c98792ef8fb",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 28,
+          "id": null,
+          "node_sha256": "d61776cf85117ba7dbebe4b853548e6bed3e4a8176f6b73048ab781f7b2a4e18",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 29,
+          "id": null,
+          "node_sha256": "c1747122227ea427fc3b6c05b230c0c4f969562e0cc2261348999ba32ebd16cf",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": [
+            "-"
+          ]
+        },
+        {
+          "object_index": 30,
+          "id": null,
+          "node_sha256": "5f0c7feda4c8cf36f430113dd89cab3e45cbc0dd30c8f593fac0d006c9ec822e",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 31,
+          "id": null,
+          "node_sha256": "b4bae38d2fea785392d41a7a51b5af4d1755fd345a5dd9780f193d31e30b64bd",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 32,
+          "id": null,
+          "node_sha256": "c3215f1b7d518783f56e15ed3bf55d49343146aaca4e4c195f633ccdc8408cc1",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 33,
+          "id": null,
+          "node_sha256": "df3190a8f434b4f025278de507da98cef8b0a9c5a52db9e7b9271b8b7c7041e2",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 34,
+          "id": null,
+          "node_sha256": "10ddaed9c5d32c43569be3410a89cb3378996ec2887df12ee2f8f74fa2540e6d",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 35,
+          "id": null,
+          "node_sha256": "930f89cbbccb6e8fdbcceb2a343fa6c2e4a5285213312bd9c0f9885419ff1f98",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 36,
+          "id": null,
+          "node_sha256": "09107a1ca7c634f8b040f8e2f492a9b331ec6faaf43e6e569ba08c604974c10d",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 37,
+          "id": null,
+          "node_sha256": "05b16d1f631b5e77d161346a741cfa64144956f8ca5983f7d07c8c858894ef49",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 38,
+          "id": null,
+          "node_sha256": "80f23180b5d3659041ea78ca6b57f4f5b11128c72051532d86cf1374d6556eea",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 39,
+          "id": null,
+          "node_sha256": "cf5684e8601a52eb66acb59e8fb501f8c17605bbbbca1586e4a1930aa6dd0a5b",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 40,
+          "id": null,
+          "node_sha256": "c9c62ff3b6326cd8f1dda1f3f50b4afbbc36e7e2326abf9c730419fbc851f6f0",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "CLI",
+            "D"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 41,
+          "id": null,
+          "node_sha256": "3d5b658423c37a87c15e84c4c994c79981cda9ea4ea9a69e557edc47a7a3a240",
+          "numbers": "",
+          "minimum": {
+            "^": 2
+          },
+          "identifiers": [
+            "δ",
+            "ET",
+            "LAI",
+            "CLI"
+          ],
+          "operators": []
+        }
+      ]
+    }
+  ],
+  "historical_source_review": {
     "sample_id": "10.1111_gcb.16561",
     "provider": "wiley",
     "doi": "10.1111/gcb.16561",
@@ -97,14 +1006,5 @@
       "mathml_checked": 0,
       "empty_excluded": 1
     }
-  },
-  "source_objects": [
-    {
-      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_gcb.16561/original.html",
-      "sha256": "838d60f958878ebed5dca1d4263d5fca52d3981c2e7203009165b90378199ece",
-      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
-      "tables": [],
-      "mathml": []
-    }
-  ]
+  }
 }

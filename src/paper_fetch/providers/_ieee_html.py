@@ -313,6 +313,9 @@ def _ieee_asset_from_figure_full_block(
     alt_text = (
         normalize_text(str(image.get("alt") or "")) if isinstance(image, Tag) else ""
     )
+    identity = re.fullmatch(r"fig(\d+[a-z]?)", str(block.get("id") or ""), re.I)
+    if not caption and not title and identity:
+        title = "Figure " + identity[1]
     caption = caption or title or alt_text
     asset = {
         "kind": kind,

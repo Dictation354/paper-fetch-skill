@@ -326,8 +326,8 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.uclim.2019.100528/acquisition/sciencedirect-browser-2026-11-03T070304Z/article.md",
-      "size": 54920,
-      "sha256": "22e8e8966ad976a1dc4e81e4ff4e21b4db37441d6624c61bfb85bfbb392f3a3c"
+      "size": 54955,
+      "sha256": "08398e796e105bcf604a433ec9b6fe2cd0ccd04be2c0ed29d62f7ad2680ca068"
     }
   ]
 }

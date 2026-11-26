@@ -119,5 +119,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md",
+      "source_sha256": "020a81af026137b4292dcf97dfb6f222d2bfe76611b2110bb5507daa128adcb9",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md",
+      "sha256": "b478fe701062780a8ab82fc0528211a4e1f21354dbe44c6f43a4303f238808e3",
+      "image_references": 3
+    }
   ]
 }

@@ -156,6 +156,8 @@ def inline_figure_markdown_entries(
                 or ""
             )
         )
+        viewer = normalize_text(str(asset.get("figure_page_url") or ""))
+        url = url or viewer
         if not url:
             continue
         aliases: list[str] = []
@@ -166,6 +168,7 @@ def inline_figure_markdown_entries(
         entries.append(
             {
                 "url": url,
+                "viewer": viewer,
                 "heading": normalize_text(str(asset.get("heading") or "Figure"))
                 or "Figure",
                 "caption": normalize_text(str(asset.get("caption") or "")),
@@ -175,6 +178,11 @@ def inline_figure_markdown_entries(
             }
         )
     return entries
+
+
+def _figure_markdown(entry: Mapping[str, str], label: str) -> str:
+    link = render_markdown_image("figure", label, entry["url"])
+    return link.removeprefix("!") if entry["url"] == entry["viewer"] else link
 
 
 def _base_panel_label_key(label_key: str) -> str | None:
@@ -375,10 +383,7 @@ def inject_inline_figure_links(
                     or normalize_text(image_entry.get("heading") or "Figure")
                     or "Figure"
                 )
-                injected.append(
-                    indent
-                    + render_markdown_image("figure", heading, image_entry["url"])
-                )
+                injected.append(indent + _figure_markdown(image_entry, heading))
             else:
                 injected.append(block)
             continue
@@ -387,9 +392,7 @@ def inject_inline_figure_links(
             label = match.group(1).rstrip(".")
             caption_entry = take_entry_for_label(canonical_figure_label(label))
             if caption_entry is not None:
-                image_block = indent + render_markdown_image(
-                    "figure", label, caption_entry["url"]
-                )
+                image_block = indent + _figure_markdown(caption_entry, label)
                 if not injected or normalize_text(injected[-1]) != image_block:
                     injected.append(image_block)
                 injected.append(block)
@@ -412,11 +415,10 @@ def inject_inline_figure_links(
                 continue
             referenced_entry = take_entry_for_label(label_key)
             if referenced_entry is not None:
-                image_block = render_markdown_image(
-                    "figure",
+                image_block = _figure_markdown(
+                    referenced_entry,
                     normalize_text(referenced_entry.get("heading") or label_key)
                     or "Figure",
-                    referenced_entry["url"],
                 )
                 if image_block and normalize_text(injected[-1]) != image_block:
                     injected.append(image_block)

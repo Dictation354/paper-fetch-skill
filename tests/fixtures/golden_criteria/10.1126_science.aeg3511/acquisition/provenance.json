@@ -557,5 +557,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md",
+      "source_sha256": "1f2b910dce66eabf08cc51c2d247a58242c0892f0481ec6de4fec14dfe63dde0",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md",
+      "sha256": "768413563e9a3a9607660d57ff58b66e07d61b7e9b28e3cc95ec387b473ddc6d",
+      "image_references": 1
+    }
   ]
 }

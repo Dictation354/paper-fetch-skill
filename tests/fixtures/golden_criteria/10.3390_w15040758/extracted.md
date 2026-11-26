@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 11059
+token_estimate: 11048
 ---
 
 # Homogenous UV/Periodate Process for the Treatment of Acid Orange 10 Polluted Water
@@ -92,8 +92,10 @@ This paper deals with the application of UV/IO<sub>4</sub><sup>−</sup> process
 Acid orange 10 (1-phenylazo-2-naphthol-6, 8-disulfonic acid, disodium salt AO10; CI number: 16230; azo chemical class: C<sub>16</sub>H<sub>10</sub>N<sub>2</sub>Na<sub>2</sub>O<sub>7</sub>S<sub>2)</sub>; supplied by Sigma-Aldrich, St. Louis, MO, USA) was used in this study as a representative dye for the investigation of its degradation by UV/IO<sub>4</sub><sup>−</sup> treatment. [Table 1](https://www.mdpi.com/2073-4441/15/4/758#water-15-00758-t001) reports the AO10’s molecular structure and some other specifications. Sodium hydroxide or sulfuric acid (Sigma-Aldrich, St. Louis, MO, USA) were employed to adjust the pH of the solution. Sodium periodate, sodium sulfate, and potassium bromide were purchased from Acros Organics. Hexadecyltrimethylammonium bromide (CTAB), Tween 80 and Triton X100, which were used to test the effect of surfactants on AO10 degradation, were supplied by Sigma-Aldrich. Periodate solutions were prepared in distilled water. All purchased products had the purest grade available (&gt;99%).
 
 **Table 1.** The characteristics of acid orange 10 (AO10) dye.
-| Structure / Formula: | ![Image](https://www.mdpi.com/water/water-15-00758/article_deploy/html/images/water-15-00758-i001.png) / C<sub>16</sub>H<sub>10</sub>N<sub>2</sub>Na<sub>2</sub>O<sub>7</sub>S<sub>2</sub> |
-| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
+| | |
+| ------------------------------------------------------ | ------------------------------------------------------------------------------------------------------ |
+| Structure | ![Image](https://www.mdpi.com/water/water-15-00758/article_deploy/html/images/water-15-00758-i001.png) |
+| Formula: | C<sub>16</sub>H<sub>10</sub>N<sub>2</sub>Na<sub>2</sub>O<sub>7</sub>S<sub>2</sub> |
 | M<sub>w</sub> = 452.36 g/mol; λ<sub>max</sub> = 477 nm | |
 
 ### 2.2. Photoreactor
@@ -272,6 +274,14 @@ M.N. and H.G.: conceptualization, interpretation of results, writing, and editin
 ## Funding
 
 Researchers Supporting Project number (RSP-2023R113), King Saud University, Riyadh, Saudi Arabia.
+
+## Institutional Review Board Statement
+
+Not applicable.
+
+## Informed Consent Statement
+
+Not applicable.
 
 ## Data Availability Statement
 

@@ -8,7 +8,7 @@ source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 5678
+token_estimate: 5679
 ---
 
 # The Ultraviolet Behavior of ${{\cal N}=8}$ Supergravity at Four Loops
@@ -17,11 +17,13 @@ token_estimate: 5678
 
 We describe the construction of the complete four-loop four-particle amplitude of ${{\cal N}=8}$ supergravity. The amplitude is ultraviolet finite, not only in four dimensions, but in five dimensions as well. The observed extra cancellations provide additional non-trivial evidence that ${{\cal N}=8}$ supergravity in four dimensions may be ultraviolet finite to all orders of perturbation theory.
 
+## Front matter
+
 UCLA/09/TEP/09/47 SLAC–PUB–13608
 
-## pacs
+PACS: 04.65.+e, 11.15.Bt, 11.25.Db, 12.60.Jv
 
-04.65.+e, 11.15.Bt, 11.25.Db, 12.60.Jv
+## Full text
 
 An often-expressed sentiment is that point-like quantum field theories based on Einstein’s theory of General Relativity, including supersymmetric extensions thereof, are quantum mechanically inconsistent, due to either a proliferation of divergences associated with the dimensionful nature of Newton’s constant, or absence of unitarity. A series of recent computations has challenged this widely held belief. In particular, the three-loop four-graviton amplitude \[[1](https://arxiv.org/html/0905.2326v2#bib.bib1), [2](https://arxiv.org/html/0905.2326v2#bib.bib2)\] in ${{\cal N}=8}$ supergravity \[[3](https://arxiv.org/html/0905.2326v2#bib.bib3)\] exposes cancellations beyond those needed for ultraviolet (UV) finiteness at that order. Novel cancellations occur already in this theory \[[4](https://arxiv.org/html/0905.2326v2#bib.bib4), [5](https://arxiv.org/html/0905.2326v2#bib.bib5)\] at one loop, related \[[6](https://arxiv.org/html/0905.2326v2#bib.bib6), [7](https://arxiv.org/html/0905.2326v2#bib.bib7)\] to the remarkably good behavior of gravity tree amplitudes under large complex deformations of external momenta \[[8](https://arxiv.org/html/0905.2326v2#bib.bib8), [7](https://arxiv.org/html/0905.2326v2#bib.bib7)\], and to the unordered nature of gravity amplitudes \[[5](https://arxiv.org/html/0905.2326v2#bib.bib5)\]. The modern unitarity method \[[9](https://arxiv.org/html/0905.2326v2#bib.bib9)\] implies that extensive UV cancellations occur to all loop orders \[[10](https://arxiv.org/html/0905.2326v2#bib.bib10)\], for a class of terms obtained by isolating one-loop sub-amplitudes via generalized unitarity \[[11](https://arxiv.org/html/0905.2326v2#bib.bib11)\], leading to the proposal \[[6](https://arxiv.org/html/0905.2326v2#bib.bib6)\] that the multiloop UV cancellations trace back to the tree-level behavior. These surprising cancellations point to the possible perturbative UV finiteness of the theory.
 

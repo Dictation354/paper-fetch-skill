@@ -41,7 +41,6 @@ from ._html_references import (
 )
 from ._html_section_markdown import (
     render_container_markdown,
-    render_heading_text_from_html,
 )
 from ._script_json import extract_assignment_json
 from .atypon_browser_workflow.asset_scopes import (
@@ -450,12 +449,6 @@ def science_before_block_normalization(container: Any) -> None:
             heading = BeautifulSoup("<h2>Main Text</h2>", "html.parser").h2
             root.insert(0, heading)
 
-    for heading in container.select("h2, h3, h4, h5, h6"):
-        if heading.find(["sup", "sub"]) is not None:
-            text = render_heading_text_from_html(heading)
-            heading.clear()
-            heading.append(text)
-            heading["data-paper-fetch-markdown"] = "1"
     _normalize_science_table_row_groups(container)
 
 
@@ -770,7 +763,19 @@ def finalize_extraction(
         r"(?im)^#{2,6} supplementary (?:materials?|information)\s*$", markdown_text
     ):
         supplementary_lines: list[str] = []
+        hints = list(finalized.get("section_hints") or [])
+        # The body copy excludes these nodes. Append their source-ordered
+        # hints after body hints so a homonymous body heading keeps its kind.
         for section in _atypon_browser_workflow_supplementary_sections(soup):
+            for node in section.select("h2, h3, h4, h5, h6"):
+                hints.append(
+                    {
+                        "heading": normalize_text(node.get_text(" ", strip=True)),
+                        "level": int(node.name[1]),
+                        "kind": "supplementary",
+                        "order": len(hints),
+                    }
+                )
             for link in section.select("a[href]"):
                 link["href"] = urllib.parse.urljoin(source_url, str(link["href"]))
             render_container_markdown(
@@ -781,6 +786,7 @@ def finalize_extraction(
                 preserve_heading_levels=True,
             )
         if supplementary_lines:
+            finalized["section_hints"] = hints
             markdown_text += "\n\n## Supplementary Materials\n\n" + "\n".join(
                 supplementary_lines
             )

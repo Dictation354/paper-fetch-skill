@@ -3,7 +3,7 @@ title: "On the use of routine airborne observations for evaluation and monitorin
 authors: "Timothy J. Wagner, Thomas August, Tim Hultberg, Ralph A. Petersen"
 journal: "Atmospheric Measurement Techniques"
 doi: "10.5194/amt-17-1-2024"
-publication_dates: [{"kind": "unspecified", "value": "2024-January-3", "source": "jats:pub-date:unspecified"}]
+publication_dates: [{"kind": "unspecified", "value": "2024-01-03", "source": "jats:pub-date:unspecified"}]
 source: "copernicus_xml"
 has_fulltext: true
 content_kind: "fulltext"
@@ -16,6 +16,7 @@ token_estimate: 11949
 ## Abstract
 
 Satellite-based observations require independent sources of data to monitor and evaluate their precision and accuracy. For the temperature and water vapor profiles produced by satellite-based sounders, this typically results in comparisons to operational radiosonde observations. However, polar-orbiting satellite overpasses are frequently misaligned with the global synoptic launch times. The routine airborne in situ observations of temperature and water vapor from the Airborne Meteorological Data Relay (AMDAR) program and the Water Vapor Sensing System-II (WVSS-II) instrument greatly enhance opportunities to make precise matchups due to the far greater temporal frequency and spatial density of aircraft flights.
+
 The potential for the use of aircraft-based observations as a source of evaluation of tropospheric satellite sounder profiles is explored through a year-long intercomparison with the Infrared Atmospheric Sounding Interferometer (IASI) level-2 profiles produced from both the Metop-A and Metop-B satellites. Results using 1 h and 50 km match criteria indicating good agreement between the satellites and the aircraft-based observations with temperature, specific humidity, and relative humidity biases generally less than 0.5 K, 0.8 $\mathrm{g}\hspace{0.125em}\mathrm{kg}^{- 1}$, and 5 %, respectively; both IASI instruments perform nearly identically. While the intercomparisons are generally limited to the troposphere as aircraft typically reach their maximum height at the tropopause, the substantially larger number of intercomparison points enable characterization as a function of season, scan angle, and other characteristics heretofore unexplored due to a lack of sufficient validation data.
 
 ## 1 Introduction

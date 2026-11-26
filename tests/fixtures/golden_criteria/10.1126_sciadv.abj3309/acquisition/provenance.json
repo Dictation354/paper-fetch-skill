@@ -36,6 +36,21 @@
       "capture_kind": "browser_rendered_dom",
       "transport": "existing paper-fetch provider; observation only",
       "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
+    },
+    {
+      "doi": "10.1126/sciadv.abj3309",
+      "provider": "science",
+      "requested_url": "https://www.science.org/doi/10.1126/sciadv.abj3309",
+      "final_url": "https://www.science.org/doi/10.1126/sciadv.abj3309",
+      "status_code": 200,
+      "response_headers": {},
+      "captured_at_utc": "2026-11-26T08:49:35.426699+00:00",
+      "body_file": "acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html",
+      "size": 508448,
+      "sha256": "98b06f326b6a28e4abc01a6df8e96cd9e469e8f993850ff2635ea3764781149e",
+      "capture_kind": "browser_rendered_dom",
+      "transport": "paper-fetch Science selected-browser HTML (Byparr / Invisible)",
+      "access_conditions": "Official article page; no manual authentication"
     }
   ]
 }

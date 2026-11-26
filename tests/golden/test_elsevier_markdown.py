@@ -814,3 +814,39 @@ if __name__ == "__main__":
 
 if __name__ == "__main__":
     unittest.main()
+
+
+def test_persisted_supplementary_appendices_keep_each_source_entry_once():
+    from bs4 import BeautifulSoup
+
+    for suffix in (
+        "ecolind.2023.110326",
+        "ecolind.2024.112140",
+        "jhydrol.2021.126210",
+        "rse.2024.114346",
+        "scitotenv.2022.158499",
+    ):
+        doi = "10.1016/j." + suffix
+        source = BeautifulSoup(
+            golden_criteria_asset(doi, "original.xml").read_bytes(), "xml"
+        )
+        markdown = golden_criteria_asset(doi, "extracted.md").read_text()
+        components = source.find("appendices").find_all("e-component")
+        assert components
+        for component in components:
+            label = (component.find("label") or component.find("alt-text")).get_text(
+                strip=True
+            )
+            locator = component.find("link")["locator"]
+            links = re.findall(r"\[([^\]]+)\]\(([^)]+)\)", markdown)
+            matches = [(name, url) for name, url in links if "-" + locator + "." in url]
+            assert len(matches) == 1 and matches[0][0] == label
+            for text in component.find_parent("para").find_all(
+                string=True, recursive=False
+            ):
+                if intro := text.strip():
+                    assert intro in markdown
+            if caption := component.find("caption"):
+                assert (
+                    " ".join(caption.stripped_strings).replace("\xa0", " ") in markdown
+                )

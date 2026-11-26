@@ -675,5 +675,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
   ],
-  "scope": "Original response entity bytes after project HTTP decompression; no browser authentication or challenge bypass. Headers omit Set-Cookie only. Main golden extraction route unchanged."
+  "scope": "Original response entity bytes after project HTTP decompression; no browser authentication or challenge bypass. Headers omit Set-Cookie only. Main golden extraction route unchanged.",
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/8986bb746956-Wang_et_al_2022_Quantum_pattern_recognition_in_photonic_circuits.md",
+      "source_sha256": "8986bb746956a44fa23e53ed422d0a14c4550902266a937f440c5eb9d74eaa22",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8986bb746956-Wang_et_al_2022_Quantum_pattern_recognition_in_photonic_circuits.md",
+      "sha256": "75a7bfe6cbf1678ca13748a8118f6d7a04e1566ef48e8252260fdf404c716ab2",
+      "image_references": 2
+    }
+  ]
 }

@@ -713,7 +713,7 @@ def _raw_inline_markdown_from_node(node: Any) -> str | None:
         label = render_html_inline_node(
             content, raw_markdown_from_node=_raw_inline_markdown_from_node
         )
-        if node["href"] == "#":
+        if not label.strip() or node["href"] == "#":
             return label
         href = quote(str(node["href"]), safe="/:#?=&%+@;,~!$*'[]")
         return f"[{label}]({href})"

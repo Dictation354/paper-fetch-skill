@@ -6,7 +6,7 @@ source: "pnas"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 12356
+token_estimate: 12398
 ---
 
 # The importance of internal climate variability in climate impact projections
@@ -182,6 +182,14 @@ Source code and raw data has been deposited to Mendeley ([https://data.mendeley.
 ## Acknowledgments
 
 We thank the editor and two anonymous reviewers for their constructive comments that improved the presentation of this work. We are grateful for thoughtful comments from James Rising, Mingfang Ting, Kate Marvel, Tom Bearpark, Corey Lesk, Gernot Wagner, and the Large Ensemble community. We also thank the US Climate and Ocean: Variability, Preditability, and Change (US CLIVAR) Working Group on Large Ensembles for coordinating the multimodel LE experiment and making the data public.
+
+## Author contributions
+
+K.S. and N.L. designed research; K.S. performed research; K.S. and N.L. analyzed data; and K.S. and N.L. wrote the paper.
+
+## Competing interests
+
+The authors declare no competing interest.
 
 ## Supplementary Materials
 

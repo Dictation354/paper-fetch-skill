@@ -6,7 +6,7 @@ source: "acs"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 8959
+token_estimate: 9190
 ---
 
 # Functionalized Metal-Free Carbon Nanosphere Catalyst for the Selective C–N Bond Formation under Open-Air Conditions
@@ -14,6 +14,10 @@ token_estimate: 8959
 ## Abstract
 
 A versatile shape-controlled carbon nanomaterial that can efficiently catalyze the selective C–N coupling reactions under metal-free and open-air conditions was developed by applying N-doping and KOH activation strategies in candle soot (ANCS). The TEM and elemental mapping results showed the formation of sphere-shaped carbon particles as well as the uniform distribution of nitrogen species in the carbon framework. KOH activation enhanced the specific surface area of carbon, whereas N-doping enriched the electron-deficient nature by introducing functional N-based pyrrolic/graphitic structures in the carbon framework. The synergistic effect of N-doping and KOH activation significantly improved the catalytic efficiency of the carbon catalyst (ANCS), giving a 96% conversion of *o*-phenylenediamine (OPD) with a good selectivity to 2-phenylbenzimidazole (97%). In contrast, the pristine carbon exhibited very low activity (48% conversion of the OPD and 36% selectivity to 2-phenylbenzimidazole). Besides, the ANCS nanomaterial provided a facile catalytic approach for the homo- and cross-C–N condensation of various aromatic amines and diamines to produce diverse functional imines and benzimidazoles at mild conditions. This work provided promising insights into developing advanced, metal-free carbon-based catalysts for selective C–N coupling reactions to produce valuable drug motifs.
+
+## Visual Abstract
+
+![Visual Abstract](https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/9/33/10.1021_acsomega.4c03987/3/m_ao4c03987_0013.png?Expires=1787320359&Signature=eZ0rwu8gytkFKOIN~nBc2y-QPbfNh-Iy4V7ygTIdEQFqbWv8SJT82AsrHNYkIB2jzUzoHuJs3XhdXUoQ2Lxj3bbigdU1VtyA9y3lPH2UGkx3BtTc~nlt-EjB~MQ52CKijXUxNhxJVefLWCcOd-7V5cSm6S7yjEBkMYJbNs4amma4wx~Gl8oTXIvrEjzTh~ZGOmnP807KkqKFQ1jse1mXHXUAnQHQpgWPgdjAWoVErLJKwymVlY3Qm7CDGboQcDCzqZINK7oOVAXZ9YHGDrtOJtLv9KbIBuFCIkPQW9SrdykaHohaqvTUbodnDOWG4N~a0Gwei6QRYezEbXO9F7h6cA__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 ## 1. Introduction
 
@@ -85,6 +89,17 @@ The catalytic efficiency of the developed carbon materials was investigated for 
 | 6[c](https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere#t1fn3) | ANCS     | 58                 | 39                            | 61             |
 | 7[d](https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere#t1fn4) | ANCS     | 82                 | 81                            | 19             |
 | 8[e](https://pubs.acs.org/acsodf/article/9/33/35676/358560/Functionalized-Metal-Free-Carbon-Nanosphere#t1fn5) | ANCS     | 8                  | 61                            | 39             |
+
+| s. no. | catalyst | OPD conversion (%) | benzimidazole selectivity (%) | other products |
+| ------ | -------- | ------------------ | ----------------------------- | -------------- |
+| 1      | blank    | negligible         |                               |                |
+| 2      | CS       | 48                 | 36                            | 64             |
+| 3      | ACS      | 76                 | 82                            | 18             |
+| 4      | ANCS     | 89                 | 90                            | 10             |
+| 5b     | ANCS     | 96                 | 97                            | 3              |
+| 6c     | ANCS     | 58                 | 39                            | 61             |
+| 7d     | ANCS     | 82                 | 81                            | 19             |
+| 8e     | ANCS     | 8                  | 61                            | 39             |
 
 a
 1.5 mmol *o*-phenylenediamine (OPD), 2.5 mmol benzylamine, 15 wt % catalyst with respect to OPD, 100 °C, 4 h, toluene (1 mL), and open-air conditions.

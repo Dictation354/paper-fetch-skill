@@ -144,7 +144,11 @@ def _non_table_raw_markdown_from_node(node: Any) -> str | None:
         content = copy.deepcopy(node)
         content.name = "span"
         label = _render_non_table_inline_node(content)
-        return label if node["href"] == "#" else f"[{label}]({node['href']})"
+        return (
+            label
+            if not label.strip() or node["href"] == "#"
+            else f"[{label}]({node['href']})"
+        )
     if (
         isinstance(node, Tag)
         and normalize_text(node.name or "").lower() == "img"
@@ -376,6 +380,8 @@ def _strip_caption_label(text: str, label: str) -> str:
 
 def _table_caption_text(node: Tag, label: str) -> str:
     for selector in (
+        ".boxout > p:first-child",
+        ".tableCaption .captionText",
         ".tableWrapCaption",
         ".article-table-caption",
         ".caption",
@@ -403,7 +409,13 @@ def _is_glossary_table(node: Tag) -> bool:
 
 def _table_like_nodes(container: Tag) -> list[Tag]:
     nodes: list[Tag] = []
-    for selector in (".tableWrap", ".table-wrap", ".article-table"):
+    for selector in (
+        ".tableWrap",
+        ".table-wrap",
+        ".article-table",
+        ".boxout:has(> p > b[id$='-label'])",
+        ".tableView",
+    ):
         try:
             matches = container.select(selector)
         except Exception:
@@ -665,7 +677,9 @@ def _normalize_table_blocks(
             rendered_markdown = render_table(node, label=label, caption=caption)
         if rendered_markdown is None:
             rendered_markdown = _render_table_markdown(
-                node, label=label, caption=caption
+                node,
+                label="" if label == "Table" and not caption else label,
+                caption=caption,
             )
         if not rendered_markdown:
             rendered_markdown = _render_table_image_markdown(

@@ -944,6 +944,16 @@ def _normalize_tandf_subitem_headings(container: Tag) -> None:
 def tandf_before_block_normalization(container: Any) -> None:
     prepare_source_images(container, "")
     _drop_tandf_formula_previews(container)
+    for box in container.select(".supplement-box"):
+        link = box.select_one('a[href*="downloadSupplement"]')
+        heading = box.find(["h3", "h4"])
+        if link and heading:
+            filename = heading.get_text(strip=True)
+            link.string = filename
+            for duplicate in box.find_all(["h3", "h4", "b"]):
+                if duplicate.get_text(strip=True) == filename:
+                    duplicate.decompose()
+            box.name = "p"
     _normalize_tandf_subitem_headings(container)
     for table in list(container.select("table.listgroup")):
         factory = BeautifulSoup("", choose_parser())
@@ -1486,6 +1496,8 @@ def extract_references(html_text: str) -> list[dict[str, str | None]]:
         ):
             group = node.find_parent(class_="summation-section")
             heading = group.find(["h2", "h3"]) if group is not None else None
+            if heading is None and group is not None:
+                heading = group.find_previous_sibling(["h2", "h3"])
             if (
                 heading is not None
                 and heading.get_text(strip=True).casefold() == "notes"

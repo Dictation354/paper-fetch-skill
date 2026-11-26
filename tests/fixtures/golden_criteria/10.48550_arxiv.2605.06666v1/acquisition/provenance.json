@@ -313,5 +313,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/b9cc4a2b2783-unknown_unknown_10.48550_arxiv.2605.06666v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/5a0ed396e1ca-Huang_et_al_2026_The_Kubo-Thermalization_Correspondence.md",
+      "source_sha256": "5a0ed396e1ca08b19e10185d493baad13b205fec5ce5006e0db9b0625ab517bc",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5a0ed396e1ca-Huang_et_al_2026_The_Kubo-Thermalization_Correspondence.md",
+      "sha256": "c8ba9f1c24132e7c9e09deb678919a26c79f8838672e5a7fc9fb83789a043e08",
+      "image_references": 9
+    }
   ]
 }

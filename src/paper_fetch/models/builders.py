@@ -523,6 +523,11 @@ def article_from_markdown(
             _normalize_inline_citations_in_section(section)
             for section in _abstract_sections_from_blocks(abstract_sections)
         ]
+        for section in explicit_abstract_sections:
+            if "![" in section.text:
+                section.text = rewrite_markdown_asset_links(
+                    section.text, normalized_assets
+                )
         sections = list(explicit_abstract_sections)
         extracted_abstract = first_abstract_text(
             abstract_text=None, sections=explicit_abstract_sections

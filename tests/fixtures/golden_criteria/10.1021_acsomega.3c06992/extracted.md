@@ -6,7 +6,7 @@ source: "acs"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 12616
+token_estimate: 12978
 ---
 
 # General Equation to Estimate the Physicochemical Properties of Aliphatic Amines
@@ -14,6 +14,10 @@ token_estimate: 12616
 ## Abstract
 
 Changes in various physicochemical properties (*P*<sub>(<em>n</em>)</sub>) of aliphatic amines (including primary, secondary, and tertiary amines) can be roughly divided into nonlinear (*P*<sub>(<em>n</em>)</sub>) and linear (*P*<sub>LC(<em>n</em>)</sub>) changes. In our previous paper, nonlinear and linear change properties of noncyclic alkanes all were correlated with four parameters, *n*, *S*<sub>CNE</sub>, ΔAOEI, and ΔAIMPI, indicating number of carbon atoms, sum of carbon number effects, average odd–even index difference, and average inner molecular polarizability index difference, respectively. To date, there has been no general equation to express changes in the properties of substituted alkanes. This work, based on the molecular structure characteristics of aliphatic amine molecules, proposes a general equation to express nonlinear changes in their physicochemical properties, named as the “NPAA equation” (eq 12), ln­(*P*<sub>(<em>n</em>)</sub>) = *a* + *b*(*n*) + *c*(*S*<sub>CNE</sub>) + *d*(ΔAOEI) + *e*(PEI) + *f*(APEI) + *g*(*G*<sub>N</sub>), and proposes a general equation to express linear changes in the physicochemical properties of them, named as the “LPAA equation” (eq 13), *P*<sub>LC(<em>n</em>)</sub> = *a* + *b*(*n*) + *c*(*S*<sub>CNE</sub>) + *d*(ΔAOEI) + *e*(PEI) + *f*(APEI) + *g*(*G*<sub>N</sub>). In NPAA and LPAA equations, *a*, *b*, *c*, *d*, *e*, *f*, and *g* are coefficients, and PEI, APEI, and *G*<sub>N</sub> represent the polarizability effect index, average polarizability effect index, and N atomic influence factor, respectively. The results show that nonlinear and linear change properties of aliphatic amines all can be correlated with six parameters, *n*, *S*<sub>CNE</sub>, ΔAOEI, PEI, APEI, and *G*<sub>N</sub>. NPAA and LPAA equations have the advantages of uniform expression, high estimation accuracy, and usage of fewer parameters. Further, by employing the above six parameters, a quantitative correlation equation can be established between any two properties of aliphatic amines. Using the obtained equations as model equations, the property data of aliphatic amines were predicted, involving 107 normal boiling points, 10 refractive indexes, 11 liquid densities, 54 critical temperatures, 54 critical pressures, 62 liquid thermal conductivities, 59 surface tensions, 56 heat capacities, 55 critical volumes, 54 gas enthalpies of formation, and 57 gas Gibbs energies of formation, a total of 579 values, which have not been experimentally determined yet. This work not only provides a simple and convenient method for estimating or predicting the properties of aliphatic amines but can also provide new perspectives for quantitative structure–property relationships of substituted alkanes.
+
+## Visual Abstract
+
+![Visual Abstract](https://acs.silverchair-cdn.com/acs/content_public/journal/acsodf/8/51/10.1021_acsomega.3c06992/3/m_ao3c06992_0011.svg?Expires=1787179709&Signature=1ejjHsGXiCE8HDz7O38WpQqlnoT12Q4q3SZQEt4sY1CkC-4hKSse16jOW-YueF5d6kBjqO9TVY2~lB9KACuAsgmd0eAvIFqhglNafDeoRblxep0N3QorY6gU8DR6-vRwt5mNgAd9ziTiYkbDEch4mV0NDRgUF96kQBrEiw9FMbPcwnYN5gsVGkZAW066FVDpZnFZE7hPxWxMLd0qxjRRmY5XVoWTH~6YNYdInZprun6BfgBjHSqYcpmzeqfed1J3JQPp-IdA3zrvXeU4jr8EEIHNaX8fKFcjMxr4WdQp5d0TSuojVbUvrZWPP2Hnka3ySVsyvEeMXCS6j~EKiGeLxQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)
 
 ## 1. Introduction
 
@@ -166,6 +170,14 @@ Aliphatic amines are polar molecules due to the electronegativity of the N atom 
 The PEI­(R) values are calculated by using the method of Cao et al. (8) That is, PEI­(R) = ΣΔPEI­(*i*), in which the ΔPEI­(*i*) value is the PEI increment of the <em>i</em>th carbon atom in the alkyl R. [Table 1](https://pubs.acs.org/acsodf/article/8/51/49088/341563/General-Equation-to-Estimate-the-Physicochemical#tbl1) lists the PEI values of some normal alkyl R.
 
 **Table 1.** PEI Values of Normal Alkyl H­(CH<sub>2</sub>)<sub><em>n</em></sub> and the ΔPEI Values of the <em>i</em>th Carbon Atom (*n*<sub><em>i</em></sub>) in Alkyl
+
+| *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI |
+| --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- |
+| 1   | 1.0000 | 1                        | 1.00000 | 6   | 1.2350 | 6                        | 0.00905 | 11  | 1.2551 | 11                       | 0.00238 | 16  | 1.2625 | 16                       | 0.00107 |
+| 2   | 1.1405 | 2                        | 0.14053 | 7   | 1.2414 | 7                        | 0.00639 | 12  | 1.2571 | 12                       | 0.00197 | 17  | 1.2634 | 17                       | 0.00094 |
+| 3   | 1.1887 | 3                        | 0.04813 | 8   | 1.2461 | 8                        | 0.00475 | 13  | 1.2587 | 13                       | 0.00166 | 18  | 1.2642 | 18                       | 0.00084 |
+| 4   | 1.2122 | 4                        | 0.02350 | 9   | 1.2498 | 9                        | 0.00367 | 14  | 1.2602 | 14                       | 0.00142 | 19  | 1.2650 | 19                       | 0.00075 |
+| 5   | 1.2260 | 5                        | 0.01380 | 10  | 1.2527 | 10                       | 0.00292 | 15  | 1.2614 | 15                       | 0.00123 | 20  | 1.2657 | 20                       | 0.00067 |
 
 | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI | *n* | PEI | *n*<sub><em>i</em></sub> | ΔPEI |
 | --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- | --- | ------ | ------------------------ | ------- |

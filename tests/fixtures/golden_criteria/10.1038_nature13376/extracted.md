@@ -83,53 +83,53 @@ Precipitation data from satellite (TRMM 3B43v7), reanalysis (NCEP-DOE Reanalysis
 
 **[Extended Data Figure 1](https://www.nature.com/articles/nature13376/figures/5)**
 
-![Figure 1](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig5_ESM.jpg)
+![Extended Data Figure 1](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig5_ESM.jpg)
 
 The thirteen regions used throughout the analysis, 11 from TRANSCOM, and two additional regions for the African continent that are semi-arid (see Methods Summary).
 
 **[Extended Data Figure 2 Seasonal AVHRR FPAR anomalies (*z* score) for the year 2011.](https://www.nature.com/articles/nature13376/figures/6)**
 
-![Figure 2](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig6_ESM.jpg)
+![Extended Data Figure 2](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig6_ESM.jpg)
 
 The *z* score is calculated relative to the long-term seasonal mean and standard deviation of FPAR (1982–2011); see legend to [Fig. 1c](https://www.nature.com/articles/nature13376#Fig1). The seasons DJF, MAM, JJA and SON are defined by the first letter of each month.
 
 **[Extended Data Figure 3 Forcing contribution to NEE and the MEI and PDO indices.](https://www.nature.com/articles/nature13376/figures/7)**
 
-![Figure 3](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig7_ESM.jpg)
+![Extended Data Figure 3](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig7_ESM.jpg)
 
 The full climate attribution of the global land sink simulation by the LPJ DGVM is shown in the bar graph. PDO, Pacific Decadal Oscillation.
 
 **[Extended Data Figure 4 *r* and FPAR correlations between climate modes for NEE at given seasons.](https://www.nature.com/articles/nature13376/figures/8)**
 
-![Figure 4](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig8_ESM.jpg)
+![Extended Data Figure 4](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig8_ESM.jpg)
 
 Shown is *r* (on the colour scales) between climate modes and MAM (**a**), and JJA (**b**) NEE simulated by LPJ for each of the TransCom regions. FPAR correlations between climate modes are shown for MAM (**c**) and JJA (**d**). The correlations were made for 1982–2011. Blank boxes indicate correlation between −0.1 and 0.1.
 
 **[Extended Data Figure 5 Global climate anomalies for air temperature and precipitation.](https://www.nature.com/articles/nature13376/figures/9)**
 
-![Figure 5](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig9_ESM.jpg)
+![Extended Data Figure 5](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig9_ESM.jpg)
 
 **a**, Global temperature and precipitation anomalies from CRU TS3.21 data. The anomalies are with respect to 1979–2012 seasonal means. **b**, Seasonal precipitation anomalies (*z* score) for year 2010. **c**, Seasonal precipitation anomalies (*z* score) for year 2011. The *z* score for **b** and **c** is calculated relative to the long-term seasonal mean and standard deviation of precipitation (1979–2011).
 
 **[Extended Data Figure 6 Spatial pattern of the contribution of precipitation to NEE exchange in 2011.](https://www.nature.com/articles/nature13376/figures/10)**
 
-![Figure 6](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig10_ESM.jpg)
+![Extended Data Figure 6](https://media.springernature.com/lw685/springer-static/image/art%3A10.1038%2Fnature13376/MediaObjects/41586_2014_BFnature13376_Fig10_ESM.jpg)
 
 This is calculated as the difference between NPP (**a**) and *R*<sub>h</sub> (**b**) with the all-climate forcing varied and NEE simulated with the precipitation climatology. This is the same as in [Fig. 2c](https://www.nature.com/articles/nature13376#Fig2) but for component fluxes of NEE.
 
-![Table 1](acquisition/template-gaps-2026-09-16/table1-image-response.bin)
+![Extended Data Table 1](acquisition/template-gaps-2026-09-16/table1-image-response.bin)
 
 **Extended Data Table 1.** Global summary of annual NEE
 
-![Table 2](acquisition/template-gaps-2026-09-16/table2-image-response.bin)
+![Extended Data Table 2](acquisition/template-gaps-2026-09-16/table2-image-response.bin)
 
 **Extended Data Table 2.** Annual LPJ-derived NEE
 
-![Table 3](acquisition/template-gaps-2026-09-16/table3-image-response.bin)
+![Extended Data Table 3](acquisition/template-gaps-2026-09-16/table3-image-response.bin)
 
 **Extended Data Table 3.** Total carbon emissions from wildfire for each TransCom region
 
-![Table 4](acquisition/template-gaps-2026-09-16/table4-image-response.bin)
+![Extended Data Table 4](acquisition/template-gaps-2026-09-16/table4-image-response.bin)
 
 **Extended Data Table 4.** CMIP5 Earth system models from PCMDI node 9 that were accessed and where the RCP8.5 scenario (2005–2099) was merged with the historical simulation (1860–2005)
 

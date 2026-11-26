@@ -477,6 +477,14 @@ def extract_html_extraction_sidecars(
                 or abstract_node
             )
             abstract_text = render_clean_text_from_html(content_root)
+            if content_root.find("figure"):
+                from ._html_section_markdown import render_container_markdown
+
+                for image in content_root.select("img[src]"):
+                    image["src"] = urllib.parse.urljoin(source_url, str(image["src"]))
+                lines: list[str] = []
+                render_container_markdown(content_root, lines, level=3)
+                abstract_text = "\n".join(lines).strip()
             abstract_sections = (
                 [
                     {
@@ -707,6 +715,13 @@ def _springer_figure_heading(
     alt_text: str,
 ) -> str:
     for candidate in (caption, alt_text):
+        qualified = re.match(
+            r"\b(Extended Data|Supplementary) (?:Fig(?:ure)?\.?)\s*(\d+[a-z]?)\b",
+            candidate,
+            re.I,
+        )
+        if qualified:
+            return f"{qualified[1].title()} Figure {qualified[2]}"
         match = SPRINGER_FIGURE_LABEL_PATTERN.match(normalize_text(candidate))
         if match:
             return f"Figure {match.group(1)}"

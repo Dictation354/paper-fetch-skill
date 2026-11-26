@@ -16,12 +16,12 @@ from copy import copy
 from dataclasses import dataclass, replace
 from typing import Any
 
-from bs4 import BeautifulSoup
-
+from ..errors import ProviderFailure
 from ..http import HttpRequestPolicy, RequestCancelledError
 from ..http.transport import request_cancel_check, request_timeout_limit
 from ..publication_dates import citation_date
 from ..publisher_identity import normalize_doi
+from ..reason_codes import NO_RESULT
 from ..tracing import TraceEvent
 from ._article_markdown_common import (
     child_text,
@@ -29,7 +29,10 @@ from ._article_markdown_common import (
     first_descendant,
     xml_local_name,
 )
-from ._article_markdown_elsevier_document import _extract_reference_title
+from ._article_markdown_elsevier_document import (
+    _extract_reference_title,
+    _xml_reference_source,
+)
 from ._reference_doi import reference_doi
 
 DEFAULT_REFERENCE_ENRICHMENT_BUDGET_SECONDS = 15.0
@@ -99,7 +102,7 @@ def xml_citations(root) -> list[Citation]:
     for node in root.iter():
         if xml_local_name(node.tag) != "bib-reference":
             continue
-        reference = first_child(node, "reference")
+        reference, _, _, doi = _xml_reference_source(node)
         contribution = first_child(reference, "contribution")
         hosts = [
             child
@@ -129,9 +132,7 @@ def xml_citations(root) -> list[Citation]:
                 year=year,
                 volume=volume,
                 first_page=first_page,
-                doi=reference_doi(_text(reference, "doi"))
-                or reference_doi(_text(node, "source-text"))
-                or "",
+                doi=doi,
                 is_journal_host=bool(journal_fields)
                 and first_descendant(node, "other-ref") is None,
             )
@@ -223,61 +224,6 @@ class _ReferenceBudget:
         return remaining
 
 
-class _ReferenceBrowserContext:
-    """Borrow browser sessions with a deadline scoped to reference completion."""
-
-    def __init__(self, context, budget: _ReferenceBudget):
-        self._context = context
-        self._budget: _ReferenceBudget | None = budget
-
-    def __getattr__(self, name: str) -> Any:
-        return getattr(self._context, name)
-
-    @property
-    def deadline_monotonic(self) -> float | None:
-        if self._budget is not None:
-            return self._budget.effective_deadline()
-        return self._context.deadline_monotonic
-
-    @property
-    def browser_deadline_monotonic(self) -> float | None:
-        deadline = self._context.browser_deadline_monotonic
-        if self._budget is not None:
-            limit = self._budget.effective_deadline()
-            return limit if deadline is None else min(deadline, limit)
-        return deadline
-
-    @browser_deadline_monotonic.setter
-    def browser_deadline_monotonic(self, deadline: float | None) -> None:
-        # Profile queue time must count toward the enrichment deadline.
-        if self._budget is None:
-            self._context.browser_deadline_monotonic = deadline
-
-    def start_browser_budget(self, timeout_seconds: float) -> float | None:
-        if self._budget is not None:
-            return self.browser_deadline_monotonic
-        return self._context.start_browser_budget(timeout_seconds)
-
-    def browser_remaining_seconds(self, maximum: float | None = None) -> float:
-        remaining = self._context.browser_remaining_seconds(maximum)
-        return min(remaining, self._budget.remaining()) if self._budget else remaining
-
-    def raise_if_cancelled(self) -> None:
-        if self._budget is not None:
-            self._budget.remaining()
-        else:
-            self._context.raise_if_cancelled()
-
-    def new_browser_context_for_runtime_config(self, config, **kwargs):
-        return self._context._browser_sessions.new_browser_context_for_runtime_config(
-            config, runtime_context=self, **kwargs
-        )
-
-    def release_deadline(self) -> None:
-        # A newly launched manager can retain this context for later operations.
-        self._budget = None
-
-
 class _RequestTransport:
     """Reuse HTTP caching/limits while bounding enrichment to this request."""
 
@@ -329,50 +275,8 @@ def _crossref_client(context, budget):
     return crossref
 
 
-def _web_references(client, doi, metadata, context, budget):
-    from ..extraction.html._metadata import parse_html_metadata
-    from ..extraction.html.parsing import choose_parser
-    from . import _elsevier_html
-    from .browser_runtime import BrowserHtmlReadiness
-    from .browser_runtime.types import BrowserHtmlFetchOptions
-
-    runtime = client.deps.load_runtime_config(client.env, provider="elsevier", doi=doi)
-    if runtime.backend != "byparr":
-        return []
-    budget.remaining()
-    client.deps.ensure_runtime_ready(runtime)
-    scoped_context = _ReferenceBrowserContext(context, budget)
-    try:
-        result = client.deps.fetch_html_with_browser(
-            client.html_candidates(doi, metadata),
-            publisher="elsevier",
-            config=runtime,
-            max_timeout_ms=min(
-                runtime.timeout_ms, 12000, max(1, int(budget.remaining() * 1000))
-            ),
-            runtime_context=scoped_context,
-            wait_seconds=0,
-            readiness=BrowserHtmlReadiness(
-                selector="#references", require_selector=True
-            ),
-            options=BrowserHtmlFetchOptions(reuse_runtime_page=True),
-        )
-    finally:
-        scoped_context.release_deadline()
-    budget.remaining()
-    observed = normalize_doi(
-        parse_html_metadata(result.html, result.final_url).get("doi")
-    )
-    if not observed or observed != normalize_doi(doi):
-        return []
-    soup = BeautifulSoup(result.html, choose_parser())
-    for node in list(soup.select(_elsevier_html.NOISE_SELECTOR)):
-        node.decompose()
-    return _elsevier_html._references(soup)
-
-
-def complete_reference_dois(client, doi, metadata, payload, context):
-    """Enrich accepted XML, retaining it on lookup, browser or matching failure."""
+def complete_reference_dois(doi, payload, context):
+    """Fill missing DOIs in accepted XML using Crossref bibliographic evidence."""
     from ..workflow.session_cache import CROSSREF_METADATA_KEY
     from .elsevier import elsevier_xml_root_from_payload
 
@@ -380,12 +284,16 @@ def complete_reference_dois(client, doi, metadata, payload, context):
     budget = _ReferenceBudget(context)
     diagnostics: dict[str, list[dict[str, Any]]] = {"matches": [], "attempts": []}
 
-    def attempt(operation):
+    def attempt(operation, *args, **kwargs):
         budget.remaining()
         try:
-            result = operation()
+            result = operation(*args, **kwargs)
         except (RequestCancelledError, _ReferenceDeadlineExceeded):
             raise
+        except ProviderFailure as exc:
+            budget.remaining()
+            outcome = "info" if exc.code == NO_RESULT else "unavailable"
+            return None, {"outcome": outcome, "reason": exc.code}
         except Exception as exc:  # Enrichment must never discard accepted XML.
             budget.remaining()
             return None, {"outcome": "unavailable", "reason": type(exc).__name__}
@@ -397,13 +305,14 @@ def complete_reference_dois(client, doi, metadata, payload, context):
         diagnostics["attempts"].append({"source": source, **details})
         return result
 
-    def fill(records, source, *, work=False, keys=True):
+    def fill(records, source, targets, *, work=False, keys=True):
         candidates = [
             metadata_citation(record, work=work)
             for record in records
             if isinstance(record, Mapping)
         ]
-        for index, target in list(pending.items()):
+        for index in targets:
+            target = pending[index]
             matched = match_citation(
                 target, candidates, parent_doi=doi, allow_keys=keys
             )
@@ -429,10 +338,10 @@ def complete_reference_dois(client, doi, metadata, payload, context):
             del pending[index]
 
     def search(crossref):
-        titles: dict[str, str] = {}
-        for target in pending.values():
-            if target.searchable:
-                titles.setdefault(_normalized(target.title), target.title)
+        titles: dict[str, list[int]] = {}
+        for index, target in pending.items():
+            if target.is_journal_host and target.searchable:
+                titles.setdefault(_normalized(target.title), []).append(index)
         if not titles:
             return
         keys = {title: ("elsevier_reference_search", title) for title in titles}
@@ -455,8 +364,12 @@ def complete_reference_dois(client, doi, metadata, payload, context):
                     records = record_attempt(
                         "crossref_search", completed_results[title]
                     )
-                    context.set_session_cache(keys[title], records or [])
-                fill(records or [], "crossref_search", work=True, keys=False)
+                    if records is not None:
+                        context.set_session_cache(keys[title], records)
+                if records:
+                    fill(
+                        records, "crossref_search", titles[title], work=True, keys=False
+                    )
 
         executor = ThreadPoolExecutor(max_workers=min(3, len(titles)))
         try:
@@ -464,11 +377,11 @@ def complete_reference_dois(client, doi, metadata, payload, context):
                 executor.submit(
                     copy_context().run,
                     attempt,
-                    lambda query=query: crossref.search_bibliographic_candidates(
-                        query, rows=5
-                    ),
+                    crossref.search_bibliographic_candidates,
+                    pending[indices[0]].title,
+                    rows=5,
                 ): title
-                for title, query in titles.items()
+                for title, indices in titles.items()
                 if cached[title] is None
             }
             unfinished = set(futures)
@@ -502,15 +415,13 @@ def complete_reference_dois(client, doi, metadata, payload, context):
             return payload
 
         source = "crossref_client"
-        crossref = record_attempt(
-            source, attempt(lambda: _crossref_client(context, budget))
-        )
+        crossref = record_attempt(source, attempt(_crossref_client, context, budget))
         source = "crossref_parent"
         parent_key = CROSSREF_METADATA_KEY.materialize(normalize_doi(doi))
         parent = context.get_session_cache(parent_key)
         if parent is None and crossref is not None:
             parent = record_attempt(
-                source, attempt(lambda: crossref.fetch_metadata({"doi": doi}))
+                source, attempt(crossref.fetch_metadata, {"doi": doi})
             )
             if parent is not None:
                 context.set_session_cache(parent_key, parent)
@@ -520,26 +431,13 @@ def complete_reference_dois(client, doi, metadata, payload, context):
             fill(
                 parent.get("_reference_records") or parent.get("references") or [],
                 source,
+                list(pending),
             )
 
-        pending = {i: ref for i, ref in pending.items() if ref.is_journal_host}
         source = "crossref_search"
         if crossref is not None and pending:
             search(crossref)
 
-        source = "elsevier_html"
-        if pending:
-            key = ("elsevier_reference_html", normalize_doi(doi))
-            records = context.get_session_cache(key)
-            if records is None:
-                records = record_attempt(
-                    source,
-                    attempt(
-                        lambda: _web_references(client, doi, metadata, context, budget)
-                    ),
-                )
-                context.set_session_cache(key, records or [])
-            fill(records or [], source)
         budget.remaining()
     except RequestCancelledError:
         raise
@@ -568,11 +466,16 @@ def complete_reference_dois(client, doi, metadata, payload, context):
         )
         for match in diagnostics["matches"]
     )
+    outcome = "info"
+    if diagnostics["matches"]:
+        outcome = "ok"
+    elif any(item["outcome"] == "unavailable" for item in diagnostics["attempts"]):
+        outcome = "unavailable"
     payload.trace.append(
         TraceEvent(
             stage="references",
             component="elsevier_doi_completion",
-            outcome="ok" if diagnostics["matches"] else "unavailable",
+            outcome=outcome,
             duration_ms=duration_ms,
             message=f"Filled {len(diagnostics['matches'])} XML reference DOIs; evidence in reference_doi_completion diagnostics.",
         )

@@ -60,7 +60,7 @@ browser = [
   "playwright>=1.58,<2; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "invisible-playwright==0.58.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "invisible-core==68.80.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
-  "trafilatura>=2.0,<2.3",
+  "trafilatura>=2.4,<3",
 ]
 pdf = [
   "PyMuPDF>=2,<3",
@@ -76,7 +76,7 @@ full = [
   "invisible-core==68.80.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "PyMuPDF>=2,<3",
   "pymupdf4llm>=2,<3",
-  "trafilatura>=2.0,<2.3",
+  "trafilatura>=2.4,<3",
 ]
 dev = [
   "cyclonedx-bom>=7,<10",

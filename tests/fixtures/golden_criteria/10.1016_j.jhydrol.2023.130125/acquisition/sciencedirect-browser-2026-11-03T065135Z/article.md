@@ -1,6 +1,7 @@
 ---
 title: "An evaluation of the response of vegetation greenness, moisture, fluorescence, and temperature-based remote sensing indicators to drought stress"
 authors: "Hao Sun, Zhenheng Xu, Hao Liu"
+doi: "10.1016/j.jhydrol.2023.130125"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"
@@ -52,7 +53,7 @@ In summary, when vegetation suffers drought stress, its features of greenness, w
 
 [Fig. 1](#elsevier-f0005) illustrates the spatial distribution of the study area and the available meteorological stations located in the study area. The background in [Fig. 1](#elsevier-f0005) was filled with land cover types obtained from the Moderate Resolution Imaging Spectroradiometer (MODIS) product MCD12Q1 in 2020. In addition to the Chinese mainland as the main study area, three small areas were also selected for specific comparative analysis for [Section 5.3](#elsevier-s0090). They are Abaga Banner in Inner Mongolia Autonomous Region ([Fig. 1](#elsevier-f0005)-a), Nong’an County in Jilin Province ([Fig. 1](#elsevier-f0005)-b), and Anyang and Hebi City in Henan Province ([Fig. 1](#elsevier-f0005)-c). 98% of the land in Abaga Banner is covered by grassland. Nong’an County is an agricultural county where agricultural land accounts for 80.41% of the total area. Anyang City and Hebi City are also mainly covered by cropland with a proportion of around 91.2%.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr1_lrg.jpg)
+![Figure 1](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr1_lrg.jpg)
 
 <a id="elsevier-f0005"></a>Fig. 1. Spatial distribution of the study area and meteorological stations with the background of land cover types mapped from the MCD12Q1 in 2020. The geographic coordinate system adopts GCS\_WGS\_1984. The polygon of climate zones was divided by the Aridity Index. The subfigures (a), (b), and (c) are three relatively small regions in Abaga Banner, Jilin, and Henan, respectively, for [Section 5.3](#elsevier-s0090).
 
@@ -173,13 +174,13 @@ As shown in [Fig. 1](#elsevier-f0005), the areas with AI less than 0.05 are usua
 
 [Fig. 2](#elsevier-f0010) presents the results of the temporal correlation analysis between soil moisture anomaly and various vegetation indicators’ anomalies. The correlation analysis was conducted in the vegetation growing period i.e., five months from May to September during 2000–2020. The CRA/LAND soil moisture dataset was employed in this temporal correlation analysis. Results indicate that 1) significant correlations with a p-value less than 0.05 were found for arid and transitional areas, whereas weak significant correlations with a p-value greater than 0.05 and less than 0.3 were found for humid areas. The hyper-arid areas were excluded from the correlation analysis since there is very limited vegetation coverage over these areas. 2) Over arid and transitional areas, there are strong positive correlations between SIF, NDVI, EVI, NDIIB6, WET, and VSDI anomalies and soil moisture anomaly, and there are strong negative correlations between LST anomaly and soil moisture anomaly. The results demonstrated that the drought stress would significantly reduce the vegetation’s greenness, moisture, and fluorescence, while significantly increasing the vegetation temperature. All of the greenness, moisture, fluorescence, and temperature are essential indicators for remote sensing of vegetation drought. Certainly, we can see that there are certain differences among the responses of various remote sensing indicators to drought stress.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr2_lrg.jpg)
+![Figure 2](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr2_lrg.jpg)
 
 <a id="elsevier-f0010"></a>Fig. 2. Spatial distribution of the Pearson and Spearman correlation coefficients and their p-values for temporal correlation analysis between remote sensing indicator anomaly and CRA/LAND soil moisture anomaly from May to September 2000 to 2020.
 
 To see the differences among the responses of various remote sensing indicators to drought stress, [Fig. 3](#elsevier-f0015) presents box statistics of Spearman correlation coefficients on different climate-type areas using data pairs from May to September 2000–2020. Both the CRA/LAND soil moisture dataset and the ESA CCI soil moisture dataset were used in the statistics of [Fig. 3](#elsevier-f0015). Moreover, although water, urban, snow and ice, desert, and other non-vegetated areas were excluded in the investigation by MODIS land cover type data, we are hesitant about farmland because sometimes there is vegetation and sometimes there is no vegetation on farmland. Therefore, the farmland was excluded in [Fig. 3](#elsevier-f0015) (a) and (c), while it was included in [Fig. 3](#elsevier-f0015) (b) and (d).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr3_lrg.jpg)
+![Figure 3](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr3_lrg.jpg)
 
 <a id="elsevier-f0015"></a>Fig. 3. Box plots of the Spearman correlation coefficients (Spearman-r) between remote sensing indicator anomalies and soil moisture anomaly, where (a) and (b) are the statistics with CRA/LAND soil moisture data, (c) and (d) are the statistics with CCI soil moisture data. (a) and (c) do not contain farmland areas, while (b) and (d) contain farmland areas.
 
@@ -187,13 +188,13 @@ The results in [Fig. 3](#elsevier-f0015) demonstrate that the evaluation results
 
 To explore the influence of different SIF products, all five SIF products were used to conduct the temporal correlation analysis in the Chinese mainland. [Fig. 4](#elsevier-f0020) presents the box statistics of Spearman correlation coefficients on different climate-type areas using data pairs from May to September 2007–2018. Likewise, both the CRA/LAND soil moisture dataset and the ESA CCI soil moisture dataset were used in the statistics. As compared with SIF\_LUE\_JJ, SIF\_LUE\_PK, SIF005, and LT\_SIFc, the GOSIF did not show relatively poor performance. Instead, the GOSIF presented a higher correlation coefficient than the other SIF products as compared with soil moisture anomaly, such as the box plots in [Fig. 4](#elsevier-f0020) (a) and (b). In [Fig. 4](#elsevier-f0020) (c) and (d), there are some times that GOSIF presented a relatively poorer correlation than the other SIF products but not significant. In summary, the GOSIF can be used as a representative of the SIF products in evaluating the response of vegetation fluorescence-based remote sensing indicators to drought stress.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr4_lrg.jpg)
+![Figure 4](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr4_lrg.jpg)
 
 <a id="elsevier-f0020"></a>Fig. 4. Box plots of the Spearman correlation coefficients (Spearman-r) between SIF anomaly from five SIF products and soil moisture anomaly, where (a) and (b) are the statistics with CRA/LAND soil moisture data, (c) and (d) are the statistics with CCI soil moisture data. (a) and (c) do not contain farmland areas, while (b) and (d) contain farmland areas.
 
 [Fig. 5](#elsevier-f0025) presents the mean Spearman correlation coefficients on different climate-type areas using data pairs for each month during 2000–2020. The farmland is included in [Fig. 5](#elsevier-f0025). Results also illustrated that arid areas have the relatively highest sensitivity followed by the transitional areas and the humid areas are the last. Moreover, it quantitatively demonstrated that the temperature-based indicator has the highest sensitivity among the various remote sensing indexes whether in arid, transitional, or humid areas. It also demonstrated that the moisture-based indicators have a higher sensitivity than the fluorescence-based and greenness-based indicators whether in arid, transitional, or humid areas. As to the fluorescence-based and greenness-based indicators, the former presented a comparatively sensitive response to the letter in arid, transitional, or humid areas. For example, the mean correlation coefficients of temperature-based LST, moisture-based VSDI, fluorescence-based GOSIF, and greenness-based EVI are around 0.6, 0.50, 0.43, and 0.41, respectively, in arid areas. That mean correlation coefficients are around 0.50, 0.32, 0.18, and 0.21, respectively, in the transitional area.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr5_lrg.jpg)
+![Figure 5](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr5_lrg.jpg)
 
 <a id="elsevier-f0025"></a>Fig. 5. Heat map of the mean Spearman correlation coefficient of remote sensing indicator anomalies with CRA/LAND soil moisture anomaly on each vegetation growing month (5, 6, 7, 8, 9) and their average (AVG) in the (a) arid, (b) transitional, and (c) humid climate.
 
@@ -203,13 +204,13 @@ To explore the influence of different SIF products, all five SIF products were u
 
 In addition to soil moisture anomaly, the SPEI was utilized to represent the drought stress. The precipitation and air temperature data from CRA/LAND and in-situ meteorological stations were used. [Fig. 6](#elsevier-f0030) presents the box statistics of Spearman correlation coefficients using data pairs from May to September 2000–2020. The evaluation results with farmland areas are like the results without farmland areas, which is consistent with the results in [Fig. 3](#elsevier-f0015). In addition, [Fig. 6](#elsevier-f0030) indicates that the vegetation response was found to be the most sensitive in arid areas, the second in transitional areas, and relatively the least sensitive in humid areas, which is like the comparisons with soil moisture anomaly. As to the various remote sensing indicators, we also found that the sensitivity sequence is: temperature-based indicator &gt; moisture-based indicator &gt; fluorescence-based indicator ≈ greenness-based indicator, in most cases, which is also similar to the comparisons with soil moisture anomaly.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr6_lrg.jpg)
+![Figure 6](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr6_lrg.jpg)
 
 <a id="elsevier-f0030"></a>Fig. 6. Box plots for the correlation analysis between remote sensing indicator anomalies and SPEI3. (a) and (b) are the statistics based on CRA/LAND meteorological data. (c) and (d) are the statistics based on in-situ meteorological data. (a) and (c) do not contain farmland areas, while (b) and (d) contain farmland areas.
 
 [Fig. 7](#elsevier-f0035) presents the mean Spearman correlation coefficients on different climate-type areas using data pairs on each month from 2000 to 2020. The farmland is included in [Fig. 7](#elsevier-f0035). Note that only CRA/LAND meteorological data was used in this figure. [Fig. 7](#elsevier-f0035) illustrated that arid areas have the relatively highest sensitivity followed by the transitional areas and the humid areas. Moreover, it demonstrated that the temperature-based indicator has the highest sensitivity among the various remote sensing indexes in transitional and humid areas. The moisture-based indicators also have a higher sensitivity than the fluorescence-based and greenness-based indicators whether in arid, transitional, or humid areas. The fluorescence-based indicator presented a comparatively sensitive response to the greenness-based indicators. Certainly, in the comparisons with SPEI3, the temperature-based indicator did not manifest its advantage as significantly as that in comparisons with soil moisture anomaly. This is reasonable because soil moisture is a straighter influencer of vegetation water requirements.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr7_lrg.jpg)
+![Figure 7](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr7_lrg.jpg)
 
 <a id="elsevier-f0035"></a>Fig. 7. Heat map of the mean Spearman correlation coefficient of remote sensing indicator anomalies with SPEI3 based on CRA/LAND meteorological data on each vegetation growing month (5, 6, 7, 8, 9) and their average (AVG) in the (a) arid, (b) transitional, and (c) humid climate regions.
 
@@ -219,11 +220,11 @@ In addition to soil moisture anomaly, the SPEI was utilized to represent the dro
 
 In addition to the comparisons with soil moisture anomaly and SPEI3, we also made a comparison with SPI3. Likewise, the precipitation data from CRA/LAND and in-situ meteorological stations were used. [Fig. 8](#elsevier-f0040) presents the box statistics of Spearman correlation coefficients using data pairs from May to September 2000–2020, and [Fig. 9](#elsevier-f0045) presents the mean Spearman correlation coefficients for each month. Likewise, the evaluation results with the meteorological data from CRA/LAND and in-situ meteorological stations are very similar. Moreover, the evaluation results with farmland areas are similar to the results without farmland areas, which is consistent with the results as compared with soil moisture anomaly and SPEI3.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr8_lrg.jpg)
+![Figure 8](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr8_lrg.jpg)
 
 <a id="elsevier-f0040"></a>Fig. 8. Box plots for the correlation analysis between remote sensing indicator anomalies and SPI3. (a) and (b) are the statistics based on CRA/LAND meteorological data. (c) and (d) are the statistics based on in-situ meteorological data. (a) and (c) do not contain farmland areas, while (b) and (d) contain farmland areas.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr9_lrg.jpg)
+![Figure 9](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr9_lrg.jpg)
 
 <a id="elsevier-f0045"></a>Fig. 9. Heat map of the mean Spearman correlation coefficient of remote sensing indicator anomalies with SPI3 based on CRA/LAND meteorological data on each vegetation growing month (5, 6, 7, 8, 9) and their average (AVG) in the (a) arid, (b) transitional, and (c) humid climate regions.
 
@@ -243,7 +244,7 @@ Our results suggest that the vegetation responses to drought stress were the mos
 
 As to the four response characteristics, we found that the temperature-based indicator was the most sensitive to drought stress, the moisture-based indicator was in the second, and the fluorescence-based and greenness-based indicators were in the third where the former presented a little more sensitivity than the latter. We also believe these findings are reasonable because they are consistent with the study of botany on phases of drought response in plants ([Choat et al., 2018](#elsevier-h0025)). [Fig. 10](#elsevier-f0050) presents a general form of vegetation response process with increasing drought stress reproduced from a botany study ([Choat et al., 2018](#elsevier-h0025)). This botany study indicated that the decreasing stomatal conductance ranks in the first position of the response of plants during drought. On short time scales, the decreasing of stomatal conductance i.e., the stomatal closure induces loss of canopy evaporative cooling through transpiration and thus brings the canopy temperature to rise abnormally. The stomatal closure would not induce the decrease of vegetation moisture, fluorescence, and greenness as fast as the increase of temperature, because the purpose of plants to close stomata is to maintain the normal growth of plants and there is a certain amount of water and chlorophyll storage in the plants. Resultantly, vegetation canopy temperature anomalies have been thought to have the ability to diagnose early symptoms of drought events (i.e., pre-symptomatic detection), or pre-visual detection of drought stresses before visible drought effects occur ([Neinavaz et al., 2021](#elsevier-h0100)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr10_lrg.jpg)
+![Figure 10](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr10_lrg.jpg)
 
 <a id="elsevier-f0050"></a>Fig. 10. A general form of vegetation response processes with increasing drought stress reproduced ([Choat et al., 2018](#elsevier-h0025)).
 
@@ -265,7 +266,7 @@ At last, we demonstrated the outperformance of temperature-based and moisture-ba
 
 To remove the influence of soil background on moisture-based remote sensing indicators, we suggested employing the feature space model like the LST/FVC space ([Sun, 2016](#elsevier-h0130)). Taking VSDI as an example, we constructed a VSDI/NDVI space where the horizontal axis is NDVI and the vertical axis is VSDI shown as in [Fig. 11](#elsevier-f0055). There are also one dry edge and one wet edge in the VSDI/NDVI space, where the former represents a very dry land surface and the letter represents a very wet land surface. The four endmember points are representatives of wet soil, dry soil, wet vegetation, and dry vegetation. The left region of the VSDI/NDVI space is dominated by a low vegetation coverage area, the right region is dominated by a high vegetation coverage area, and the middle region is dominated by a partial vegetation coverage area. Given a point in the VSDI/NDVI space, its vertical distance to the dry edge or wet edge can be employed to indicate surface moisture, which is our solution for removing the soil background effect in moisture-based indicators. The specific equation can be expressed as:
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr11_lrg.jpg)
+![Figure 11](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr11_lrg.jpg)
 
 <a id="elsevier-f0055"></a>Fig. 11. The VSDI and NDVI feature space (VSDI/NDVI space model).
 
@@ -294,13 +295,13 @@ According to the equation (3), the most important problem is obtaining the wet a
 
 Taking the three small study areas shown in [Fig. 1](#elsevier-f0005) as an example, [Fig. 12](#elsevier-f0060) presents the VSDI/NDVI feature space and its fitted dry and wet edges in those research areas, where [Fig. 12](#elsevier-f0060) (a) is the Abaga Banner in Inner Mongolia Autonomous Region, [Fig. 12](#elsevier-f0060) (b) is the Nong’an County in Jilin Province, and [Fig. 12](#elsevier-f0060) (c) is Anyang and Hebi City in Henan Province. It can be seen that the fitting result of the wet and dry edges is satisfying. The outliers can be effectively excluded in fitting the dry and wet edges. It is noteworthy that the VSDI/NDVI space was created with VSDI and NDVI during all study months and years in the study area. Therefore, the fitted dry and wet edges are applicative to all data in the study period and the calculated MVSDI is comparable during the study period.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr12_lrg.jpg)
+![Figure 12](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr12_lrg.jpg)
 
 <a id="elsevier-f0060"></a>Fig. 12. The VSDI/NDVI feature space and its fitted dry and wet edges in the research areas of (a) Inner Mongolia, (b) Jilin, and (c) Henan.
 
 To evaluate the MVSDI and VSDI, we first calculated the Pearson correlation coefficient between them and soil moisture anomaly based on the SMC dataset on each month from 2000 to 2020. The calculation results can be labeled as R<sub>MVSDI</sub> and R<sub>VSDI</sub>, respectively. Subsequently, the relative change of the above two correlation coefficients can be obtained by the equation of Relative Change = (R<sub>MVSDI</sub> − R<sub>VSDI</sub>)/abs(R<sub>VSDI</sub>), where abs() means taking the absolute value. A greater Relative Change indicates a greater improvement of the MVSDI as compared with the VSDI. [Fig. 13](#elsevier-f0065) presents the statistics of the Relative Change for each month and the average value for all study months. The results illustrated that the MVSDI outperformed the VSDI statistically, which demonstrated the possibility of the proposed solution for removing the soil background effect in VSDI. For example, the first quartile and the third quartile of the average Relative Change varied between 0 and 1 for Anyang and Hebi in Henan and Abaga Banner in Inner Mongolia. In contrast, the values varied between 2 and 7 for Nong’an County in Jilin. Certainly, there are some uncertainties like the comparisons in August of [Fig. 13](#elsevier-f0065) (a) and (c). We think the uncertainties may come from the determination of the dry and wet edges of the VSDI/NDVI space especially over the high vegetation coverage area. The average NDVI in August is usually higher than in the other months in [Fig. 13](#elsevier-f0065). Further studies could pay attention to the determination of the dry and wet edges in theoretical or semi-theoretical calculation way rather than the pure auto-fitting method.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr13_lrg.jpg)
+![Figure 13](https://ars.els-cdn.com/content/image/1-s2.0-S0022169423010673-gr13_lrg.jpg)
 
 <a id="elsevier-f0065"></a>Fig. 13. Statistical analysis of the Relative Change from R<sub>VSDI</sub> to R<sub>MVSDI</sub> on each study month where R<sub>VSDI</sub> is the Pearson correlation coefficient between VSDI anomaly and SMC soil moisture anomaly and R<sub>MVSDI</sub> is the Pearson correlation coefficient between MVSDI anomaly and SMC soil moisture anomaly. The right axis NDVI is the average NDVI during multiple years. (a) is in Anyang and Hebi, Henan. (b) is in Nong’an County, Jilin. (c) is in Abaga Banner, Inner Mongolia.
 

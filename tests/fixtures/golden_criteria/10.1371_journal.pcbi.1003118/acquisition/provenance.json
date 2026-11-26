@@ -638,5 +638,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/e8a7ee54cccc-Lawrence_et_al_2013_Software_for_Computing_and_Annotating_Genomic_Ranges.md",
+      "source_sha256": "e8a7ee54cccc61541a476caff14a2d1fb0019e0ea18639fb1b000fa445232615",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/e8a7ee54cccc-Lawrence_et_al_2013_Software_for_Computing_and_Annotating_Genomic_Ranges.md",
+      "sha256": "94c723fad0023b98070a81ea07860568d5e1a288eb4e9a094fe0dd768d90fb8d",
+      "image_references": 18
+    }
   ]
 }

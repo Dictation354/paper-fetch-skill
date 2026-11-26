@@ -471,5 +471,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md",
+      "source_sha256": "2714e6e2be7532f895536e28f631e5c51af30a9c80d6641acf8339c71c10733d",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md",
+      "sha256": "d18cac03d7077ac305a18ebd6168e944d549db73ea9028adf6b91e8a88c195f0",
+      "image_references": 4
+    }
   ]
 }

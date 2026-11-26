@@ -2522,6 +2522,10 @@
             "evidence_tests": [],
             "remaining": []
           }
+        },
+        "test_historical_readable_copies_restore_original_bytes_and_image_identity": {
+          "kind": "infrastructure",
+          "scope": "核对历史归档与本地派生副本的相对路径、同批次文件哈希和逐字节可逆性。"
         }
       }
     },

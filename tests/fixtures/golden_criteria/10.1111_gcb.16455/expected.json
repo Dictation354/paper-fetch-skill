@@ -10,9 +10,9 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 23,
+    "sections": 25,
     "abstract_sections": 1,
-    "body_sections": 21,
+    "body_sections": 23,
     "figures": 0,
     "tables": 0,
     "references": 93
@@ -22,8 +22,8 @@
     "sample_id": "10.1111_gcb.16455",
     "provider": "wiley",
     "doi": "10.1111/gcb.16455",
-    "original": "tests/fixtures/golden_criteria/10.1111_gcb.16455/original.html",
-    "sha256": "3ac824463d5a2aedad3968c78c407ae9221805302ca4e5ac164704ac7331458b",
+    "original": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+    "sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
     "format": "html",
     "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
     "dimensions": {
@@ -64,7 +64,7 @@
       },
       "mathml": {
         "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
-        "source_count": 0,
+        "source_count": 11,
         "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
       },
       "citation_targets": {
@@ -86,16 +86,27 @@
       "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
     ],
     "author_source": "meta[name=\"citation_author\"]",
-    "provenance": null,
+    "provenance": [
+      {
+        "provenance": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/provenance.json",
+        "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
+        "capture_kind": "browser_rendered_dom",
+        "captured_at_utc": "2026-09-18T02:26:05.912314+00:00",
+        "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455",
+        "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455",
+        "status_code": 403
+      }
+    ],
     "captured_image_files": [],
     "binary_tests": [
       "tests/integration/test_fixture_provenance.py"
     ],
     "formula_audit": {
-      "selected": 1,
+      "selected": 11,
       "tex_checked": 0,
-      "mathml_checked": 0,
-      "empty_excluded": 1
+      "mathml_checked": 11,
+      "empty_excluded": 0
     }
   },
   "source_objects": [
@@ -383,6 +394,595 @@
         }
       ],
       "mathml": []
+    },
+    {
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "e4d36190fe20b8a0d1ec0ff36fe0c8c48b3332bb25da2b8dfb54be8807db7697",
+          "grid": [
+            [
+              0,
+              [
+                0,
+                1,
+                2,
+                3,
+                4
+              ]
+            ],
+            [
+              1,
+              [
+                5,
+                6,
+                7,
+                8,
+                9
+              ]
+            ],
+            [
+              2,
+              [
+                5,
+                10,
+                11,
+                12,
+                9
+              ]
+            ],
+            [
+              3,
+              [
+                5,
+                13,
+                14,
+                15,
+                16
+              ]
+            ],
+            [
+              4,
+              [
+                5,
+                17,
+                18,
+                19,
+                20
+              ]
+            ],
+            [
+              5,
+              [
+                5,
+                21,
+                22,
+                23,
+                24
+              ]
+            ],
+            [
+              6,
+              [
+                5,
+                25,
+                26,
+                27,
+                28
+              ]
+            ],
+            [
+              7,
+              [
+                29,
+                30,
+                31,
+                32,
+                33
+              ]
+            ],
+            [
+              8,
+              [
+                29,
+                34,
+                35,
+                36,
+                37
+              ]
+            ],
+            [
+              9,
+              [
+                29,
+                38,
+                39,
+                40,
+                41
+              ]
+            ],
+            [
+              10,
+              [
+                29,
+                42,
+                43,
+                44,
+                45
+              ]
+            ],
+            [
+              11,
+              [
+                29,
+                46,
+                47,
+                48,
+                49
+              ]
+            ],
+            [
+              12,
+              [
+                29,
+                50,
+                51,
+                52,
+                53
+              ]
+            ],
+            [
+              13,
+              [
+                54,
+                55,
+                56,
+                57,
+                58
+              ]
+            ],
+            [
+              14,
+              [
+                54,
+                59,
+                60,
+                61,
+                58
+              ]
+            ],
+            [
+              15,
+              [
+                54,
+                62,
+                63,
+                64,
+                65
+              ]
+            ],
+            [
+              16,
+              [
+                54,
+                66,
+                67,
+                68,
+                69
+              ]
+            ],
+            [
+              17,
+              [
+                54,
+                70,
+                71,
+                72,
+                73
+              ]
+            ],
+            [
+              18,
+              [
+                54,
+                74,
+                75,
+                76,
+                77
+              ]
+            ]
+          ],
+          "cells": [
+            "",
+            "Variable",
+            "Instrument/dataset",
+            "Reference",
+            "Dataset use notes",
+            "Assessment I: African Vegetation-Temperature Interactions",
+            "Fraction of Vegetation Cover (FVC)",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Assess annual mean vegetation cover response to surface temperature",
+            "Land Surface Temperature (LST)",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Downward Surface Solar Radiation (R _{S} )",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Control for light availability",
+            "Soil Moisture (θ)",
+            "SMAP",
+            "Feldman et al. ( 2021 )",
+            "Control for soil water availability",
+            "Precipitation (P)",
+            "CHIRPS",
+            "Funk et al. ( 2015 )",
+            "Rainfall gradient analysis; robustness test",
+            "Land Cover Classification",
+            "IGBP",
+            "Kim et al. ( 2013 )",
+            "Vegetation type analysis",
+            "Assessment II: Africa Mechanism Identification",
+            "Fraction of Vegetation Cover (FVC)",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Seasonal analysis; Surface albedo response",
+            "Land Surface Temperature (LST)",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Seasonal analysis, Energy dissipation efficiency",
+            "Downward Surface Solar Radiation (R _{S} )",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Seasonal analysis, Control for light availability",
+            "Soil Moisture (θ)",
+            "SMAP",
+            "Feldman et al. ( 2021 )",
+            "Seasonal analysis, Control for water availability",
+            "Vapor Pressure Deficit (VPD)",
+            "AIRS",
+            "Teixeira ( 2013 )",
+            "Seasonal analysis",
+            "Surface Albedo (α)",
+            "SEVIRI",
+            "Trigo et al. ( 2011 )",
+            "Surface albedo response",
+            "Assessment III: Tropical Vegetation-Temperature Interactions",
+            "Land Surface Temperature (LST)",
+            "MODIS",
+            "Wan et al. ( 2015 )",
+            "Assess interannual vegetation cover response to surface temperature",
+            "Normalized Difference Vegetation Index (NDVI)",
+            "MODIS",
+            "Didan et al. ( 2021 )",
+            "Downward Surface Solar Radiation (R _{S} )",
+            "MERRA2",
+            "Gelaro et al. ( 2017 )",
+            "Control for light availability",
+            "Precipitation (P)",
+            "CPC",
+            "Chen et al. ( 2008 )",
+            "Control for water availability",
+            "Land Cover Classification",
+            "IGBP",
+            "Kim et al. ( 2013 )",
+            "Remove bare soil regions",
+            "Leaf Area Index (LAI)",
+            "MODIS",
+            "Myneni et al. ( 2021 )",
+            "Alternative test"
+          ]
+        }
+      ],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "701bf34674f55b92659a7c89a5e1eb94f5e60a4d18edabfaa4028cf72614fb1f",
+          "numbers": "0",
+          "minimum": {
+            "_": 2,
+            "\\frac": 1
+          },
+          "identifiers": [
+            "E",
+            "d",
+            "LST",
+            "dt",
+            "β",
+            "β",
+            "FVC",
+            "E",
+            "FVC",
+            "ε"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "d77dd89299e87c3f1f5bd24cbdbb37b5655a38e4be65b93b9712b7bf9e742873",
+          "numbers": "",
+          "minimum": {},
+          "identifiers": [
+            "β"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 2,
+          "id": null,
+          "node_sha256": "e3038ffc616f09e336265aa796462aab7cbc24250d4786475a6228d396905253",
+          "numbers": "",
+          "minimum": {},
+          "identifiers": [
+            "β"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 3,
+          "id": null,
+          "node_sha256": "e79e1845f9462661584a7dfc4d52dee297db5f2ff62d0bf28f3f41a3be5baa8c",
+          "numbers": "",
+          "minimum": {},
+          "identifiers": [
+            "β"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 4,
+          "id": null,
+          "node_sha256": "9aee5b06625a643a675a4ef02b9782bf0674f9dc1fb950f7748891689084329f",
+          "numbers": "",
+          "minimum": {
+            "_": 1
+          },
+          "identifiers": [
+            "β",
+            "FVC"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 5,
+          "id": null,
+          "node_sha256": "dd8604a4cf9d2b4252736f79022e64b78009bc3500e6636e0c31376b30130c9d",
+          "numbers": "",
+          "minimum": {
+            "_": 1
+          },
+          "identifiers": [
+            "β",
+            "FVC"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 6,
+          "id": null,
+          "node_sha256": "ae00d9a76499d7e482255c0a96bd16976dce5440deb130611c4a343697c1a170",
+          "numbers": "0",
+          "minimum": {
+            "_": 6
+          },
+          "identifiers": [
+            "E",
+            "d",
+            "LST",
+            "dt",
+            "β",
+            "β",
+            "FVC",
+            "E",
+            "FVC",
+            "β",
+            "θ",
+            "E",
+            "θ",
+            "β",
+            "R",
+            "S",
+            "E",
+            "R",
+            "S",
+            "ε"
+          ],
+          "operators": [
+            "/",
+            "=",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 7,
+          "id": null,
+          "node_sha256": "c861a307fd2328dfa39c713423d5beece3be9ac6b31d4b728e5a6f09321eb0a0",
+          "numbers": "",
+          "minimum": {},
+          "identifiers": [
+            "β"
+          ],
+          "operators": []
+        },
+        {
+          "object_index": 8,
+          "id": null,
+          "node_sha256": "15ab01074a1d54267b5acf7284104be5282bdf67c8e20d1d01a8e449661ab15e",
+          "numbers": "0",
+          "minimum": {
+            "_": 2,
+            "\\frac": 1
+          },
+          "identifiers": [
+            "d",
+            "LST",
+            "dt",
+            "β",
+            "β",
+            "Eff",
+            "LST",
+            "ε"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "-",
+            "+"
+          ]
+        },
+        {
+          "object_index": 9,
+          "id": null,
+          "node_sha256": "36e6b46603bd35a82b651ca96b71751b8527466bfabb876f707a97a84d9a89b1",
+          "numbers": "0",
+          "minimum": {
+            "_": 2
+          },
+          "identifiers": [
+            "E",
+            "α",
+            "β",
+            "β",
+            "α",
+            "FVC",
+            "E",
+            "FVC",
+            "ε"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+"
+          ]
+        },
+        {
+          "object_index": 10,
+          "id": null,
+          "node_sha256": "8db255302a0e11ff4db84560ed70e11c605c576f4ae9b669284c21a125b4110d",
+          "numbers": "0",
+          "minimum": {
+            "_": 6
+          },
+          "identifiers": [
+            "E",
+            "LST",
+            "β",
+            "β",
+            "E",
+            "β",
+            "P",
+            "E",
+            "P",
+            "β",
+            "R",
+            "S",
+            "E",
+            "R",
+            "S",
+            "ε"
+          ],
+          "operators": [
+            "=",
+            "+",
+            "+",
+            "+",
+            "+"
+          ]
+        }
+      ]
     }
-  ]
+  ],
+  "historical_source_review": {
+    "sample_id": "10.1111_gcb.16455",
+    "provider": "wiley",
+    "doi": "10.1111/gcb.16455",
+    "original": "tests/fixtures/golden_criteria/10.1111_gcb.16455/original.html",
+    "sha256": "3ac824463d5a2aedad3968c78c407ae9221805302ca4e5ac164704ac7331458b",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 6,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 93,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 71,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 95,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 0,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": null,
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 1,
+      "tex_checked": 0,
+      "mathml_checked": 0,
+      "empty_excluded": 1
+    }
+  }
 }

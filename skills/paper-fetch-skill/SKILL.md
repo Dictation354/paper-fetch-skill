@@ -15,10 +15,21 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ```bash
 paper-fetch fetch --progress text --query "10.1186/1471-2105-11-421"
-paper-fetch fetch --query-file queries.txt --output-dir ./papers --batch-concurrency 3
 ```
 
-从 stdout 读取 JSON 回执，进度见 stderr。通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认紧凑回执 `paper-fetch/receipt` 在顶层提供 `body_path`、`section_index_path` 和 `image_index_path`。直接用这些字段定位文件，完整产物清单见逐篇 manifest 的 `output_artifacts`。默认正文及索引保存在独立系统临时目录，命令退出后仍可读取。从 `section_index_path` 取得章节行范围，再按范围读取 `body_path`。Nature 文章的无标题引言可从 `Main` 起读。
+批量抓取时，在 `dois.txt` 中每行写一个 DOI。以下命令将 stdout 中的逐篇 JSON 回执写入 `receipts.jsonl`（每行一篇），进度仍输出到 stderr。
+
+```bash
+paper-fetch fetch --query-file dois.txt --batch-concurrency 4 --output-dir ./papers > receipts.jsonl
+```
+
+通过 `identity`、`target_satisfied`、`acceptance` 和 `error` 确认实际交付，并保留回执供后续复用。默认紧凑回执 `paper-fetch/receipt` 在顶层提供 `body_path`、`section_index_path` 和 `image_index_path`。直接用这些字段定位文件，完整产物清单见逐篇 manifest 的 `output_artifacts`。默认正文及索引保存在独立系统临时目录，命令退出后仍可读取。Nature 文章的无标题引言可从 `Main` 起读。
+
+读取方法章时，按每篇回执分别操作。
+
+1. 打开 `section_index_path`，按索引中的实际 `title` 找到方法章，例如 `2 **Materials and methods**`，记下其 `start_line` 和 `level`。
+2. 从该项向后查找第一个 `level` 小于或等于方法章的标题，以该标题的 `start_line - 1` 为末行。如果方法章是最后一章，以最后一个索引项的 `end_line` 为末行。
+3. 打开 `body_path`，从方法章的 `start_line` 读到上述末行（含）。即使父标题后紧接 `2.1`，这个范围也包含各子节的方法正文。
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。
 
@@ -43,7 +54,7 @@ paper-fetch fetch --progress text --target supplementary --query DOI --output-di
 
 - 尊重用户明确的来源、路径、资产范围及覆盖授权。默认预设只补全未指定选项。
 - 建库从逐篇回执或最终 `batch-results.jsonl` 读取，按 DOI、已验证规范 URL、最后按 manifest 路径识别论文，保留实际获取状态。普通目录扫描排除 `.paper-fetch-results`，避免重复计入正文快照。
-- 同一任务的同出版社 DOI 一起交给 `--query-file`，由批内调度安排名额。批量 stdout 重定向至 `receipts.jsonl`。宿主截断输出后，从文本进度开头提示的运行目录读取 `<index>/receipt.json`。保存每篇身份、路径及实际阅读进度。
+- 同一任务的同出版社 DOI 一起交给 `--query-file`，由批内调度安排名额。宿主截断输出后，从文本进度开头提示的运行目录读取 `<index>/receipt.json`。保存每篇身份、路径及实际阅读进度。
 - 仅解析用 `paper-fetch resolve --query ...`；仅探测用 `paper-fetch check --query ...`，都支持 query-file；探测不自动升级为抓取。
 - 依据 `target_satisfied`、acceptance 和实际文件判断交付，`status` 只表示任务生命周期。依据 acceptance 判断全文、摘要、元数据及降级。全文降级结果仍可成功；仅摘要、元数据或失败退出码为 1，保留文件回执；参数错误为 2。
 - AMS 联网正文、附件和补图必须先有 `paper-fetch auth ams` 成功且原生 profile 重开验证通过的状态。交互 CLI 缺少状态时先认证再继续；非交互及 `--control-stdin` 返回 `auth_required`。兼容缓存和已有本地文件可直接复用；resolve/check 不自动认证。

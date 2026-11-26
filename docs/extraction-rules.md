@@ -631,7 +631,7 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
 
 - HTML 正文外声明根据当前文章容器与 `#body` 的祖先、兄弟关系收集，保留页面顺序，父子节点只选取一次，并排除导航、推荐与阅读助手。双语摘要按外层摘要容器生成 `heading/text/language/order`，子标题保留在对应摘要文本中；最终文章仅组装一次，摘要段落不计为正文。参考文献 DOI 优先来自条目内 DOI 链接，文本回退使用去除工具链接且保留块边界的节点；表格仅按 DOM 类去除辅助提示，保留真实单元格文字。
 - XML 的 `data-availability`、`conflict-of-interest`、`acknowledgment` 从文章 head/body/tail 按来源顺序统一渲染，已遍历子树不重复输出。文章关键词组合并入 metadata；图资产注册表先于摘要渲染建立，图文摘要保持 `section=abstract` 并在摘要内消费，不进入正文图附录或正文图计数。
-- XML 缺失参考文献 DOI 的网络补全只能在全文和身份验收后执行，模型转换保持无网络副作用。优先复用父论文 Crossref 记录，再查询充分书目的条目，最后用现有 Elsevier Byparr 上下文读取同篇网页参考文献；按可靠 reference key 且无书目冲突，或规范化完整题名、首作者、年份与可用卷页一致的唯一匹配填空。原 XML 条目数量、编号、顺序及已有 DOI 不变，补全来源与依据进入 diagnostics/trace。失败或平台不支持保留 XML，使用请求剩余期限，显式取消照常传播。所有结构规则不以具体 DOI、题名、段落或固定节点编号为条件。
+- XML 参考文献 DOI 只在全文和身份验收后使用 Crossref 补全，模型转换保持无网络副作用。先匹配父论文 Crossref 书目（优先复用会话记录），再按题名查询书目信息充分的期刊条目。父书目的可靠 reference key 必须无书目冲突；书目匹配要求规范化完整题名、首作者、年份与可用卷页一致。仅用唯一匹配填空，保留 XML 引文文本、编号、顺序及已有 DOI，补全来源与依据进入 diagnostics/trace。正常零命中记为 `info`；服务错误或超时且零新增时记为 `unavailable`，全文验收降级。已取得的匹配保留，故障单独记入诊断。补全预算为 15 秒，受请求剩余期限约束，显式取消照常传播。所有结构规则不以具体 DOI、题名、段落或固定节点编号为条件。
 
 - 官方 PDF 的 HTTP 200 不能覆盖授权限制：响应头 `x-els-status` 明确声明 `limited to first page` 时，PDF route 返回 `no_access`，不把同篇首页预览报告为全文；其它 WARNING 或没有该声明的正常 PDF 仍走原有验收。真实输入与回放见 `tests/golden/test_acquired_publisher_inputs.py`。
 
@@ -659,9 +659,9 @@ Springer 的 `Ethics compliance` / `Ethics statement` 若在 DOM 中属于 Metho
   - 它约束的是“行内和 display 数学不能混渲，失败时不能静默丢失”；源 TeX 保留及转换处理见 [源 TeX 保真与 MathML 转换边界](#rule-formula-latex-normalization)。
 
 <a id="rule-elsevier-supplementary-materials"></a>
-### Supplementary data 不进正文，统一收进 `## Supplementary Materials`
+### Supplementary data 的源附录和附件入口
 
-- `Supplementary data` 这类补充材料显示块不能混进正文叙述里，而是要统一落到文末的 `## Supplementary Materials` 区域，并保留基本的标题和说明。
+- XML 明确标为补充材料的附录保留原题名、引介语和附件说明。`asset_profile=all` 展示这些章节及附件。每件附件优先链接已下载文件，缺少本地文件时使用与该 locator 对应的官方对象地址。
 - 代表性 HTML / XML：
   - [`../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml`](../tests/fixtures/golden_criteria/10.1016_j.ecolind.2024.112140/original.xml)
   - [`../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml`](../tests/fixtures/golden_criteria/_scenarios/elsevier_supplementary_display/original.xml)

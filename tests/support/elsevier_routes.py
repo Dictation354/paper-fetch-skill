@@ -3,6 +3,7 @@
 import json
 from dataclasses import replace
 from types import MethodType
+from unittest.mock import Mock
 
 from paper_fetch.providers import _elsevier_html
 from paper_fetch.providers.browser_runtime import (
@@ -65,6 +66,11 @@ def replay_route(
             CROSSREF_METADATA_KEY.materialize(metadata["doi"]), parent_crossref
         )
     url = metadata["landing_page_url"]
+    browser = Mock(
+        return_value=BrowserFetchedHtml(
+            url, url, html_text, 200, {}, metadata["title"], "", {}
+        )
+    )
     client.deps = replace(
         client.deps,
         load_runtime_config=lambda *a, **k: BrowserRuntimeConfig(
@@ -76,9 +82,7 @@ def replay_route(
             backend="byparr",
         ),
         ensure_runtime_ready=lambda config: None,
-        fetch_html_with_browser=lambda *a, **k: BrowserFetchedHtml(
-            url, url, html_text, 200, {}, metadata["title"], "", {}
-        ),
+        fetch_html_with_browser=browser,
     )
 
     def discover(
@@ -93,8 +97,10 @@ def replay_route(
 
     client.download_related_assets = MethodType(discover, client)
     try:
-        return client.fetch_result(
+        result = client.fetch_result(
             metadata["doi"], metadata, output_dir, asset_profile="all", context=context
         )
+        assert browser.call_count == (1 if route == "html" else 0)
+        return result
     finally:
         context.close()

@@ -37,42 +37,13 @@ from ._html_section_markdown import (
     render_container_markdown,
 )
 from ._reference_doi import reference_doi
+from .browser_workflow.mathjax import prepare_browser_page as prepare_browser_page
+from .browser_workflow.mathjax import restore_runtime_mathml
 
 BODY_SELECTOR = "#body"
 SUPPLEMENT_SELECTOR = ".Appendices .e-component, .appendices .e-component, .e-component, .supplementary-material, #supplementary-material"
 CONTENT_SELECTOR = "#abstracts, .abstracts, .Highlights, .highlights, .Keywords, .keywords-section, #body, .Tail, .tail, #references"
 NOISE_SELECTOR = "nav, aside, .RecommendedArticles, .recommended-articles, .related-content, .reading-assistant, .ReaderAssistant, .PdfEmbed, .u-screen-reader-only, .sr-only, button, style, noscript"
-
-_MATHJAX_ORIGINALS_SCRIPT = r"""() => {
-  let recovered = 0;
-  const bind = (node, original) => {
-    if (!node || typeof original !== 'string' || !/^\s*<(?:[\w-]+:)?math[\s>]/.test(original)) return;
-    node.setAttribute('data-paper-fetch-mathml', original);
-    recovered++;
-  };
-  if (window.MathJax && MathJax.Hub && MathJax.Hub.getAllJax) {
-    for (const jax of MathJax.Hub.getAllJax()) {
-      const source = jax.SourceElement && jax.SourceElement();
-      const node = document.getElementById(jax.inputID + '-Frame')
-        || (source && source.previousElementSibling);
-      bind(node, jax.originalText);
-    }
-  }
-  const doc = window.MathJax && MathJax.startup && MathJax.startup.document;
-  if (doc && doc.getMathItemsWithin) {
-    for (const item of doc.getMathItemsWithin(document.body)) bind(item.typesetRoot, item.math);
-  }
-  return { mathjax_original_mathml: recovered };
-}"""
-
-
-def prepare_browser_page(page: Any, *, timeout_ms: int, cancel_check=None):
-    del timeout_ms
-    if cancel_check is not None:
-        cancel_check()
-    from .browser_runtime.navigation import evaluate_main_world
-
-    return evaluate_main_world(page, _MATHJAX_ORIGINALS_SCRIPT)
 
 
 def main_document_matches(
@@ -222,19 +193,7 @@ def _prepare_dom(soup, source_url, losses=None):
                 title = heading.get_text(" ", strip=True)
                 if combine_elsevier_section_title(counter, title) != title:
                     heading.insert(0, counter + " ")
-    for node in soup.select("[data-paper-fetch-mathml]"):
-        math = BeautifulSoup(
-            str(node["data-paper-fetch-mathml"]), choose_parser()
-        ).find("math")
-        if math is not None:
-            node.clear()
-            node.append(math)
-            node.attrs.pop("aria-hidden", None)
-            node["class"] = [
-                "display-formula"
-                if math.get("display") == "block"
-                else "inline-formula"
-            ]
+    restore_runtime_mathml(soup)
     for script in list(soup.select("script")):
         if str(script.get("type") or "").lower() not in {
             "math/tex",
@@ -405,6 +364,17 @@ def _prepare_figures(container, soup):
             alt = str(image.get("alt") or "Figure")
             if alt == "Unlabelled Image":
                 alt = "Figure"
+            caption_label = figure.select_one(
+                "figcaption .label, .captions .label, figcaption .captions strong, figcaption b"
+            )
+            if caption_label:
+                alt = caption_label.get_text(" ", strip=True)
+            elif re.fullmatch(
+                r"(?:fig(?:ure)?|f)\d+[A-Za-z]?", str(figure.get("id") or ""), re.I
+            ):
+                alt = re.sub(
+                    r"^(?:fig(?:ure)?|f)", "Figure ", str(figure["id"]), flags=re.I
+                )
             lines.extend([render_markdown_image("figure", alt, str(image["src"])), ""])
         caption = figure.select_one("figcaption, .captions")
         if caption is not None:
@@ -709,6 +679,7 @@ def extract_markdown(html_text: str, source_url: str, *, metadata=None):
     capture_formula_diagnostics(losses, count_fallbacks=True)
     return markdown, {
         "title": title,
+        "page_doi": normalize_doi(page_metadata.get("doi")),
         "extracted_authors": authors,
         "references": refs,
         "keywords": keywords,

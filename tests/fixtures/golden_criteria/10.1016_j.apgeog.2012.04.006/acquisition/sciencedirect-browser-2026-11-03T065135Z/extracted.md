@@ -143,7 +143,7 @@ Table 2. Comparison of alternative models with the proposed EHVI. (Bold indicate
 
 Examining the model developed utilizing population density (all models are presented spatially in [Fig. 1](#elsevier-fig1)) we do not see a significant increase in death over expected in the areas of greater settlement density. Therefore, there is not an indication of more death occurring in higher density areas than in lower density locations. There is a higher than expected death rate in the H-M category and a lower than expected rate in the L-M class. The remaining categories do not significantly differ from the expectation. This would seem to indicate that total population density is not a statistically significant factor in heat-related death. This has further been corroborated in previous studies elucidating the Philadelphia 1998 event ([Johnson et al., 2009](#elsevier-bib34)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S014362281200032X-gr1.jpg)
+![Figure 1](https://ars.els-cdn.com/content/image/1-s2.0-S014362281200032X-gr1.jpg)
 
 <a id="elsevier-fig1"></a>Fig. 1. Demonstration of the spatial distributions of each of the aforementioned models.
 

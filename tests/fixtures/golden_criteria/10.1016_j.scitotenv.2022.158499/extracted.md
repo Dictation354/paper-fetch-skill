@@ -364,6 +364,16 @@ The authors declare that they have no known competing financial interests or per
 
 Thanks sincerely to Wenping Yuan, Liang Shunlin, Jingfeng Xiao, Xing Li, Mengxia Li, Ian Harris, Santiago Beguería, D. G. Miralles and Damien Sulla-Menashe for their help with this paper.
 
+## Appendix A Supplementary data
+
+<a id="elsevier-s0130"></a>
+
+Supplementary data to this article can be found online at https://doi.org/10.1016/j.scitotenv.2022.158499.
+
+## Supplementary Materials
+
+- [Image 1](https://api.elsevier.com/content/object/eid/1-s2.0-S004896972205598X-mmc1.docx?httpAccept=%2A%2F%2A): Supplementary material
+
 ## References (67 total, showing 67)
 
 1. <a id="elsevier-bb0005"></a>F. Achard, H.D. Eva, H.J. Stibig, P. Mayaux, J. Gallego, T. Richards, J.P. Malingreau. 2002. Determination of deforestation rates of the world’s humid tropical forests. Science (80-. ), 297: 999-1002. 10.1126/science.1070656 [Achard et al., 2002]

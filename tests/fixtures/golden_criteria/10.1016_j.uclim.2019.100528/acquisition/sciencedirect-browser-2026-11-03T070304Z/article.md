@@ -1,6 +1,7 @@
 ---
 title: "A methodological assessment of extreme heat mortality modeling and heat vulnerability mapping in Dallas, Texas"
 authors: "Evan Mallen, Brian Stone, Kevin Lanza"
+doi: "10.1016/j.uclim.2019.100528"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

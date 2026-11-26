@@ -169,7 +169,11 @@ def source_references(fixture, soup):
     if fixture.provider == "science" and not nodes:
         nodes = soup.select("#bibliography .biblioentry")
     if fixture.provider == "tandf" and not nodes:
-        nodes = soup.select(".summation-section > div[id^='FN']")
+        nodes = [
+            note
+            for note in soup.select(".summation-section > div[id^='FN']")
+            if not note.parent.find_previous_sibling(id="inline_frontnotes")
+        ]
     return nodes
 
 

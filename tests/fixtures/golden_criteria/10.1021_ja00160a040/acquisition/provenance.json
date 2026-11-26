@@ -611,5 +611,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1021_ja00160a040/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/9e3c3254cb43-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.md",
+      "source_sha256": "9e3c3254cb43901d06425c4ee5291c654debbfee1bb88823ea869d2bd7f4410f",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/9e3c3254cb43-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.md",
+      "sha256": "7658589ca82839641baca922424efd84da8995ce7aabbe45bbad939630a2bcf5",
+      "image_references": 5
+    }
   ]
 }

@@ -63,12 +63,9 @@ def refresh_html(path):
     provenance = json.loads(provenance_path.read_text())
     article_path = path.with_name("article.json")
     old = json.loads(article_path.read_text()) if article_path.exists() else None
-    doi = (
-        old["doi"]
-        if old
-        else provenance.get("doi") or source.parents[2].name.replace("_", "/", 1)
-    )
-    metadata = dict(old["metadata"]) if old else {"doi": doi}
+    # Archived article metadata preserves the original request, including an
+    # absent DOI. The page supplies its independently observed citation DOI.
+    metadata = dict(old["metadata"]) if old else {"doi": provenance.get("doi")}
     url = provenance["final_url"]
     with formula_runtime_env(captured_formula_environment()):
         markdown, extraction = _elsevier_html.extract_markdown(
@@ -87,7 +84,7 @@ def refresh_html(path):
                 merged_metadata=metadata,
                 diagnostics={"extraction": extraction},
                 warnings=old["quality"]["warnings"],
-                trace=[fulltext_event("elsevier", "ok", route="html")],
+                trace_events=[fulltext_event("elsevier", "ok", route="html")],
             )
             # These thirteen captures requested no assets; do not discover or
             # download new assets while refreshing derived text.
@@ -103,7 +100,7 @@ def refresh_html(path):
             )
             path.with_name("article.md").write_text(final)
             envelope = FetchEnvelope(
-                doi=doi,
+                doi=article.doi,
                 source=article.source,
                 article=article,
                 markdown=final,
@@ -115,7 +112,7 @@ def refresh_html(path):
             acceptance = evaluate_fetch_acceptance(
                 envelope,
                 asset_profile=profile,
-                expected_doi=doi,
+                expected_doi=provenance["doi"],
                 requested_outputs=old_acceptance["output"]["requested"],
             ).model_dump(mode="json")
             write_json(path.with_name("acceptance.json"), acceptance)

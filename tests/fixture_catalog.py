@@ -11,7 +11,12 @@ from tests.golden_criteria import golden_criteria_manifest
 from tests.paths import REPO_ROOT
 
 OriginKind = Literal[
-    "real_replay", "real_excerpt", "contract_scenario", "synthetic", "unverified"
+    "real_replay",
+    "real_excerpt",
+    "contract_scenario",
+    "synthetic",
+    "unverified",
+    "derived",
 ]
 FixtureFamily = Literal["golden", "block", "scenario"]
 UsageKind = Literal["content", "infrastructure"]
@@ -85,6 +90,7 @@ def _iter_manifest_records() -> list[FixtureRecord]:
                 "contract_scenario",
                 "synthetic",
                 "unverified",
+                "derived",
             }:
                 raise ValueError(f"Unknown asset origin: {sample_id}: {asset_origin}")
             if origin_kind == "synthetic" and asset_origin in {

@@ -3,12 +3,12 @@ title: "Variation in Effects of Non-Hodgkin Lymphoma Risk Factors According to t
 authors: "Sophia S. Wang, Yani Lu, Nathaniel Rothman, Amr M. Abdou, James R. Cerhan, Anneclaire De Roos, Scott Davis, Richard K. Severson, Wendy Cozen, Stephen J. Chanock, Leslie Bernstein, Lindsay M. Morton, Patricia Hartge"
 journal: "PLoS ONE"
 doi: "10.1371/journal.pone.0026949"
-publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-11-9", "source": "jats:pub-date:epub"}]
+publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-11-09", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 24391
+token_estimate: 24783
 ---
 
 # Variation in Effects of Non-Hodgkin Lymphoma Risk Factors According to the Human Leukocyte Antigen (*HLA*)*-DRB1\*01:01* Allele and Ancestral Haplotype 8.1
@@ -366,6 +366,20 @@ Confirming these potential interactions between NHL risk factors with *HLA-DRB1\
 Study strengths include our systematic approach to evaluating the joint effects of two important gene variations with a wide range of NHL risk factors observed in the present study that have been replicated in large pooled analyses or are consistent with the literature \[8\]. Study limitations include the small sample sizes for some analyses that resulted from the split-sample design of the parent study, decreasing our statistical power to detect significant interactions, particularly within subtypes. In our data interpretation, we assessed previously reported associations to determine whether these known associations were consistent by *HLA DRB1\*01:01* or AH 8.1 status, or if they were restricted and statistically significant by genotype or haplotype strata. Although we present p-interactions, we did not place sole emphasis on this statistic as they could easily be influenced by risk estimates that lean in opposite directions. Finally, we acknowledge that we may have failed to detect true interactions due to limited statistical power, imperfect measures of exposures and of genes, particularly as not all cis-SNPs necessarily effect local genes and we cannot rule out effects from a trans gene.
 
 Our results require replication in a large independent or pooled effort, such as within the InterLymph Consortium, and among prospective studies. In the emerging view of complex etiologies for NHL with potentially multiple paths to lymphomagenesis, *HLA* associations with NHL may explain a portion of the reported associations between family history and NHL risk. If confirmed in independent data, they provide important evidence that NHL risk factors, including environmental exposures to organochlorines, sun exposure/pigmentation, autoimmune conditions, and BMI, may vary according to a person's *HLA-DRB1\*01:01* or *AH 8.1* status.
+
+## Author contributions
+
+Conceived and designed the experiments: SSW PH NR. Performed the experiments: AMA. Analyzed the data: YL SSW. Contributed reagents/materials/analysis tools: JRC WC NR SD RKS LB ADR SJC LMM PH. Wrote the paper: SSW PH JRC WC NR SD RKS LB ADR SJC LMM PH AMA YL.
+
+## Competing interests
+
+The authors have read the journal's policy and have the following conflicts: Co-author completed part of this study while employed at SAIC Frederick Inc. There are no patents, products in development or marketed products to declare. This does not alter the authors' adherence to all the PLoS ONE policies on sharing data and materials, as detailed online in the guide for authors.
+
+## Funding
+
+The NCI-SEER study was supported by the Intramural Research Program of the National Institutes of Health (NHI) National Cancer Institute (NCI), and by Public Health Service (PHS) contracts N01-PC-65064, N01-PC-67008, N01-PC-67009, N01-PC-67010, and N02-PC-71105. HLA typing for the study was funded in part with federal funds from the National Cancer Institute, National Institutes of Health, under Contract No. HHSN261200800001E and in part by the Intramural Research Program of the NIH, National Cancer Institute, Center for Cancer Research. The content of this publication does not necessarily reflect the views or policies of the Department of Health and Human Services, nor does mention of trade names, commercial products, or organizations imply endorsement by the United States Government. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+
+## Acknowledgments
 
 We thank Peter Hui of the Information Management Services, Inc. for programming support. We also gratefully acknowledge the contributions of the staff and scientists at the SEER centers of Iowa, Los Angeles, Detroit, and Seattle for the conduct of the study's field effort. The content of this publication does not necessarily reflect the views or policies of the Department of Health and Human Services, nor does mention of trade names, commercial products, or organizations imply endorsement by the U.S. Government.
 

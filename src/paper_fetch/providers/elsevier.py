@@ -42,7 +42,7 @@ from ..models import (
 )
 from ..pdf_limits import pdf_max_bytes
 from ..publication_dates import publication_date
-from ..publisher_identity import extract_doi, normalize_doi
+from ..publisher_identity import extract_doi, normalize_doi, validate_extracted_identity
 from ..quality.access_boundary import (
     propagate_paywall,
     raise_for_api_entitlement,
@@ -1463,9 +1463,7 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
         ):
             from ._elsevier_reference_completion import complete_reference_dois
 
-            payload = complete_reference_dois(
-                self, normalized_doi, metadata, payload, context
-            )
+            payload = complete_reference_dois(normalized_doi, payload, context)
         return payload
 
     def to_article_model(
@@ -1481,18 +1479,49 @@ class ElsevierClient(browser_workflow.BrowserWorkflowClient):
         if "html" in raw_payload.content.content_type.lower():
             from ._elsevier_html import extract_title
 
-            title = extract_title(
-                raw_payload.content.body.decode("utf-8", errors="replace")
+            html = raw_payload.content.body.decode("utf-8", errors="replace")
+            title = extract_title(html)
+            updates = {"title": title} if title else {}
+            observed = normalize_doi(
+                (raw_payload.content.diagnostics.get("extraction") or {}).get(
+                    "page_doi"
+                )
             )
-            if title:
-                metadata = {**metadata, "title": title}
+            page_url = raw_payload.content.source_url
+            if not observed:
+                from ..extraction.html._metadata import parse_html_metadata
+
+                observed = normalize_doi(parse_html_metadata(html, page_url).get("doi"))
+            if (
+                observed
+                and urllib.parse.urlsplit(page_url).hostname
+                in {"www.sciencedirect.com", "sciencedirect.com"}
+                and extract_elsevier_pii_from_url(page_url)
+            ):
+                known = metadata.get("doi") or (
+                    raw_payload.content.merged_metadata or {}
+                ).get("doi")
+                identity = validate_extracted_identity(
+                    {"doi": known}, None, {"doi": observed}
+                )
+                if identity.mismatch:
+                    raise ProviderFailure(
+                        IDENTITY_MISMATCH,
+                        identity.reason or "ScienceDirect DOI mismatch.",
+                        diagnostics=FailureDiagnostics(
+                            details={"identity": identity.to_dict()}
+                        ),
+                    )
+                updates["doi"] = observed
+            if updates:
+                metadata = {**metadata, **updates}
                 raw_payload = replace(
                     raw_payload,
                     content=replace(
                         raw_payload.content,
                         merged_metadata={
                             **(raw_payload.content.merged_metadata or metadata),
-                            "title": title,
+                            **updates,
                         },
                     ),
                 )

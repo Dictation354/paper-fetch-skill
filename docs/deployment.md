@@ -140,9 +140,9 @@ PDF 的 `pdf/full` extras 协调使用 `PyMuPDF>=2,<3` 与 `pymupdf4llm>=2,<3`�
 开发锁定这两个包及其传递依赖 `pymupdf-layout` 均为 2.1；仅维护 2.x。
 转换调用、上游输出透传及资产落盘语义保持不变。
 
-HTML 提取依赖 trafilatura 暂限 `>=2.0,<2.3`，开发锁定 2.2.0。
-2.3.0 和 2.3.1 的 Markdown 转义会改写既有 `$...$` 公式中的下划线及表格引用；
-在线安装与离线构建沿用这一兼容上限，保留现有公式和表格输出契约。
+HTML 提取依赖 trafilatura `>=2.4,<3`，开发锁定 2.4.0。
+2.4.0 保留 `$...$` 行内公式及表格锚点。普通方括号在 Markdown 源文中可转义，
+表格引用的可见文本按 CommonMark 渲染结果验收。
 
 Camoufox 路线当前锁定为 Camoufox 0.5.9 / Playwright 1.62.0。项目允许
 `playwright>=1.58,<1.63`，但解析时仍受 Camoufox 自身的 `<1.63` 约束，不能强制
@@ -309,7 +309,7 @@ Windows 构建在 PowerShell 中执行：
 
 公式 workspace 要求 Node ≥22.12.0；在线安装遇到旧版本会提示升级，并保留核心安装。已有 workspace 按 `package-lock.json` 核对全部依赖版本，传递依赖变更时重新执行 `npm ci`。
 
-**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.14 x64 上运行，并按 manifest 下载和校验官方 CPython 3.14.10 embeddable x64 runtime。
+**平台构建范围。** 构建解释器必须是标准 GIL CPython，架构须与宿主目标一致。正式发布的 Linux x86_64 `cp311`、`cp312`、`cp313` 离线包在 Ubuntu 24.04（glibc 2.39）上解析依赖、构建和验证，安装时须使用对应 ABI 的 CPython。macOS 构建只接受 Darwin arm64，并把最低 deployment target 固定为 15.0；Linux / WSL 交叉构建不能充当发布证据。Windows 构建必须在 CPython 3.14 x64 上运行，并按 manifest 下载和校验官方 CPython 3.14.10 embeddable x64 runtime。
 
 **Payload 所有权。** Linux 产物是 shell stub 与压缩 payload 组成的单文件 `.sh` 安装器，macOS 产物是 `.tar.gz` bundle；两者都把项目和依赖安装进 `runtime/site-packages`，预编译 bytecode，并写入私有 launcher 与 paper-fetch 命令启动器。`bin/` 不包含通用 `python` wrapper，payload 不携带源码树或 wheelhouse。离线构建只从 repo-local 可重定位 runtime 暂存 Ghostscript/libvips；macOS 还会实体化 texmath、收集非系统动态库、重写 Mach-O install name 并执行 ad-hoc codesign。Windows 把 Python 包安装进 `runtime/Lib/site-packages`，Inno Setup 安装器只包含 embedded runtime、命令启动器、静态 skill、formula tools、image-tools、installer manifest、Windows helper 和离线元数据；安装后不携带顶层 `src/`、`tests/`、`.github/`、`wheelhouse/`、`dist/` 或 `pyproject.toml`。
 

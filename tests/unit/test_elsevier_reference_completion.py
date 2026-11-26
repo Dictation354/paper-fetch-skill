@@ -13,19 +13,16 @@ from paper_fetch.http import HttpRequestPolicy, HttpTransport, RequestCancelledE
 from paper_fetch.providers import _elsevier_reference_completion as completion
 from paper_fetch.providers._payloads import build_provider_payload
 from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_runtime import (
-    BrowserFetchedHtml,
-    BrowserRuntimeConfig,
-)
 from paper_fetch.providers.elsevier import ElsevierClient
 from paper_fetch.runtime import RuntimeContext
+from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from paper_fetch.workflow.session_cache import CROSSREF_METADATA_KEY
 from tests.support.http_cache import FakeHTTPResponse
+from tests.support.workflow_acceptance import _envelope
 
 DOI = "10.1016/example"
 REF_DOI = "10.1000/matched"
 TITLE = "Measured vegetation responses across seasons"
-URL = "https://www.sciencedirect.com/science/article/pii/S016819232400090X"
 
 
 def xml_payload(*, existing=False, journal=True):
@@ -50,10 +47,8 @@ def setup(*, parent=None):
     )
     client = ElsevierClient(None, {"ELSEVIER_API_KEY": "key"})
     context = RuntimeContext(env={}, clients={"crossref": crossref})
-    browser = Mock(
-        side_effect=ProviderFailure("not_supported", "No browser on this platform")
-    )
-    client.deps = replace(client.deps, load_runtime_config=browser)
+    browser = Mock()
+    client.deps = replace(client.deps, fetch_html_with_browser=browser)
     if parent is not None:
         context.set_session_cache(
             CROSSREF_METADATA_KEY.materialize(DOI),
@@ -92,12 +87,10 @@ def search_record(**changes):
     return {**record, **changes}
 
 
-def complete(client, context, *, existing=False, journal=True):
+def complete(client, context, *, journal=True):
     payload = completion.complete_reference_dois(
-        client,
         DOI,
-        {"doi": DOI, "title": "Example", "landing_page_url": URL},
-        xml_payload(existing=existing, journal=journal),
+        xml_payload(journal=journal),
         context,
     )
     article = client.to_article_model(
@@ -298,133 +291,55 @@ def test_search_checks_candidates_instead_of_accepting_first_result_and_caches()
     ],
 )
 def test_search_ambiguity_year_conflict_and_partial_title_leave_doi_empty(records):
-    client, context, crossref, _ = setup(parent=[])
+    client, context, crossref, browser = setup(parent=[])
     crossref.search_bibliographic_candidates.return_value = records
-    _, article = complete(client, context)
+    payload, article = complete(client, context)
     assert article.references[0].doi is None
+    assert payload.trace[-1].outcome == "info"
+    browser.assert_not_called()
 
 
-def test_existing_doi_is_never_replaced_or_queried():
+@pytest.mark.parametrize("source_tag", ["doi", "comment"])
+def test_existing_doi_is_never_replaced_or_queried(source_tag):
     client, context, crossref, browser = setup()
-    payload, article = complete(client, context, existing=True)
+    payload = xml_payload(existing=True)
+    payload.content = replace(
+        payload.content,
+        body=payload.content.body.replace(
+            b"<doi>10.1000/existing</doi>",
+            f"<{source_tag}>10.1000/existing</{source_tag}>".encode(),
+        ),
+    )
+    payload = completion.complete_reference_dois(DOI, payload, context)
+    article = client.to_article_model({"doi": DOI}, payload, context=context)
     assert article.references[0].doi == "10.1000/existing"
     assert "reference_doi_completion" not in payload.content.diagnostics
+    crossref.search_bibliographic_candidates.assert_not_called()
     crossref.fetch_metadata.assert_not_called()
     browser.assert_not_called()
 
 
 @pytest.mark.parametrize(
-    "page_doi,expected", [(DOI, REF_DOI), ("10.1016/different", None)]
+    ("parent_error", "search_error", "outcome", "overall"),
+    [
+        (None, None, "info", "complete"),
+        ("no_result", None, "info", "complete"),
+        ("error", None, "unavailable", "degraded"),
+        (None, "rate_limited", "unavailable", "degraded"),
+    ],
 )
-def test_web_fallback_checks_identity_and_excludes_recommended_references(
-    page_doi, expected, tmp_path
+def test_zero_matches_preserve_xml_and_report_crossref_availability(
+    monkeypatch, parent_error, search_error, outcome, overall
 ):
-    client, context, crossref, _ = setup(parent=[])
-    source = f'''<meta name="citation_doi" content="{page_doi}"><article><div id="body"></div>
-    <div id="references"><ol class="references"><li><span class="reference" id="publisher-key"><div class="authors">A. Writer</div><div class="title">{TITLE}</div><div class="host">Journal, 12 (2024), pp. 101-110 <a href="https://doi.org/{REF_DOI}">DOI</a></div></span></li></ol></div>
-    <aside><div id="references"><ol class="references"><li><span class="reference" id="publisher-key"><a href="https://doi.org/10.1000/recommended">Recommended</a></span></li></ol></div></aside></article>'''
-    fetch = Mock(
-        return_value=BrowserFetchedHtml(URL, URL, source, 200, {}, "Example", "", {})
-    )
-    client.deps = replace(
-        client.deps,
-        load_runtime_config=lambda *a, **k: BrowserRuntimeConfig(
-            provider="elsevier",
-            doi=DOI,
-            artifact_dir=tmp_path,
-            headless=True,
-            user_agent=None,
-            backend="byparr",
-        ),
-        ensure_runtime_ready=lambda config: None,
-        fetch_html_with_browser=fetch,
-    )
-    payload, article = complete(client, context)
-    assert article.references[0].doi == expected
-    assert len(article.references) == 1
-    assert (
-        fetch.call_args.kwargs["runtime_context"]._browser_sessions
-        is context._browser_sessions
-    )
-    assert fetch.call_args.kwargs["readiness"].selector == "#references"
-    assert fetch.call_args.kwargs["max_timeout_ms"] == 12000
-    assert crossref.search_bibliographic_candidates.call_count == 1
-    if expected:
-        assert (
-            payload.content.diagnostics["reference_doi_completion"]["matches"][0][
-                "source"
-            ]
-            == "elsevier_html"
-        )
-
-
-@pytest.mark.parametrize(
-    ("outer_timeout", "browser_timeout"), [(None, None), (3.0, 6.0), (30.0, 6.0)]
-)
-def test_web_fallback_shares_request_state_with_scoped_deadlines(
-    tmp_path, outer_timeout, browser_timeout
-):
-    client, context, _, _ = setup(parent=[])
-    started = time.monotonic()
-    outer_deadline = None if outer_timeout is None else started + outer_timeout
-    browser_deadline = None if browser_timeout is None else started + browser_timeout
-    context.deadline_monotonic = outer_deadline
-    context.browser_deadline_monotonic = browser_deadline
-    budget = completion._ReferenceBudget(context)
-    expected = (
-        budget.deadline
-        if outer_deadline is None
-        else min(budget.deadline, outer_deadline)
-    )
-    expected_browser = (
-        expected if browser_deadline is None else min(expected, browser_deadline)
-    )
-
-    def fetch(*args, runtime_context, **kwargs):
-        assert runtime_context is not context
-        assert runtime_context.deadline_monotonic == expected
-        assert runtime_context.browser_deadline_monotonic == expected_browser
-        # Profile acquisition normally adds queue time to the browser budget.
-        runtime_context.browser_deadline_monotonic += 1.0
-        assert runtime_context.browser_deadline_monotonic == expected_browser
-        return BrowserFetchedHtml(URL, URL, "", 200, {}, "", "", {})
-
-    browser_fetch = Mock(side_effect=fetch)
-    runtime = BrowserRuntimeConfig(
-        provider="elsevier",
-        doi=DOI,
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent=None,
-        backend="byparr",
-    )
-    client.deps = replace(
-        client.deps,
-        load_runtime_config=lambda *a, **k: runtime,
-        ensure_runtime_ready=lambda config: None,
-        fetch_html_with_browser=browser_fetch,
-    )
-    completion._web_references(client, DOI, {"landing_page_url": URL}, context, budget)
-
-    scoped = browser_fetch.call_args.kwargs["runtime_context"]
-    assert context.deadline_monotonic == outer_deadline
-    assert context.browser_deadline_monotonic == browser_deadline
-    assert scoped.deadline_monotonic == outer_deadline
-    assert scoped.browser_deadline_monotonic == browser_deadline
-    assert scoped._browser_sessions is context._browser_sessions
-    assert scoped._session_cache_lock is context._session_cache_lock
-    assert scoped.session_cache is context.session_cache
-    assert scoped._commit_guard is context._commit_guard
-    assert scoped.fetch_trace is context.fetch_trace
-    assert scoped.diagnostic_artifacts is context.diagnostic_artifacts
-
-
-def test_lookup_failures_and_platform_skip_keep_accepted_xml_without_pdf(monkeypatch):
     client, context, crossref, browser = setup()
-    crossref.fetch_metadata.side_effect = ProviderFailure("error", "Unavailable")
-    crossref.search_bibliographic_candidates.side_effect = ProviderFailure(
-        "rate_limited", "Throttled"
-    )
+    if parent_error:
+        crossref.fetch_metadata.side_effect = ProviderFailure(
+            parent_error, "Parent lookup"
+        )
+    if search_error:
+        crossref.search_bibliographic_candidates.side_effect = ProviderFailure(
+            search_error, "Title lookup"
+        )
     monkeypatch.setattr(
         client, "_fetch_official_xml_payload", lambda doi: xml_payload()
     )
@@ -438,19 +353,35 @@ def test_lookup_failures_and_platform_skip_keep_accepted_xml_without_pdf(monkeyp
     assert article.references[0].doi is None
     assert payload.content.diagnostics["availability_diagnostics"]["accepted"]
     assert payload.content.diagnostics["identity"]
-    browser.assert_called_once()
+    assert payload.trace[-1].outcome == outcome
+    envelope = _envelope()
+    envelope.trace.extend(payload.trace)
+    report = evaluate_fetch_acceptance(envelope, asset_profile="none")
+    assert report.content.has_fulltext
+    assert report.overall == overall
+    browser.assert_not_called()
     pdf.assert_not_called()
 
+    # Only successful lookups, including ordinary empty results, are reusable.
+    crossref.fetch_metadata.side_effect = None
+    crossref.search_bibliographic_candidates.side_effect = None
+    crossref.search_bibliographic_candidates.return_value = [search_record()]
+    again, article = complete(client, context)
+    assert crossref.fetch_metadata.call_count == (2 if parent_error else 1)
+    assert crossref.search_bibliographic_candidates.call_count == (
+        2 if search_error else 1
+    )
+    assert article.references[0].doi == (REF_DOI if search_error else None)
+    assert again.trace[-1].outcome == ("ok" if search_error else "info")
 
-@pytest.mark.parametrize("stage", ["parent", "search", "browser"])
+
+@pytest.mark.parametrize("stage", ["parent", "search"])
 def test_explicit_cancellation_propagates(stage):
-    client, context, crossref, browser = setup(parent=[] if stage != "parent" else None)
+    client, context, crossref, _ = setup(parent=[] if stage != "parent" else None)
     call = (
         crossref.fetch_metadata
         if stage == "parent"
         else crossref.search_bibliographic_candidates
-        if stage == "search"
-        else browser
     )
     call.side_effect = RequestCancelledError("cancelled")
     with pytest.raises(RequestCancelledError):
@@ -460,8 +391,9 @@ def test_explicit_cancellation_propagates(stage):
 def test_expired_deadline_does_not_start_network_or_browser():
     client, context, crossref, browser = setup(parent=[])
     context.deadline_monotonic = time.monotonic() - 1
-    _, article = complete(client, context)
+    payload, article = complete(client, context)
     assert article.references[0].doi is None
+    assert payload.trace[-1].outcome == "unavailable"
     crossref.search_bibliographic_candidates.assert_not_called()
     browser.assert_not_called()
 
@@ -513,19 +445,19 @@ def test_xml_citations_prefer_journal_host_and_exclude_conference_and_books():
     assert bare_journal.is_journal_host
 
 
-def test_unsearchable_journal_can_still_match_publisher_reference_key(monkeypatch):
-    client, context, crossref, _ = setup(parent=[])
+def test_unsearchable_journal_can_still_match_parent_reference_key(monkeypatch):
+    client, context, crossref, browser = setup(parent=[parent_record()])
     original = completion.xml_citations
     monkeypatch.setattr(
         completion,
         "xml_citations",
         lambda root: [replace(ref, title="", year="") for ref in original(root)],
     )
-    monkeypatch.setattr(completion, "_web_references", lambda *args: [parent_record()])
     payload, article = complete(client, context)
     assert article.references[0].doi == REF_DOI
     (match,) = payload.content.diagnostics["reference_doi_completion"]["matches"]
-    assert (match["source"], match["basis"]) == ("elsevier_html", "reference_key")
+    assert (match["source"], match["basis"]) == ("crossref_parent", "reference_key")
+    browser.assert_not_called()
     crossref.search_bibliographic_candidates.assert_not_called()
 
 
@@ -563,6 +495,7 @@ def test_parallel_search_applies_finished_title_when_first_title_expires(monkeyp
     assert [(match["index"], match["doi"]) for match in diagnostics["matches"]] == [
         (1, REF_DOI)
     ]
+    assert payload.trace[-1].outcome == "ok"
     assert diagnostics["attempts"][-1] == {
         "source": "crossref_search",
         "outcome": "unavailable",
@@ -582,10 +515,10 @@ def test_failure_in_enrichment_parsing_or_matching_keeps_accepted_xml(
     monkeypatch.setattr(completion, operation, Mock(side_effect=error))
     if isinstance(error, RequestCancelledError):
         with pytest.raises(RequestCancelledError):
-            completion.complete_reference_dois(client, DOI, {}, original, context)
+            completion.complete_reference_dois(DOI, original, context)
     else:
         body = original.content.body
-        updated = completion.complete_reference_dois(client, DOI, {}, original, context)
+        updated = completion.complete_reference_dois(DOI, original, context)
         assert updated is original and updated.content.body == body
         attempt = updated.content.diagnostics["reference_doi_completion"]["attempts"][
             -1

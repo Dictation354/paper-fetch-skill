@@ -294,5 +294,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md",
+      "source_sha256": "176b3e833f529ce7f6714c9a06e52cb2f821f01c4926da8830cd2ab828d23eed",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md",
+      "sha256": "4e2a1e8146f89d359b5f201319b5fb15be0c02d70d741d75ab42b2d2f8626b4a",
+      "image_references": 10
+    }
   ]
 }

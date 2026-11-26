@@ -941,5 +941,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/c551db395956-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md",
+      "source_sha256": "c551db395956309b6617baedab004e82b0d1dfd9df412f08822a7423018d1728",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/c551db395956-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md",
+      "sha256": "c5be5bab9aac080b4c5e049669253679ab4b8c4a401dfecfd213028de458e97f",
+      "image_references": 3
+    }
   ]
 }

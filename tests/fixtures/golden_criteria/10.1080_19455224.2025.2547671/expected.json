@@ -1,10 +1,10 @@
 {
   "counts": {
     "abstract_sections": 5,
-    "body_sections": 9,
+    "body_sections": 10,
     "figures": 0,
-    "references": 87,
-    "sections": 14,
+    "references": 0,
+    "sections": 15,
     "tables": 0
   },
   "expected_content_kind": "fulltext",
@@ -15,7 +15,7 @@
     "code_availability": false,
     "data_availability": false,
     "figures": false,
-    "references": true,
+    "references": false,
     "title": true
   },
   "source_review": {
@@ -34,7 +34,7 @@
       },
       "references": {
         "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
-        "source_count": 87,
+        "source_count": 0,
         "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
       },
       "prose": {

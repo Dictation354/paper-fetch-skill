@@ -3,12 +3,12 @@ title: "Social media usage to share information in communication journals: An an
 authors: "Yasemin Özkent"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0263725"
-publication_dates: [{"kind": "online", "value": "2022-2-9", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2022", "source": "jats:pub-date:collection"}]
+publication_dates: [{"kind": "online", "value": "2022-02-09", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2022", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 6922
+token_estimate: 7016
 ---
 
 # Social media usage to share information in communication journals: An analysis of social media activity and article citations
@@ -143,6 +143,22 @@ The use of social media platforms in the scientific world will make an important
 The results of this study show that articles with exposure to social media had higher citation rates. There was also a positive correlation between exposure to social media and article citations. Therefore, the scientist and journals should develop new projects to increase the usage of social media.
 
 However, the present study has some limitations. First, it analyzed only the number of citations and the number of tweets and did not evaluate their content or the Twitter account holders. Second, this study evaluated only the top 10 journals in the communication science. Third, multiple factors (such as sending articles to the press at the same time, focusing on some specific communication topics, and evaluating popular topics) may play a role in the emergence of the articles’ impact. Posting articles on Twitter is only one contributor to this impact. Further, this study examined the relationship between the number of Twitter posts and the number of citations of articles. However, the cause of the relationship was not analyzed. Therefore, more work is needed to explain potential causes of the relationships between posts and citations of an article. Nevertheless, this study presented significant findings that highlight the importance of using social media in academia.
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Author contributions
+
+Yasemin Özkent: Conceptualization, Data curation, Formal analysis, Funding acquisition, Investigation, Methodology, Project administration, Resources, Software, Supervision, Validation, Visualization, Writing – original draft, Writing – review & editing
+
+## Funding
+
+The authors received no specific funding for this work.
+
+## Data availability
+
+The data underlying the results presented in the study are available from: [https://github.com/yaseminozkent/minimal-data-set.git](https://github.com/yaseminozkent/minimal-data-set.git).
 
 ## References (60 total, showing 60)
 

@@ -516,7 +516,7 @@ def test_acs_table_graphic_counts_toward_strict_local_acceptance(
     )
     images = [a for a in article.assets if "ao4c03987_0009" in str(a.original_url)]
     assert len(images) == 1
-    assert len(article.assets) == 10
+    assert len(article.assets) == 11
     rendered = article.to_ai_markdown(asset_profile="all", max_tokens="full_text")
     if not missing_table:
         assert "silverchair-cdn.com" not in rendered
@@ -534,8 +534,8 @@ def test_acs_table_graphic_counts_toward_strict_local_acceptance(
         asset_profile="body",
         require_local_body_assets=True,
     )
-    assert acceptance.asset.discovered == 10
-    assert acceptance.asset.local == (9 if missing_table else 10)
+    assert acceptance.asset.discovered == 11
+    assert acceptance.asset.local == (10 if missing_table else 11)
     assert acceptance.asset.local_body_assets_satisfied is (not missing_table)
     if missing_table:
         assert acceptance.overall != "complete"

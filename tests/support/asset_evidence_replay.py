@@ -130,12 +130,28 @@ def replay_completed_signed_paper(doi, output_dir):
             *existing.values(),
             *download_captured_images(doi, remaining, output_dir),
         ]
+    elif row["provider"] == "acs":
+        # The signed-image collection captured the body figures and table images.
+        # Preserve the additional graphical abstract in the complete article below.
+        recorded = {m["current_url"] for m in row["mappings"]}
+        collected = [
+            a
+            for a in candidates
+            if any(
+                a.get(k) in recorded for k in ("url", "preview_url", "full_size_url")
+            )
+        ]
+        assert len(collected) == len(recorded)
+        downloaded = download_captured_images(doi, collected, output_dir)
     else:
         downloaded = download_captured_images(doi, candidates, output_dir)
     client, metadata, payload, old_candidates, _ = extract_signed_fixture_payload(
         row, REPO_ROOT / row["old_source"], empty, output_dir
     )
-    article = client.to_article_model(metadata, payload, downloaded_assets=downloaded)
+    delivered = downloaded
+    if row["provider"] == "acs":
+        delivered = merge_extracted_and_downloaded_assets(candidates, downloaded)
+    article = client.to_article_model(metadata, payload, downloaded_assets=delivered)
     article, markdown, acceptance = finish_asset_replay(article, output_dir)
     return article, markdown, acceptance, downloaded, row, old_candidates
 

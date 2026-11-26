@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.rse.2024.114346",
   "source": "elsevier_html",
   "metadata": {
     "title": "Patterns and Trends in Northern Hemisphere River Ice Phenology from 2000 to 2021",
@@ -10,7 +10,9 @@
     "abstract": "<a id=\"elsevier-ab0005\"></a>\n\nRiver ice plays a crucial role in hydrology, ecosystems, and socio-economic systems in mid-to-high latitude regions. However, there is a notable gap in the analysis of patterns and trends in river ice phenologies and their influence factors at the river level. In this study, we developed a practical method to identify river ice phenologies by leveraging Landsat observations from 2000 to 2021, and established a comprehensive dataset encompassing 7970 river segments across the entire Northern Hemisphere. Our results revealed that the mean freeze-up date, break-up date, and ice duration for these river segments were October 24, May 4, and 192.1 days, respectively. Notably, 56% of the river segments exhibited a warming trend, with the average freeze-up date delayed by 2.7 days per decade, break-up date advanced by 2.5 days per decade, and ice duration shortened by 5.5 days per decade—nearly five times the documented decrease rate over the past 150 years. Furthermore, high-latitude polar regions and the Qinghai-Tibet Plateau demonstrated the most pronounced decreases in ice duration, exceeding 7.0 days per decade on average. We observed a substantial relative contribution, reaching up to 70%, of surface air temperature (SAT) in middle and low latitude regions characterized by relatively high winter temperatures. However, as winter temperatures decrease, the relative influence of SAT diminishes, while the contributions of precipitation, solar radiation, and residuals increase. Our dataset provided essential baseline for further understanding the fundamental physical processes within river systems, offering crucial insights for river management, hydrological disaster risk control, climate change research, and ecosystem conservation efforts.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "River ice",
       "Landsat",
@@ -651,9 +653,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 448,
       "body": 14913,
@@ -769,10 +768,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -788,7 +785,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -800,7 +796,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -812,7 +807,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -824,7 +818,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -836,7 +829,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -847,13 +839,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

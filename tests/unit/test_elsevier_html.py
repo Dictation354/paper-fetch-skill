@@ -271,3 +271,24 @@ def test_list_label_first_paragraph_and_nested_blocks(label):
     assert "x=1" in inline_text(items[0])
     images = [n for n in tree.walk() if n.type == "image"]
     assert len(images) == 1 and ancestor(images[0], "list_item") is items[0]
+
+
+def test_citation_doi_is_bound_to_the_article_and_conflicts_are_rejected():
+    from paper_fetch.providers._errors import ProviderFailure
+
+    source = f'<meta name="citation_doi" content="{DOI}"><h1>Results</h1>'
+    payload = build_provider_payload(
+        provider="elsevier",
+        route_kind="html",
+        source_url=URL,
+        body=source.encode(),
+        content_type="text/html",
+        markdown_text="## Results\n\nArticle body.",
+        merged_metadata={"title": "Results"},
+        trace_events=[],
+    )
+    client = ElsevierClient(None, {})
+    assert client.to_article_model({}, payload).doi == DOI
+    with pytest.raises(ProviderFailure) as exc:
+        client.to_article_model({"doi": "10.1016/different"}, payload)
+    assert exc.value.code == "identity_mismatch"

@@ -296,7 +296,10 @@ def test_source_driven_fix(case):
         for n in encoded:
             data = bytes.fromhex(n["data-cfemail"])
             email = bytes(v ^ data[0] for v in data[1:]).decode()
-            assert email in rendered.get_text(), email
+            if n.find_parent(class_=re.compile(r"copyright|license")):
+                assert email not in rendered.get_text(), email
+            else:
+                assert email in rendered.get_text(), email
     elif kind in {"source_data_links", "url_encoding"}:
         originals = [
             a

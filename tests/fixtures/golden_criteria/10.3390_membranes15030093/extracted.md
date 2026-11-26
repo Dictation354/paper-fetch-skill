@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 13067
+token_estimate: 13071
 ---
 
 # Simulation of Carbon Dioxide Absorption in a Hollow Fiber Membrane Contactor Under Non-Isothermal Conditions
@@ -399,6 +399,10 @@ Y.J.: writing—original draft, methodology, software, and investigation; L.W.: 
 ## Funding
 
 This research was funded by Natural Science Foundation of Shandong Province (No. ZR2021ME174).
+
+## Institutional Review Board Statement
+
+Not applicable.
 
 ## Data Availability Statement
 

@@ -256,6 +256,14 @@ def iter_html_figure_text_candidates(
                 if text not in description_candidates:
                     description_candidates.append(text)
                 continue
+            outer = match.find_parent("figcaption")
+            if outer is not None and outer in node.select("figcaption"):
+                outer_text = render_clean_text(outer)
+                if (
+                    normalize_text(outer_text).startswith(normalize_text(text))
+                    and outer_text != text
+                ):
+                    continue
             if text not in caption_candidates:
                 caption_candidates.append(text)
     if caption_candidates:

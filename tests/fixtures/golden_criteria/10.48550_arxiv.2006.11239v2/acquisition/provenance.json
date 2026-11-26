@@ -634,5 +634,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/889bf6b3d1e1-unknown_unknown_10.48550_arxiv.2006.11239v2_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/f5fb620d195d-Ho_et_al_2020_Denoising_Diffusion_Probabilistic_Models.md",
+      "source_sha256": "f5fb620d195d230dd81b6f8a202fafcd95936dc4626fbfc9642c0a4fbb0a9ef2",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f5fb620d195d-Ho_et_al_2020_Denoising_Diffusion_Probabilistic_Models.md",
+      "sha256": "d8639f67d98183bd690bba38a2ff22754fd728315e2900540a796cd1d77756eb",
+      "image_references": 26
+    }
   ]
 }

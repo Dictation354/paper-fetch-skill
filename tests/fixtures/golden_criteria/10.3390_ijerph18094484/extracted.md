@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 10918
+token_estimate: 10927
 ---
 
 # The Tipping Effect of Delayed Interventions on the Evolution of COVID-19 Incidence
@@ -221,6 +221,14 @@ The tendency of repeated and stronger epidemic waves has been ubiquitous across 
 ## Funding
 
 This research received no external funding.
+
+## Institutional Review Board Statement
+
+Not applicable.
+
+## Informed Consent Statement
+
+Not applicable.
 
 ## Data Availability Statement
 

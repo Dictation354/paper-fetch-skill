@@ -1,24 +1,20 @@
 {
-  "schema_version": 2,
-  "minimum_reader_schema_version": 2,
-  "overall": "action_required",
+  "schema_version": 3,
+  "overall": "degraded",
   "target": "paper",
   "identity": {
-    "status": "unavailable",
-    "doi": null,
-    "expected_doi": null,
+    "status": "resolved",
+    "doi": "10.1016/j.agrformet.2024.110321",
+    "expected_doi": "10.1016/j.agrformet.2024.110321",
     "title": "Land-atmosphere feedback exacerbated the mega heatwave and drought over the Yangtze River Basin of China during summer 2022",
     "candidate_count": 0,
     "canonical_landing_url": null,
     "canonical_landing_verified": false,
     "canonical_landing_unique": false,
-    "codes": [
-      "canonical_landing_identity_unverified"
-    ]
+    "codes": []
   },
   "fetch": {
     "status": "ok",
-    "completed": true,
     "code": null
   },
   "content": {
@@ -27,16 +23,329 @@
     "has_fulltext": true,
     "has_abstract": true,
     "token_estimate": 11300,
-    "confidence": "high",
-    "flags": [],
-    "tables": {
-      "fallback_count": 0,
-      "layout_degraded_count": 0,
-      "semantic_loss_count": 0
-    },
-    "formulas": {
-      "fallback_count": 0,
-      "missing_count": 0
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0,
+      "formula_diagnostics": [
+        {
+          "node_id": "formula-1",
+          "source_tex": "",
+          "final_latex": "R_{n} = SR + TR",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-2",
+          "source_tex": "",
+          "final_latex": "\\begin{array}{r} {\\mathit{EF} = \\hspace{0.33em}\\frac{\\mathit{LE}}{R_{n}}} \\end{array}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-3",
+          "source_tex": "",
+          "final_latex": "{\\text{Daily}\\hspace{0.33em}\\text{extreme}\\hspace{0.33em}\\text{index}\\hspace{0.33em} = \\hspace{0.33em}}\\left({\\text{Daily}\\hspace{0.33em}\\mathrm{X} - \\text{mean}\\hspace{0.33em}\\text{daily}\\hspace{0.33em}\\mathrm{X}} \\right)/{\\text{Standard}\\hspace{0.33em}\\text{deviation}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-4",
+          "source_tex": "",
+          "final_latex": "\\mathrm{Ω} = \\rho\\left({H,T} \\right) - \\rho\\left({H_{P},T} \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-5",
+          "source_tex": "",
+          "final_latex": "\\mathrm{Ω} = \\frac{1}{\\sigma_{T}}\\left({\\frac{Cov\\left({H,T} \\right)}{\\sigma_{H}} - \\frac{Cov\\left({H_{p},T} \\right)}{\\sigma_{H_{p}}}} \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-6",
+          "source_tex": "",
+          "final_latex": "\\pi_{i} = \\frac{T_{i} - \\overline{T}}{\\sigma_{T}}\\left({\\frac{H_{i} - \\overline{H}}{\\sigma_{H}} - \\frac{H_{p,i} - \\bar{H_{p}}}{\\sigma_{H_{p}}}} \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-7",
+          "source_tex": "",
+          "final_latex": "\\pi = {T_{max}}^{{}'} \\times \\mathrm{e}' = {T_{max}}^{{}'}\\left({H' - H_{p}^{{}'}} \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-8",
+          "source_tex": "",
+          "final_latex": "BIC = nln\\left({RSS/n} \\right) + kln(n)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-9",
+          "source_tex": "",
+          "final_latex": "T_{\\max }\\hspace{0.33em}\\left({T_{\\max }}' \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-10",
+          "source_tex": "",
+          "final_latex": "H\\hspace{0.33em}\\left(H' \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-11",
+          "source_tex": "",
+          "final_latex": "H_{p}\\hspace{0.33em}\\left(\\hspace{4pt}{H_{p}}' \\right)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-12",
+          "source_tex": "",
+          "final_latex": "H' - H_{p}^{{}'}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-13",
+          "source_tex": "",
+          "final_latex": "T_{max}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-14",
+          "source_tex": "",
+          "final_latex": "R_{n}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-15",
+          "source_tex": "",
+          "final_latex": "\\rho",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-16",
+          "source_tex": "",
+          "final_latex": "H = R_{n} - \\lambda E,\\hspace{0.33em}H_{P} = R_{n} - \\lambda E_{P}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-17",
+          "source_tex": "",
+          "final_latex": "\\lambda",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-18",
+          "source_tex": "",
+          "final_latex": "E",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-19",
+          "source_tex": "",
+          "final_latex": "E_{P}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-20",
+          "source_tex": "",
+          "final_latex": "\\mathrm{Ω}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-21",
+          "source_tex": "",
+          "final_latex": "T",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-22",
+          "source_tex": "",
+          "final_latex": "H_{p}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-23",
+          "source_tex": "",
+          "final_latex": "Cov",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-24",
+          "source_tex": "",
+          "final_latex": "\\sigma_{T}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-25",
+          "source_tex": "",
+          "final_latex": "\\sigma_{H}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-26",
+          "source_tex": "",
+          "final_latex": "\\sigma_{H_{p}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-27",
+          "source_tex": "",
+          "final_latex": "\\pi",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-28",
+          "source_tex": "",
+          "final_latex": "\\overline{T}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-29",
+          "source_tex": "",
+          "final_latex": "\\overline{H}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-30",
+          "source_tex": "",
+          "final_latex": "\\bar{H_{p}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-31",
+          "source_tex": "",
+          "final_latex": "{T_{max}}^{{}'}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-32",
+          "source_tex": "",
+          "final_latex": "H'",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-33",
+          "source_tex": "",
+          "final_latex": "H_{p}^{{}'}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-34",
+          "source_tex": "",
+          "final_latex": "H",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-35",
+          "source_tex": "",
+          "final_latex": "\\mathrm{e}'",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        }
+      ]
     }
   },
   "asset": {
@@ -46,10 +355,8 @@
     "expected": null,
     "discovered": 0,
     "attempted": 0,
-    "total": 0,
     "local": 0,
     "full_size": 0,
-    "preview": 0,
     "accepted_preview": 0,
     "fallback_preview": 0,
     "failed": 0,
@@ -57,37 +364,26 @@
     "not_archived": 0,
     "remote_link_count": 0,
     "remote_only_count": 0,
-    "body_discovered": 0,
-    "body_attempted": 0,
-    "body_local": 0,
-    "body_full_size": 0,
-    "body_preview": 0,
-    "body_failed": 0,
-    "body_not_archived": 0,
-    "body_remote_only_count": 0,
+    "body_assets": {
+      "discovered": 0,
+      "attempted": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "failed": 0,
+      "not_archived": 0,
+      "remote_only_count": 0
+    },
     "require_local_body_assets": false,
     "require_full_size_body_assets": false,
-    "has_local_body_assets": false,
-    "all_body_assets_local": true,
-    "all_body_assets_full_size": true,
     "local_body_assets_satisfied": true,
     "full_size_body_assets_satisfied": true,
     "failure_codes": [],
     "issue_codes": [],
-    "status": "not_requested",
-    "remote_links_preserved": false
+    "status": "not_requested"
   },
   "output": {
-    "status": "complete",
-    "requested": [
-      "article",
-      "markdown"
-    ],
-    "available": [
-      "article",
-      "markdown"
-    ],
-    "missing": []
+    "status": "complete"
   },
   "provenance": {
     "status": "partial",
@@ -99,12 +395,8 @@
       "transport": "browser",
       "fallback_used": false
     },
-    "trace_event_count": 0,
     "fallback_codes": [],
     "warning_codes": [],
-    "failure_codes": [],
-    "unstructured_warning_count": 0,
-    "acceptance_policy": "provider_html_body",
-    "acceptance_policy_satisfied": true
+    "failure_codes": []
   }
 }

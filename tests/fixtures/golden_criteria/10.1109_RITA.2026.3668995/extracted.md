@@ -135,13 +135,13 @@ Test de Pensamiento Computacional (Versión 2.0) de Román-González (2016) apli
 
 ![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett1-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett2-3668995-large.gif)
+![Figure 2](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett2-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett3-3668995-large.gif)
+![Figure 3](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett3-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett4-3668995-large.gif)
+![Figure 4](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett4-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett5-3668995-large.gif)
+![Figure 5](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett5-3668995-large.gif)
 
 Instrucciones para los estudiantes: Este cuestionario no es un examen escolar y no afectará sus calificaciones. Su propósito es comprender cómo razonan al resolver problemas lógicos y de programación. Lean cada pregunta con atención y seleccionen la opción que mejor represente su razonamiento. Trabajen individualmente y no consulten a sus compa ñeros.”
 
@@ -153,12 +153,12 @@ Instructions for students:
 
 This questionnaire is not a school exam and will not affect your grades. Its purpose is to understand how you reason when solving logical and programming problems. Read each question carefully and select the option that best represents your reasoning. Work individually and do not consult your classmates
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett6-3668995-large.gif)
+![Figure 6](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett6-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett7-3668995-large.gif)
+![Figure 7](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett7-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett8-3668995-large.gif)
+![Figure 8](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett8-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett9-3668995-large.gif)
+![Figure 9](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett9-3668995-large.gif)
 
-![Figure](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett10-3668995-large.gif)
+![Figure 10](https://ieeexplore.ieee.org/mediastore/IEEE/content/media/6245520/11315891/11417163/prett10-3668995-large.gif)

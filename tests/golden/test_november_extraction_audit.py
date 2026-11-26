@@ -153,6 +153,14 @@ def test_all_24_signed_images_match_saved_source_objects(doi, count):
     markdown = persisted_fixture_markdown(fixture, article)
     baseline = golden_criteria_asset(doi, "extracted.md")
     images = list(iter_markdown_images(markdown))
+    if fixture.provider == "acs":
+        # These captures contain signed body images. The separately sourced
+        # visual abstract is retained even when its bytes were never archived.
+        source = BeautifulSoup(fixture.raw_path.read_text(), "lxml")
+        graphic = source.select_one(".graphical-abstract .fig-graphic img")
+        expected_url = graphic.get("data-src") or graphic["src"]
+        assert [i.url for i in images if i.alt == "Visual Abstract"] == [expected_url]
+        images = [i for i in images if i.alt != "Visual Abstract"]
     assert len(images) == count
     provenance = json.loads(
         golden_criteria_asset(doi, "acquisition/provenance.json").read_text()

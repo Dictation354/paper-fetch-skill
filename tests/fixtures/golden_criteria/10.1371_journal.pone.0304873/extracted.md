@@ -3,12 +3,12 @@ title: "Efficient implementation of the linear layer of block ciphers with large
 authors: "Tran Thi Luong, Nguyen Van Long, Bay Vo"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0304873"
-publication_dates: [{"kind": "online", "value": "2024-6-21", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2024", "source": "jats:pub-date:collection"}]
+publication_dates: [{"kind": "online", "value": "2024-06-21", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2024", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 14368
+token_estimate: 14454
 ---
 
 # Efficient implementation of the linear layer of block ciphers with large MDS matrices based on a new lookup table technique
@@ -455,6 +455,26 @@ As outlined in the original problem statement, the proposed approach is tailored
 ## 7. Conclusion
 
 In this article, we propose a new lookup table technique to reduce the storage memory when executing in the software. This technique applies to the linear layer of block ciphers with large MDS matrices such as recursive, Hadamard, or circulant ones. Accordingly, the proposed lookup table technique exploits the recursive properties of linear matrices, the similarity in the elements in each row of the Hadamard matrix or the circulant one, allowing the implementation of a linear layer with calculation complexity (number of XORs and memory accesses) to remain the same compared to the usual lookup table implementation. Furthermore, the proposed method allows a significant reduction in the memory for storing pre-calculated lookup tables, which can be reduced by up to 4 or 8 times or even more. The larger the size of the MDS matrices of the linear layer, the more benefits the proposed method has, which means the less storage memory it needs. Memory storage will decrease even more as the size of the MDS matrix increases. For example, when analyzing the case with a matrix size of 64, the memory storage ratio with the proposed lookup table technique decreases by 87.5% compared to the conventional lookup table technique. It is quite possible to apply the proposed approach to the case of a matrix for a complete block to increase the diffusion layer’s branch number or increase the security of the block cipher without raising the memory for the pre-calculated lookup tables. This method also allows more flexible implementation of large linear layers in different environments. Future research will focus on applying the proposed implementation method to practical ciphers using MDS matrices such as recursive, Hadamard, or circulant ones, and then we can accurately evaluate the efficiency of this method.
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Author contributions
+
+Tran Thi Luong: Data curation, Methodology, Resources, Writing – original draft
+
+Nguyen Van Long: Validation, Visualization, Writing – review & editing
+
+Bay Vo: Conceptualization, Validation, Writing – review & editing
+
+## Funding
+
+The author(s) received no specific funding for this work.
+
+## Data availability
+
+All relevant data are within the paper and its Supporting Information files.
 
 ## Supplementary Materials
 

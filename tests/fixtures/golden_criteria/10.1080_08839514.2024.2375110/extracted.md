@@ -6,7 +6,7 @@ source: "tandf_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 24643
+token_estimate: 24413
 ---
 
 # An algorithmic multiple attribute decision-making context to model uncertainty associated with hospital site selection problem using complex sv-neutrosophic soft information
@@ -418,7 +418,7 @@ The substantial rise in population highlights the vital role that hospitals play
 
 **Figure 3.** Categorical criteria for hospital site selection-II.
 
-**Table 1.** Adopted criteria (Soltani and Marandi 2011).
+**Table 1.** Adopted criteria (Soltani and Marandi [2011](https://www.tandfonline.com/doi/full/10.1080/08839514.2024.2375110#cit0045)).
 
 | Categorial Criteria    | Relevant Sub Criteria                                                                                                                             |
 | ---------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -428,8 +428,6 @@ The substantial rise in population highlights the vital role that hospitals play
 | Miscellaneous Criteria | Pollution free; Population density; Government policies; Socio-demographics of service area                                                       |
 
 Now, let us introduce a dependable methodology that will assist the Ministry of Health in determining which location would be best for a new hospital. This procedure consists of the subsequent steps:
-
-**Table**
 
 |                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                                       |
 | ----------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
@@ -550,25 +548,17 @@ Informed consent was obtained from all individual participants included in the s
 
 ## Supplemental material
 
-### paraa.png
+[paraa.png](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7556.png)
 
-[Download PNG Image (144 KB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7556.png)**paraa.png**
+[metho.png](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7555.png)
 
-### metho.png
+[CsvNSS.pdf](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7554.pdf)
 
-[Download PNG Image (47.4 KB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7555.png)**metho.png**
+[Algor.png](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7553.png)
 
-### CsvNSS.pdf
+[score.png](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7552.png)
 
-[Download PDF (838.1 KB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7554.pdf)**CsvNSS.pdf**
-
-### Algor.png
-
-[Download PNG Image (115.5 KB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7553.png)**Algor.png**
-
-### score.png
-
-[Download PNG Image (14.8 KB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F08839514.2024.2375110&file=uaai_a_2375110_sm7552.png)**score.png**
+Supplemental data for this article can be accessed online at [https://doi.org/10.1080/08839514.2024.2375110](https://doi.org/10.1080/08839514.2024.2375110)
 
 ## Disclosure Statement
 
@@ -577,10 +567,6 @@ No potential conflict of interest was reported by the author(s).
 ## Data Availability Statement
 
 This study has no associated data.
-
-## Supplemental material
-
-Supplemental data for this article can be accessed online at [https://doi.org/10.1080/08839514.2024.2375110](https://doi.org/10.1080/08839514.2024.2375110)
 
 ## References (52 total, showing 52)
 

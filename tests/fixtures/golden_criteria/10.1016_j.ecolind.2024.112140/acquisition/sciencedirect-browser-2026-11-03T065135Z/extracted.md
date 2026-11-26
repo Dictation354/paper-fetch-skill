@@ -32,7 +32,7 @@ With Eurasia as the target region, we used the Terrestrial Ecoregions of the Wor
 
 In this study, we excluded biome types with a small proportion of area and retained 10 types in Eurasia from the TEOW ([Fig. 1](#elsevier-f0005)). The sensitivity of crops to climate change is strongly influenced by human activities, which can be different from natural vegetation. The TEOW classification does not have a clear division in croplands, which may affect our cognition. Therefore, we superimposed layers of TEOW and satellite-based landcover classification (MCD12C1) in 2001 to isolate the distribution of farmland in Eurasia. The croplands layer under the International Geosphere-Biosphere Program (IGBP) classification scheme within the MCD12C1 were selected to overlay the TEOW-biomes classification. Finally, the repainted biome domains at 0.05°×0.05° spatial resolution were aggregated to 0.5°×0.5° with majority filter (modal) method, and the procedure was achieved through ‘aggregate’ function in ‘raster’ package in R4.2.2 software.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr1_lrg.jpg)
+![Figure 1](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr1_lrg.jpg)
 
 <a id="elsevier-f0005"></a>Fig. 1. Spatial distribution of different biomes across Eurasia.
 
@@ -67,7 +67,7 @@ At biome scale, we hired multiple regression model and regressed γNDVI<sup>TEM<
 
 For the period 1982–2015, over half (51.80 %) of Eurasia became greening and less than 5 % of NDVI browning significantly (Mann-Kendall test, *p* < 0.05). Spatially, there are several clusters with high NDVI increase rates, including China, India, Europe, and the Siberian Plateau ([Fig. 2](#elsevier-f0010)). The NDVI overall Eurasia increased noticeably at a linear rate of 2 % per decade.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr2_lrg.jpg)
+![Figure 2](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr2_lrg.jpg)
 
 <a id="elsevier-f0010"></a>Fig. 2. Spatial pattern of NDVI trend (Sen’s slope, ×10<sup>−1</sup>/decade) across Eurasia during 1982–2015. The inset panel shows the frequency distribution of NDVI trends, and regions labelled with black dots indicate the NDVI trend is statistically significant (Mann-Kendall test; *p* < 0.05).
 
@@ -78,7 +78,7 @@ For the period 1982–2015, over half (51.80 %) of Eurasia became greening and l
 
 Generally, the variation in vegetation greenness was positively and significantly (*p* < 0.05) correlated with growing season temperature in the northern lands (&gt;50°N) ([Fig. 3](#elsevier-f0015)a), accounting for 29.9 % of Eurasia. The relationship between NDVI and growing season precipitation was not significant statistically (*p* &gt; 0.05) for most lands. However, in the middle latitudes, which account for nearly 21.8 % of Eurasia, NDVI variations are remarkably constrained by precipitation ([Fig. 3](#elsevier-f0015)c).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr3_lrg.jpg)
+![Figure 3](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr3_lrg.jpg)
 
 <a id="elsevier-f0015"></a>Fig. 3. Vegetation greenness climatic sensitivity and its change trend in the past three decades. The NDVI<sup>TEM</sup> and NDVI<sup>PRE</sup> refer to the NDVI temperature and precipitation sensitivity detected by multiple regression models applied in 1982–2015, respectively. γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> represent NDVI temperature and precipitation sensitivity detected in each 9-year moving window from 1982 to 2015. Lands labelled with black dots indicate the relationship is statistically significant (*p* < 0.05).
 
@@ -87,7 +87,7 @@ In the sub-period of 1982–2015, we found that both γNDVI<sup>TEM</sup> and γ
 
 In the past three decades, positive γNDVI<sup>TEM</sup> showed a remarkable decrease in percentage areas in Eurasia, while the areas of negative γNDVI<sup>TEM</sup> increase significantly ([Fig. 4](#elsevier-f0020)a–b). It was novelty that vegetation greenness constrained by low temperature had decreased with a relatively highe rate (−4.3 %/decade) ([Fig. 4](#elsevier-f0020)b). Areas with positive and significantly positive (*p* < 0.05) γNDVI<sup>PRE</sup> had increased notably, while lands with negative and significantly negative (*p* < 0.05) γNDVI<sup>PRE</sup> declined significantly ([Fig. 4](#elsevier-f0020)c–d).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr4_lrg.jpg)
+![Figure 4](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr4_lrg.jpg)
 
 <a id="elsevier-f0020"></a>Fig. 4. Temporal change of positive and negative γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in percentage areas. γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in labels represent NDVI temperature and precipitation sensitivity detected in each 9-year moving window since 1982. Red (blue) hollow and solid symbols in a–b (c–d) represent the proportion of positive γNDVI<sup>TEM</sup> (γNDVI<sup>PRE</sup>) and significantly positive γNDVI<sup>TEM</sup> (γNDVI<sup>PRE</sup>), respectively.
 
@@ -98,7 +98,7 @@ In the past three decades, positive γNDVI<sup>TEM</sup> showed a remarkable dec
 
 Overall Eurasia, γNDVI<sup>TEM</sup> showed stronger stability than γNDVI<sup>PRE</sup>, which firstly decreased, even fell below 0 in 1990–2005, and then recovered during the whole period ([Fig. 5](#elsevier-f0025)a). At biome scale, variations of γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> exhibited a variety of regimes. Sustained significant reductions in γNDVI<sup>TEM</sup> were observed in TSMBF, TBMF, TCF, Crop, Tundra and DXS. Specifically, γNDVI<sup>TEM</sup> had approached from positive to zero ([Fig. 5](#elsevier-f0025)d,e,k), while it had shifted from positive to negative for TSMBF, Crop and DXS ([Fig. 5](#elsevier-f0025)b,g,l). The γNDVI<sup>TEM</sup> of MFWS, TGSS, and MGS decreased slightly throughout the period, but no statistical significance was found ([Fig. 5](#elsevier-f0025)h, i, j). The γNDVI<sup>TEM</sup> of both TSDBF and BF showed a nonlinear regime, which increased first and then decreased ([Fig. 5](#elsevier-f0025)c,f).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr5_lrg.jpg)
+![Figure 5](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr5_lrg.jpg)
 
 <a id="elsevier-f0025"></a>Fig. 5. Temporal variations of climatic sensitivity of NDVI (γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> in blue line) across biomes in Eurasia. Panels labelled with a–l indicate γNDVI<sup>TEM</sup> (red dotted line) and γNDVI<sup>PRE</sup> (blue dotted line) variations for Eurasia, TSMBF, TSDBF, TBMF, TCF, BF, Crop, MFWS, TGSS, MGS, Tundra, and DXS, respectively. And the corresponding *R<sup>2</sup>* and *p* values in red and blue colour within each panel show the coefficient of determination and statistical significance level of linear or polynomial fitting (coloured dotted lines), respectively.
 
@@ -111,7 +111,7 @@ The γNDVI<sup>PRE</sup> decreased significantly over TSMBF, TBMF, TCF and DXS. 
 
 Considering changes in climate, carbon dioxide concentration (CO<sub>2</sub>), and nitrogen deposition (ND), we evaluated the dominant driver regulating γNDVI<sup>TEM</sup> and γNDVI<sup>PRE</sup> variations at the local (grid cell) scale across Eurasia. Spatially, we found γNDVI<sup>TEM</sup> variations driven by temperature account for 16.2 % of Eurasia, most of which were in north of the Central Siberian Plateau and the Eastern Siberian Mountains ([Fig. 6](#elsevier-f0030)a). The area, where γNDVI<sup>TEM</sup> variability was dominated by precipitation, account for merely 12.9 % in the percentage of vegetated lands in Eurasia ([Fig. 6](#elsevier-f0030)a). Lands exhibited radiation-driven in γNDVI<sup>TEM</sup> were maintained in southern China and the Central Siberian Plateau, accounting for 15.7 % of lands in Eurasia ([Fig. 6](#elsevier-f0030)a). Nitrogen deposition-dominated γNDVI<sup>TEM</sup> variations accounted for 24.2 % of the total area of Eurasia, mainly distributed in the Eastern European Plain, the northern part of the Western Siberian Plain and the Turan Plain (Southwest Kazakhstan, northwest of Uzbekistan and Turkmenistan) in Central Asia ([Fig. 6](#elsevier-f0030)a). The CO<sub>2</sub>-driven γNDVI<sup>TEM</sup> variations appeared in 30.9 % of Eurasia and most of the lands spread in Asia ([Fig. 6](#elsevier-f0030)a). The relative importance of different variables in regulating γNDVI<sup>TEM</sup> can be obtained in [Fig. S1](#elsevier-s0090)a–e.
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr6_lrg.jpg)
+![Figure 6](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr6_lrg.jpg)
 
 <a id="elsevier-f0030"></a>Fig. 6. Spatial patterns of dominant factor regulating γNDVI<sup>TEM</sup> (a) and γNDVI<sup>PRE</sup> (b) variations during the past three decades. TEM: mean growing season temperature, PRE: growing season accumulate precipitation, RAD: mean growing season surface shortwave radiation, ND: nitrogen decomposition, and CO<sub>2</sub>: atmospheric CO<sub>2</sub>. Bar charts indicate the frequency distribution of each factor in percentage.
 
@@ -120,14 +120,14 @@ The γNDVI<sup>PRE</sup> variations dominated by temperature and precipitation m
 
 At Eurasia and biome scale, temperature played a positively significant (*p* < 0.1) role in explaining γNDVI<sup>TEM</sup> variations for TSMBF, TSDBF and DXS, while it was negatively and statistically significant (*p* < 0.1) overall Eurasia, TGSS and MGS ([Fig. 7](#elsevier-f0035)). Precipitation was expected to notably (*p* < 0.1) increase γNDVI<sup>TEM</sup> for TCF and MFWS but remarkably (*p* < 0.05) decrease γNDVI<sup>TEM</sup> for BF ([Fig. 7](#elsevier-f0035)). The correlation was negatively significant between radiation and γNDVI<sup>TEM</sup> for TSMBF, TBMF, BF and Tundra. While it was contrary for TCF and TGSS, where the relationship was significantly negative ([Fig. 7](#elsevier-f0035)). The increase in nitrogen decomposition may considerably reduce γNDVI<sup>TEM</sup> in both TSDBF and MGS but substantially trigger the increase of γNDVI<sup>TEM</sup> for MFWS ([Fig. 7](#elsevier-f0035)). For Eurasia, TSMBF, TSDBF and BF, CO<sub>2</sub> anomalies acted as the dominate driver regulating γNDVI<sup>TEM</sup> variations rather than other factors, and the relationship was negatively significant ([Fig. 7](#elsevier-f0035)). While for MFWS, MGS and Tundra, increasing CO<sub>2</sub> was intend to enhance γNDVI<sup>TEM</sup> ([Fig. 7](#elsevier-f0035)).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr7_lrg.jpg)
+![Figure 7](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr7_lrg.jpg)
 
 <a id="elsevier-f0035"></a>Fig. 7. Drivers regulating NDVI temperature sensitivity (γNDVI<sup>TEM</sup>) variations across different biomes in Eurasia. Bars coloured in red, light blue, orange, green, and pink, represent the sensitivity of the γNDVI<sup>TEM</sup> variations to mean temperature (TEM), total precipitation (PRE), mean radiation (RAD), nitrogen deposition (ND), and atmosphere carbon dioxide (CO<sub>2</sub>). *R*<sup>2</sup> in each panel refers to the coefficient of determination of the multilinear regression model and the column bar is labelled with <sup>+</sup> and \* denoting the significance at the levels of 0.1 and 0.05, respectively.
 
 
 Temperature was significantly positively (*p* < 0.1) correlated with γNDVI<sup>PRE</sup> for TBMF, Crop, and DXS, providing evidence that higher temperatures lead to higher precipitation demand ([Fig. 8](#elsevier-f0040)d,g,l). More precipitation was expected to notably (*p* < 0.05) increase γNDVI<sup>PRE</sup> for BF and MFWS, but remarkably (*p* < 0.1) decrease γNDVI<sup>PRE</sup> for TSMBF, Crop and TGSS ([Fig. 8](#elsevier-f0040)b,g, i). The relationship was significantly positive between radiation and γNDVI<sup>PRE</sup> for Eurasia, TCF and Tundra ([Fig. 8](#elsevier-f0040)a,e,k), which was contrary to the relationship found in TSMBF and Crop ([Fig. 8](#elsevier-f0040)b,g). It was widely observed that the increase in nitrogen decomposition was intended to increase γNDVI<sup>PRE</sup> for TMBF, TCF, Crop, TGSS and DXS ([Fig. 8](#elsevier-f0040)d,e,g, i,l). No significant relationship between CO<sub>2</sub> and γNDVI<sup>PRE</sup> was found for most biomes except for Crop and Eurasia, where the relationship was positively and negatively significant, respectively ([Fig. 8](#elsevier-f0040)a,g).
 
-![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr8_lrg.jpg)
+![Figure 8](https://ars.els-cdn.com/content/image/1-s2.0-S1470160X24005971-gr8_lrg.jpg)
 
 <a id="elsevier-f0040"></a>Fig. 8. Drivers regulating NDVI precipitation sensitivity (γNDVI<sup>PRE</sup>) variations across different biomes in Eurasia.
 

@@ -998,10 +998,10 @@ def extract_markdown(
         merged_metadata["references"] = references
     extracted_assets = _extract_assets_from_scopes(
         article_html,
-        "",
+        str(soup.select_one("#supplementary_data") or ""),
         html_text,
         source_url,
-        asset_profile="body",
+        asset_profile="all",
     )
     markdown = inject_inline_figure_links(
         markdown,

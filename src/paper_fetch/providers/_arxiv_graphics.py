@@ -85,6 +85,8 @@ def prepare_arxiv_graphics(article: Tag, source_url: str) -> None:
             for key, value in node.attrs.items()
             if key in {"id", "class", "width", "height", "style"}
         }
+        if node.get("id") and kind == "arxiv_inline_svg":
+            image["alt"] = str(node["id"])
         image["src"] = target
         image["data-arxiv-graphic"] = kind
         node.replace_with(image)

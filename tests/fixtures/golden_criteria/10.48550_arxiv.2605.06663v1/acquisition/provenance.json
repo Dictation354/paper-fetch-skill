@@ -661,5 +661,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/975efd41f740-unknown_unknown_10.48550_arxiv.2605.06663v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md",
+      "source_sha256": "909f94c00abbac71d555b6f6f6420cda9dd044c46a0c87c16c68ebcbd3a2606d",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md",
+      "sha256": "4f041dc592353be1f83f7e859edbf772bd9aa6f87adc2fb27c421dcf68fc49a5",
+      "image_references": 14
+    }
   ]
 }

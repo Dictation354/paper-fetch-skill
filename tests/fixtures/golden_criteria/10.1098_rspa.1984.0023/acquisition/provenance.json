@@ -1210,5 +1210,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md",
+      "source_sha256": "56996c5f4bd7bef2bf5492d8f61a098f74adcdc0c424400dc430ff3e58413caf",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md",
+      "sha256": "9d45cc0fef09d6b6ed28e90f208d6a01b77068ea63daa59d56cd5af98fcaf6f2",
+      "image_references": 35
+    }
   ]
 }

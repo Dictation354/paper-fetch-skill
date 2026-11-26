@@ -3,12 +3,12 @@ title: "Relationship between loss of desiccation tolerance and programmed cell d
 authors: "Xiangrong Tian, Sidi Li, Qing Zeng, Wei Huang, Xuanming Liu, Songquan Song"
 journal: "PLOS ONE"
 doi: "10.1371/journal.pone.0218513"
-publication_dates: [{"kind": "online", "value": "2019-7-2", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2019", "source": "jats:pub-date:collection"}]
+publication_dates: [{"kind": "online", "value": "2019-07-02", "source": "jats:pub-date:epub"}, {"kind": "collection", "value": "2019", "source": "jats:pub-date:collection"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 6804
+token_estimate: 6940
 ---
 
 # Relationship between loss of desiccation tolerance and programmed cell death (PCD) in mung bean (*Vigna radiata*) seeds
@@ -216,6 +216,34 @@ The increase in cytoplasmic Ca<sup>2+</sup> concentration is a precursor signal 
 ## Conclusions
 
 The results of mitochondrial membrane potential and fluorescent in situ localization of cytochrome C, combined with the results of morphological changes in mitochondria, suggested that mitochondria are an important inducer and transmitter involved in PCD in the dehydration response process. That is, the mitochondrial apoptosis pathway can be considered the main form of dehydration-induced PCD. The whole process can be divided into dehydration induction, transfer changes in Ca<sup>2+</sup> and mitochondrial respiratory electron, ROS and Ca<sup>2+</sup>-induced mitochondrial membrane potential reversal, and cytochrome C release. The hypothesis of mitochondrial pathway PCD as the reason for loss of desiccation tolerance can be confirmed by classical morphological observation and by physiological and biochemical analysis (S4 Fig).
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Author contributions
+
+Xiangrong Tian: Conceptualization, Investigation, Writing – original draft, Writing – review & editing
+
+Sidi Li: Data curation
+
+Qing Zeng: Investigation, Writing – original draft
+
+Wei Huang: Investigation, Writing – original draft
+
+Xuanming Liu: Conceptualization, Investigation, Writing – review & editing
+
+Songquan Song: Formal analysis, Investigation, Writing – review & editing
+
+## Funding
+
+This work was supported by the Natural Science Foundation of China (Grant No. 31360062, 31660119).
+
+## Data availability
+
+All relevant data are within the manuscript and its Supporting Information files.
+
+## Acknowledgments
 
 The authors thank the technical staff from the participating labs for their contributions to this research.
 

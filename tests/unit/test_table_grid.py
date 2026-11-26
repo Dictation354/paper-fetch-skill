@@ -324,3 +324,21 @@ def test_table_without_tgroup_remains_one_compatible_group() -> None:
     groups = parse_xml_table_groups(root, render_cell_text=_xml_cell_text)
 
     assert groups == (legacy,)
+
+
+def test_crossed_spans_project_source_fields_only_with_two_observations():
+    header = (
+        TableRow((TableCell("CI", colspan=3),), role="header"),
+        TableRow((TableCell("Lower"), TableCell("Upper", colspan=2)), role="header"),
+    )
+    pair = TableRow((TableCell("0.98", colspan=2), TableCell("1.14")))
+    # A sibling column keeps the CI spanner inside the table width.
+    rows = tuple(
+        TableRow((TableCell("Age"), *row.cells), role=row.role)
+        for row in (*header, pair)
+    )
+    projected = normalize_table(rows)
+    assert projected.headers[-2:] == ("CI / Lower", "CI / Upper")
+    assert projected.rows[0][-2:] == ("0.98", "1.14")
+    independent = TableRow(tuple(TableCell(text) for text in ("Weight", "1", "2", "3")))
+    assert normalize_table((*rows, independent)).rows[-1] == ("Weight", "1", "2", "3")

@@ -6,7 +6,7 @@ source: "wiley_browser"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 19854
+token_estimate: 20139
 ---
 
 # Tropical surface temperature response to vegetation cover changes and the role of drylands
@@ -88,11 +88,13 @@ For our primary approach to partition FVC's effect on *d*(LST)/*dt*, we used spa
 
 **Equation 1.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/2e6af451-55c0-4650-95a9-e541d24ec959/gcb16455-math-0001.png)
+$$
+\mathrm{E}\left\lbrack \frac{d\left(\mathrm{LST} \right)}{\mathit{dt}} \right\rbrack = \beta_{0} + \beta_{\mathrm{FVC}}\mathrm{E}\left\lbrack \mathrm{FVC} \right\rbrack + \varepsilon,
+$$
 
-*d*(LST)/*dt* and FVC annual means in 2018 were used in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001). β<sub>0</sub> and ε are the y-intercept and residual, respectively. ![Formula](https://onlinelibrary.wiley.com/cms/asset/dfeb6c85-4083-4861-b489-c280131b2f8b/gcb16455-math-0002.png)<sub>FVC</sub> represents the linear effect of FVC on *d*(LST)/*dt*. Statistically significant (*p* < .05) positive and negative values of ![Formula](https://onlinelibrary.wiley.com/cms/asset/bec2145c-11ea-4ce3-ba39-3c11c03ac38b/gcb16455-math-0003.png)<sub>FVC</sub> indicate a warming and cooling effect of vegetation, respectively. Statistically insignificant values of ![Formula](https://onlinelibrary.wiley.com/cms/asset/2532d704-fa2d-4674-bd3e-f1c08351047d/gcb16455-math-0004.png)<sub>FVC</sub> are considered neutral effects here. This approach assumes a space–time equivalence where changes in annual means of FVC and *d*(LST)/*dt* between pixels with similar water and energy availability are assumed to also occur in time at a given location. Pixels with mean SEVIRI FVC of zero were removed from the analysis.
+*d*(LST)/*dt* and FVC annual means in 2018 were used in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001). β<sub>0</sub> and ε are the y-intercept and residual, respectively. $\beta$<sub>FVC</sub> represents the linear effect of FVC on *d*(LST)/*dt*. Statistically significant (*p* < .05) positive and negative values of $\beta$<sub>FVC</sub> indicate a warming and cooling effect of vegetation, respectively. Statistically insignificant values of $\beta$<sub>FVC</sub> are considered neutral effects here. This approach assumes a space–time equivalence where changes in annual means of FVC and *d*(LST)/*dt* between pixels with similar water and energy availability are assumed to also occur in time at a given location. Pixels with mean SEVIRI FVC of zero were removed from the analysis.
 
-We focus on this approach for several reasons. (a) Use of median *d*(LST)/*dt* can reveal more causal relationships between vegetation cover and LST than can direct statistical relationships between FVC and LST. (b) It uses 15-min LST observations from the SEVIRI geostationary satellite, which provide greater temporal coverage under cloud cover conditions given their more frequent sub-daily sampling than satellites with global coverage. (c) The approach attempts to determine long-term, climatic relations between variables that are indicative of how they would co-vary at annual and decadal timescales relevant to land cover changes. Indeed, differences in climatic, edaphic, and topographic conditions across space may confound ![Formula](https://onlinelibrary.wiley.com/cms/asset/7fc56cc2-9eb2-454d-8739-a3bb88e1b0b1/gcb16455-math-0005.png) interpretations from Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) of how annual *d*(LST)/*dt* and FVC vary in time at a given location. However, we expect that this spatial approach will consider effects of beyond-decadal scale feedbacks and ecosystem equilibrium states (Eagleson & Segarra, [1985](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0022)) that may not appear in sub-annual and interannual timescale regression analyses. Additionally, the use of water and light availability to bin pixels is expected to provide similarity between ecosystems such that their spatial vegetation-temperature covariations are more likely to reflect those in time at a location than differences in climate.
+We focus on this approach for several reasons. (a) Use of median *d*(LST)/*dt* can reveal more causal relationships between vegetation cover and LST than can direct statistical relationships between FVC and LST. (b) It uses 15-min LST observations from the SEVIRI geostationary satellite, which provide greater temporal coverage under cloud cover conditions given their more frequent sub-daily sampling than satellites with global coverage. (c) The approach attempts to determine long-term, climatic relations between variables that are indicative of how they would co-vary at annual and decadal timescales relevant to land cover changes. Indeed, differences in climatic, edaphic, and topographic conditions across space may confound $\beta_{\mathrm{FVC}}$ interpretations from Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) of how annual *d*(LST)/*dt* and FVC vary in time at a given location. However, we expect that this spatial approach will consider effects of beyond-decadal scale feedbacks and ecosystem equilibrium states (Eagleson & Segarra, [1985](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0022)) that may not appear in sub-annual and interannual timescale regression analyses. Additionally, the use of water and light availability to bin pixels is expected to provide similarity between ecosystems such that their spatial vegetation-temperature covariations are more likely to reflect those in time at a location than differences in climate.
 
 #### 2.3.2 Assessment I robustness tests
 
@@ -106,21 +108,25 @@ The spatial analysis in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111
 
 ### 2.4 Assessment II: Mechanisms driving African vegetation-temperature interactions
 
-Several analyses were conducted here to attribute spatial variations in ![Formula](https://onlinelibrary.wiley.com/cms/asset/3fdd286b-dcf5-4edc-b68b-0a54c5b5ec4a/gcb16455-math-0006.png) to mechanistic drivers. Namely, we tested whether aridity, energy dissipation efficiency, and surface radiation absorption describe why vegetation shifts its control on surface temperature along climatic gradients, especially in drylands compared to more humid environments.
+Several analyses were conducted here to attribute spatial variations in $\beta_{\mathrm{FVC}}$ to mechanistic drivers. Namely, we tested whether aridity, energy dissipation efficiency, and surface radiation absorption describe why vegetation shifts its control on surface temperature along climatic gradients, especially in drylands compared to more humid environments.
 
 We first evaluated the interaction of FVC and *d*(LST)/*dt* during different seasons to infer the interactive effects of radiation and moisture availability. Specifically, the spatial timescale analysis in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) is repeated in the halves of the year with low and high vegetation cover, defined as times of year below and above the FVC median, respectively,
 
 **Equation 2.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/07caeedb-93a4-4e9a-8069-a0c306967568/gcb16455-math-0007.png)
+$$
+\mathrm{E}\left\lbrack {d\left(\mathrm{LST} \right)/\mathit{dt}} \right\rbrack = \beta_{0} + \beta_{\mathrm{FVC}}\mathrm{E}\left\lbrack \mathrm{FVC} \right\rbrack + \beta_{\theta}\mathrm{E}\lbrack\theta\rbrack + \beta_{\mathrm{R}_{\mathrm{S}}}\mathrm{E}\left\lbrack \mathrm{R}_{\mathrm{S}} \right\rbrack + \varepsilon.
+$$
 
-Equation [2](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0002) was performed as in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) with binning based on water and light availability, but the seasonal means of R<sub>S</sub> and θ under seasons of high and low vegetation coverage are included as regressors in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) to control for the direct effects of the environmental factors on LST that do not necessarily involve the influence of vegetation. As such, we expect that differences in *β*<sub>FVC</sub> between seasons of low and high vegetation cover can be interpreted as effects of climatic factors (R<sub>S</sub>, θ, and VPD) on FVC-*d*(LST)/*dt* interactions. Comparability of *β*<sub>FVC</sub> between seasons is possible because *β*<sub>FVC</sub> is based on unit changes in FVC, not its overall magnitude. We do not aim to determine effects within specific seasons, but rather test whether FVC-*d*(LST)/*dt* interactions change with seasons and identify environmental factors that may be driving these changes. Seasons of high and low vegetation coverage are naively chosen to test how different environmental conditions seasonally limit photosynthesis rather than imposing only water-limitation, for example, from wet and dry season definitions. We computed the seasonal differences in ![Formula](https://onlinelibrary.wiley.com/cms/asset/2f209043-9a45-41e0-9f46-0e1e37d61b46/gcb16455-math-0008.png)<sub>FVC</sub> and related them to the seasonal mean changes in soil moisture, solar radiation, and vapor pressures deficit.
+Equation [2](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0002) was performed as in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) with binning based on water and light availability, but the seasonal means of R<sub>S</sub> and θ under seasons of high and low vegetation coverage are included as regressors in Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) to control for the direct effects of the environmental factors on LST that do not necessarily involve the influence of vegetation. As such, we expect that differences in *β*<sub>FVC</sub> between seasons of low and high vegetation cover can be interpreted as effects of climatic factors (R<sub>S</sub>, θ, and VPD) on FVC-*d*(LST)/*dt* interactions. Comparability of *β*<sub>FVC</sub> between seasons is possible because *β*<sub>FVC</sub> is based on unit changes in FVC, not its overall magnitude. We do not aim to determine effects within specific seasons, but rather test whether FVC-*d*(LST)/*dt* interactions change with seasons and identify environmental factors that may be driving these changes. Seasons of high and low vegetation coverage are naively chosen to test how different environmental conditions seasonally limit photosynthesis rather than imposing only water-limitation, for example, from wet and dry season definitions. We computed the seasonal differences in $\beta$<sub>FVC</sub> and related them to the seasonal mean changes in soil moisture, solar radiation, and vapor pressures deficit.
 
 To evaluate strength of energy dissipation through latent and sensible heat and radiation fluxes for different locations, Bateni and Entekhabi ([2012](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0006)) show analytically that *d*(LST)/*dt* can be predicted by LST dependent terms that are all dissipative through surface energy fluxes. As such, the *d*(LST)/*dt* versus LST at hourly timescales is an intrinsic landscape property:
 
 **Equation 3.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/1fff9642-a229-44c7-b7cc-9408eed0b563/gcb16455-math-0009.png)
+$$
+\frac{d\mathrm{LST}}{\mathit{dt}} = \beta_{0} + - \beta_{\mathrm{Eff}}\mathrm{LST} + \varepsilon
+$$
 
 where *β*<sub>Eff</sub> describes the efficiency of total land surface energy dissipation. Equation [3](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0003) was computed per pixel using available 15-minute *d*(LST)/*dt* increments and concurrent LST magnitude. *β*<sub>Eff</sub> is normalized to be unitless by a multiplication factor of 32.5 used in Bateni and Entekhabi ([2012](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0006)) (see their Equation 12).
 
@@ -128,7 +134,9 @@ To quantify whether vegetation fraction has differential effects on surface albe
 
 **Equation 4.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/d5e228b3-53be-44ee-b77a-e55103d7abeb/gcb16455-math-0010.png)
+$$
+\mathrm{E}\lbrack\alpha\rbrack = \beta_{0} + \beta_{\alpha,\mathrm{FVC}}\mathrm{E}\left\lbrack \mathrm{FVC} \right\rbrack + \varepsilon.
+$$
 
 Equation [4](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0004) was repeated identically to Equation [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0001) in each bin of mean moisture and solar radiation. A higher *β*<sub>α,FVC</sub> magnitude suggests that changes in vegetation cover have a stronger influence on the vegetated surface's ability to absorb incoming radiation. Note that SEVIRI FVC and surface albedo retrieval processes are independent and use different electromagnetics models (García-Haro & Camacho, [2014](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0034)).
 
@@ -142,7 +150,9 @@ A per-pixel regression was performed on annual mean values to determine the part
 
 **Equation 5.**
 
-![Formula](https://onlinelibrary.wiley.com/cms/asset/36dcbbfe-7de6-4a17-878b-6043a9521e9c/gcb16455-math-0011.png)
+$$
+\mathrm{E}\left\lbrack \mathrm{LST} \right\rbrack = \beta_{0} + \beta_{\text{NDVI}}\mathrm{E}\left\lbrack \text{NDVI} \right\rbrack + \beta_{P}\mathrm{E}\left\lbrack \mathrm{P} \right\rbrack + \beta_{\mathrm{R}_{\mathrm{S}}}\mathrm{E}\left\lbrack \mathrm{R}_{\mathrm{S}} \right\rbrack + \varepsilon
+$$
 
 Variables used in Equation [5](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-disp-0005) are shown in Table [1](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-tbl-0001). We evaluated the direct statistical connection of vegetation cover to LST here, instead of *d*(LST)/*dt*, where we later argue that there is a causal interpretation of these relationships. NDVI is approximately linearly related to FVC especially in non-forested regions, which cover most of the tropics by area (Carlson & Ripley, [1997](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0012); Fan et al., [2009](https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455#gcb16455-bib-0024)). As such, we expect some transferability between SEVIRI FVC-based and MODIS NDVI-based results. Statistically significant linear trends in annual means were removed from LST and NDVI to remove confounding effects of LST on NDVI, which mainly influenced tropical forest pixels. We multiplied *β*<sub>NDVI</sub> by 1% of mean annual NDVI between 2003 to 2021 to determine by how much LST would change if mean NDVI were increased by 1% everywhere (denoted as ΔLST). To assess the role of drylands on the LST changes due to biophysical feedbacks of vegetation cover increases, spatial distributions of this ΔLST with and without drylands included were compared using *t*-tests.
 

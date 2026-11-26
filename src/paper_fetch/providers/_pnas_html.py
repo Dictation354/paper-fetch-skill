@@ -12,6 +12,7 @@ from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.semantics import normalize_heading, parse_markdown_heading
 from ..quality.html_signals import PNAS_SIGNAL_SET, evaluate_datalayer_blocking_signals
+from ..utils import normalize_text
 from ._html_authors import (
     ATYPON_AUTHOR_COLLAPSE_UI_TEXT,
     ATYPON_AUTHOR_COUNT_PATTERN,
@@ -206,6 +207,19 @@ def finalize_extraction(
 ) -> tuple[str, dict[str, Any]]:
     del metadata
     soup = BeautifulSoup(html_text, "lxml")
+    for note in soup.select(
+        '#tab-contributors [role="doc-footnote"], #tab-contributors .core-conflict [role="paragraph"]'
+    ):
+        text = normalize_text(note.get_text(" ", strip=True))
+        if note.find_parent(class_="core-conflict"):
+            heading = "Competing interests"
+        elif text.casefold().startswith("author contributions:"):
+            heading = "Author contributions"
+            text = text.partition(":")[2].strip()
+        else:
+            continue
+        if text and text not in markdown_text:
+            markdown_text += f"\n\n## {heading}\n\n{text}"
     if not re.search(
         r"(?im)^#{2,6} (?:supporting information|supplementary materials?)\s*$",
         markdown_text,

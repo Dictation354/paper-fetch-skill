@@ -35,7 +35,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/ee0811e4d537-1dsubspace2.png": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/assets/ee0811e4d537-1dsubspace2.png",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/13fdf37674ea-unknown_unknown_10.48550_arxiv.1406.2661v1_original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md": "tests/fixtures/golden_criteria/10.48550_arxiv.1406.2661v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md"
       },
       "fixture_family": "golden",
       "title": "Generative Adversarial Networks",
@@ -62,7 +63,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/ee0811e4d537-1dsubspace2.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/13fdf37674ea-unknown_unknown_10.48550_arxiv.1406.2661v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/606f9e3ffe60-Goodfellow_et_al_2014_Generative_Adversarial_Networks.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.1406.2661v1",
@@ -138,7 +140,8 @@
         "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/acquisition/official-reacquisition-2026-09-19/collection.json",
         "original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "expected.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f5fb620d195d-Ho_et_al_2020_Denoising_Diffusion_Probabilistic_Models.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2006.11239v2/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f5fb620d195d-Ho_et_al_2020_Denoising_Diffusion_Probabilistic_Models.md"
       },
       "fixture_family": "golden",
       "title": "Denoising Diffusion Probabilistic Models",
@@ -179,7 +182,8 @@
         "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
         "original.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f5fb620d195d-Ho_et_al_2020_Denoising_Diffusion_Probabilistic_Models.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2006.11239v2",
@@ -428,7 +432,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/cc33c8739539-unknown_unknown_10.48550_arxiv.2605.06659v1_original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/acquisition/official-reacquisition-2026-09-19/collection.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/858b05700e07-Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06659v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/858b05700e07-Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md"
       },
       "fixture_family": "golden",
       "title": "The Pulsar Radial Acceleration Relation",
@@ -447,7 +452,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/cc33c8739539-unknown_unknown_10.48550_arxiv.2605.06659v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/858b05700e07-Yasin_et_al_2026_The_Pulsar_Radial_Acceleration_Relation.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2605.06659v1",
@@ -546,7 +552,8 @@
         "body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p8.pic1.svg": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p8.pic1.svg",
         "body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p8.pic2.svg": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p8.pic2.svg",
         "body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic1.svg": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic1.svg",
-        "body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic2.svg": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic2.svg"
+        "body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic2.svg": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/body_assets/10.48550_arxiv.2605.06663v1_assets/A2.SS5.p9.pic2.svg",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06663v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md"
       },
       "fixture_family": "golden",
       "title": "EMO: Pretraining Mixture of Experts for Emergent Modularity",
@@ -576,7 +583,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/81c67f84d307-domain_similarities.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/975efd41f740-unknown_unknown_10.48550_arxiv.2605.06663v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/909f94c00abb-Wang_et_al_2026_EMO_Pretraining_Mixture_of_Experts_for_Emergent_Modularity.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2605.06663v1",
@@ -645,7 +653,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/d313bca95f25-unknown_unknown_10.48550_arxiv.2605.06665v1_original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/acquisition/official-reacquisition-2026-09-19/collection.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06665v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md"
       },
       "fixture_family": "golden",
       "title": "UniPool: A Globally Shared Expert Pool for Mixture-of-Experts",
@@ -672,7 +681,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/d313bca95f25-unknown_unknown_10.48550_arxiv.2605.06665v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2605.06665v1",
@@ -734,7 +744,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/b9cc4a2b2783-unknown_unknown_10.48550_arxiv.2605.06666v1_original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/acquisition/official-reacquisition-2026-09-19/collection.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5a0ed396e1ca-Huang_et_al_2026_The_Kubo-Thermalization_Correspondence.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06666v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5a0ed396e1ca-Huang_et_al_2026_The_Kubo-Thermalization_Correspondence.md"
       },
       "fixture_family": "golden",
       "title": "The Kubo-Thermalization Correspondence",
@@ -758,7 +769,8 @@
         "acquisition/official-reacquisition-2026-09-19/raw_sources/b9cc4a2b2783-unknown_unknown_10.48550_arxiv.2605.06666v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5a0ed396e1ca-Huang_et_al_2026_The_Kubo-Thermalization_Correspondence.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2605.06666v1",
@@ -829,7 +841,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/58df73a23112-fig_multichar.png": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/official-reacquisition-2026-09-19/assets/58df73a23112-fig_multichar.png",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/a22847d7d4a4-unknown_unknown_10.48550_arxiv.2605.06667v1_original.html": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/source-completion-2026-09-18/001-http_response_entity.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/7a1421a3f7a6-Khalifi_et_al_2026_ActCam_Zero-Shot_Joint_Camera_and_3D_Motion_Control_for_Video_Generation.md": "tests/fixtures/golden_criteria/10.48550_arxiv.2605.06667v1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/7a1421a3f7a6-Khalifi_et_al_2026_ActCam_Zero-Shot_Joint_Camera_and_3D_Motion_Control_for_Video_Generation.md"
       },
       "fixture_family": "golden",
       "title": "ActCam: Zero-Shot Joint Camera and 3D Motion Control for Video Generation",
@@ -862,7 +875,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/58df73a23112-fig_multichar.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/a22847d7d4a4-unknown_unknown_10.48550_arxiv.2605.06667v1_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/7a1421a3f7a6-Khalifi_et_al_2026_ActCam_Zero-Shot_Joint_Camera_and_3D_Motion_Control_for_Video_Generation.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.48550_arxiv.2605.06667v1",
@@ -5233,6 +5247,13 @@
           "canonical": [],
           "title": "Tropical surface temperature response to vegetation cover changes and the role of drylands"
         }
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "b22526bf439b336498b88c691ac18580e923985a3fe9dd5c2c32004dab85cc2b",
+        "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16455",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1111_gcb.16455/acquisition/provenance.json"
       }
     },
     "10.1111_gcb.16998": {
@@ -5267,7 +5288,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/bf2256225d7c-gcb16998-fig-0003-m.jpg": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/bf2256225d7c-gcb16998-fig-0003-m.jpg",
         "acquisition/official-reacquisition-2026-09-19/assets/46b0fcf9bf75-gcb16998-fig-0004-m.jpg": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/assets/46b0fcf9bf75-gcb16998-fig-0004-m.jpg",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1111_gcb.16998/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md": "tests/fixtures/golden_criteria/10.1111_gcb.16998/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md"
       },
       "fixture_family": "golden",
       "title": "Drought thresholds that impact vegetation reveal the divergent responses of vegetation growth to drought across China",
@@ -5283,7 +5305,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/bf2256225d7c-gcb16998-fig-0003-m.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/46b0fcf9bf75-gcb16998-fig-0004-m.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/2714e6e2be75-Sun_et_al_2024_Drought_thresholds_that_impact_vegetation_reveal_the_divergent_responses_of_vegetation_growth_to_drought_across_China.md": "derived"
       }
     },
     "10.1126_sciadv.abf8021": {
@@ -5599,7 +5622,8 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/extracted.md",
+        "acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html"
       },
       "fixture_family": "golden",
       "title": "Greenhouse warming intensifies north tropical Atlantic climate variability",
@@ -5610,7 +5634,8 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html": "real_replay"
       },
       "source_selection": {
         "sample_id": "10.1126_sciadv.abg9690",
@@ -5645,7 +5670,15 @@
             "https://www.science.org/doi/10.1126/sciadv.abg9690"
           ],
           "title": "Greenhouse warming intensifies north tropical Atlantic climate variability"
-        }
+        },
+        "capture_scope": "partial DOM: 41 bibliography entries loaded"
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/original.html",
+        "sha256": "2571caea99d38cf46b9bfd2b9144bd2e24e7fcad1088fae5fe289f84763dd139",
+        "source_url": "https://www.science.org/doi/10.1126/sciadv.abg9690",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1126_sciadv.abg9690/expected.json#source_review"
       }
     },
     "10.1126_sciadv.adl6155": {
@@ -6381,7 +6414,8 @@
         "acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md",
         "acquisition/official-reacquisition-2026-09-19/assets/59bc2aefe140-science.aeg3511-f1.jpg": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/assets/59bc2aefe140-science.aeg3511-f1.jpg",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md": "tests/fixtures/golden_criteria/10.1126_science.aeg3511/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md"
       },
       "fixture_family": "golden",
       "title": "Magma plumbing beneath Yellowstone",
@@ -6394,7 +6428,8 @@
         "acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md": "unverified",
         "acquisition/official-reacquisition-2026-09-19/assets/59bc2aefe140-science.aeg3511-f1.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/1f2b910dce66-Farrell_2026_Magma_plumbing_beneath_Yellowstone.md": "derived"
       }
     },
     "scenario_elsevier_author_groups_minimal": {
@@ -7653,7 +7688,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/7429a4c91155-41561_2022_912_Fig4_HTML.png": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/official-reacquisition-2026-09-19/assets/7429a4c91155-41561_2022_912_Fig4_HTML.png",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/ed07f57e1657-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks_original.html": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/official-reacquisition-2026-09-19/raw_sources/ed07f57e1657-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks_original.html",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/277b312774c7-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md": "tests/fixtures/golden_criteria/10.1038_s41561-022-00912-7/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/277b312774c7-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md"
       },
       "expected_outcome": "fulltext",
       "asset_origins": {
@@ -7665,7 +7701,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/7429a4c91155-41561_2022_912_Fig4_HTML.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/raw_sources/ed07f57e1657-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks_original.html": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/277b312774c7-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md": "derived"
       },
       "asset_collection": {
         "provider": "springer",
@@ -8788,6 +8825,13 @@
           "canonical": [],
           "title": "Climate‐driven vegetation greening further reduces water availability in drylands"
         }
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "ad45ae43672521578c6f2084d6b82e804932d2b93b228f8fbe408314b4ab1da6",
+        "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.16561",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1111_gcb.16561/acquisition/provenance.json"
       }
     },
     "10.1111_gcb.16745": {
@@ -8916,7 +8960,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/f28bfd7dff75-gcb16758-math-0026.png": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/assets/f28bfd7dff75-gcb16758-math-0026.png",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/manifest.json",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/collection.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16758/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1111_gcb.16758/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md": "tests/fixtures/golden_criteria/10.1111_gcb.16758/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md"
       },
       "asset_origins": {
         "acquisition/problem-fixes-2026-09-18-p02/002-rendered-dom.html": "real_replay",
@@ -8956,7 +9001,15 @@
         "acquisition/official-reacquisition-2026-09-19/assets/f28bfd7dff75-gcb16758-math-0026.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
         "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md": "derived"
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/problem-fixes-2026-09-18-p02/native-mathml-dom.html",
+        "sha256": "65f6ed0fb9231a745d8adb299a4ece5ee245b3faa87c1f2f52f09c9f6f194aac",
+        "source_url": "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.16758",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/provenance.json"
       }
     },
     "10.1111_gcb.17141": {
@@ -9016,6 +9069,13 @@
           "canonical": [],
           "title": "Declining coupling between vegetation and drought over the past three decades"
         }
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1111_gcb.17141/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "de4632975218394fc189cc7fc0c1922f8b67d019943faa82af7e158d7fa6c5f3",
+        "source_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.17141",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1111_gcb.17141/acquisition/provenance.json"
       }
     },
     "10.1126_sciadv.aax6869": {
@@ -9097,13 +9157,15 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/extracted.md",
+        "acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "acquisition/science-browser-2026-11-26/001-browser_rendered_dom.html": "real_replay"
       },
       "source_selection": {
         "sample_id": "10.1126_sciadv.abj3309",
@@ -9138,7 +9200,15 @@
             "https://www.science.org/doi/10.1126/sciadv.abj3309"
           ],
           "title": "Projections of future forest degradation and CO2 emissions for the Brazilian Amazon"
-        }
+        },
+        "capture_scope": "partial DOM: ends within table 3"
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/original.html",
+        "sha256": "422f1c05d257b6f9b782790c8e05a28abe013440a3b99ff9c14405fd527cad59",
+        "source_url": "https://www.science.org/doi/10.1126/sciadv.abj3309",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1126_sciadv.abj3309/expected.json#source_review"
       }
     },
     "10.1126_science.abb3021": {
@@ -11985,7 +12055,7 @@
     "10.1175_jcli-d-25-0547.1": {
       "doi": "10.1175/jcli-d-25-0547.1",
       "publisher": "ams",
-      "source_url": "https://journals.ametsoc.org/downloadpdf/view/journals/clim/39/10/JCLI-D-25-0547.1.pdf",
+      "source_url": "https://journals.ametsoc.org/view/journals/clim/39/10/JCLI-D-25-0547.1.xml",
       "origin_kind": "real_replay",
       "usage_kind": "content",
       "assets": {
@@ -11995,13 +12065,14 @@
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
         "acquisition/provenance.json": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/provenance.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/extracted.md",
+        "original.html": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html"
       },
       "fixture_family": "golden",
       "title": "Corrigendum",
       "landing_url": "https://journals.ametsoc.org/view/journals/clim/39/10/JCLI-D-25-0547.1.xml",
-      "route_kind": "pdf_fallback",
-      "content_type": "application/pdf",
+      "route_kind": "html",
+      "content_type": "text/html",
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "real_replay",
@@ -12041,6 +12112,13 @@
           ],
           "title": "Corrigendum"
         }
+      },
+      "baseline_input": {
+        "path": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "9ebe3f6013774df42dd879137586454c8bcc2aa17e10180121e346bb31f08425",
+        "source_url": "https://journals.ametsoc.org/view/journals/clim/39/10/JCLI-D-25-0547.1.xml",
+        "route_kind": "html",
+        "evidence": "tests/fixtures/golden_criteria/10.1175_jcli-d-25-0547.1/acquisition/provenance.json"
       }
     },
     "10.3390_en16186655": {
@@ -15228,7 +15306,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/13d7f086ed1f-pbio.0040298.e003.png": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/13d7f086ed1f-pbio.0040298.e003.png",
         "acquisition/official-reacquisition-2026-09-19/assets/633243ec9bb6-pbio.0040298.ex001.png": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/assets/633243ec9bb6-pbio.0040298.ex001.png",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
@@ -15246,7 +15325,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/13d7f086ed1f-pbio.0040298.e003.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/633243ec9bb6-pbio.0040298.ex001.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.1371_journal.pbio.0040298",
@@ -16404,7 +16484,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png",
         "acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/e8a7ee54cccc-Lawrence_et_al_2013_Software_for_Computing_and_Annotating_Genomic_Ranges.md": "tests/fixtures/golden_criteria/10.1371_journal.pcbi.1003118/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/e8a7ee54cccc-Lawrence_et_al_2013_Software_for_Computing_and_Annotating_Genomic_Ranges.md"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
@@ -16431,7 +16512,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/274663b6f424-pcbi.1003118.e006.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/dbc3dec23263-pcbi.1003118.e007.png": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/e8a7ee54cccc-Lawrence_et_al_2013_Software_for_Computing_and_Annotating_Genomic_Ranges.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.1371_journal.pcbi.1003118",
@@ -17666,7 +17748,9 @@
         "acquisition/official-reacquisition-2026-09-19/assets/497b8dc05f3a-erlab7d02f4_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/official-reacquisition-2026-09-19/assets/497b8dc05f3a-erlab7d02f4_hr.jpg",
         "acquisition/official-reacquisition-2026-09-19/assets/45a1d304d6a1-erlab7d02f5_hr.jpg": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/official-reacquisition-2026-09-19/assets/45a1d304d6a1-erlab7d02f5_hr.jpg",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/network-repair/iop-fetch.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/derived/readable/acquisition/network-repair/iop-fetch.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/49311adc9873-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md": "tests/fixtures/golden_criteria/10.1088_1748-9326_ab7d02/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/49311adc9873-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/4c91909d17d6-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.json": "unverified",
@@ -17677,7 +17761,9 @@
         "acquisition/official-reacquisition-2026-09-19/assets/497b8dc05f3a-erlab7d02f4_hr.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/45a1d304d6a1-erlab7d02f5_hr.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/network-repair/iop-fetch.md": "derived",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/49311adc9873-Maher_et_al_2020_Quantifying_the_role_of_internal_variability_in_the_temperature_we_expect_to_observe_in_the_coming_decades.md": "derived"
       },
       "asset_collection": {
         "provider": "iop",
@@ -17908,7 +17994,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/22a492858b0d-qstac3460f1_hr.jpg": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/official-reacquisition-2026-09-19/assets/22a492858b0d-qstac3460f1_hr.jpg",
         "acquisition/official-reacquisition-2026-09-19/assets/3ef0a38fb83d-qstac3460f2_hr.jpg": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/official-reacquisition-2026-09-19/assets/3ef0a38fb83d-qstac3460f2_hr.jpg",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8986bb746956-Wang_et_al_2022_Quantum_pattern_recognition_in_photonic_circuits.md": "tests/fixtures/golden_criteria/10.1088_2058-9565_ac3460/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8986bb746956-Wang_et_al_2022_Quantum_pattern_recognition_in_photonic_circuits.md"
       },
       "capture_scope": "Historical golden content retained. acquisition/subscription-2026-09-15 contains a confirmed real subscription-restricted negative sample: article and PDF entrances return purchase HTML; live CLI is limited. Historical challenge evidence is separate.",
       "asset_origins": {
@@ -17917,7 +18004,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/22a492858b0d-qstac3460f1_hr.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/3ef0a38fb83d-qstac3460f2_hr.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8986bb746956-Wang_et_al_2022_Quantum_pattern_recognition_in_photonic_circuits.md": "derived"
       },
       "asset_collection": {
         "provider": "iop",
@@ -19890,7 +19978,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/4c76a196126d-uaai_a_2375110_f0004_oc.jpg": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/assets/4c76a196126d-uaai_a_2375110_f0004_oc.jpg",
         "acquisition/official-reacquisition-2026-09-19/assets/88ec5ac456a5-uaai_a_2375110_f0005_oc.jpg": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/assets/88ec5ac456a5-uaai_a_2375110_f0005_oc.jpg",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/collection.json"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/collection.json",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8fc82498c091-Khan_et_al_2024_An_algorithmic_multiple_attribute_decision-making_context_to_model_uncertainty_associated_with_hospital_site_selection_problem_using_complex_sv-neutrosophi_3f01ff52.md": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8fc82498c091-Khan_et_al_2024_An_algorithmic_multiple_attribute_decision-making_context_to_model_uncertainty_associated_with_hospital_site_selection_problem_using_complex_sv-neutrosophi_3f01ff52.md"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
@@ -19904,7 +19993,8 @@
         "acquisition/official-reacquisition-2026-09-19/assets/4c76a196126d-uaai_a_2375110_f0004_oc.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/assets/88ec5ac456a5-uaai_a_2375110_f0005_oc.jpg": "real_replay",
         "acquisition/official-reacquisition-2026-09-19/manifest.json": "unverified",
-        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified"
+        "acquisition/official-reacquisition-2026-09-19/collection.json": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8fc82498c091-Khan_et_al_2024_An_algorithmic_multiple_attribute_decision-making_context_to_model_uncertainty_associated_with_hospital_site_selection_problem_using_complex_sv-neutrosophi_3f01ff52.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.1080_08839514.2024.2375110",
@@ -20047,13 +20137,17 @@
         "acquisition/assets-2026-09-15/replay-receipt.json": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/assets-2026-09-15/replay-receipt.json",
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/source-completion-2026-09-18/000-http_response_entity.bin",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/extracted.md",
+        "derived/readable/acquisition/network-repair/tandf-fetch.md": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/derived/readable/acquisition/network-repair/tandf-fetch.md",
+        "derived/readable/acquisition/network-repair/tandf-retry.md": "tests/fixtures/golden_criteria/10.1080_17538947.2022.2137254/derived/readable/acquisition/network-repair/tandf-retry.md"
       },
       "asset_origins": {
         "acquisition/source-completion-2026-09-18/000-http_response_entity.bin": "real_replay",
         "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html": "real_replay",
         "acquisition/provenance.json": "real_replay",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/network-repair/tandf-fetch.md": "derived",
+        "derived/readable/acquisition/network-repair/tandf-retry.md": "derived"
       },
       "source_selection": {
         "sample_id": "10.1080_17538947.2022.2137254",
@@ -25061,7 +25155,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1021_ja00160a040/acquisition/official-reacquisition-2026-09-19/raw_sources/cc41e1251976-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1021_ja00160a040/acquisition/subscription-2026-09-15/response-003.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_ja00160a040/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1021_ja00160a040/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1021_ja00160a040/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/9e3c3254cb43-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.md": "tests/fixtures/golden_criteria/10.1021_ja00160a040/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/9e3c3254cb43-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/d1b3b3235e0f-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.json": "unverified",
@@ -25081,7 +25176,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/9e3c3254cb43-Hupp_1990_Solvent_control_of_orbital_mixing_and_electronic_coupling_in_ligand-bridged_mixed-valence_complexes_evidence_for_an_intervalence_hole-transfer_pathway.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -25263,7 +25359,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/pdf-identity-recheck-2026-09-15-intermediate/response-008.bin",
         "landing.html": "tests/fixtures/golden_criteria/10.1063_5.0260731/acquisition/subscription-2026-09-15/response-003.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1063_5.0260731/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1063_5.0260731/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1063_5.0260731/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/c551db395956-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md": "tests/fixtures/golden_criteria/10.1063_5.0260731/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/c551db395956-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/0c48683e58f2-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.json": "unverified",
@@ -25276,7 +25373,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/c551db395956-Tao_et_al_2025_A_basis-free_phase_space_electronic_Hamiltonian_that_recovers_beyond_Born_Oppenheimer_electronic_momentum_and_current_density.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -25364,7 +25462,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/raw_sources/53651721f249-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/subscription-2026-09-15/response-001.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/ae369653aeae-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.json": "unverified",
@@ -25392,7 +25491,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -25632,7 +25732,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/official-reacquisition-2026-09-19/raw_sources/1866e0df8119-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/acquisition/subscription-2026-09-15/response-001.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md": "tests/fixtures/golden_criteria/10.1088_0034-4885_53_3_002/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/1f595795f1e4-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.json": "unverified",
@@ -25680,7 +25781,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/f1ef5c351741-Chevalier_et_al_1990_The_structure_of_micelles_and_microemulsions.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -25761,7 +25863,8 @@
         "acquisition/fulltext-baselines-2026-10-21/service-000-http_response_entity.bin": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/fulltext-baselines-2026-10-21/service-000-http_response_entity.bin",
         "original.html": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/acquisition/fulltext-baselines-2026-10-21/service-001-browser_rendered_dom.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b6545b74f081-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.md": "tests/fixtures/golden_criteria/10.1088_1681-7575_ae1dfc/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b6545b74f081-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/b998e697562f-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.json": "unverified",
@@ -25783,7 +25886,8 @@
         "acquisition/fulltext-baselines-2026-10-21/service-000-http_response_entity.bin": "real_replay",
         "original.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b6545b74f081-Thomas_et_al_2025_Calibration_of_two_mass_standards_with_the_LNE_Kibble_balance_in_2024.md": "derived"
       },
       "route_kind": "html",
       "content_type": "text/html",
@@ -26176,7 +26280,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/raw_sources/1d6eacec9635-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/subscription-2026-09-15/response-002.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/681e1ea14625-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.json": "unverified",
@@ -26193,7 +26298,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -26304,7 +26410,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/official-reacquisition-2026-09-19/raw_sources/4cbf879baad9-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/acquisition/subscription-2026-09-15/response-001.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md": "tests/fixtures/golden_criteria/10.1098_rspa.1984.0023/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/4f71b69b5de9-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.json": "unverified",
@@ -26354,7 +26461,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/56996c5f4bd7-Berry_1984_Quantal_phase_factors_accompanying_adiabatic_changes.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -26542,7 +26650,8 @@
         "landing.html": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/subscription-2026-09-15/response-002.bin",
         "expected.json": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/expected.json",
         "extracted.md": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/extracted.md",
-        "acquisition/current-19-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/current-19-2026-09-18/001-browser_rendered_dom.html"
+        "acquisition/current-19-2026-09-18/001-browser_rendered_dom.html": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/acquisition/current-19-2026-09-18/001-browser_rendered_dom.html",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b75563cefc27-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.md": "tests/fixtures/golden_criteria/10.1021_jacs.6c10062/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b75563cefc27-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/6db4406fac51-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.json": "unverified",
@@ -26557,7 +26666,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/b75563cefc27-Wang_et_al_2026_Decoupling_the_Cation-Induced_Vibrational_Responses_at_the_Graphdiyne_Water_Interface_via_In_Situ_Surface-Enhanced_Raman_Spectroscopy.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -27440,7 +27550,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/official-reacquisition-2026-09-19/raw_sources/c865aa6e439f-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/acquisition/template-gaps-2026-09-16/article-response.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md": "tests/fixtures/golden_criteria/10.1186_s40359-026-04991-8/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/fbc55e65e5c4-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.json": "unverified",
@@ -27456,7 +27567,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/020a81af0261-Sobol_et_al_2026_Phubbing_in_pregnancy_as_a_predictor_of_postpartum_depressive_symptoms_preliminary_results.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",
@@ -27528,7 +27640,8 @@
         "original.pdf": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/official-reacquisition-2026-09-19/raw_sources/b48e5ce1ed78-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.pdf",
         "landing.html": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/acquisition/requested-templates-2026-09-16/article-response.html",
         "expected.json": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/expected.json",
-        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/extracted.md"
+        "extracted.md": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/extracted.md",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md": "tests/fixtures/golden_criteria/10.1038_s41419-026-09210-1/derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md"
       },
       "asset_origins": {
         "acquisition/official-reacquisition-2026-09-19/outputs/c7d10d59a728-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.json": "unverified",
@@ -27551,7 +27664,8 @@
         "original.pdf": "real_replay",
         "landing.html": "real_replay",
         "expected.json": "unverified",
-        "extracted.md": "unverified"
+        "extracted.md": "unverified",
+        "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/176b3e833f52-Liu_et_al_2026_PTTG1-driven_self-amplifying_loop_with_SP1_and_ENO1_promotes_IRF4-mediated_myeloma_progression_and_bone_destruction.md": "derived"
       },
       "route_kind": "pdf_fallback",
       "content_type": "application/pdf",

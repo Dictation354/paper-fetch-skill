@@ -139,7 +139,8 @@
               "real_excerpt",
               "contract_scenario",
               "synthetic",
-              "unverified"
+              "unverified",
+              "derived"
             ]
           }
         }

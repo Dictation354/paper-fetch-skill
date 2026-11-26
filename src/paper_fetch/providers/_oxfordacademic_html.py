@@ -400,6 +400,23 @@ def _supplementary_lines(soup: BeautifulSoup, source_url: str) -> list[str]:
     return lines
 
 
+def _attachment_identity(url: str) -> tuple[str, str, str, str]:
+    parsed = urlparse(url)
+    query = parsed.query
+    if (
+        parsed.hostname == "oup.silverchair-cdn.com"
+        and "/oup/backfile/" in parsed.path.lower()
+    ):
+        query = urlencode(
+            [
+                (key, value)
+                for key, value in parse_qsl(query, keep_blank_values=True)
+                if key.lower() not in {"expires", "signature", "key-pair-id", "policy"}
+            ]
+        )
+    return parsed.scheme, parsed.netloc, parsed.path, query
+
+
 def _supplementary_assets(soup: BeautifulSoup, source_url: str) -> list[dict[str, str]]:
     # Prefer the attachment widget's current signed URL over inline references.
     panel_links = soup.select(".dataSuppLink a[href]")
@@ -430,17 +447,7 @@ def _supplementary_assets(soup: BeautifulSoup, source_url: str) -> list[dict[str
         candidates = html_assets.extract_supplementary_assets(str(anchor), source_url)
         if not candidates:
             continue
-        query = parsed.query
-        if cdn_attachment:
-            query = urlencode(
-                [
-                    (key, value)
-                    for key, value in parse_qsl(query, keep_blank_values=True)
-                    if key.lower()
-                    not in {"expires", "signature", "key-pair-id", "policy"}
-                ]
-            )
-        identity = (parsed.scheme, parsed.netloc, parsed.path, query)
+        identity = _attachment_identity(url)
         assets.setdefault(identity, candidates[0])
     return list(assets.values())
 
@@ -575,6 +582,20 @@ def extract_markdown(
     formula_assets = html_assets.extract_formula_assets(str(body), source_url)
     body_assets = [*extract_inline_figures(body, source_url), *formula_assets]
     _retain_author_footnotes(soup, body)
+    for chrome in list(body.select(".copyright, .copyright-statement, .license")):
+        chrome.decompose()
+    panel_targets = {
+        _attachment_identity(urljoin(source_url, str(link["href"])))
+        for link in soup.select(".dataSuppLink a[href]")
+    }
+    for link in body.select("a[href]"):
+        if not link.find_parent(class_="widget-ArticleDataSupplements") and (
+            _attachment_identity(urljoin(source_url, str(link["href"])))
+            in panel_targets
+        ):
+            # Keep the author's callout at its original position. The widget
+            # supplies the single download entry and its current signature.
+            link.unwrap()
     for anchor in list(body.select("a[href]")):
         if anchor.get_text(strip=True) in OXFORDACADEMIC_MARKDOWN_PROMO_TOKENS:
             anchor.decompose()

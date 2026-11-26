@@ -1,6 +1,8 @@
 from __future__ import annotations
 
 import pytest
+from bs4 import BeautifulSoup
+from markdown_it import MarkdownIt
 
 from paper_fetch.extraction.html.renderer import (
     render_html_markdown,
@@ -44,28 +46,12 @@ def test_render_provider_html_fragment_returns_markdown_and_sidecars() -> None:
     assert any(item["heading"] == "Abstract" for item in rendered.abstract_sections)
 
 
-@pytest.mark.parametrize(
-    "sentence,expected",
-    [
-        (
-            "The measured response follows $V_i = B V^h$, with $k_{on}$ and $x_i^2$ as model parameters.",
-            ("$V_i = B V^h$", "$k_{on}$", "$x_i^2$"),
-        ),
-        (
-            'The measured response is listed in <a href="#table_1">Table 1</a>, with [Table 2] as an additional comparison.',
-            ("Table 1", "[Table 2]"),
-        ),
-    ],
-    ids=["inline-latex", "table-reference"],
-)
-def test_render_html_markdown_preserves_formula_and_table_tokens(
-    sentence, expected
-) -> None:
+def test_render_html_markdown_preserves_inline_latex() -> None:
     trafilatura = pytest.importorskip("trafilatura")
     html = (
         "<article><h1>Measured response</h1><p>"
-        + sentence
-        + " Each parameter is estimated from independent measurements to describe "
+        "The measured response follows $V_i = B V^h$, with $k_{on}$ and $x_i^2$ as model parameters."
+        " Each parameter is estimated from independent measurements to describe "
         "the observed biological process and its quantitative response.</p></article>"
     )
     markdown = render_html_markdown(
@@ -73,5 +59,26 @@ def test_render_html_markdown_preserves_formula_and_table_tokens(
         "https://example.test/article",
         trafilatura_backend=trafilatura,
     )
-    for token in expected:
-        assert token in markdown
+    for formula in ("$V_i = B V^h$", "$k_{on}$", "$x_i^2$"):
+        assert formula in markdown
+
+
+def test_render_html_markdown_preserves_visible_table_references_and_links() -> None:
+    trafilatura = pytest.importorskip("trafilatura")
+    html = (
+        "<article><h1>Measured response</h1><p>"
+        'The measured response is listed in <a href="#table_1">Table 1</a>, '
+        "with [Table 2] as an additional comparison."
+        " Each parameter is estimated from independent measurements to describe "
+        "the observed biological process and its quantitative response.</p></article>"
+    )
+    markdown = render_html_markdown(
+        html,
+        "https://example.test/article",
+        trafilatura_backend=trafilatura,
+    )
+    rendered = BeautifulSoup(MarkdownIt("commonmark").render(markdown), "lxml")
+    assert "[Table 2]" in rendered.get_text()
+    link = rendered.select_one('a[href="#table_1"]')
+    assert link is not None
+    assert link.get_text() == "Table 1"

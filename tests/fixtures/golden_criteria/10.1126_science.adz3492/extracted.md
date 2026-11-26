@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: false
-token_estimate: 5214
+token_estimate: 5174
 ---
 
 # New demand goals for energy and climate resilience
@@ -70,6 +70,8 @@ Pursuing these goals in combination unlocks powerful synergies. Enhancing final 
 ## Acknowledgments
 
 The authors acknowledge support under the EDITS Project for part of the research reported in this work. EDITS (Energy Demand Changes Induced by Technological and Social Innovations) is a collaborative research initiative coordinated by the Research Institute of Innovative Technology for the Earth (RITE) and the International Institute for Applied Systems Analysis (IIASA) and funded by the Ministry of Economy, Trade, and Industry (METI), Japan. All data used in this paper are available at Zenodo ([*15*](https://www.science.org/doi/full/10.1126/science.adz3492#R15)) and in the SM.
+
+## Supplementary Materials
 
 ### This PDF file includes:
 

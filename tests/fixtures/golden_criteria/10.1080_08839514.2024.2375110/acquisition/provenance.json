@@ -162,5 +162,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1080_08839514.2024.2375110/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/8fc82498c091-Khan_et_al_2024_An_algorithmic_multiple_attribute_decision-making_context_to_model_uncertainty_associated_with_hospital_site_selection_problem_using_complex_sv-neutrosophi_3f01ff52.md",
+      "source_sha256": "8fc82498c0910fa17b46b19c5c9b76b259396232afa7e66de3d4d3e7bddd91a4",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/8fc82498c091-Khan_et_al_2024_An_algorithmic_multiple_attribute_decision-making_context_to_model_uncertainty_associated_with_hospital_site_selection_problem_using_complex_sv-neutrosophi_3f01ff52.md",
+      "sha256": "cec77e61af3045b2413ae0229589483d329fb01d3ff2f11c3b049a4c377527cc",
+      "image_references": 5
+    }
   ]
 }

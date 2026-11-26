@@ -8,7 +8,7 @@ source: "arxiv_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 9621
+token_estimate: 9633
 ---
 
 # The Kubo-Thermalization Correspondence
@@ -97,7 +97,7 @@ We prepare an incoherent mixture of the first and third lowest Zeeman sublevels 
 
 In Extended Data Fig. [1](https://arxiv.org/html/2605.06666v1#S1.F1), we show $\Delta_{\text{p}}-\Delta_{0}$ as a function of $1/(k_{\mathrm{F}}a_{\uparrow\text{B}})$. We also show the spectral width $\Gamma$ (inset) extracted by fitting a Lorentzian function to $R_{\downarrow}(\Delta)$; Gaussian fits give consistent results within error bars.
 
-![Figure 1](https://arxiv.org/html/2605.06666v1/x5.png)
+![Extended Data Figure 1](https://arxiv.org/html/2605.06666v1/x5.png)
 
 Extended Data Fig. 1: Difference $\Delta_{\text{p}}-\Delta_{0}$ as a function of $1/(k_{\mathrm{F}}a_{\uparrow\text{B}})$. Inset: $\hbar\Gamma/E_{\text{F}}$ extracted from a Lorentzian fit to $R_{\downarrow}(\Delta)$ versus $1/(k_{\text{F}}a_{\uparrow\text{B}})$.
 
@@ -105,7 +105,7 @@ Extended Data Fig. 1: Difference $\Delta_{\text{p}}-\Delta_{0}$ as a function of
 
 In Extended Data Fig. [2](https://arxiv.org/html/2605.06666v1#S1.F2), we show the slope $\chi\equiv(\partial\mathcal{M}_{\infty}/\partial(\hbar\Delta))|_{\Delta=\Delta_{0}}$ as a function of $1/(k_{\mathrm{F}}a_{\uparrow\text{B}})$. The bath temperature $T=0.25(2)T_{\mathrm{F}}$ (gray band) is extracted by time-of-flight measurement of the bath atoms.
 
-![Figure 2](https://arxiv.org/html/2605.06666v1/x6.png)
+![Extended Data Figure 2](https://arxiv.org/html/2605.06666v1/x6.png)
 
 Extended Data Fig. 2: Verification of thermalization. Susceptibility $\chi\equiv(\partial\mathcal{M}_{\infty}/\partial(\hbar\Delta))|_{\Delta=\Delta_{0}}$ as a function of $1/(k_{\text{F}}a_{\uparrow\text{B}})$. The gray band is determined from the bath temperature $T/T_{\mathrm{F}}=0.25(2)$ (which is measured by time of flight of the bath component).
 
@@ -265,6 +265,10 @@ $$
 $$
 
 Given its general nature, it is likely that the Kubo-Thermalization correspondence could be further generalized to various other types of observables and spin-bath interactions.
+
+## Author notes
+
+These authors contributed equally to this work
 
 ## References (29 total, showing 29)
 

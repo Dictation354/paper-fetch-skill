@@ -102,10 +102,14 @@ def section_kind_for_heading(heading: str) -> str:
         return "body"
     if normalized in {"references", "bibliography"}:
         return "references"
+    normalized = re.sub(r"^appendix [a-z0-9]+[.:]?\s+(?=supplement)", "", normalized)
     if normalized.startswith("extended data") or normalized in {
         "supplementary files",
         "supplementary data",
         "electronic supplementary material",
+        "supplemental material",
+        "supplemental materials",
+        "supplemental data",
         "supplementary materials",
         "supplementary material",
         "supplementary information",
@@ -136,7 +140,7 @@ def _should_preserve_empty_parent_section(
     normalized = normalize_text(heading)
     if not normalized:
         return False
-    return section_kind_for_heading(normalized) == "body"
+    return section_kind_for_heading(normalized) in {"body", "supplementary"}
 
 
 def section_priority(section: Section) -> int:

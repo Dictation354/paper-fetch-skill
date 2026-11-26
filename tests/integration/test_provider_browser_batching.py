@@ -76,3 +76,31 @@ def test_tandf_batches_controls_and_injection_with_partial_csv_failure(monkeypat
         assert page.locator("#t0 table").count() == 1
         assert page.locator("#t1 table").count() == 0
         assert page.locator("#t2 table").count() == 1
+
+
+@pytest.mark.browser
+def test_wiley_runtime_original_binds_only_its_own_mathml(monkeypatch):
+    from paper_fetch.browser_runtime_policy import engine_name
+    from paper_fetch.providers import _wiley_html
+
+    if engine_name() == "invisible":
+        from invisible_core.download import cache_dir_for_seal
+        from invisible_playwright import InvisiblePlaywright
+
+        if not cache_dir_for_seal().is_dir():
+            pytest.skip("requires the prepared platform browser")
+        session = InvisiblePlaywright(headless=True, timezone="UTC", locale="en-US")
+    else:
+        session = prepared_browser(monkeypatch)
+    with session as browser:
+        page = browser.new_page()
+        page.set_content(
+            '<article><mjx-container id="a"></mjx-container><mjx-container id="b"></mjx-container></article><script>window.MathJax={startup:{document:{getMathItemsWithin:()=>[{typesetRoot:document.querySelector("#a"),math:"<math><mi>x</mi></math>"},{typesetRoot:document.querySelector("#b"),math:"x+1"}]}}}</script>'
+        )
+        result = _wiley_html.prepare_browser_page(page, timeout_ms=5000)
+        assert result["mathjax_original_mathml"] == 1
+        assert (
+            page.locator("#a").get_attribute("data-paper-fetch-mathml")
+            == "<math><mi>x</mi></math>"
+        )
+        assert page.locator("#b").get_attribute("data-paper-fetch-mathml") is None

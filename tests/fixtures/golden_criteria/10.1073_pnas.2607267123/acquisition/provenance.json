@@ -468,5 +468,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1073_pnas.2607267123/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md",
+      "source_sha256": "798586d537b6348f35a3fa1a6956cf92ed91cbec83f0403a997a788a5cc0d7cb",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/798586d537b6-Liu_et_al_2026_Reconfigurable_hydrogel_interfaces_for_soft_brain_electrodes.md",
+      "sha256": "d417040370257f64c82381bc43fa99eb9f54cd00b0551b56d4b8db87bb4749b6",
+      "image_references": 2
+    }
   ]
 }

@@ -1,24 +1,20 @@
 {
-  "schema_version": 2,
-  "minimum_reader_schema_version": 2,
-  "overall": "action_required",
+  "schema_version": 3,
+  "overall": "degraded",
   "target": "paper",
   "identity": {
-    "status": "unavailable",
-    "doi": null,
-    "expected_doi": null,
+    "status": "resolved",
+    "doi": "10.1016/j.ecolind.2023.110326",
+    "expected_doi": "10.1016/j.ecolind.2023.110326",
     "title": "Climate warming-induced phenology changes dominate vegetation productivity in Northern Hemisphere ecosystems",
     "candidate_count": 0,
     "canonical_landing_url": null,
     "canonical_landing_verified": false,
     "canonical_landing_unique": false,
-    "codes": [
-      "canonical_landing_identity_unverified"
-    ]
+    "codes": []
   },
   "fetch": {
     "status": "ok",
-    "completed": true,
     "code": null
   },
   "content": {
@@ -27,16 +23,23 @@
     "has_fulltext": true,
     "has_abstract": true,
     "token_estimate": 11084,
-    "confidence": "high",
-    "flags": [],
-    "tables": {
-      "fallback_count": 0,
-      "layout_degraded_count": 0,
-      "semantic_loss_count": 0
-    },
-    "formulas": {
-      "fallback_count": 0,
-      "missing_count": 0
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0,
+      "formula_diagnostics": [
+        {
+          "node_id": "formula-1",
+          "source_tex": "",
+          "final_latex": "Y = \\sum_{i = 1}^{N}\\mathrm{β}_{i}x_{i} + \\mathrm{ε}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        }
+      ]
     }
   },
   "asset": {
@@ -46,10 +49,8 @@
     "expected": null,
     "discovered": 0,
     "attempted": 0,
-    "total": 0,
     "local": 0,
     "full_size": 0,
-    "preview": 0,
     "accepted_preview": 0,
     "fallback_preview": 0,
     "failed": 0,
@@ -57,37 +58,26 @@
     "not_archived": 0,
     "remote_link_count": 0,
     "remote_only_count": 0,
-    "body_discovered": 0,
-    "body_attempted": 0,
-    "body_local": 0,
-    "body_full_size": 0,
-    "body_preview": 0,
-    "body_failed": 0,
-    "body_not_archived": 0,
-    "body_remote_only_count": 0,
+    "body_assets": {
+      "discovered": 0,
+      "attempted": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "failed": 0,
+      "not_archived": 0,
+      "remote_only_count": 0
+    },
     "require_local_body_assets": false,
     "require_full_size_body_assets": false,
-    "has_local_body_assets": false,
-    "all_body_assets_local": true,
-    "all_body_assets_full_size": true,
     "local_body_assets_satisfied": true,
     "full_size_body_assets_satisfied": true,
     "failure_codes": [],
     "issue_codes": [],
-    "status": "not_requested",
-    "remote_links_preserved": false
+    "status": "not_requested"
   },
   "output": {
-    "status": "complete",
-    "requested": [
-      "article",
-      "markdown"
-    ],
-    "available": [
-      "article",
-      "markdown"
-    ],
-    "missing": []
+    "status": "complete"
   },
   "provenance": {
     "status": "partial",
@@ -99,12 +89,8 @@
       "transport": "browser",
       "fallback_used": false
     },
-    "trace_event_count": 0,
     "fallback_codes": [],
     "warning_codes": [],
-    "failure_codes": [],
-    "unstructured_warning_count": 0,
-    "acceptance_policy": "provider_html_body",
-    "acceptance_policy_satisfied": true
+    "failure_codes": []
   }
 }

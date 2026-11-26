@@ -286,5 +286,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1371_journal.pbio.0040298/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md",
+      "source_sha256": "5c75d054d6594c1691e2d1dec440356e60e2113ed662ff0891cb543a133efe96",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/5c75d054d659-Forero_et_al_2006_Uncoiling_Mechanics_of_Escherichia_coli_Type_I_Fimbriae_Are_Optimized_for_Catch_Bonds.md",
+      "sha256": "fa8d2b406f18429b24f1f940f85b7b719e797194511011e07cf7103d4b850b70",
+      "image_references": 9
+    }
   ]
 }

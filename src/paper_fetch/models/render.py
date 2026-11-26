@@ -225,11 +225,18 @@ def _build_markdown_render_plan(
     )
     supplementary_sections = tuple(
         section
-        for section in article.sections
+        for index, section in enumerate(article.sections)
         if section.kind == "supplementary"
-        and section.text.strip()
         and effective_include_supplementary
         and asset_profile == "all"
+        and (
+            section.text.strip()
+            or (
+                index + 1 < len(article.sections)
+                and article.sections[index + 1].kind == "supplementary"
+                and article.sections[index + 1].level > section.level
+            )
+        )
     )
     remaining_ids = {id(section) for section in remaining_body_sections}
     retained_ids = {
@@ -545,13 +552,17 @@ def rewrite_markdown_asset_links(
         inline_candidates = image_reference_candidates(inline_url)
         if not inline_candidates:
             return image.text
-        for asset, replacement_path, asset_candidates in indexed_assets:
-            if image_references_match(asset_candidates, inline_candidates):
-                return _asset_image_markdown(
-                    asset,
-                    image_alt=image.alt,
-                    replacement_path=replacement_path,
-                )
+        exact = [item for item in indexed_assets if item[2] & inline_candidates]
+        matches = exact or [
+            item
+            for item in indexed_assets
+            if image_references_match(item[2], inline_candidates)
+        ]
+        if matches and len({item[1] for item in matches}) == 1:
+            asset, replacement_path, _ = matches[0]
+            return _asset_image_markdown(
+                asset, image_alt=image.alt, replacement_path=replacement_path
+            )
         return image.text
 
     return replace_markdown_images(markdown_text, replace_image)

@@ -125,6 +125,10 @@ BACK_MATTER_HEADINGS = frozenset(
         "references and notes",
         "bibliography",
         "electronic supplementary material",
+        "supplemental material",
+        "supplemental materials",
+        "supplemental data",
+        "supplementary files",
         "supplementary material",
         "supplementary materials",
         "supplementary information",
@@ -147,6 +151,10 @@ SUPPLEMENTARY_BACK_MATTER_HEADINGS = (
     frozenset(
         {
             "electronic supplementary material",
+            "supplemental material",
+            "supplemental materials",
+            "supplemental data",
+            "supplementary files",
             "supplementary material",
             "supplementary materials",
             "supplementary information",

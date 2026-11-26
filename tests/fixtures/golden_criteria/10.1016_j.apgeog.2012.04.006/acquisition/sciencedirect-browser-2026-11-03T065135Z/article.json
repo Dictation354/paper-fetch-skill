@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.apgeog.2012.04.006",
   "source": "elsevier_html",
   "metadata": {
     "title": "Developing an applied extreme heat vulnerability index utilizing socioeconomic and environmental data",
@@ -12,7 +12,9 @@
     "abstract": "<a id=\"elsevier-aep-abstract-id2\"></a>\n\nExtreme heat is a leading cause of weather-related fatalities worldwide. Emphasis is currently being placed on the development of spatially specific vulnerability models, which are useful for decision support during extreme heat events (EHE). Research results concerning such spatially-explicit models lead efforts in preparation and mitigation of heat-related vulnerability and potential adaptation. The presented research analyzes the 1995 Chicago EHE in the context of a socio-environmental hazards approach, and fosters the development of an extreme heat vulnerability index (EHVI). The EHVI is a fused dataset consisting of census data and remotely sensed variables, which are examined in relation to geocoded mortality data. The presented analysis combines 25 well-known indicators of extreme heat-health risk into an applied index utilizing a principal components analysis. The developed EHVI presented a trend of higher rates of death in the highest risk zones to lower rates in lower zones of risk. The model explains nearly 80% of the total variance in the heat-health vulnerability variables utilized. This index could be utilized by city officials to assist in the mitigation of extreme heat events and is a further evolution of previously developed efforts. Our findings indicate extreme heat vulnerability models should likely be developed on a local level for a specific location, taking into account local variations in social and environmental vulnerability.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Extreme heat",
       "Urban heat island",
@@ -71,7 +73,7 @@
       "heading": "Comparison between models",
       "level": 3,
       "kind": "body",
-      "text": "<a id=\"elsevier-sec5.1\"></a>\n\nExamining the model developed utilizing population density (all models are presented spatially in [Fig. 1](#elsevier-fig1)) we do not see a significant increase in death over expected in the areas of greater settlement density. Therefore, there is not an indication of more death occurring in higher density areas than in lower density locations. There is a higher than expected death rate in the H-M category and a lower than expected rate in the L-M class. The remaining categories do not significantly differ from the expectation. This would seem to indicate that total population density is not a statistically significant factor in heat-related death. This has further been corroborated in previous studies elucidating the Philadelphia 1998 event ([Johnson et al., 2009](#elsevier-bib34)).\n\n![Figure](https://ars.els-cdn.com/content/image/1-s2.0-S014362281200032X-gr1.jpg)\n\n<a id=\"elsevier-fig1\"></a>Fig. 1. Demonstration of the spatial distributions of each of the aforementioned models.\n\nThe model utilizing only LST does not perform better than the model utilizing population density. As with the previous model there is a higher rate than expected in the H-M category and less than expected in the L-M section. Utilizing this variable alone, it does not appear that there are greater than expected deaths in residential locations that exhibit extremes in heat, than in those that are closer to the background temperature associated with vegetated surfaces. This further corroborates studies demonstrating the social structure of heat-related health issues.\n\nThe model containing only socioeconomic variables arguably under-performs both the population density model and the LST only model. The H-L category has significantly less death than expected, while the other categories are similar to expectation. This finding seems to indicate that utilizing the socioeconomic variables alone does not account for much of the variation in heat-related death. Given this finding, it seems logical to mix the variables from both socioeconomic and environmental (remotely sensed) datasets to develop a better model of extreme heat-health risk, as is presented in this article by the EHVI model.\n\nThe EHVI model does follow the expected trend of greater than expected death in the higher risk categories and lower than expected in the lower risk zones. This is witnessed by a greater than expected death rate in the H-H, L-H, and H-M categories. The death rate is equal to expectation in the L-M category and less than expected in the H-L and L-L zones. Based on these findings the EHVI does appear to be a viable model at determining heat-related mortality risk by fusing data from socioeconomic and environmental assets."
+      "text": "<a id=\"elsevier-sec5.1\"></a>\n\nExamining the model developed utilizing population density (all models are presented spatially in [Fig. 1](#elsevier-fig1)) we do not see a significant increase in death over expected in the areas of greater settlement density. Therefore, there is not an indication of more death occurring in higher density areas than in lower density locations. There is a higher than expected death rate in the H-M category and a lower than expected rate in the L-M class. The remaining categories do not significantly differ from the expectation. This would seem to indicate that total population density is not a statistically significant factor in heat-related death. This has further been corroborated in previous studies elucidating the Philadelphia 1998 event ([Johnson et al., 2009](#elsevier-bib34)).\n\n![Figure 1](https://ars.els-cdn.com/content/image/1-s2.0-S014362281200032X-gr1.jpg)\n\n<a id=\"elsevier-fig1\"></a>Fig. 1. Demonstration of the spatial distributions of each of the aforementioned models.\n\nThe model utilizing only LST does not perform better than the model utilizing population density. As with the previous model there is a higher rate than expected in the H-M category and less than expected in the L-M section. Utilizing this variable alone, it does not appear that there are greater than expected deaths in residential locations that exhibit extremes in heat, than in those that are closer to the background temperature associated with vegetated surfaces. This further corroborates studies demonstrating the social structure of heat-related health issues.\n\nThe model containing only socioeconomic variables arguably under-performs both the population density model and the LST only model. The H-L category has significantly less death than expected, while the other categories are similar to expectation. This finding seems to indicate that utilizing the socioeconomic variables alone does not account for much of the variation in heat-related death. Given this finding, it seems logical to mix the variables from both socioeconomic and environmental (remotely sensed) datasets to develop a better model of extreme heat-health risk, as is presented in this article by the EHVI model.\n\nThe EHVI model does follow the expected trend of greater than expected death in the higher risk categories and lower than expected in the lower risk zones. This is witnessed by a greater than expected death rate in the H-H, L-H, and H-M categories. The death rate is equal to expectation in the L-M category and less than expected in the H-L and L-L zones. Based on these findings the EHVI does appear to be a viable model at determining heat-related mortality risk by fusing data from socioeconomic and environmental assets."
     },
     {
       "heading": "Components of the EHVI",
@@ -575,9 +577,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 379,
       "body": 12764,
@@ -611,10 +610,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -630,7 +627,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -642,7 +638,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -654,7 +649,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -666,7 +660,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -678,7 +671,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -689,13 +681,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

@@ -3485,5 +3485,21 @@
       "access_conditions": "Existing configured lawful access; no manual authentication or access-policy changes"
     }
   ],
-  "scope": "Original response entity bytes after project HTTP decompression; no browser authentication or challenge bypass. Headers omit Set-Cookie only. Main golden extraction route unchanged."
+  "scope": "Original response entity bytes after project HTTP decompression; no browser authentication or challenge bypass. Headers omit Set-Cookie only. Main golden extraction route unchanged.",
+  "readable_derivatives": [
+    {
+      "source": "acquisition/network-repair/tandf-fetch.md",
+      "source_sha256": "8f7446ce64b6307becdad301d096e7ca74ffba3928eda7df840e078dc3de27c1",
+      "path": "derived/readable/acquisition/network-repair/tandf-fetch.md",
+      "sha256": "c386f701741424e2ecf68b9f78a7948b9baebfe69b550f185f90c885a8889de7",
+      "image_references": 41
+    },
+    {
+      "source": "acquisition/network-repair/tandf-retry.md",
+      "source_sha256": "1438d76c85160e0cdb1dc3840718527220684b7fcde5c57dc5908d4107826584",
+      "path": "derived/readable/acquisition/network-repair/tandf-retry.md",
+      "sha256": "0b1e7ab8587b860b21b1bc89fea133ed560cc3dcb31c2ffe0ec2c6bce9d83fa1",
+      "image_references": 12
+    }
+  ]
 }

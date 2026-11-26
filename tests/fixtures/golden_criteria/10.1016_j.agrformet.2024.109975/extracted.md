@@ -241,6 +241,10 @@ This study was supported by the National Natural Science Foundation of China (32
 
 Supplementary material associated with this article can be found, in the online version, at doi:10.1016/j.agrformet.2024.109975.
 
+## Supplementary Materials
+
+- [Image, application 1](https://api.elsevier.com/content/object/eid/1-s2.0-S016819232400090X-mmc1.docx?httpAccept=%2A%2F%2A)
+
 ## References (45 total, showing 45)
 
 1. <a id="elsevier-bib0001"></a>A. Anav, P. Friedlingstein, C. Beer, P. Ciais, A. Harper, C. Jones, M. Zhao. 2015. Spatiotemporal patterns of terrestrial gross primary production: a review. Reviews of Geophysics, 53(3): 785-818. 10.1002/2015rg000483 [Anav et al., 2015]

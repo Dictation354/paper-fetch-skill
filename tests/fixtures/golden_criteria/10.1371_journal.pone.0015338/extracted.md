@@ -3,20 +3,28 @@ title: "Figure Text Extraction in Biomedical Literature"
 authors: "Daehyun Kim, Hong Yu"
 journal: "PLoS ONE"
 doi: "10.1371/journal.pone.0015338"
-publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-1-13", "source": "jats:pub-date:epub"}]
+publication_dates: [{"kind": "collection", "value": "2011", "source": "jats:pub-date:collection"}, {"kind": "online", "value": "2011-01-13", "source": "jats:pub-date:epub"}]
 source: "plos_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 11597
+token_estimate: 11779
 ---
 
 # Figure Text Extraction in Biomedical Literature
 
 ## Abstract
 
+### Background
+
 Figures are ubiquitous in biomedical full-text articles, and they represent important biomedical knowledge. However, the sheer volume of biomedical publications has made it necessary to develop computational approaches for accessing figures. Therefore, we are developing the Biomedical Figure Search engine ([http://figuresearch.askHERMES.org](http://figuresearch.askHERMES.org)) to allow bioscientists to access figures efficiently. Since text frequently appears in figures, automatically extracting such text may assist the task of mining information from figures. Little research, however, has been conducted exploring text extraction from biomedical figures.
+
+### Methodology
+
 We first evaluated an off-the-shelf Optical Character Recognition (OCR) tool on its ability to extract text from figures appearing in biomedical full-text articles. We then developed a Figure Text Extraction Tool (FigTExT) to improve the performance of the OCR tool for figure text extraction through the use of three innovative components: *image preprocessing*, *character recognition*, and *text correction*. We first developed *image preprocessing* to enhance image quality and to improve text localization. Then we adapted the off-the-shelf OCR tool on the improved text localization for *character recognition*. Finally, we developed and evaluated a novel *text correction* framework by taking advantage of figure-specific lexicons.
+
+### Results/Conclusions
+
 The evaluation on 382 figures (9,643 figure texts in total) randomly selected from PubMed Central full-text articles shows that FigTExT performed with 84% precision, 98% recall, and 90% F1-score for text localization and with 62.5% precision, 51.0% recall and 56.2% F1-score for figure text extraction. When limiting figure texts to those judged by domain experts to be important content, FigTExT performed with 87.3% precision, 68.8% recall, and 77% F1-score. FigTExT significantly improved the performance of the off-the-shelf OCR tool we used, which on its own performed with 36.6% precision, 19.3% recall, and 25.3% F1-score for text extraction. In addition, our results show that FigTExT can extract texts that do not appear in figure captions or other associated text, further suggesting the potential utility of FigTExT for improving figure search.
 
 ## Introduction
@@ -305,6 +313,20 @@ Our study is an important step towards biomedical full-text mining. Since we fou
 However, our results also show that lexicon coverage was not always positively correlated with FigTExT's performance. The best FigTExT system incorporated caption+associated text as the lexicon, outperforming the system that incorporated the larger full-text as the lexicon. Lexicon quality is also important. Therefore, we will explore natural language processing approaches to improve the quality of lexicons. For example, as a part of these approaches, we will find ways to limit lexicons to domain-specific named entities including gene, protein, small molecules, tissue names, etc. We will also explore approaches by which abbreviations can be mapped to full-forms and then added to lexicons.
 
 Another research direction we intend to pursue is that of image quality assessment. Since biomedical figures tend to be of low quality, an alternative is to extract from high quality images and figure texts only. We will also explore techniques implementing super-resolution \[51\], \[52\] to improve image quality.
+
+## Author contributions
+
+Conceived and designed the experiments: DK HY. Performed the experiments: DK. Analyzed the data: DK HY. Contributed reagents/materials/analysis tools: DK. Wrote the paper: DK HY.
+
+## Competing interests
+
+The authors have declared that no competing interests exist.
+
+## Funding
+
+The authors acknowledge that this work was supported in part by National Institutes of Health 1R21RR024933 and the Research Growth Initiative grant by University of Wisconsin-Milwaukee. Any opinions, findings, or recommendations are those of the authors and do not necessarily reflect the views of the NIH. The funders had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
+
+## Acknowledgments
 
 We thank Feifan Liu for comments, Shashank Agarwal and Zuofeng Li for annotating important figure texts, and Alexander Kruse for generating a part of the figure text gold standard.
 

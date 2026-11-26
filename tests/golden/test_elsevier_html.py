@@ -9,6 +9,7 @@ import pytest
 from bs4 import BeautifulSoup
 
 from paper_fetch.providers import _elsevier_html
+from paper_fetch.publisher_identity import extract_doi, normalize_doi
 from tests.golden_criteria import golden_criteria_asset, iter_manifest_samples
 from tests.support.elsevier_structure import assert_numbering_and_list_structure
 from tests.support.reviewed_publisher_content import _words
@@ -266,7 +267,7 @@ def test_final_acquisition_routes_preserve_statements_abstracts_keywords_and_doi
 ):
     from tests.support.elsevier_routes import replay_route
 
-    doi, source, xml, _, _, html, url = article
+    doi, source, xml, _, html_extraction, html, url = article
     metadata = {
         "doi": doi,
         "title": source.select_one("h1 .title-text").get_text(" ", strip=True),
@@ -337,37 +338,23 @@ def test_final_acquisition_routes_preserve_statements_abstracts_keywords_and_doi
     web_refs = source.select("#references ol.references > li")
     assert len(xml_article.references) == len(original_refs) == len(web_refs)
     completion = results["xml"].content.diagnostics.get("reference_doi_completion", {})
-    matches = {m["index"]: m for m in completion.get("matches", [])}
-    for index, (node, web, actual) in enumerate(
-        zip(original_refs, web_refs, xml_article.references, strict=True)
+    # The replay serves empty Crossref records. Each route keeps its own DOIs.
+    assert not completion.get("matches")
+    assert [ref.doi for ref in results["html"].article.references] == [
+        ref["doi"] for ref in html_extraction["references"]
+    ]
+    for index, (node, actual) in enumerate(
+        zip(original_refs, xml_article.references, strict=True)
     ):
         original_doi = node.find("doi")
-        web_link = web.select_one('a[href*="doi.org/"]')
+        source_text = node.find("source-text")
+        expected = (
+            normalize_doi(original_doi.get_text(strip=True))
+            if original_doi
+            else extract_doi((source_text or node).get_text(" ", strip=True))
+        )
         with subtests.test(doi=doi, reference=index):
-            if original_doi is not None:
-                assert (
-                    actual.doi
-                    == re.sub(r"\s+", "", original_doi.get_text(strip=True)).lower()
-                )
-                assert index not in matches
-            elif (
-                actual.doi
-                and actual.doi in node.get_text(" ", strip=True).lower()
-                and index not in matches
-            ):
-                pass
-            elif doi == "10.1016/j.envres.2018.12.059" and node.get("id") == "bib5":
-                assert node.find("edited-book") is not None
-                assert web_link is not None
-                assert actual.doi is None
-                assert index not in matches
-            elif web_link is not None:
-                assert actual.doi
-                assert actual.doi.casefold() in web_link["href"].casefold() or re.sub(
-                    r"\s", "", actual.doi.casefold()
-                ) in re.sub(r"\s", "", web_link["href"].casefold())
-                if index in matches:
-                    assert matches[index]["source"] == "elsevier_html"
+            assert actual.doi == (expected or None)
     if source.select_one(".graphical figure") is not None:
         graphical = next(
             asset for asset in xml_article.assets if asset.section == "abstract"
@@ -426,3 +413,29 @@ def test_reference_corpus_membership_from_all_fifteen_sources():
         assert count == len(xml.find_all("bib-reference"))
         total += count
     assert total == 938
+
+
+def test_archived_sciencedirect_articles_take_their_doi_from_the_bound_page():
+    import json
+
+    from bs4 import BeautifulSoup
+
+    from tests.golden_criteria import golden_criteria_manifest
+    from tests.paths import REPO_ROOT
+
+    checked = 0
+    for sample in golden_criteria_manifest()["samples"].values():
+        path = sample["assets"].get("sciencedirect.article.json")
+        if path:
+            article = REPO_ROOT / path
+            capture = json.loads(article.with_name("provenance.json").read_text())
+            soup = BeautifulSoup(article.with_name("original.html").read_text(), "lxml")
+            observed = soup.select_one('meta[name="citation_doi"]')["content"].lower()
+            assert observed == sample["doi"].lower() == capture["doi"].lower()
+            assert json.loads(article.read_text())["doi"] == observed
+            identity = json.loads(article.with_name("acceptance.json").read_text())[
+                "identity"
+            ]
+            assert identity["doi"] == identity["expected_doi"] == observed
+            checked += 1
+    assert checked == 13

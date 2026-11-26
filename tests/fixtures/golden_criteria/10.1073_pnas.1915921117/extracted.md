@@ -6,7 +6,7 @@ source: "pnas"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 11900
+token_estimate: 11941
 ---
 
 # Global snow drought hot spots and characteristics
@@ -152,6 +152,14 @@ Data deposition: Data supporting the conculsions in this study can be obtained f
 ## Acknowledgments
 
 This work was partially supported by the National Science Foundation (NSF) Earth Sciences Postdoctoral Fellowship Award EAR-1725789, NSF Award OAC-1931335, National Aeronautics and Space Administration (NASA) Grant NNX16AO56G, and National Oceanic and Atmospheric Administration (NOAA) Grant NA14OAR4310222.
+
+## Author contributions
+
+L.S.H. and A.A. designed research; L.S.H. performed research; L.S.H. analyzed data; and L.S.H. and A.A. wrote the paper.
+
+## Competing interests
+
+The authors declare no competing interest.
 
 ## Supplementary Materials
 

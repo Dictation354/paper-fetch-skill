@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 5403
+token_estimate: 5368
 ---
 
 # Strong future increases in Arctic precipitation variability linked to poleward moisture transport
@@ -72,6 +72,42 @@ We acknowledge the World Climate Research Programme’s Working Group on Coupled
 ## Data and materials availability
 
 All climate model output data used in this study are either publicly available (CMIP5) or can be obtained by contacting the authors. All data needed to evaluate the conclusions in the paper are present in the paper and/or the Supplementary Materials. Additional data related to this paper may be requested from the authors. Correspondence and requests for materials should be addressed to R.B. ([bintanja@knmi.nl](mailto:bintanja@knmi.nl) or [bintanja@gmail.com](mailto:bintanja@gmail.com)).
+
+## Supplementary Material
+
+### Summary
+
+Climate model validation of Arctic precipitation (mean and variability)
+
+Model-based interannual versus decadal variability
+
+Separating interannual and decadal variability
+
+Changes in convective (small-scale) precipitation in the Arctic
+
+Intermodel differences and decadal variations in interannual precipitation variability uncertainty
+
+Intermodel versus intramodel uncertainties in interannual precipitation variability trends
+
+Fig. S1. Arctic (70° to 90°N) mean and annual mean precipitation (average and interannual variability) as simulated by 35 CMIP5 global climate models compared with six observation- driven reanalysis datasets for the period 1981–2010.
+
+Fig. S2. Arctic (70° to 90°N) mean and annual mean precipitation, surface evaporation, and poleward moisture transport across 70°N for each of the 16 randomly chosen initial conditions in the 2000-year EC-Earth climate model ensemble of the present-day climate.
+
+Fig. S3. Relations between mean and variability of Arctic moisture budget components.
+
+Fig. S4. Arctic (70° to 90°N) and annual mean precipitation anomaly (i.e., mean value subtracted) for a 400-year simulation of the current climate using the global climate model EC-Earth.
+
+Fig. S5. Arctic moisture budget component variability estimates of the current climate and the 2xCO<sub>2</sub> climate (both 400-year quasi-equilibrium climates simulated by EC-Earth) for the complete time series (ALL), only decadal variations (DEC), and only interannual variations (INT).
+
+Fig. S6. Time scale–dependent correlations between time series of annual mean Arctic precipitation and moisture transport at 70°N (blue lines) and precipitation and surface evaporation (red lines) for the current climate (full lines) and the 2xCO<sub>2</sub> climate (dashed lines).
+
+Fig. S7. Model-simulated (EC-Earth) change in convective precipitation in the Arctic between a 2xCO<sub>2</sub> and a 1xCO<sub>2</sub> simulation expressed as the difference in the ratio (in percentage) of convective to total precipitation occurrence, evaluated using annual means.
+
+Fig. S8. Arctic precipitation variability and its uncertainty in CMIP5 preindustrial simulations, determined by taking the SD over subsequent 30-year detrended periods (annual means), per model.
+
+Fig. S9. Arctic interannual precipitation variability trends (1980–2100) and their intermodel (between models) and intramodel (within one model) uncertainties for six state-of-the-art global climate models, determined by taking the SD over subsequent 30-year detrended periods (annual means) and then taking a linear regression of the resulting time series in variability.
+
+References ([*28*](https://www.science.org/doi/10.1126/sciadv.aax6869#core-collateral-R28)–[*31*](https://www.science.org/doi/10.1126/sciadv.aax6869#core-collateral-R31))
 
 ### Resources
 

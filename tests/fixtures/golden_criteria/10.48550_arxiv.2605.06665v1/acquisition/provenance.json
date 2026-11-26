@@ -472,5 +472,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/d313bca95f25-unknown_unknown_10.48550_arxiv.2605.06665v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md",
+      "source_sha256": "79c81ab80c4e364937d53f9290ee215fa0f1b289f95e8930272996bf101e7e25",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/79c81ab80c4e-Huang_et_al_2026_UniPool_A_Globally_Shared_Expert_Pool_for_Mixture-of-Experts.md",
+      "sha256": "4e18e2a315e2faf24b4881b67d60c86a5bbb71337263a0a08b6a4ef11a388a6f",
+      "image_references": 11
+    }
   ]
 }

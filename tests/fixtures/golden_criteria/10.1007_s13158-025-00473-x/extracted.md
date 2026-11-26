@@ -8,7 +8,7 @@ source: "springer_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 13317
+token_estimate: 13290
 ---
 
 # Stagnated Development of Home Language Vocabulary in Japanese–Chinese Bilingual Children at Risk for Autism Spectrum Disorder
@@ -128,12 +128,12 @@ These results suggest that older bilingual TD children developed productive voca
 
 **Table 2.** Binary logistic regression for the probability of indicating ASD-at-risk
 
-| Variables                             | β     | SE                         | Wald  | *p*     | OR     | 95% CI for Exp / Lower | 95% CI for Exp / Upper | 95% CI for Exp / Upper |
-| ------------------------------------- | ----- | -------------------------- | ----- | ------- | ------ | ---------------------- | ---------------------- | ---------------------- |
-| Chronological age                     | 0.06  | 0.04                       | 2.23  | 0.135   | 1.06   | 0.98                   | 0.98                   | 1.14                   |
-| Taipei-II cutoff                      | 5.30  | 1.07                       | 24.71 | 0.000\* | 199.53 | 24.73                  | 24.73                  | 1610.05                |
-| Chinese productive<br>vocabulary size | -0.01 | 0.01 | 3.88 | 0.049\* | 0.99 | 0.98 | 0.98 | 1.00 |
-| Intercept | -3.61 | 0.25<sup>a</sup><br>(0.06) | 7.91 | 0.005 | 0.03 | | | |
+| Variables                             | β     | SE                         | Wald  | *p*     | OR     | 95% CI for Exp / Lower | 95% CI for Exp / Upper |
+| ------------------------------------- | ----- | -------------------------- | ----- | ------- | ------ | ---------------------- | ---------------------- |
+| Chronological age                     | 0.06  | 0.04                       | 2.23  | 0.135   | 1.06   | 0.98                   | 1.14                   |
+| Taipei-II cutoff                      | 5.30  | 1.07                       | 24.71 | 0.000\* | 199.53 | 24.73                  | 1610.05                |
+| Chinese productive<br>vocabulary size | -0.01 | 0.01 | 3.88 | 0.049\* | 0.99 | 0.98 | 1.00 |
+| Intercept | -3.61 | 0.25<sup>a</sup><br>(0.06) | 7.91 | 0.005 | 0.03 | | |
 
 Correctly classified: 93.5%, *R*<sup><em>2</em></sup> Nagelkerke = 0.75
 

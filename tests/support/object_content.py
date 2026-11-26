@@ -101,6 +101,45 @@ def assert_source_tables(
     checked = 0
     for table_index, table in enumerate(tables, 1):
         grid = source_table_grid(table)
+        if (
+            provider == "copernicus"
+            and grid
+            and len(grid[0][1]) > 1
+            and len({id(c) for c in grid[0][1]}) == 1
+        ):
+            # A full-width CALS title introduces a field group. Check each
+            # column independently, including the percentages of shared spanners.
+            starts = [
+                i
+                for i, (_, cells) in enumerate(grid)
+                if len({id(c) for c in cells}) == 1
+            ]
+            for begin, limit in zip(starts, [*starts[1:], len(grid)], strict=True):
+                title = comparable_cell(cell_text(grid[begin][1][0]))
+                group = groups[next_group]
+                before = groups[next_group - 1].end if next_group else 0
+                assert title in comparable_cell(markdown[before : group.start])
+                fields = grid[begin + 1][1]
+                headers = [comparable_cell(cell_text(c)) if c else "" for c in fields]
+                data = begin + 2
+                if len({id(c) for c in fields}) < len(fields):
+                    leaves = grid[data][1]
+                    headers = [
+                        a + "/" + comparable_cell(cell_text(b))
+                        if b and cell_text(b).strip()
+                        else a
+                        for a, b in zip(headers, leaves, strict=True)
+                    ]
+                    data += 1
+                assert group.rows[0] == headers
+                expected = [
+                    [comparable_cell(cell_text(c)) if c else "" for c in cells]
+                    for _, cells in grid[data:limit]
+                ]
+                assert group.rows[2:] == expected
+                checked += limit - begin
+                next_group += 1
+            continue
         if provider == "science":
             # Source rowspans bind one model's statistics to wrapped covariates.
             # Keep an independent logical-row expectation from those source cells.

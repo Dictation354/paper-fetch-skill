@@ -324,6 +324,8 @@ def _retained_mdpi_statement(node: Tag) -> bool:
         "acknowledgments",
         "acknowledgements",
         "conflicts of interest",
+        "institutional review board statement",
+        "informed consent statement",
         "supplementary materials",
     }
 
@@ -1044,6 +1046,13 @@ def _render_mdpi_table_object_markdown(
     if not isinstance(table, Tag):
         table = wrapper.find("table")
     if isinstance(table, Tag):
+        # Some chemical-property tables put key/value pairs in thead.
+        # Preserve their row relationships when a value is a structure image.
+        head = table.find("thead", recursive=False)
+        if head and head.select_one("th + th img") and len(head.select("tr")) > 1:
+            head.name = "tbody"
+            for th in head.select("th"):
+                th.name = "td"
         rendered = normalize_text(
             render_table_markdown(table, label=label, caption=caption)
         )

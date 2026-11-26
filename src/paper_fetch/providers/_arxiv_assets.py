@@ -331,7 +331,7 @@ def _extract_arxiv_html_assets(
                     "url": image["src"],
                     "image_id": image.get("id"),
                     "dom_id": image.get("id"),
-                    "heading": "Figure",
+                    "heading": str(image.get("alt") or "Figure"),
                     "caption": "",
                 }
             ]

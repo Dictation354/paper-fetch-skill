@@ -1,6 +1,7 @@
 ---
 title: "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests"
 authors: "Jing Fang, Herman H. Shugart, Leibin Wang, James A. Lutz, Xiaodong Yan, Feng Liu"
+doi: "10.1016/j.agrformet.2024.109975"
 source: "elsevier_html"
 acquisition:
   provider: "elsevier"

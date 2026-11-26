@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 9026
+token_estimate: 8948
 ---
 
 # Satellites reveal widespread decline in global lake water storage
@@ -88,6 +88,8 @@ The Landsat images, including Landsat 5 Thematic Mapper, Landsat 7 Enhanced Them
 ## Code availability
 
 R scripts that were used to process hydroclimate and human water use data, to derive water levels from ICESat and ICESat-2, to construct lake water storage time series, to estimate the mean rate of sedimentation in reservoirs, to estimate trends in lake water storage and basin aridity, to conduct validation, to construct regression model ensemble, and to estimate affected population are available on CodeOcean at [https://codeocean.com/capsule/0322198/tree/v1](https://codeocean.com/capsule/0322198/tree/v1). JavaScript scripts for mapping water areas from Landsat images and IDL Scripts for processing CyoSat-2 data are available in the supplementary materials.
+
+## Supplementary Materials
 
 ### This PDF file includes:
 

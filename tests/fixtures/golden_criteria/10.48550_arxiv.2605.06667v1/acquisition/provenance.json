@@ -526,5 +526,14 @@
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes.",
       "original_body_file": "acquisition/official-reacquisition-2026-09-19/raw_sources/a22847d7d4a4-unknown_unknown_10.48550_arxiv.2605.06667v1_original.html"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/7a1421a3f7a6-Khalifi_et_al_2026_ActCam_Zero-Shot_Joint_Camera_and_3D_Motion_Control_for_Video_Generation.md",
+      "source_sha256": "7a1421a3f7a60d277f2ccb9eb039bf435fc29616b4238b62fdd517c47d42c168",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/7a1421a3f7a6-Khalifi_et_al_2026_ActCam_Zero-Shot_Joint_Camera_and_3D_Motion_Control_for_Video_Generation.md",
+      "sha256": "cc2e2f094b9b203f2d7af251498db71eab656d14460369ec9a9c27534e8adc46",
+      "image_references": 29
+    }
   ]
 }

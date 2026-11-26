@@ -85,9 +85,12 @@ def release_matrix(version: str | None = None) -> dict[str, list[dict[str, str]]
     rows = []
     for target, _artifact, _installer in stable_target_artifacts(version):
         platform, _, abi = target.split("-")
+        runner = runners[platform]
+        if platform == "linux" and abi in {"cp311", "cp312", "cp313"}:
+            runner = "ubuntu-24.04"
         rows.append(
             {
-                "os": runners[platform],
+                "os": runner,
                 "python-version": f"{abi[2]}.{abi[3:]}",
                 "target": target,
             }

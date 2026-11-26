@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.agrformet.2024.109975",
   "source": "elsevier_html",
   "metadata": {
     "title": "Optimal representation of spring phenology on photosynthetic productivity across the northern hemisphere forests",
@@ -14,7 +14,9 @@
     "abstract": "<a id=\"elsevier-abs0002\"></a>\n\nAccurate simulation of the onset of spring is crucial for predicting the photosynthetic productivity of forest ecosystems. Nonetheless, the potential of phenology simulations on predictions of forest gross primary productivity (GPP) remains poorly understood, with previous studies generally focused on predicting phenology dates themselves or on limited scales. Here, we constructed a framework through the critical process of leaf growth to couple a terrestrial biosphere model—FORCCHN2 with five widely used phenology models, including one-phase (involving heat forcing), two-phase (considering chilling demand), and multi-phase models (integrating photoperiod effects) through the critical process of leaf growth. We evaluated the GPP performance from the multiple forest biomes in 74 eddy covariance (EC) sites and compared the total trends to satellite observations across the northern hemisphere forests. The predictions of the five models could reproduce 62.41–67.24 % variations of the GPP observations in all EC sites. In the deciduous broadleaf forest sites, we found the two-phase and multi-phase coupled models performed better than the one-phase coupled model. Chilling may play an essential role in controlling photosynthetic activity in deciduous broadleaf forests. Moreover, the multi-phase coupled model integrated photoperiod effects performed best at capturing GPP changes of the whole northern hemisphere forests. The predictions also showed the GPP in the northern hemisphere ranged from 21.68 to 26.06 Pg C year<sup>−1</sup>, and the total GPP showed an increasing trend. This study provides local and regional available evidence for the impact of phenology on photosynthesis with climate warming. The results highlight the necessity for enhancing understanding of the phenology factors on GPP and integrating the appropriate phenology representation to improve predictions of photosynthetic productivity for forests, especially in prediction to large scales and long-term trends.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Forest GPP",
       "Spring phenology",
@@ -427,9 +429,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 509,
       "body": 12164,
@@ -644,10 +643,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -663,7 +660,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -675,7 +671,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -687,7 +682,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -699,7 +693,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -711,7 +704,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -722,13 +714,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

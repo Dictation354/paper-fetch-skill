@@ -6,7 +6,7 @@ source: "elsevier_xml"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 21971
+token_estimate: 21933
 ---
 
 # New approach to identifying proper thresholds for a heat warning system using health risk increments
@@ -311,13 +311,13 @@ In response to the call from UN and ICSU for solution-oriented research, this st
 
 We would like to acknowledge the in-house funding support from the Research Center for Environmental Changes of Academia Sinica in Taiwan and the Academia Sinica thematic project “Integrated Multi-source and High-resolution Heat Wave Vulnerability Assessment of Taiwan (AS-104-SS-A02)”. We also thank the Health and Welfare Data Science Center of the Ministry of Health and Welfare in Taiwan, Taiwan Environmental Protection Administration, and Taiwan Central Weather Bureau for providing data. The contents of this paper are solely the responsibility of the authors and do not represent the official views of the aforementioned institutes and funding agencies.
 
-### Declaration of competing financial interests
+## Declaration of competing financial interests
 
 <a id="elsevier-s0045"></a>
 
 The authors declare no competing financial interests on funding, employment, or personal financial interests. The funding agencies had no role in study design, data collection and analysis, decision to publish, or preparation of the manuscript.
 
-### Funding
+## Funding
 
 <a id="elsevier-s0050"></a>
 
@@ -328,6 +328,10 @@ This work was supported by the Research Center for Environmental Changes of Acad
 <a id="elsevier-s0055"></a>
 
 Supplementary data associated with this article can be found in the online version at doi:10.1016/j.envres.2018.12.059
+
+## Supplementary Materials
+
+- [mmc1](https://api.elsevier.com/content/object/eid/1-s2.0-S0013935118306947-mmc1.docx?httpAccept=%2A%2F%2A): Supplementary material
 
 ## References (57 total, showing 57)
 

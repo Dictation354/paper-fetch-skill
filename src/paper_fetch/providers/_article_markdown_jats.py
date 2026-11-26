@@ -2,6 +2,7 @@
 
 from __future__ import annotations
 
+import calendar
 import re
 import xml.etree.ElementTree as ET
 from collections.abc import Mapping
@@ -215,6 +216,20 @@ def _publication_dates(article_meta: ET.Element | None) -> list[PublicationDate]
         parts = [
             normalize_text(child_text(node, key)) for key in ("year", "month", "day")
         ]
+        year, month, day = parts
+        months = {
+            name.casefold(): index
+            for names in (calendar.month_name, calendar.month_abbr)
+            for index, name in enumerate(names)
+            if name
+        }
+        month_number = months.get(month.casefold().rstrip(".")) or (
+            int(month) if month.isdecimal() else None
+        )
+        if year and month_number and 1 <= month_number <= 12:
+            parts[1] = f"{month_number:02d}"
+            if day.isdecimal():
+                parts[2] = day.zfill(2)
         value = "-".join(part for part in parts if part)
         dates.extend(publication_date(kind, value, "jats:pub-date:" + raw_kind))
     return dates
@@ -604,6 +619,8 @@ def _formula_asset_entry(result: FormulaRenderResult) -> dict[str, Any] | None:
 
 
 def _note_heading(node: ET.Element) -> str:
+    if xml_local_name(node.tag) == "ack":
+        return "Acknowledgments"
     notes_type = normalize_text(str(node.get("notes-type") or "")).lower()
     known = {
         "dataavailability": "Data availability",
@@ -625,9 +642,41 @@ def _back_matter_lines(
     formula_renders: list[FormulaRenderResult],
 ) -> list[str]:
     back = first_child(root, "back")
-    if back is None:
-        return []
     lines: list[str] = []
+    meta = _article_meta(root)
+    declarations: dict[str, list[str]] = {}
+
+    def add(heading: str, text: str) -> None:
+        if text and text not in declarations.setdefault(heading, []):
+            declarations[heading].append(text)
+
+    for note in iter_children(first_child(meta, "author-notes"), "fn"):
+        heading = {
+            "con": "Author contributions",
+            "conflict": "Competing interests",
+        }.get(note.get("fn-type", ""))
+        if heading:
+            add(heading, "\n\n".join(_render_paragraph_texts(note)))
+    for contrib in iter_descendants(meta, "contrib"):
+        if contrib.get("contrib-type") == "author":
+            roles = [
+                render_inline_text(role) for role in iter_children(contrib, "role")
+            ]
+            name = _extract_contrib_name(contrib)
+            if name and roles:
+                add("Author contributions", name + ": " + ", ".join(roles))
+    for funding in iter_descendants(meta, "funding-statement"):
+        add("Funding", render_inline_text(funding))
+    for item in iter_descendants(meta, "custom-meta"):
+        if (
+            item.get("id") == "data-availability"
+            or child_text(item, "meta-name").casefold() == "data availability"
+        ):
+            add(
+                "Data availability", render_inline_text(first_child(item, "meta-value"))
+            )
+    for heading, paragraphs in declarations.items():
+        lines.extend([f"## {heading}", "", "\n\n".join(paragraphs), ""])
     for child in iter_children(back):
         local_name = xml_local_name(child.tag)
         if local_name in {"notes", "ack", "sec"}:
@@ -746,16 +795,25 @@ def parse_jats_xml(
     )
     article_meta = _article_meta(root)
     abstract_node = first_child(article_meta, "abstract")
-    abstract_text = normalize_text("\n\n".join(_render_paragraph_texts(abstract_node)))
+    assets: list[dict[str, Any]] = []
+    table_entries: list[dict[str, Any]] = []
+    formula_renders: list[FormulaRenderResult] = []
+    abstract_text = normalize_lines(
+        _render_blocks(
+            abstract_node,
+            heading_level=3,
+            source_url=source_url,
+            assets=assets,
+            table_entries=table_entries,
+            formula_renders=formula_renders,
+        )
+    ).strip() or normalize_text("\n\n".join(_render_paragraph_texts(abstract_node)))
     abstract_sections = (
         [{"heading": "Abstract", "text": abstract_text, "kind": "abstract", "order": 0}]
         if abstract_text
         else []
     )
 
-    assets: list[dict[str, Any]] = []
-    table_entries: list[dict[str, Any]] = []
-    formula_renders: list[FormulaRenderResult] = []
     body = first_child(root, "body")
     body_sections = iter_descendants(body, "sec")
     body_paragraphs = iter_descendants(body, "p")

@@ -144,6 +144,11 @@ def test_supported_python_and_native_macos_matrix_remains_explicit() -> None:
         "${{ fromJSON(needs.plan.outputs.posix_matrix) }}"
     )
     includes = release_matrix()["include"]
+    assert {row["target"] for row in includes if row["os"] == "ubuntu-24.04"} == {
+        "linux-x86_64-cp311",
+        "linux-x86_64-cp312",
+        "linux-x86_64-cp313",
+    }
     macos_versions = {
         str(item["python-version"]) for item in includes if item.get("os") == "macos-15"
     }

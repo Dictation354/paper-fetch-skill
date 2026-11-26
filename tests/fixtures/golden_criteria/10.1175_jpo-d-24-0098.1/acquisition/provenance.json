@@ -624,5 +624,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1175_jpo-d-24-0098.1/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md",
+      "source_sha256": "11790143f9e20da37164f54b0262f4decde3962f309ce814aed3ae4bfbb2e17a",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/11790143f9e2-Sun_et_al_2025_Spectral_Features_of_Internal_Waves_in_the_South_China_Sea.md",
+      "sha256": "ece858722ba2b76f27a1bf0cbe51ccd9f193db2bf0253eebf7f276e45a4f868a",
+      "image_references": 13
+    }
   ]
 }

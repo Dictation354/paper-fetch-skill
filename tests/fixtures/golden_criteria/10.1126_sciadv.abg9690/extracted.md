@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 8408
+token_estimate: 8372
 ---
 
 # Greenhouse warming intensifies north tropical Atlantic climate variability
@@ -146,6 +146,8 @@ where *C*<sub><em>Y</em>(<em>B</em>∣<em>A</em>)</sub> is the partial regressio
 ## Data and materials availability
 
 All data needed to evaluate the conclusions in the paper are present in the paper and/or the Supplementary Materials.
+
+## Supplementary Materials
 
 ### This PDF file includes:
 

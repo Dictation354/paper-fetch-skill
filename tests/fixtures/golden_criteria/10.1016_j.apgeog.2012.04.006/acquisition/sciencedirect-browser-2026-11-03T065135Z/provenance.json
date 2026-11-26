@@ -320,13 +320,13 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
-      "size": 72761,
-      "sha256": "d44700d1c2645ee16e0bc1c056dd5c50b4d7343d6f5f49914eb2363d4c606add"
+      "size": 72763,
+      "sha256": "7501588e9b7ee819b7c4c343f399ececab9973f812a4181ccfdc5824da2acf6d"
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.apgeog.2012.04.006/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
-      "size": 73217,
-      "sha256": "04220418f76c8e1f500b2071c6c868f38fe74ab45b9efb5ada37a6077091b89d"
+      "size": 73255,
+      "sha256": "04d1ef66ed1629135df43557b004417c5ba29787422510f01e1e0340d69fe5b0"
     }
   ]
 }

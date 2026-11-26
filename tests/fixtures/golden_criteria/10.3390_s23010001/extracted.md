@@ -6,7 +6,7 @@ source: "mdpi_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 35516
+token_estimate: 35524
 ---
 
 # A Review of Data-Driven Approaches and Techniques for Fault Detection and Diagnosis in HVAC Systems
@@ -583,6 +583,14 @@ Conceptualization, I.Š. and S.L.; methodology, I.M., I.W., I.Š. and S.L.; soft
 ## Funding
 
 This work was supported in part by European Regional Development Fund (ERDF) under grant agreement number KK.01.2.1.02.0303, project Adria Smart Room.
+
+## Institutional Review Board Statement
+
+Not applicable.
+
+## Informed Consent Statement
+
+Not applicable.
 
 ## Data Availability Statement
 

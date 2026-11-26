@@ -49,7 +49,24 @@ def short_image_alt(
     """Return a compact, caption-free alt label for generated image Markdown."""
 
     normalized_kind = normalize_text(kind).lower()
+    if normalized_kind in {"figure", "table"}:
+        pattern = (
+            _FIGURE_LABEL_PATTERN
+            if normalized_kind == "figure"
+            else _TABLE_LABEL_PATTERN
+        )
+        for candidate in (heading, fallback):
+            text = normalize_text(candidate)
+            match = pattern.search(text)
+            if match and (
+                qualifier := re.search(
+                    r"(extended data|supplementary)\s+$", text[: match.start()], re.I
+                )
+            ):
+                return f"{qualifier[1].title()} {normalized_kind.title()} {match[1]}"
     if normalized_kind == "figure":
+        if normalize_text(heading).casefold() == "visual abstract":
+            return "Visual Abstract"
         number = _first_label_number("figure", heading=heading, fallback=fallback)
         if number:
             prefix = (
@@ -63,6 +80,9 @@ def short_image_alt(
         )
         if listing_number:
             return f"Listing {listing_number}"
+        for candidate in (heading, fallback):
+            if re.fullmatch(r"[A-Za-z0-9_.-]*\.pic\d+", candidate or "", re.I):
+                return str(candidate)
         return "Figure"
     if normalized_kind == "listing":
         number = _first_label_number("listing", heading=heading, fallback=fallback)

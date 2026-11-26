@@ -320,13 +320,13 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/extracted.md",
-      "size": 80707,
-      "sha256": "d679d0a14df615c1b32c6fb7a011be0c99ef1dd6c6b91dc53ca8184430b2c5cd"
+      "size": 80737,
+      "sha256": "c3617dfaee255fc9879ecef4d9e38ff71b834c4e9309c69445bb18f956e89c94"
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.jhydrol.2023.130125/acquisition/sciencedirect-browser-2026-11-03T065135Z/article.md",
-      "size": 81114,
-      "sha256": "36ea88dad042d5ce647a3553683b55f275cca4f2533d13984291fe302a6c92c7"
+      "size": 81181,
+      "sha256": "2729fbda44daf431b52301e0c4f4ea32128b4b0d5cfbe2f8161a979332897357"
     }
   ]
 }

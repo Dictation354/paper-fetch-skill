@@ -1,5 +1,5 @@
 {
-  "doi": null,
+  "doi": "10.1016/j.rse.2025.114648",
   "source": "elsevier_html",
   "metadata": {
     "title": "Seasonality of vegetation greenness in Southeast Asia unveiled by geostationary satellite observations",
@@ -16,7 +16,9 @@
     "abstract": "<a id=\"elsevier-ab0005\"></a>\n\nTropical forests in the Amazon are characterized by a dry-season green-up, indicating a light-dominated regime in the seasonal variation of ecosystem functions. Southeast Asia, which hosts some of the most carbon-dense and diverse ecosystems in the world, is also expected to green up in dry seasons, however, recent in-situ evidence suggests otherwise. Here, we utilized high-frequency observations from the Himawari-8 geostationary satellite to examine the seasonality of vegetation greenness across Southeast Asia and to investigate potential factors driving this seasonality. We found that evergreen forests in maritime Southeast Asia green up in dry seasons, which is linked to positive anomaly in incoming radiation, similar to the Amazon forests. However, deciduous forests, croplands, and evergreen forests in continental Southeast Asia tend to green up in wet seasons, which is associated with the changes in climate sensitivities of vegetation greenness between dry and wet seasons. Our study highlights seasonal differences in tropical vegetation across biomes and sheds light on the underlying mechanisms of climate-vegetation interactions in Southeast Asia.",
     "journal": null,
     "article_type": null,
-    "published": null,
+    "publication_dates": [],
+    "relations": [],
+    "update_to": [],
     "keywords": [
       "Greenness seasonality",
       "Geostationary satellites",
@@ -656,9 +658,6 @@
     "content_kind": "fulltext",
     "has_abstract": true,
     "warnings": [],
-    "source_trail": [
-      "fulltext:elsevier_html_ok"
-    ],
     "token_estimate_breakdown": {
       "abstract": 300,
       "body": 14711,
@@ -1269,10 +1268,8 @@
       "expected": null,
       "discovered": 0,
       "attempted": 0,
-      "total": 0,
       "local": 0,
       "full_size": 0,
-      "preview": 0,
       "accepted_preview": 0,
       "fallback_preview": 0,
       "failed": 0,
@@ -1288,7 +1285,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -1300,7 +1296,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -1312,7 +1307,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -1324,7 +1318,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -1336,7 +1329,6 @@
           "total": 0,
           "requested": 0,
           "full_size": 0,
-          "preview": 0,
           "accepted_preview": 0,
           "fallback_preview": 0,
           "failed": 0,
@@ -1347,13 +1339,38 @@
       },
       "diagnostics": []
     },
-    "extraction_revision": 11
+    "extraction_revision": 15
   },
+  "trace": [
+    {
+      "stage": "fulltext",
+      "component": "elsevier_html",
+      "outcome": "ok",
+      "code": null,
+      "message": null,
+      "provider": "elsevier",
+      "route": "html",
+      "span_id": null,
+      "attempt_id": null,
+      "parent_span_id": null,
+      "attempt": null,
+      "http_status": null,
+      "error_category": null,
+      "retryable": null,
+      "retry_after_seconds": null,
+      "target": null,
+      "target_sha256": null,
+      "started_at": null,
+      "finished_at": null,
+      "duration_ms": null
+    }
+  ],
   "acquisition": {
     "provider": "elsevier",
     "route": "browser_html",
     "representation": "html",
     "transport": "browser",
     "fallback_used": false
-  }
+  },
+  "diagnostics": {}
 }

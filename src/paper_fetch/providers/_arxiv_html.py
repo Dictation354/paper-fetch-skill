@@ -485,6 +485,50 @@ def _extract_arxiv_html_markdown(
     )
     from ._arxiv_graphics import prepare_arxiv_graphics
 
+    front_lines = []
+    document_title = article.select_one("h1.ltx_title_document")
+    if document_title:
+        for paragraph in reversed(
+            document_title.find_previous_siblings(class_="ltx_para")
+        ):
+            front_lines.append(render_clean_text_from_html(paragraph))
+            paragraph.decompose()
+    for classification in article.select(".ltx_classification"):
+        label = classification.select_one(".ltx_title_classification")
+        if label is None:
+            continue
+        kind = label.get_text(strip=True).casefold()
+        if kind in {"keywords", "pacs"}:
+            label.decompose()
+            value = normalize_text(classification.get_text(" ", strip=True))
+            if kind == "keywords":
+                html_frontmatter.setdefault("keywords", []).extend(
+                    word.strip() for word in value.split(",") if word.strip()
+                )
+            else:
+                front_lines.append("PACS: " + value)
+            classification.decompose()
+    abstract = article.select_one(".ltx_abstract")
+    if (
+        abstract
+        and (sibling := abstract.find_next_sibling())
+        and "ltx_para" in sibling.get("class", [])
+    ):
+        # A headingless article starts its body immediately after the abstract.
+        body_heading = soup.new_tag("h2")
+        body_heading.string = "Full text"
+        sibling.insert_before(body_heading)
+    thanks = []
+    for note in article.select(".ltx_role_thanks .ltx_note_content"):
+        clone = copy.deepcopy(note)
+        for marker in clone.select(".ltx_note_type, .ltx_note_mark"):
+            marker.decompose()
+        text = normalize_text(clone.get_text(" ", strip=True))
+        author = note.find_parent(class_="ltx_creator")
+        if author and (name := author.select_one(".ltx_personname")):
+            text = name.get_text(" ", strip=True) + ": " + text
+        if text and text not in thanks:
+            thanks.append(text)
     prepare_arxiv_graphics(article, source_url)
     noise_diagnostics = _clean_official_html_latexml_noise(article)
     extracted_references = _extract_arxiv_html_references(article)
@@ -504,6 +548,10 @@ def _extract_arxiv_html_markdown(
     )
     lines: list[str] = []
     render_container_markdown(article, lines, level=2, section_content_selectors=())
+    if front_lines:
+        lines = ["## Front matter", "", "\n\n".join(front_lines), "", *lines]
+    if thanks:
+        lines.extend(["## Author notes", "", "\n\n".join(thanks)])
     markdown_text = normalize_markdown_text("\n".join(lines))
     markdown_text, insertion_diagnostics, insertion_warnings = (
         _inject_arxiv_semantic_blocks(

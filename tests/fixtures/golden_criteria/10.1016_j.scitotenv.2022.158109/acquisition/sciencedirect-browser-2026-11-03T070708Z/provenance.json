@@ -45,13 +45,13 @@
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/extracted.md",
-      "size": 57013,
-      "sha256": "ac67e00d296146c67d20a5579224c4cb490e762fd29e0155393f641e010d440f"
+      "size": 57018,
+      "sha256": "1baf822bda4ef43c092da0609a4c28389a764d856d1ce26629655f5d5c431dca"
     },
     {
       "path": "tests/fixtures/golden_criteria/10.1016_j.scitotenv.2022.158109/acquisition/sciencedirect-browser-2026-11-03T070708Z/article.md",
-      "size": 57363,
-      "sha256": "04f3679801e03abdee0ef0620fd7e0d1e63d844f2ef24ed0ea42d88a4fd46cd6"
+      "size": 57407,
+      "sha256": "3a0356a454068d4408e80d9ec231c488eec46e4388cb5e3c36046d6fa62c9d23"
     }
   ]
 }

@@ -6,7 +6,7 @@ source: "tandf_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 24478
+token_estimate: 24385
 ---
 
 # Quantifying cumulative heat effects on heat-related mortality using MODIS land surface temperature data
@@ -257,11 +257,11 @@ This study highlights the growing value of Earth observation for health monitori
 
 ## Supplemental material
 
-### supplementary materials round2
-
-[Download MS Word (16.4 MB)](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F15481603.2026.2667034&file=tgrs_a_2667034_sm1980.docx)**supplementary materials round2**
+[supplementary materials round2](https://www.tandfonline.com/action/downloadSupplement?doi=10.1080%2F15481603.2026.2667034&file=tgrs_a_2667034_sm1980.docx)
 
 supplementary materials round2.
+
+Supplemental data for this article can be accessed at [https://doi.org/10.1080/15481603.2026.2667034](https://doi.org/10.1080/15481603.2026.2667034).
 
 ## Disclosure statement
 
@@ -270,10 +270,6 @@ The authors declare that they have no known competing financial interests or per
 ## Data availability statement
 
 The datasets and R scripts supporting this article are publicly available at https://doi.org/10.6084/m9.figshare.30879479.v2 (Qian [2025](https://www.tandfonline.com/doi/full/10.1080/15481603.2026.2667034#cit0065)). The data supporting the findings of this study are openly accessible. Weekly all-cause mortality data were obtained from Eurostat (https://ec.europa.eu/eurostat, last access: 1 January 2025) and supplemented by corresponding national statistical agencies for missing information. Land surface temperature (LST) data were derived from MODIS (MOD11A1) (https://ladsweb.modaps.eosdis.nasa.gov/missions-and-measurements/products/MOD11A1/, last access: 1 January 2025). ERA5-Land reanalysis temperature data were obtained from the Copernicus Climate Data Store (https://cds.climate.copernicus.eu/, last access: 1 January 2025). The repository also includes the full random forest modeling workflow implemented in R, including feature generation, PAT optimization, hyperparameter tuning, and cross-validation procedures used in this study.
-
-## Supplemental material
-
-Supplemental data for this article can be accessed at [https://doi.org/10.1080/15481603.2026.2667034](https://doi.org/10.1080/15481603.2026.2667034).
 
 ## Funding
 

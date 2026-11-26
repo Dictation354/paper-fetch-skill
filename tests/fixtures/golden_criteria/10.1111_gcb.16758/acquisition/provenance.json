@@ -1218,5 +1218,14 @@
       "official_cli_record": "tests/fixtures/golden_criteria/10.1111_gcb.16758/acquisition/official-reacquisition-2026-09-19/manifest.json",
       "notes": "Exact official CLI artifact bytes. HTTP response envelope not observed. Exported/converted assets are not asserted to be original response bytes."
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md",
+      "source_sha256": "d66876e2dc15598bbe7bd945a07733c257ec0d83cb9e5c10b49a9b9171681c04",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/d66876e2dc15-Huang_et_al_2023_Spring_phenology_rather_than_climate_dominates_the_trends_in_peak_of_growing_season_in_the_Northern_Hemisphere.md",
+      "sha256": "7c3ad36c4e428f81c64c9356e4d7cffe51e6d4d82e640cce348851c71fc8c313",
+      "image_references": 5
+    }
   ]
 }

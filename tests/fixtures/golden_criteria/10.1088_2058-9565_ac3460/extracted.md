@@ -6,7 +6,7 @@ source: "iop_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 13049
+token_estimate: 13025
 ---
 
 # Quantum pattern recognition in photonic circuits
@@ -396,8 +396,6 @@ The first three tables show the results of the predictions made by the ML models
 
 **Table 1.** Fidelities achieved by SVRs in the *N* = 3 case with three different kernels: RBF (Gaussian), linear, and polynomial. The first column specifies the metrics used to assess the fidelities, namely, the mean value alongside the corresponding standard deviation as dispersal measure, as well as the minimum, maximum and quartile values to give information about the distribution of fidelity measures.
 
-**Table**
-
 |                    | RBF       | Linear    | Polynomial |
 | ------------------ | --------- | --------- | ---------- |
 | Mean               | 0.742 530 | 0.655 262 | 0.735 201  |
@@ -416,8 +414,6 @@ Table [2](https://iopscience.iop.org/article/10.1088/2058-9565/ac3460#qstac3460t
 
 **Table 2.** Fidelities achieved by SVRs with a Gaussian kernel for the three different data sets: *N* = 1, *N* = 2 and *N* = 3. Results using a preprocessing based on a PCA and not using PCA are compared. The first column specifies the metrics used to assess the fidelities, namely, the mean value alongside the corresponding standard deviation as dispersal measure, as well as minimum, maximum and quartile values to give information about the distribution of fidelity measures.
 
-**Table**
-
 | Without PCA        | *N* = 1  | *N* = 2  | *N* = 3  |
 | ------------------ | -------- | -------- | -------- |
 | Mean               | 0.823151 | 0.850400 | 0.742530 |
@@ -427,8 +423,6 @@ Table [2](https://iopscience.iop.org/article/10.1088/2058-9565/ac3460#qstac3460t
 | 50%                | 0.881910 | 0.950054 | 0.807703 |
 | 75%                | 0.970362 | 0.983219 | 0.914678 |
 | Maximum            | 0.999827 | 0.998861 | 0.992325 |
-
-**Table**
 
 | With PCA           | *N* = 1   | *N* = 2   | *N* = 3   |
 | ------------------ | --------- | --------- | --------- |
@@ -444,8 +438,6 @@ Table [3](https://iopscience.iop.org/article/10.1088/2058-9565/ac3460#qstac3460t
 
 **Table 3.** Fidelities achieved by ERTs for the three different data sets: *N* = 1, *N* = 2 and *N* = 3. Results using a preprocessing based on a PCA and not using PCA are compared. The first column specifies the metrics used to assess the fidelities, namely, the mean value alongside the corresponding standard deviation as dispersal measure, as well as minimum, maximum and quartile values to give information about the distribution of fidelity measures.
 
-**Table**
-
 | Without PCA        | *N* = 1  | *N* = 2  | *N* = 3  |
 | ------------------ | -------- | -------- | -------- |
 | Mean               | 0.719850 | 0.900017 | 0.761558 |
@@ -455,8 +447,6 @@ Table [3](https://iopscience.iop.org/article/10.1088/2058-9565/ac3460#qstac3460t
 | 50%                | 0.751323 | 0.987036 | 0.813736 |
 | 75%                | 0.916520 | 0.994959 | 0.928541 |
 | Maximum            | 0.999996 | 0.999894 | 0.988078 |
-
-**Table**
 
 | With PCA           | *N* = 1   | *N* = 2   | *N* = 3   |
 | ------------------ | --------- | --------- | --------- |
@@ -472,8 +462,6 @@ Results about entanglement estimation via the corresponding entropy are shown in
 
 **Table 4.** SVRs with Gaussian kernel: entanglement estimation (by entropy) performance for 200 test samples and the three different data sets: *N* = 1, *N* = 2 and *N* = 3. Results using a preprocessing based on a PCA and not using PCA are compared. The first column specifies the mean values of entropy (as a reference for the committed errors) and the metrics used to evaluate the performance. Namely, MAE with its corresponding standard deviation, as well as the minimum, quartile and maximum values, and also *R*<sup>2</sup>-scores.
 
-**Table**
-
 | Without PCA           | *N* = 1   | *N* = 2   | *N* = 3   |
 | --------------------- | --------- | --------- | --------- |
 | Entropy mean value    | 0.297 344 | 0.297 822 | 0.159 738 |
@@ -485,8 +473,6 @@ Results about entanglement estimation via the corresponding entropy are shown in
 | 75%                   | 0.104 777 | 0.161 541 | 0.115 779 |
 | Maximum               | 0.436 492 | 0.934 630 | 1.082 693 |
 | *R*<sup>2</sup>-score | 0.818 407 | 0.600 526 | 0.507 575 |
-
-**Table**
 
 | With PCA              | *N* = 1   | *N* = 2   | *N* = 3   |
 | --------------------- | --------- | --------- | --------- |
@@ -502,8 +488,6 @@ Results about entanglement estimation via the corresponding entropy are shown in
 
 **Table 5.** ERTs: entanglement estimation (by entropy) performance for 200 test samples and the three different data sets: *N* = 1, *N* = 2 and *N* = 3. Results using a preprocessing based on a PCA and not using PCA are compared. The first column specifies the mean values of entropy (as a reference for the committed errors) and the metrics used to evaluate the performance. Namely, MAE with its corresponding standard deviation, as well as the minimum, quartile and maximum values, and also *R*<sup>2</sup>-scores.
 
-**Table**
-
 | Without PCA           | *N* = 1   | *N* = 2   | *N* = 3   |
 | --------------------- | --------- | --------- | --------- |
 | Real mean             | 0.297 344 | 0.297 822 | 0.159 738 |
@@ -515,8 +499,6 @@ Results about entanglement estimation via the corresponding entropy are shown in
 | 75%                   | 0.130 161 | 0.191 042 | 0.117 126 |
 | Maximum               | 0.408 034 | 0.704 982 | 0.573 232 |
 | *R*<sup>2</sup>-score | 0.766 088 | 0.627 655 | 0.664 271 |
-
-**Table**
 
 | With PCA              | *N* = 1   | *N* = 2   | *N* = 3   |
 | --------------------- | --------- | --------- | --------- |

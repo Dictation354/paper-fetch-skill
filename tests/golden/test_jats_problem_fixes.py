@@ -169,3 +169,85 @@ def test_copernicus_all_83_empty_xrefs_keep_their_101_bibliography_targets():
         assert (
             re.findall(re.escape(source) + r"#(bib1\.bibx\d+)\)", markdown) == targets
         )
+
+
+def test_registered_plos_declarations_and_roles_are_owned_by_their_source_authors():
+    from tests.golden_criteria import iter_manifest_samples
+    from tests.support.markdown_presentation import visible_markdown
+
+    count = 0
+    for sample in iter_manifest_samples(fixture_family="golden"):
+        assets = sample["assets"]
+        if sample["publisher"] != "plos" or "original.xml" not in assets:
+            continue
+        soup = BeautifulSoup((REPO_ROOT / assets["original.xml"]).read_bytes(), "xml")
+        markdown = (REPO_ROOT / assets["extracted.md"]).read_text()
+        meta = soup.find("article-meta")
+        if not meta:
+            continue
+        checked = False
+        for selector, heading in [
+            ('author-notes fn[fn-type="con"]', "Author contributions"),
+            ('author-notes fn[fn-type="conflict"]', "Competing interests"),
+            ("funding-statement", "Funding"),
+            ('custom-meta[id="data-availability"] meta-value', "Data availability"),
+        ]:
+            for node in meta.select(selector):
+                assert "## " + heading in markdown
+                checked = True
+                text = node.find("p") or node
+                first_words = " ".join(text.stripped_strings).split()[:5]
+                assert (
+                    " ".join(first_words).casefold()
+                    in visible_markdown(markdown).casefold()
+                )
+        for author in meta.select('contrib[contrib-type="author"]'):
+            roles = [
+                r.get_text(strip=True) for r in author.find_all("role", recursive=False)
+            ]
+            if roles:
+                name = " ".join(
+                    author.find(t).get_text(strip=True)
+                    for t in ("given-names", "surname")
+                )
+                assert name + ": " + ", ".join(roles) in markdown
+                checked = True
+        if checked:
+            count += 1
+    assert count == 7
+
+
+def test_copernicus_dates_follow_the_source_calendar_fields():
+    import calendar
+    import json
+    from datetime import date
+
+    from tests.golden_criteria import iter_manifest_samples
+
+    count = 0
+    for sample in iter_manifest_samples(fixture_family="golden"):
+        assets = sample["assets"]
+        if sample["publisher"] != "copernicus" or sample.get("route_kind") != "xml":
+            continue
+        soup = BeautifulSoup((REPO_ROOT / assets["original.xml"]).read_bytes(), "xml")
+        markdown = (REPO_ROOT / assets["extracted.md"]).read_text()
+        dates = json.loads(
+            next(
+                line.removeprefix("publication_dates: ")
+                for line in markdown.splitlines()
+                if line.startswith("publication_dates: ")
+            )
+        )
+        for node in soup.select("article-meta > pub-date"):
+            month = node.find("month").get_text(strip=True)
+            number = (
+                int(month)
+                if month.isdecimal()
+                else list(calendar.month_name).index(month)
+            )
+            value = date(
+                int(node.year.string), number, int(node.day.string)
+            ).isoformat()
+            assert value in [item["value"] for item in dates]
+        count += 1
+    assert count == 8

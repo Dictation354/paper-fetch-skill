@@ -8,7 +8,7 @@ source: "oxfordacademic_html"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 12901
+token_estimate: 12378
 ---
 
 # The protective value of the size and movement components of deimatic behavior
@@ -57,7 +57,7 @@ Before the experiment, birds were trained to associate the arena with a food rew
 
 ### Experimental protocol
 
-The experimental trials were conducted from May to July 2023. Each bird was randomly allocated to one of the 3 deimatic behavior treatments with moving prey: (i) small (*n* = 10), (ii) large (*n* = 11), and (iii) small-to-large (*n* = 11, [Fig. 1a](https://academic.oup.com/beheco/article/37/4/arag047/8665303#567118263), see [Supplementary Videos](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/arag047_supplementary_data.zip?Expires=1791332594&Signature=saegqKNJmU9gfqsSmI2CYZexwouRb0EkU-rRcQCNWVjvQfIuqj964HpozaDUh46jqaD3UDvbpGa82cJ5Pd4v-APyTevNKVMjpvsjpX6YnjxOIaE-bz8yH1X0vk2UidzcPVoC9hxJTs0CD9UxA1KizAabs76CAZfRe2kCTqwUv6~O5nBz~zmRFRHgjYLaFMSvpCX~VvDIVYLKYLBpBos2VG2cPD2iRIddoYpCLrMZcUYxxNHiV6CQ6F3A7cRCRzXDU69-SWvn2Up~itetOEoUOMb7iTHLFQVTvM~CoTFprfC18zcSHJrKeMLVIJIIWlXln0Eocl05QttIB5M29Jv7AQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)). In small and small-to-large treatments the robotic moth was first presented to birds with forewings closed, and the display consisted of the forewings opening (moving upward 60°). In the small-to-large treatment, this movement revealed hidden hindwings, whereas in the small treatment, the moth did not have hindwings, so the display included only movement and no increase in size. In the large treatment, the moth was first presented with forewings open, so that both forewings and hindwings were visible, and the display consisted of the forewings moving upward 60°. This movement was similar to the other 2 treatments, but both fore- and hindwings remained visible throughout the display. The size of the moth in the initial position (before movement) was therefore larger in this treatment compared with small and small-to-large treatments, but there was no size change during the movement.
+The experimental trials were conducted from May to July 2023. Each bird was randomly allocated to one of the 3 deimatic behavior treatments with moving prey: (i) small (*n* = 10), (ii) large (*n* = 11), and (iii) small-to-large (*n* = 11, [Fig. 1a](https://academic.oup.com/beheco/article/37/4/arag047/8665303#567118263), see Supplementary Videos). In small and small-to-large treatments the robotic moth was first presented to birds with forewings closed, and the display consisted of the forewings opening (moving upward 60°). In the small-to-large treatment, this movement revealed hidden hindwings, whereas in the small treatment, the moth did not have hindwings, so the display included only movement and no increase in size. In the large treatment, the moth was first presented with forewings open, so that both forewings and hindwings were visible, and the display consisted of the forewings moving upward 60°. This movement was similar to the other 2 treatments, but both fore- and hindwings remained visible throughout the display. The size of the moth in the initial position (before movement) was therefore larger in this treatment compared with small and small-to-large treatments, but there was no size change during the movement.
 
 Before birds received a deimatic behavior treatment with moving prey, they were all presented a nonmoving control moth. The control moths were presented in the initial positions of each treatment (top row of [Fig. 1a](https://academic.oup.com/beheco/article/37/4/arag047/8665303#567118263)), with forewings closed in the small and small-to-large treatments, and open in the large treatment. This ensured that a nonmoving control moth matched the “before movement” position of the moth for the 3 treatments, and the addition of the movement was the only difference between the control and the experimental trials. Because the mechanical sound of the robot might influence bird responses, the control treatment included the same sound. This was achieved by placing the rotating servos inside the wooden box, so that birds could hear the rotating sound but did not see the moving parts of the robot. This ensured that the birds became habituated to the mechanical sound before the trials with the moving prey, so that any differences in bird behavior between moving and nonmoving moths could not be explained by the sound.
 
@@ -119,7 +119,7 @@ There was no significant difference among the 3 deimatic behavior treatments in 
 
 **Figure 4** Birds’ habituation to the moving prey during the experiment (small: *n* = 10, large: *n* = 11, small to large: *n* = 11).
 
-The number of encounters with the moving prey before birds reached the habituation criteria varied from 0 (no behavioral responses during the first encounter) to 10. We did not find any differences in the habituation speed among the deimatic behavior treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.237, df = 2, *P* = 0.89, [Figure S1a](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/arag047_supplementary_data.zip?Expires=1791332594&Signature=saegqKNJmU9gfqsSmI2CYZexwouRb0EkU-rRcQCNWVjvQfIuqj964HpozaDUh46jqaD3UDvbpGa82cJ5Pd4v-APyTevNKVMjpvsjpX6YnjxOIaE-bz8yH1X0vk2UidzcPVoC9hxJTs0CD9UxA1KizAabs76CAZfRe2kCTqwUv6~O5nBz~zmRFRHgjYLaFMSvpCX~VvDIVYLKYLBpBos2VG2cPD2iRIddoYpCLrMZcUYxxNHiV6CQ6F3A7cRCRzXDU69-SWvn2Up~itetOEoUOMb7iTHLFQVTvM~CoTFprfC18zcSHJrKeMLVIJIIWlXln0Eocl05QttIB5M29Jv7AQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)) but our low sample size (*n* = 14) meant that this analysis had low statistical power. We also found no evidence that the speed of habituation to the moving prey was associated with the speed of habituation to the robot sound during the control trials (Spearman's correlation: rho = 0.045, *P* = 0.88). For the birds that did not habituate to the movement, the number of encounters with the moving prey before rejection varied from 1 to 5. This did not differ among the treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.057, df = 2, *P* = 0.97, [Figure S1b](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/arag047_supplementary_data.zip?Expires=1791332594&Signature=saegqKNJmU9gfqsSmI2CYZexwouRb0EkU-rRcQCNWVjvQfIuqj964HpozaDUh46jqaD3UDvbpGa82cJ5Pd4v-APyTevNKVMjpvsjpX6YnjxOIaE-bz8yH1X0vk2UidzcPVoC9hxJTs0CD9UxA1KizAabs76CAZfRe2kCTqwUv6~O5nBz~zmRFRHgjYLaFMSvpCX~VvDIVYLKYLBpBos2VG2cPD2iRIddoYpCLrMZcUYxxNHiV6CQ6F3A7cRCRzXDU69-SWvn2Up~itetOEoUOMb7iTHLFQVTvM~CoTFprfC18zcSHJrKeMLVIJIIWlXln0Eocl05QttIB5M29Jv7AQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)) but the sample size in the analysis was again low (*n* = 18).
+The number of encounters with the moving prey before birds reached the habituation criteria varied from 0 (no behavioral responses during the first encounter) to 10. We did not find any differences in the habituation speed among the deimatic behavior treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.237, df = 2, *P* = 0.89, Figure S1a) but our low sample size (*n* = 14) meant that this analysis had low statistical power. We also found no evidence that the speed of habituation to the moving prey was associated with the speed of habituation to the robot sound during the control trials (Spearman's correlation: rho = 0.045, *P* = 0.88). For the birds that did not habituate to the movement, the number of encounters with the moving prey before rejection varied from 1 to 5. This did not differ among the treatments (Kruskal–Wallis: χ<sup>2</sup> = 0.057, df = 2, *P* = 0.97, Figure S1b) but the sample size in the analysis was again low (*n* = 18).
 
 ## Discussion
 
@@ -145,7 +145,7 @@ Liisa Hämäläinen (Conceptualization, Methodology, Project administration, Val
 
 ## Supplementary material
 
-Supplementary material is available at *[Behavioral Ecology](https://oup.silverchair-cdn.com/oup/backfile/Content_public/Journal/beheco/37/4/10.1093_beheco_arag047/2/arag047_supplementary_data.zip?Expires=1791332594&Signature=saegqKNJmU9gfqsSmI2CYZexwouRb0EkU-rRcQCNWVjvQfIuqj964HpozaDUh46jqaD3UDvbpGa82cJ5Pd4v-APyTevNKVMjpvsjpX6YnjxOIaE-bz8yH1X0vk2UidzcPVoC9hxJTs0CD9UxA1KizAabs76CAZfRe2kCTqwUv6~O5nBz~zmRFRHgjYLaFMSvpCX~VvDIVYLKYLBpBos2VG2cPD2iRIddoYpCLrMZcUYxxNHiV6CQ6F3A7cRCRzXDU69-SWvn2Up~itetOEoUOMb7iTHLFQVTvM~CoTFprfC18zcSHJrKeMLVIJIIWlXln0Eocl05QttIB5M29Jv7AQ__&Key-Pair-Id=APKAIE5G5CRDK6RD3PGA)* online.
+Supplementary material is available at *Behavioral Ecology* online.
 
 ## Funding
 
@@ -158,10 +158,6 @@ Analyses reported in this article can be reproduced using the data and the code 
 ## Author notes
 
 Conflicts of interest: None declared.
-
-© The Author(s) 2026. Published by Oxford University Press in association with the International Society for Behavioral Ecology.
-
-This is an Open Access article distributed under the terms of the Creative Commons Attribution License ([https://creativecommons.org/licenses/by/4.0/](https://creativecommons.org/licenses/by/4.0/)), which permits unrestricted reuse, distribution, and reproduction in any medium, provided the original work is properly cited.
 
 ## Supplementary Files
 

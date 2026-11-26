@@ -262,22 +262,29 @@ def _reference_body_is_doi_only(body: str, doi: str) -> bool:
     }
 
 
+def _xml_reference_source(
+    bib_reference: ET.Element,
+) -> tuple[ET.Element | None, str, str, str]:
+    label = _child_text(bib_reference, "label")
+    sb_reference = first_child(bib_reference, "reference")
+    if sb_reference is None:
+        sb_reference = first_descendant(bib_reference, "reference")
+    source_text = _child_text(bib_reference, "source-text")
+    fallback_text = source_text or _raw_reference_text(bib_reference, label=label)
+    doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (
+        extract_doi(fallback_text) or ""
+    )
+    return sb_reference, label, fallback_text, doi
+
+
 def extract_elsevier_references(root: ET.Element) -> list[Reference]:
     references: list[Reference] = []
     for index, bib_reference in enumerate(
         _iter_elements_by_local_name(root, "bib-reference"), start=1
     ):
-        label = _child_text(bib_reference, "label")
-        sb_reference = first_child(bib_reference, "reference")
-        if sb_reference is None:
-            sb_reference = first_descendant(bib_reference, "reference")
+        sb_reference, label, fallback_text, doi = _xml_reference_source(bib_reference)
         contribution = first_child(sb_reference, "contribution")
         host = first_child(sb_reference, "host")
-        source_text = _child_text(bib_reference, "source-text")
-        fallback_text = source_text or _raw_reference_text(bib_reference, label=label)
-        doi = normalize_doi(_first_descendant_text(sb_reference, "doi")) or (
-            extract_doi(fallback_text) or ""
-        )
         title = _extract_reference_title(contribution)
         year = _first_descendant_text(host, "date")
         body = _format_reference_body(
@@ -364,7 +371,13 @@ def _build_elsevier_article_structure(
     abstract_lines: list[str] = []
     abstract_sections: list[dict[str, Any]] = []
     abstracts = _iter_elements_by_local_name(root, "abstract")
+    parents = {child: parent for parent in root.iter() for child in parent}
     for abstract_node in abstracts:
+        ancestor: ET.Element | None = abstract_node
+        language = None
+        while ancestor is not None and not language:
+            language = ancestor.get("{http://www.w3.org/XML/1998/namespace}lang")
+            ancestor = parents.get(ancestor)
         abstract_title = child_text(abstract_node, "section-title")
         render_node = abstract_node
         if not abstract_title and abstract_node.get("class") == "graphical":
@@ -372,6 +385,9 @@ def _build_elsevier_article_structure(
             if subsection is not None and child_text(subsection, "section-title"):
                 abstract_title = child_text(subsection, "section-title")
                 render_node = subsection
+        abstract_title = abstract_title or {"es": "Resumen", "fr": "Résumé"}.get(
+            (language or "").split("-")[0], "Abstract"
+        )
         if len(abstracts) > 1:
             abstract_lines.extend(
                 [
@@ -381,7 +397,7 @@ def _build_elsevier_article_structure(
             )
         rendered_abstract = render_elsevier_blocks(
             render_node,
-            heading_level=4 if len(abstracts) > 1 else 3,
+            heading_level=3,
             formula_image_lookup=formula_image_lookup,
             formula_renders=formula_renders,
             figure_lookup=figure_lookup,
@@ -390,15 +406,18 @@ def _build_elsevier_article_structure(
             table_lookup=table_lookup,
             used_table_keys=used_table_keys,
         )
-        abstract_lines.extend(rendered_abstract)
+        # In the combined XML document translated abstracts sit below the
+        # Abstract heading. ArticleModel renders each at the top level.
+        abstract_lines.extend(
+            "#" + line if len(abstracts) > 1 and re.match(r"^#{2,5} ", line) else line
+            for line in rendered_abstract
+        )
         if any(line.strip() for line in rendered_abstract):
             abstract_sections.append(
                 {
                     "heading": abstract_title or "Abstract",
                     "text": "\n".join(rendered_abstract).strip(),
-                    "language": abstract_node.get(
-                        "{http://www.w3.org/XML/1998/namespace}lang"
-                    ),
+                    "language": language,
                     "order": len(abstract_sections),
                 }
             )
@@ -413,7 +432,6 @@ def _build_elsevier_article_structure(
             abstract_lines = [fallback_abstract, ""]
     # Render the body and declarations in source order. Each selected subtree
     # is traversed once, including declarations nested inside the body.
-    parents = {child: parent for parent in root.iter() for child in parent}
     selected = ET.Element("sections")
     for node in root.iter():
         if node is body_node:
@@ -442,7 +460,7 @@ def _build_elsevier_article_structure(
         formula_image_lookup=formula_image_lookup,
         formula_renders=formula_renders,
     )
-    note_lines = []
+    note_lines: list[str] = []
     for note in root.iter():
         if xml_local_name(note.tag) not in {"footnote", "article-footnote"}:
             continue

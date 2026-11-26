@@ -6,7 +6,7 @@ source: "science"
 has_fulltext: true
 content_kind: "fulltext"
 has_abstract: true
-token_estimate: 7157
+token_estimate: 7117
 ---
 
 # Long-term forest degradation surpasses deforestation in the Brazilian Amazon
@@ -82,6 +82,20 @@ We thank W. Chomentowski for contributions to the TRFIC deforestation dataset. *
 ## Data and materials availability
 
 All results from data analysis needed to evaluate this report are available in the main text or the supplementary materials in tables and figures. Primary public domain satellite remote sensing data are available from the national satellite data archives in Brazil’s Instituto Nacional de Pesquisas Espaciais (INPE) and the U.S. Geological Survey Eros Data Center (EDC) in the United States. The remote sensing–derived products, spatial data layer products, validation data, and Excel spreadsheets of spatial analysis are available from the Tropical Rain Forest Information Center, a NASA ESIP Data Center, now maintained by the Global Observatory for Ecosystem Services at Michigan State University ([https://goeslab.us/amazondata](https://goeslab.us/amazondata)), and from the NASA Land Cover and Land Use Change Program data server ([https://lcluc.umd.edu/content/metadata](https://lcluc.umd.edu/content/metadata)). The deep retrospective deforestation record (1988 to 2000) and spatial datasets are available from the Tropical Rain Forest Information Center at the Global Observatory for Ecosystem Services at Michigan State University ([https://goeslab.us/amazondata.html](https://goeslab.us/amazondata.html)). Deforestation spatial data are available from INPE in Brazil ([http://terrabrasilis.dpi.inpe.br](http://terrabrasilis.dpi.inpe.br)) for the years 2000 to 2018.
+
+## Supplementary Material
+
+### Summary
+
+Materials and Methods
+
+Supplementary Text
+
+Figs. S1 to S11
+
+Tables S1 to S9
+
+References ([*36*](https://www.science.org/doi/10.1126/science.abb3021#core-collateral-R36)–[*45*](https://www.science.org/doi/10.1126/science.abb3021#core-collateral-R45))
 
 ### Resources
 

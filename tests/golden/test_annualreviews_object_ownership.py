@@ -69,6 +69,26 @@ def _source(doi):
     markdown = article.to_ai_markdown(include_refs="all", asset_profile="all")
     # Compare source occurrence identities after resolving persistent image
     # paths through the article's recorded original URL.
+    if doi == CONTROL:
+        formulas = [i for i in iter_markdown_images(markdown) if i.alt == "Formula"]
+        original_urls = [
+            urljoin(row["source_url"], n["src"])
+            for n in soup.select('#itemFullTextId img[src*="/eq-075625-"]')
+        ]
+        # Equal byte streams can serve distinct equation URLs. Resolve each
+        # occurrence against its own source object before comparing positions.
+        for image, origin in reversed(list(zip(formulas, original_urls, strict=True))):
+            asset = next(
+                a
+                for a in article.assets
+                if origin in {a.url, a.download_url, a.original_url, a.source_url}
+            )
+            assert image.url in {asset.path, origin}
+            markdown = (
+                markdown[: image.start]
+                + image.text.replace(image.url, origin)
+                + markdown[image.end :]
+            )
     for asset in article.assets:
         origin = asset.download_url or asset.original_url
         if asset.path and origin:

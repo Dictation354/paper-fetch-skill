@@ -10,15 +10,167 @@
     "code_availability": false
   },
   "counts": {
-    "sections": 19,
+    "sections": 22,
     "abstract_sections": 1,
-    "body_sections": 17,
+    "body_sections": 20,
     "figures": 0,
     "tables": 0,
     "references": 70
   },
   "expected_content_kind": "fulltext",
   "source_review": {
+    "sample_id": "10.1111_gcb.17141",
+    "provider": "wiley",
+    "doi": "10.1111/gcb.17141",
+    "original": "tests/fixtures/golden_criteria/10.1111_gcb.17141/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+    "sha256": "de4632975218394fc189cc7fc0c1922f8b67d019943faa82af7e158d7fa6c5f3",
+    "format": "html",
+    "review_method": "independent original DOM/XML/metadata assertions; source-proven failures inspected locally",
+    "dimensions": {
+      "authors": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_complete_source_author_order",
+        "source_count": 5,
+        "scope": "complete captured author list and order"
+      },
+      "references": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_reference_text_and_doi",
+        "source_count": 70,
+        "scope": "all captured reference text, numeric tokens and independently decoded DOI, in source order"
+      },
+      "prose": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_prose_blocks_in_order",
+        "source_count": 49,
+        "scope": "Selected source prose and heading runs in order; decimal points, signs, case and scientific script roles retained; editorial punctuation normalized. Citation/footnote markers are separately scoped."
+      },
+      "figures": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_all_source_figure_captions",
+        "source_count": 5,
+        "scope": "Captured caption runs preserve scientific symbols; captions bound to their own source image or original shared panel group. Explicit inline assets also checked against available retained prose neighbors."
+      },
+      "tables": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_cells",
+        "source_count": 0,
+        "scope": "Source data rows and column assignments checked within owned output table groups without reuse; scripts and fractions retained. Captured float/callout and gallery placement contracts applied; one-column boxes and semantic lists retain text checks."
+      },
+      "notes_and_statements": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_table_notes_and_retained_statements",
+        "source_count": 1,
+        "scope": "all captured table notes and bounded data/code availability statements"
+      },
+      "tex": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_tex_formulas_preserve_structure",
+        "source_count": 0,
+        "scope": "source TeX including scripts/fractions; whitespace, display style and equivalent delimiters normalized"
+      },
+      "mathml": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_mathml_numeric_and_structural_facts",
+        "source_count": 2,
+        "scope": "numeric content, identifiers, critical operators and minimum subscript/superscript/fraction/root structure per original expression; not full AST equivalence"
+      },
+      "citation_targets": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_source_citations_resolve_to_ordered_references",
+        "source_count": 0,
+        "scope": "original callout targets map to the same ordered bibliography and DOI; not a proof of all final inline anchors"
+      },
+      "image_identity": {
+        "test": "tests/golden/test_golden_corpus.py::test_canonical_rendered_images_have_original_source_identity",
+        "source_count": null,
+        "scope": "each emitted image has original URL/rendition identity; every captured figure with an image maps back to that same figure DOM or same-page viewer entry; captured binaries use separate collection tests"
+      }
+    },
+    "limitations": [
+      "MathML facts do not establish complete formula AST equivalence or bitmap contents.",
+      "Prose/caption text normalization does not establish typographic punctuation equivalence; table cells and reference numeric tokens have separate checks.",
+      "Citation target tests bind original callouts to output bibliography; final inline anchor structure is covered only by publisher-specific cases.",
+      "Supplementary material: same-paper index and links only; removed payloads and placeholder images are not content evidence.",
+      "No captured image response with an image media type registered here; image claims are limited to original index/URLs."
+    ],
+    "author_source": "meta[name=\"citation_author\"]",
+    "provenance": [
+      {
+        "provenance": "tests/fixtures/golden_criteria/10.1111_gcb.17141/acquisition/provenance.json",
+        "body_file": "acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+        "sha256": "de4632975218394fc189cc7fc0c1922f8b67d019943faa82af7e158d7fa6c5f3",
+        "capture_kind": "browser_rendered_dom",
+        "captured_at_utc": "2026-09-18T02:27:23.224696+00:00",
+        "requested_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.17141",
+        "final_url": "https://onlinelibrary.wiley.com/doi/10.1111/gcb.17141",
+        "status_code": 200
+      }
+    ],
+    "captured_image_files": [],
+    "binary_tests": [
+      "tests/integration/test_fixture_provenance.py"
+    ],
+    "formula_audit": {
+      "selected": 2,
+      "tex_checked": 0,
+      "mathml_checked": 2,
+      "empty_excluded": 0
+    }
+  },
+  "source_objects": [
+    {
+      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_gcb.17141/original.html",
+      "sha256": "7cb8a90a78674cb244f61382d93e8d5969a014024b534c7a870e43f543bfab85",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": []
+    },
+    {
+      "source": "tests/fixtures/golden_criteria/10.1111_gcb.17141/acquisition/source-completion-2026-09-18/001-browser_rendered_dom.html",
+      "sha256": "de4632975218394fc189cc7fc0c1922f8b67d019943faa82af7e158d7fa6c5f3",
+      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
+      "tables": [],
+      "mathml": [
+        {
+          "object_index": 0,
+          "id": null,
+          "node_sha256": "732bd24081fdf81ecf5b1cdaed7b9319a4d2aa39312e535d30225bd4f2e75b71",
+          "numbers": "112124",
+          "minimum": {
+            "_": 3
+          },
+          "identifiers": [
+            "R",
+            "i",
+            "j",
+            "i",
+            "i",
+            "j",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "="
+          ]
+        },
+        {
+          "object_index": 1,
+          "id": null,
+          "node_sha256": "c42fc68bf4cc2eae97d5e5117897829faf76369b702441bb579c680d1a4b1f5f",
+          "numbers": "112124",
+          "minimum": {
+            "_": 2
+          },
+          "identifiers": [
+            "R",
+            "max",
+            "max",
+            "R",
+            "i",
+            "j",
+            "i",
+            "j"
+          ],
+          "operators": [
+            "="
+          ]
+        }
+      ]
+    }
+  ],
+  "historical_source_review": {
     "sample_id": "10.1111_gcb.17141",
     "provider": "wiley",
     "doi": "10.1111/gcb.17141",
@@ -97,14 +249,5 @@
       "mathml_checked": 0,
       "empty_excluded": 1
     }
-  },
-  "source_objects": [
-    {
-      "source": "/home/dictation/paper-fetch-skill/tests/fixtures/golden_criteria/10.1111_gcb.17141/original.html",
-      "sha256": "7cb8a90a78674cb244f61382d93e8d5969a014024b534c7a870e43f543bfab85",
-      "method": "Source DOM/XML nodes only; no production extraction or rendering output. Object indexes follow source selection, grid cells refer to source row/cell indexes.",
-      "tables": [],
-      "mathml": []
-    }
-  ]
+  }
 }

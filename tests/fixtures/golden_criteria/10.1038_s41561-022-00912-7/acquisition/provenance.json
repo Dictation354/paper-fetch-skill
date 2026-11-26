@@ -520,5 +520,14 @@
       "former_body_file": "acquisition/assets-2026-09-15/eccfad0822fb09ff-http-1.bin",
       "retention": "removed_at_user_request_supplementary_payload"
     }
+  ],
+  "readable_derivatives": [
+    {
+      "source": "acquisition/official-reacquisition-2026-09-19/outputs/277b312774c7-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md",
+      "source_sha256": "277b312774c7f46a5be21642f9fcfa951b0ebb4a4207a0c066bba414df2e05bb",
+      "path": "derived/readable/acquisition/official-reacquisition-2026-09-19/outputs/277b312774c7-Schumacher_et_al_2022_Drought_self-propagation_in_drylands_due_to_land_atmosphere_feedbacks.md",
+      "sha256": "d9cf3dd52db8ca7f27e187bb1022f9839c6edecad7db9963d7b45abe798eed18",
+      "image_references": 4
+    }
   ]
 }

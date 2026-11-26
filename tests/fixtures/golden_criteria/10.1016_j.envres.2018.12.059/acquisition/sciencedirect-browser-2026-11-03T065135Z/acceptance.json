@@ -1,24 +1,20 @@
 {
-  "schema_version": 2,
-  "minimum_reader_schema_version": 2,
-  "overall": "action_required",
+  "schema_version": 3,
+  "overall": "degraded",
   "target": "paper",
   "identity": {
-    "status": "unavailable",
-    "doi": null,
-    "expected_doi": null,
+    "status": "resolved",
+    "doi": "10.1016/j.envres.2018.12.059",
+    "expected_doi": "10.1016/j.envres.2018.12.059",
     "title": "New approach to identifying proper thresholds for a heat warning system using health risk increments",
     "candidate_count": 0,
     "canonical_landing_url": null,
     "canonical_landing_verified": false,
     "canonical_landing_unique": false,
-    "codes": [
-      "canonical_landing_identity_unverified"
-    ]
+    "codes": []
   },
   "fetch": {
     "status": "ok",
-    "completed": true,
     "code": null
   },
   "content": {
@@ -27,16 +23,194 @@
     "has_fulltext": true,
     "has_abstract": true,
     "token_estimate": 22923,
-    "confidence": "high",
-    "flags": [],
-    "tables": {
-      "fallback_count": 0,
-      "layout_degraded_count": 0,
-      "semantic_loss_count": 0
-    },
-    "formulas": {
-      "fallback_count": 0,
-      "missing_count": 0
+    "semantic_losses": {
+      "table_fallback_count": 0,
+      "table_layout_degraded_count": 0,
+      "table_semantic_loss_count": 0,
+      "formula_fallback_count": 0,
+      "formula_missing_count": 0,
+      "formula_diagnostics": [
+        {
+          "node_id": "formula-1",
+          "source_tex": "",
+          "final_latex": "\\mathrm{Log}\\left\\lbrack {E\\left(Y_{t} \\right)} \\right\\rbrack = {\\mathrm{α} +}f(D_{t}{) +}g(t{) +}\\sum\\limits_{i = 1}^{m}{\\lambda_{i}C_{\\mathit{it}}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-2",
+          "source_tex": "",
+          "final_latex": "E_{t} = {\\{\\begin{matrix} {D_{t} - \\theta{,\\hspace{1em}\\text{if}}D_{t} > \\theta} \\\\ {0,\\mathrm{otherwise}} \\end{matrix}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-3",
+          "source_tex": "",
+          "final_latex": "\\mathrm{Log}\\left\\lbrack {E\\left({Y_{t}\\mathrm{|}\\theta} \\right)} \\right\\rbrack = {\\mathrm{α} +}\\beta_{\\theta}E_{t} + g(t{) +}\\sum\\limits_{i = 1}^{m}{\\lambda_{i}C_{\\mathit{it}}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-4",
+          "source_tex": "",
+          "final_latex": "{\\mathrm{RRI}\\left(\\% \\right)} = \\left\\lbrack {e^{\\beta_{\\theta}} - e^{\\beta_{a}}} \\right\\rbrack{\\times 100\\%}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-5",
+          "source_tex": "",
+          "final_latex": "D_{t}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-6",
+          "source_tex": "",
+          "final_latex": "Y_{t}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-7",
+          "source_tex": "",
+          "final_latex": "f(D_{t})",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-8",
+          "source_tex": "",
+          "final_latex": "g(t)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-9",
+          "source_tex": "",
+          "final_latex": "C_{\\mathit{it}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-10",
+          "source_tex": "",
+          "final_latex": "k = 3",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-11",
+          "source_tex": "",
+          "final_latex": "k = 10",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-12",
+          "source_tex": "",
+          "final_latex": "g(t)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-13",
+          "source_tex": "",
+          "final_latex": "k = 45\\hspace{0.25em}\\mathrm{and}\\hspace{0.25em}21",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-14",
+          "source_tex": "",
+          "final_latex": "g(t)",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-15",
+          "source_tex": "",
+          "final_latex": "\\hat{f}(D_{t})",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-16",
+          "source_tex": "",
+          "final_latex": "E_{t}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-17",
+          "source_tex": "",
+          "final_latex": "\\theta",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-18",
+          "source_tex": "",
+          "final_latex": "\\beta_{\\theta}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-19",
+          "source_tex": "",
+          "final_latex": "e^{\\beta_{\\theta}}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        },
+        {
+          "node_id": "formula-20",
+          "source_tex": "",
+          "final_latex": "a = \\hspace{1em}",
+          "valid": true,
+          "validation_errors": [],
+          "backend": "texmath",
+          "style_degradations": []
+        }
+      ]
     }
   },
   "asset": {
@@ -46,10 +220,8 @@
     "expected": null,
     "discovered": 0,
     "attempted": 0,
-    "total": 0,
     "local": 0,
     "full_size": 0,
-    "preview": 0,
     "accepted_preview": 0,
     "fallback_preview": 0,
     "failed": 0,
@@ -57,37 +229,26 @@
     "not_archived": 0,
     "remote_link_count": 0,
     "remote_only_count": 0,
-    "body_discovered": 0,
-    "body_attempted": 0,
-    "body_local": 0,
-    "body_full_size": 0,
-    "body_preview": 0,
-    "body_failed": 0,
-    "body_not_archived": 0,
-    "body_remote_only_count": 0,
+    "body_assets": {
+      "discovered": 0,
+      "attempted": 0,
+      "local": 0,
+      "full_size": 0,
+      "preview": 0,
+      "failed": 0,
+      "not_archived": 0,
+      "remote_only_count": 0
+    },
     "require_local_body_assets": false,
     "require_full_size_body_assets": false,
-    "has_local_body_assets": false,
-    "all_body_assets_local": true,
-    "all_body_assets_full_size": true,
     "local_body_assets_satisfied": true,
     "full_size_body_assets_satisfied": true,
     "failure_codes": [],
     "issue_codes": [],
-    "status": "not_requested",
-    "remote_links_preserved": false
+    "status": "not_requested"
   },
   "output": {
-    "status": "complete",
-    "requested": [
-      "article",
-      "markdown"
-    ],
-    "available": [
-      "article",
-      "markdown"
-    ],
-    "missing": []
+    "status": "complete"
   },
   "provenance": {
     "status": "partial",
@@ -99,12 +260,8 @@
       "transport": "browser",
       "fallback_used": false
     },
-    "trace_event_count": 0,
     "fallback_codes": [],
     "warning_codes": [],
-    "failure_codes": [],
-    "unstructured_warning_count": 0,
-    "acceptance_policy": "provider_html_body",
-    "acceptance_policy_satisfied": true
+    "failure_codes": []
   }
 }

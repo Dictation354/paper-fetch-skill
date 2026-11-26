@@ -279,13 +279,13 @@ The August extreme event in the Yangtze River Basin in 2022 was unprecedented si
 
 The authors declare that they have no known competing financial interests or personal relationships that could have appeared to influence the work reported in this paper.
 
-### Acknowledgments
+## Acknowledgments
 
 <a id="elsevier-sec0022"></a>
 
 This work is funded by the National Key Research and Development Plan of China (No. 2023YFF0805703).
 
-### Data availability
+## Data availability
 
 <a id="elsevier-sec0023"></a>
 

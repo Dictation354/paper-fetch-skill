@@ -8,7 +8,7 @@ from typing import Any
 from ..utils import normalize_text
 
 SECTION_HINT_KINDS = frozenset(
-    {"body", "data_availability", "code_availability", "references"}
+    {"body", "data_availability", "code_availability", "references", "supplementary"}
 )
 
 
