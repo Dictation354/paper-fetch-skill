@@ -8,6 +8,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.0 - 2026-11-26
+
+- Improve HTML and XML conversion to Markdown. Align data columns when multilevel headers and body cells span columns in different directions. Match article images to local files by exact source first and retain the original link when the match is ambiguous. Advance the extraction revision to 15.
+- Preserve unheaded body text that starts immediately after the abstract in official arXiv HTML, and extract keywords, PACS classifications and author notes.
+- After accepting Elsevier XML full text, use Crossref for up to 15 seconds to fill missing reference DOIs. Distinguish empty results from service failures and retain matched DOIs and the original citation order.
+- With `asset_profile=all`, preserve Elsevier XML supplementary appendix headings, introductions and attachment descriptions. Link to downloaded attachments when available.
+- Upgrade the HTML extractor trafilatura to 2.4.0 to preserve inline math and table anchors.
+
 ## 8.1.2 - 2026-11-25
 
 - Add batch DOI lookup with `lookup --query-file`. With `--include-legacy`, recover historical full text from v8 and v2 sidecars, older manifests and Markdown with managed frontmatter. Historical results retain their unverified status.

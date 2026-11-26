@@ -8,6 +8,14 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.0 - 2026-11-26
+
+- 改进 HTML 和 XML 到 Markdown 的转换。多层表头与表体的合并方向不同时，能更准确地对齐数据列。正文图片优先按完整来源匹配本地文件，匹配有歧义时保留原链接。提取修订号升至 15。
+- 改进 arXiv 官方 HTML 的章节划分，保留摘要后直接开始的无标题正文，并提取关键词、PACS 分类和作者注记。
+- Elsevier XML 全文验收后，最多用 15 秒通过 Crossref 补全缺失的参考文献 DOI。正常零命中与服务故障分别记录，保留已匹配的 DOI 和原始引文顺序。
+- 使用 `asset_profile=all` 时，Elsevier XML 补充材料保留来源附录标题、引介语和附件说明，附件优先链接已下载的本地文件。
+- HTML 提取依赖 trafilatura 升级至 2.4.0，保留行内数学公式和表格锚点。
+
 ## 8.1.2 - 2026-11-25
 
 - `lookup --query-file` 支持批量查找 DOI。启用 `--include-legacy` 后，可从 v8 和 v2 sidecar、旧 manifest 及带受管 frontmatter 的 Markdown 找回历史全文。历史结果仍标记为未经当前验收。
