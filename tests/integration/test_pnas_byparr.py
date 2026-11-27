@@ -410,7 +410,7 @@ def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
         _SharedBrowserFileDocumentFetcher,
     )
 
-    base, assets, _ = site
+    base, assets, calls = site
     _set_home(monkeypatch, "pnas", base + "/")
     config = _config(tmp_path)
     with RuntimeContext(env={}) as runtime:
@@ -432,6 +432,7 @@ def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
             )
             assert result is not None, str(fetcher.failure_for(base + "/paper.pdf"))
             assert result["body"] == assets["/paper.pdf"][1]
+            assert calls.count("/paper.pdf") == 1
             assert runtime.new_browser_context_for_runtime_config(config) is context
         finally:
             fetcher.close()

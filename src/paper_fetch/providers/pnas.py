@@ -68,7 +68,11 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
 
 
 def _activate_attachment(page, link, remaining_ms):
-    link.evaluate("node => node.click()", timeout=remaining_ms())
+    if (link.get_attribute("target", timeout=remaining_ms()) or "").lower() == "_blank":
+        # Firefox requires user activation to open an attachment in a new tab.
+        link.click(no_wait_after=True, timeout=remaining_ms())
+    else:
+        link.evaluate("node => node.click()", timeout=remaining_ms())
 
 
 PROVIDER_BUNDLE = ProviderBundle(
