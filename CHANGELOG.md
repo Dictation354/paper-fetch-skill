@@ -8,6 +8,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.2 - 2026-11-27
+
+- Fix PNAS supplementary downloads that timed out in Camoufox on macOS when the attachment link opened in a new tab.
+
 ## 8.2.1 - 2026-11-27
 
 - Raise selected publisher HTTP asset routes to four concurrent downloads while respecting configured, per-article and per-host limits. Browser recovery remains serial on the thread that owns the page.
