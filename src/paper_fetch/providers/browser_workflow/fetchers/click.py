@@ -128,7 +128,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
     listeners = []
     armed = False
     targets: set[str] = set()
-    redirect_targets = {}
+    redirect_targets: dict[str, set[Any]] = {}
     matched_requests = set()
     request_urls = set()
 

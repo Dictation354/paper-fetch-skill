@@ -8,6 +8,14 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.1 - 2026-11-27
+
+- Raise selected publisher HTTP asset routes to four concurrent downloads while respecting configured, per-article and per-host limits. Browser recovery remains serial on the thread that owns the page.
+- Batch missing images from the same paper in `fetch-assets`. Reuse local files, retain the original asset IDs and body positions, and report results in selection order even when some downloads fail.
+- Preserve rendered Science figure captions, including formulas, in `images.json`. Add `subtree_end_line` to `sections.json` for reading a section with its subsections. Advance the extraction revision to 16 so cached captions are refreshed.
+- Omit duplicate body and abstract text from routine diagnostics when full text is saved. Use `--artifact-mode all` for full redacted diagnostics.
+- Improve publisher supplementary-file discovery and matching of clicked downloads to the original article and attachment, including IEEE multimedia, PNAS filenames and AIP redirects.
+
 ## 8.2.0 - 2026-11-26
 
 - Improve HTML and XML conversion to Markdown. Align data columns when multilevel headers and body cells span columns in different directions. Match article images to local files by exact source first and retain the original link when the match is ambiguous. Advance the extraction revision to 15.

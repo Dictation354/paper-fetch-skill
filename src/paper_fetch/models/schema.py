@@ -97,7 +97,7 @@ QualityConfidence = Literal["high", "medium", "low"]
 
 TRUNCATION_WARNING = "Output truncated to satisfy token budget."
 # Increment when extraction changes invalidate previously cached articles.
-EXTRACTION_REVISION = 15
+EXTRACTION_REVISION = 16
 
 
 @dataclass

@@ -583,21 +583,21 @@ def _select_assets(
             asset["asset_id"]: asset for asset in state.assets if asset["kind"] == kind
         }
         return list(selected.values()), []
-    lookup = {}
+    lookup: dict[str, dict[str, Any]] = {}
     for asset in state.assets:
         keys = (asset["asset_id"],) if asset_ids is not None else asset_urls(asset)
         for key in keys:
             lookup.setdefault(key, asset)
     selected = {}
-    missing = []
+    missing: list[dict[str, Any]] = []
     for selector in dict.fromkeys(asset_ids if asset_ids is not None else urls or []):
-        asset = lookup.get(selector)
-        if asset is None:
+        match = lookup.get(selector)
+        if match is None:
             missing.append(
                 {"selector": selector, "status": "failed", "reason": "asset_not_found"}
             )
         else:
-            selected[asset["asset_id"]] = asset
+            selected[match["asset_id"]] = match
     return list(selected.values()), missing
 
 
