@@ -571,7 +571,9 @@ CLI、Python API 当前默认值如下：
 
 #### 资产调度与资源边界
 
-- 通用 HTML figure 与 supplementary 复用现有 assets 状态机。默认 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，为 `4`、最小 `1`；各 route 可进一步收紧。正文资源 direct 单次超时为 `20` 秒，route concurrency 为 `2`，可靠 browser recovery 路线不叠加 direct transient retry。
+- 通用 HTML figure 与 supplementary 复用现有 assets 状态机。默认 worker 上限由 `PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY` 控制，为 `4`、最小 `1`；各 route 可进一步收紧。正文资源 direct 单次超时为 `20` 秒。有效并发取配置值、单篇资产预算和路线上限的最小值，同主机请求还受 HTTP 主机限额约束。
+- Springer/Nature（正文和 Extended Data 图共用）、Copernicus、PLOS、Frontiers、Oxford Academic 的独立 HTTP 资产上限为 4。Elsevier XML 的 `object_assets` 首轮直链上限为 4，失败对象单路重试；ScienceDirect HTML 资产走浏览器。
+- Science、PNAS、AMS、MDPI、Royal Society Publishing、Annual Reviews、ACS、AIP、Taylor & Francis、RSC 和 IEEE 的正文图、表图和公式图最多并发 4 个 HTTP 请求。同源首件探测决定后续路线，需要浏览器恢复时由页面所在线程串行执行。附件沿用各自的直链或点击下载策略。IOP 使用双路 HTTP，Wiley 使用单页串行导航，arXiv 维持双路和请求间隔。
 - 每篇、每个 host 的首资源作为 direct probe，同源并发请求等待结论；direct 超时/拒绝且 browser byte recovery 成功后，剩余同源资源才复用该 browser 路线。决策不跨论文或 `RuntimeContext` 持久化。Wiley 专用串行导航见 [Wiley 正文资产](#wiley-正文资产)，IOP 的并发例外见 [IOP](#iop)。
 - HTTP 可并行，browser-backed 操作在所属调用线程串行；文件写入、命名和诊断合并保持顺序。浏览器 context、profile 与关闭归属见 [runtime](browser-runtime.md)。
 - 资产共享同一篇论文的预算、取消和原子提交边界；终态按输入资产顺序返回。`parse_cache` / `session_cache` 的归属与复用见[架构](architecture/overview.md#8-runtime--artifact--cache-边界)。

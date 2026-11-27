@@ -21,6 +21,7 @@ from ..extraction.html.assets import extract_scoped_html_assets
 from ..extraction.html.assets.silverchair import (
     promote_silverchair_srcset_originals,
     silverchair_download_image_url,
+    supplementary_file_controls,
 )
 from ..extraction.html.figure_links import inject_inline_figure_links
 from ..extraction.html.inline import render_html_inline_node
@@ -834,7 +835,7 @@ def extract_markdown(
                 cleaned_asset_html,
                 source_url,
                 asset_profile=asset_profile,
-                supplementary_html_text=cleaned_html,
+                supplementary_html_text=supplementary_file_controls(html_text),
                 noise_profile="royalsocietypublishing",
             ),
         ]

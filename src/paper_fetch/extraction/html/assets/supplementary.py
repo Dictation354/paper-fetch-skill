@@ -77,7 +77,7 @@ def _supplementary_anchor_is_supported(
         return False
 
     href = normalize_text(str(anchor.get("href") or ""))
-    if not href or href.startswith("#"):
+    if not href or href.lower().startswith(("#", "javascript:")):
         return False
     text = normalize_text(anchor.get_text(" ", strip=True)).lower()
     if any(

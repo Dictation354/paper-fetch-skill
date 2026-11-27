@@ -127,6 +127,38 @@ def _html_assets(client, html_text, source_url, context):
         assets = _supplementary_assets(
             BeautifulSoup(html_text, choose_parser()), source_url
         )
+    elif client.name in {"aip", "acs", "royalsocietypublishing", "rsc"}:
+        from ..extraction.html.assets.silverchair import supplementary_file_controls
+        from ._aip_html import scoped_asset_extractor as aip_assets
+
+        controls = supplementary_file_controls(html_text)
+        assets = (
+            aip_assets(
+                "", source_url, asset_profile="all", supplementary_html_text=controls
+            )
+            if client.name == "aip"
+            else extract_supplementary_assets(controls, source_url)
+        )
+    elif client.name == "tandf":
+        from ._tandf_html import _extract_tandf_supplementary_assets
+
+        assets = _extract_tandf_supplementary_assets(html_text, source_url)
+    elif client.name == "annualreviews":
+        from ._annualreviews_html import extract_supplementary_index
+
+        assets = extract_supplementary_index(html_text, source_url)
+    elif client.name == "pnas":
+        from ._pnas_html import extract_supplementary_index
+
+        assets = extract_supplementary_index(html_text, source_url)
+    elif client.name == "mdpi":
+        from ._mdpi_assets import extract_supplementary_index
+
+        assets = extract_supplementary_index(html_text, source_url)
+    elif client.name == "ams":
+        from ._ams_assets import _extract_ams_supplementary_assets
+
+        assets = _extract_ams_supplementary_assets(html_text, source_url)
     elif isinstance(client, BrowserWorkflowClient) and client.name != "elsevier":
         from .browser_workflow.assets import _cached_browser_workflow_assets
 
@@ -227,10 +259,7 @@ def _browser_index(client, doi, metadata, context):
     result = _fetch_browser_index(client, doi, metadata, context)
     observed = parse_html_metadata(result.html, result.final_url)
     _verify_identity(metadata, observed)
-    assets, discovery_failures = _html_assets(
-        client, result.html, result.final_url, context
-    )
-    return RawFulltextPayload(
+    raw = RawFulltextPayload(
         provider=client.name,
         content=ProviderContent(
             route_kind="html",
@@ -239,10 +268,21 @@ def _browser_index(client, doi, metadata, context):
             body=result.html.encode(),
             merged_metadata=metadata,
             browser_context_seed=dict(result.browser_context_seed or {}),
-            extracted_assets=assets,
-            diagnostics={"supplementary_discovery_failures": discovery_failures},
         ),
     )
+    if client.name == "iop":
+        from ._iop_html import extract_supplementary_index_urls
+
+        urls = extract_supplementary_index_urls(result.html, result.final_url, doi=doi)
+        assets, failures = client._resolve_supplementary_data_assets(
+            doi, raw, urls, context=context
+        )
+        raw.content.diagnostics["supplementary_index_urls"] = urls
+    else:
+        assets, failures = _html_assets(client, result.html, result.final_url, context)
+    raw.content.extracted_assets.extend(assets)
+    raw.content.diagnostics["supplementary_discovery_failures"] = failures
+    return raw
 
 
 def _xml_candidates(client, doi, metadata):
@@ -364,12 +404,89 @@ def _xml_index(client, doi, metadata, context):
     return None
 
 
+def _ieee_index(client, doi, metadata, context):
+    from ._ieee_supplementary import fetch_ieee_multimedia_assets
+    from ._ieee_url import _article_number_from_metadata, _article_number_from_url
+
+    attempt = client._fetch_landing_attempt(doi, metadata, context=context)
+    observed = parse_html_metadata(attempt.html_text, attempt.response_url)
+    _verify_identity(
+        metadata,
+        {
+            "doi": attempt.landing_metadata.get("doi") or observed.get("doi"),
+            "title": attempt.landing_metadata.get("title") or observed.get("title"),
+        },
+    )
+    observed_numbers = {
+        number
+        for number in (
+            _article_number_from_metadata(attempt.landing_metadata),
+            _article_number_from_url(attempt.response_url),
+        )
+        if number
+    }
+    expected_numbers = {
+        number
+        for number in (
+            _article_number_from_metadata(metadata),
+            _article_number_from_url(attempt.landing_url),
+        )
+        if number
+    }
+    if (
+        observed_numbers != {attempt.article_number}
+        or expected_numbers - observed_numbers
+    ):
+        raise ProviderFailure(
+            IDENTITY_MISMATCH, "IEEE landing article number mismatch."
+        )
+    assets, failures = _html_assets(
+        client, attempt.html_text, attempt.response_url, context
+    )
+    multimedia_url = client._multimedia_url(attempt.article_number)
+    try:
+        assets.extend(
+            fetch_ieee_multimedia_assets(
+                client.transport,
+                attempt,
+                multimedia_url=multimedia_url,
+                headers=client._multimedia_headers(attempt.response_url),
+                runtime_context=context,
+                strict=True,
+            )
+        )
+    except (RequestFailure, ValueError, TypeError) as exc:
+        failures.append(
+            {
+                "kind": "supplementary",
+                "heading": "Multimedia index",
+                "source_url": multimedia_url,
+                "reason": "ieee_multimedia_discovery_failed",
+                "message": str(exc),
+            }
+        )
+    return RawFulltextPayload(
+        provider=client.name,
+        content=ProviderContent(
+            route_kind="html",
+            source_url=attempt.response_url,
+            content_type="text/html",
+            body=attempt.html_text.encode(),
+            merged_metadata=attempt.merged_metadata,
+            extracted_assets=assets,
+            browser_context_seed=dict(attempt.browser_context_seed or {}),
+            diagnostics={
+                "supplementary_discovery_failures": failures,
+                "supplementary_index_urls": [multimedia_url],
+            },
+        ),
+    )
+
+
 def _http_index(client, doi, metadata, context):
     if client.name == "ieee":
-        from ._ieee_landing import resolve_ieee_landing_url
-
-        url = resolve_ieee_landing_url(client, doi, metadata)
-    elif client.name == "copernicus":
+        return _ieee_index(client, doi, metadata, context)
+    if client.name == "copernicus":
         url = client._resolve_landing_url(doi, metadata)
     else:
         url = str(metadata.get("landing_page_url") or f"https://doi.org/{doi}")
@@ -382,7 +499,7 @@ def _http_index(client, doi, metadata, context):
             retry_on_transient=True,
         )
     except RequestFailure as exc:
-        if client.name not in {"ieee", "springer"} or exc.status_code not in {
+        if client.name != "springer" or exc.status_code not in {
             401,
             403,
             429,
@@ -421,62 +538,10 @@ def _http_index(client, doi, metadata, context):
                 error_category=blocked.reason,
             ),
         )
-    if client.name != "ieee":
-        _verify_identity(metadata, result.metadata)
+    _verify_identity(metadata, result.metadata)
     assets, discovery_failures = _html_assets(
         client, result.html_text, result.final_url, context
     )
-    index_urls = []
-    if client.name == "ieee":
-        from . import _ieee_metadata as ieee_metadata
-        from ._ieee_supplementary import fetch_ieee_multimedia_assets
-        from ._ieee_url import _article_number_from_metadata, _article_number_from_url
-
-        landing_metadata = ieee_metadata._parse_landing_metadata(result.html_text)
-        _verify_identity(
-            metadata,
-            {
-                "doi": landing_metadata.get("doi") or result.metadata.get("doi"),
-                "title": landing_metadata.get("title") or result.metadata.get("title"),
-            },
-        )
-        number = _article_number_from_metadata(
-            landing_metadata
-        ) or _article_number_from_url(result.final_url)
-        attempt = ieee_metadata.IeeeLandingAttempt(
-            normalized_doi=doi,
-            landing_url=url,
-            response_url=result.final_url,
-            html_text=result.html_text,
-            merged_metadata=dict(metadata),
-            article_number=number,
-            landing_metadata=landing_metadata,
-            acquisition_source="http",
-        )
-        if number:
-            multimedia_url = client._multimedia_url(number)
-            index_urls.append(multimedia_url)
-            try:
-                assets.extend(
-                    fetch_ieee_multimedia_assets(
-                        client.transport,
-                        attempt,
-                        multimedia_url=multimedia_url,
-                        headers=client._multimedia_headers(result.final_url),
-                        runtime_context=context,
-                        strict=True,
-                    )
-                )
-            except (RequestFailure, ValueError, TypeError) as exc:
-                discovery_failures.append(
-                    {
-                        "kind": "supplementary",
-                        "heading": "Multimedia index",
-                        "source_url": multimedia_url,
-                        "reason": "ieee_multimedia_discovery_failed",
-                        "message": str(exc),
-                    }
-                )
     return RawFulltextPayload(
         provider=client.name,
         content=ProviderContent(
@@ -488,7 +553,6 @@ def _http_index(client, doi, metadata, context):
             extracted_assets=assets,
             diagnostics={
                 "supplementary_discovery_failures": discovery_failures,
-                "supplementary_index_urls": index_urls,
             },
             browser_context_seed=browser_seed,
         ),
@@ -613,6 +677,10 @@ def fetch_provider_supplementary(
             }
             for asset in assets
         ]
+        if client.name == "iop":
+            from .iop import _redact_iop_supplementary_urls
+
+            result.assets = _redact_iop_supplementary_urls(result.assets)
         return result, acquisition
     if not assets:
         return result, acquisition
@@ -686,4 +754,9 @@ def fetch_provider_supplementary(
         for asset in assets
     ]
     result.asset_failures.extend(downloaded.get("asset_failures", []))
+    if client.name == "iop":
+        from .iop import _redact_iop_supplementary_urls
+
+        result.assets = _redact_iop_supplementary_urls(result.assets)
+        result.asset_failures = _redact_iop_supplementary_urls(result.asset_failures)
     return result, acquisition

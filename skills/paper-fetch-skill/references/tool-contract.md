@@ -20,7 +20,7 @@ CLI 入口为 `paper-fetch`，命令包括 fetch、lookup、resolve、check、fe
 
 `body_path=null` 表示没有交付 Markdown 文件；以实际路径和验收判断结果，不依据请求推断交付。根据本地 reader 实际返回范围续读。
 
-`section_index_path` 指向 `sections.json`。其中 `sections` 每项含 `title`、`level`、`start_line`、`end_line`。行号对应 `body_path`，从 1 开始，两端包含；已完成的全文结果均具备经校验的 `body_path` 和 `section_index_path`。
+`section_index_path` 指向 `sections.json`。其中 `sections` 每项含 `title`、`level`、`start_line`、直属内容末行 `end_line` 和包含子节的整章末行 `subtree_end_line`。旧索引按标题层级推导整章末行。行号对应 `body_path`，从 1 开始，两端包含；已完成的全文结果均具备经校验的 `body_path` 和 `section_index_path`。
 
 ## 已有正文查找
 

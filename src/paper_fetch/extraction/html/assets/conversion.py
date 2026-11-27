@@ -55,6 +55,7 @@ _SUPPLEMENTARY_PASSTHROUGH_FIELDS = (
     "category",
 )
 _FIGURE_PASSTHROUGH_FIELDS = (
+    "asset_id",
     "asset_type",
     "source_kind",
     "source_ref",

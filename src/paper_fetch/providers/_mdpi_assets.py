@@ -127,6 +127,10 @@ def extract_asset_html_scopes(html_text: str, source_url: str) -> tuple[str, str
         ):
             node.decompose()
 
+    return str(body_container), _supplementary_scope(supplementary_container)
+
+
+def _supplementary_scope(supplementary_container: Tag) -> str:
     supplementary_nodes: list[Tag] = []
     for selector in _SUPPLEMENTARY_SELECTORS:
         for node in supplementary_container.select(selector):
@@ -137,8 +141,16 @@ def extract_asset_html_scopes(html_text: str, source_url: str) -> tuple[str, str
                 token in text for token in MDPI_SUPPLEMENTARY_TEXT_TOKENS
             ):
                 supplementary_nodes.append(node)
-    supplementary_html = "\n".join(str(node) for node in supplementary_nodes)
-    return str(body_container), supplementary_html
+    return "\n".join(str(node) for node in supplementary_nodes)
+
+
+def extract_supplementary_index(
+    html_text: str, source_url: str
+) -> list[dict[str, str]]:
+    scope = _supplementary_scope(BeautifulSoup(html_text, choose_parser()))
+    assets = _dedupe_assets(_extract_mdpi_supplementary_assets(scope, source_url))
+    _bind_supplementary_modal_links(html_text, source_url, assets)
+    return assets
 
 
 def extract_scoped_html_assets(
@@ -191,6 +203,21 @@ def _bind_supplementary_modal_links(
         if len(set(candidates)) == 1:
             asset["source_href"] = candidates[0]
             asset["source_page_url"] = source_url
+
+    # The appendix's DOI-form alias and the modal may both be in scope.
+    # Keep the appendix record when both activate the exact same modal URL.
+    aliases = {
+        urllib.parse.urljoin(source_url, asset["source_href"])
+        for asset in assets
+        if asset.get("kind") == "supplementary"
+        and asset.get("source_href")
+        and asset["url"] != urllib.parse.urljoin(source_url, asset["source_href"])
+    }
+    assets[:] = [
+        asset
+        for asset in assets
+        if asset.get("kind") != "supplementary" or asset.get("url") not in aliases
+    ]
 
 
 def _bind_explicit_cdn_download_urls(

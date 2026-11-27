@@ -21,7 +21,7 @@ from ..publisher_identity import normalize_doi
 from ..runtime import RuntimeContext
 from ..utils import empty_asset_results, extend_unique, normalize_text
 from . import _annualreviews_html, browser_workflow
-from ._annualreviews_supplement_click import reveal_supplement
+from ._annualreviews_supplement_click import activate_supplement, reveal_supplement
 from ._definitions import PROVIDER_DEFINITIONS
 from ._pdf_candidates import build_direct_pdf_candidates
 from ._registry import BrowserAssetPolicy, ProviderBundle
@@ -194,6 +194,7 @@ __all__ = ["AnnualreviewsClient"]
 PROVIDER_BUNDLE = ProviderBundle(
     browser_asset_policy=BrowserAssetPolicy(
         supplement_reveal=reveal_supplement,
+        supplement_activate=activate_supplement,
         click_supplements=True,
         figure_page_ready_selector="img.content-image[src], img.content-image[data-src]",
         figure_page_requires_caller_thread=True,

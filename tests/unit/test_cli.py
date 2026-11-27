@@ -3151,7 +3151,17 @@ def test_doctor_catalog_is_shared_and_suggests_only_unique_provider_ids(capsys):
     from paper_fetch.catalog_payload import provider_catalog_payload
 
     assert paper_fetch_cli.main(["doctor", "--catalog", "--json"]) == 0
-    assert json.loads(capsys.readouterr().out) == provider_catalog_payload()
+    catalog = json.loads(capsys.readouterr().out)
+    assert catalog == provider_catalog_payload()
+    caps = {
+        (provider["provider"], route["name"]): route["execution_policy"]["concurrency"]
+        for provider in catalog["providers"]
+        for route in provider["routes"]
+        if route["kind"] == "assets"
+    }
+    assert caps["elsevier", "object_assets"] == 4
+    assert caps["elsevier", "assets"] == 1
+    assert caps["springer", "assets"] == caps["science", "assets"] == 4
     with unittest.TestCase().assertRaises(SystemExit):
         paper_fetch_cli.main(["doctor", "--provider", "nature"])
     assert "springer" in capsys.readouterr().err

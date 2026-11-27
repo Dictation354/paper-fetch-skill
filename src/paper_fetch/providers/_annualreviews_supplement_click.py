@@ -13,3 +13,7 @@ def reveal_supplement(page, link, visible_link, remaining_ms):
         menu.locator("[data-toggle='dropdown']").first.click(timeout=remaining_ms())
     tab.click(timeout=remaining_ms())
     visible_link.wait_for(state="visible", timeout=remaining_ms())
+
+
+def activate_supplement(page, link, remaining_ms):
+    link.press("Enter", timeout=remaining_ms())

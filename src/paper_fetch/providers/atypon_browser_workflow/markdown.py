@@ -113,7 +113,13 @@ def extract_browser_workflow_markdown(
         if not str(anchor["href"]).startswith(("#", "javascript:")):
             anchor["href"] = urljoin(source_url, str(anchor["href"]))
     losses = SemanticLosses()
-    table_entries = _normalize_special_blocks(container, publisher, losses)
+    rendered_captions: list[dict[str, str]] = []
+    table_entries = _normalize_special_blocks(
+        container,
+        publisher,
+        losses,
+        rendered_captions=rendered_captions if publisher == "science" else None,
+    )
     abstract_sections = _abstract_section_payloads(container)
     abstract_block_texts = _abstract_block_texts_from_payloads(abstract_sections)
     body_container = _clone_container(container)
@@ -180,6 +186,9 @@ def extract_browser_workflow_markdown(
 
     capture_formula_diagnostics(losses, count_fallbacks=True)
     extraction_payload = {
+        **(
+            {"rendered_figure_captions": rendered_captions} if rendered_captions else {}
+        ),
         "semantic_losses": asdict(losses),
         "title": title,
         "abstract_text": normalize_text(abstract_sections[0]["text"])

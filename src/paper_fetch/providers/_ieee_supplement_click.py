@@ -63,8 +63,11 @@ def find_ieee_missing_link(page, urls, asset, remaining_ms, tab_opened):
         if not tabs.count():
             tabs = page.get_by_text(tab_name)
         for index in range(tabs.count()):
-            if tabs.nth(index).is_visible():
-                tabs.nth(index).click(timeout=remaining_ms())
+            tab = tabs.nth(index)
+            if tab.is_visible():
+                # The Media tab can sit under a floating page component.
+                # Activate its own handler before locating the attachment.
+                tab.evaluate("node => node.click()", timeout=remaining_ms())
                 tab_opened = True
                 break
     return None, tab_opened

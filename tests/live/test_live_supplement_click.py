@@ -9,34 +9,58 @@ import time
 from collections import deque
 from dataclasses import asdict
 from pathlib import Path
+from zipfile import ZipFile
 
 import pytest
 
 from paper_fetch.browser_preflight import static_browser_capabilities
 from paper_fetch.http import HttpTransport
 from paper_fetch.http.cache import redact_url_for_cache, redact_url_for_diagnostics
-from paper_fetch.providers.browser_workflow.asset_download import (
-    _CLICK_SUPPLEMENT_PROVIDERS,
-)
+from paper_fetch.provider_catalog import provider_names
+from paper_fetch.providers._registry import browser_asset_policy
 from paper_fetch.providers.browser_workflow.client import BrowserWorkflowClient
 from paper_fetch.providers.browser_workflow.fetchers import file as file_fetchers
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.service import FetchStrategy, fetch_paper, resolve_paper
 from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.live._runtime_env import build_isolated_live_env
-from tests.provider_benchmark_samples import provider_benchmark_sample
 
-DOI_OVERRIDES = {
-    "science": "10.1126/sciadv.aea9165",
-    "ieee": "10.1109/RITA.2026.3668995",
-    "mdpi": "10.3390/s23010001",
-    "royalsocietypublishing": "10.1098/rsif.2019.0334",
-    "annualreviews": "10.1146/annurev-neuro-062111-150343",
-    "iop": "10.1088/2752-5295/ae2d89",
+# Baseline papers and the files declared by their publisher attachment controls.
+SAMPLES = {
+    "acs": ("10.1021/acsomega.4c03987", ["ao4c03987_si_001.pdf"]),
+    "aip": ("10.1063/5.0129134", ["125205_1_epaps.zip"]),
+    "ams": ("10.1175/jcli-d-23-0738.1", ["10.1175_JCLI-D-23-0738.s1.pdf"]),
+    "annualreviews": (
+        "10.1146/annurev-neuro-062111-150343",
+        ["ne36_schiller_supmat.pdf", *(f"schiller_video{i}.mpg" for i in range(1, 5))],
+    ),
+    "elsevier": (
+        "10.1016/j.ecolind.2024.112140",
+        ["1-s2.0-S1470160X24005971-mmc1.docx"],
+    ),
+    "ieee": ("10.1109/RITA.2026.3668995", ["supp1-3668995.pdf"]),
+    "iop": ("10.1088/1748-9326/ab7d02", ["ERL_15_5_054014_suppdata.pdf"]),
+    "mdpi": ("10.3390/s23010001", ["sensors-2080372-supplementary.xlsx"]),
+    "pnas": (
+        "10.1073/pnas.2322622121",
+        ["pnas.2322622121.sapp.pdf", "pnas.2322622121.sd01.xlsx"],
+    ),
+    "royalsocietypublishing": ("10.1098/rsos.150470", ["rsos150470supp1.pdf"]),
+    "rsc": ("10.1039/d5gc03562g", ["d5gc03562g1_suppl.pdf"]),
+    "science": ("10.1126/science.aei2575", ["science.aei2575_sm.pdf"]),
+    "tandf": ("10.1080/15481603.2026.2667034", ["tgrs_a_2667034_sm1980.docx"]),
+    "wiley": ("10.1111/gcb.16414", ["gcb16414-sup-0001-FigureS1.docx"]),
 }
 
 
-@pytest.mark.parametrize("provider", sorted(_CLICK_SUPPLEMENT_PROVIDERS))
+@pytest.mark.parametrize(
+    "provider",
+    sorted(
+        name
+        for name in provider_names()
+        if browser_asset_policy(name).click_supplements
+    ),
+)
 def test_live_supplement_click(provider, monkeypatch):
     if os.environ.get("PAPER_FETCH_RUN_SUPPLEMENT_CLICK") != "1":
         pytest.skip(
@@ -45,7 +69,7 @@ def test_live_supplement_click(provider, monkeypatch):
     assert os.environ.get("PYTEST_XDIST_WORKER") is None, (
         "run live audit serially (-n 0)"
     )
-    doi = DOI_OVERRIDES.get(provider, provider_benchmark_sample(provider).doi)
+    doi, expected_files = SAMPLES[provider]
     root = Path(
         os.environ.get(
             "PAPER_FETCH_LIVE_ARTIFACT_DIR", ".paper-fetch-runs/supplement-click-live"
@@ -55,6 +79,9 @@ def test_live_supplement_click(provider, monkeypatch):
     output.mkdir(parents=True, exist_ok=False)
     env, isolation = build_isolated_live_env()
     env["PAPER_FETCH_BROWSER_HEADLESS"] = "true"
+    env.setdefault("PAPER_FETCH_BROWSER_TIMEOUT_MS", "600000")
+    if provider == "elsevier":
+        env["ELSEVIER_API_KEY"] = ""  # Exercise the ScienceDirect browser route.
     # An explicitly selected existing legal session may be copied into the
     # isolated profile; attachment files and HTTP/artifact caches stay fresh.
     state_root = os.environ.get("PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE")
@@ -213,7 +240,7 @@ def test_live_supplement_click(provider, monkeypatch):
             artifact_mode="all",
             asset_profile="all",
         ) as runtime:
-            runtime.initialize_deadline(240)
+            runtime.initialize_deadline(600)
             resolved = resolve_paper(doi, context=runtime)
             report["identity"] = resolved.to_dict()
             assert resolved.doi.lower() == doi.lower(), report["identity"]
@@ -278,25 +305,30 @@ def test_live_supplement_click(provider, monkeypatch):
             assert report["acceptance"]["asset"]["status"] == "complete", report[
                 "acceptance"
             ]
-            if provider == "science":
-                assert any(record.get("pages") == 43 for record in report["files"]), (
-                    "Expected Science 43-page supplement"
-                )
-            if provider == "science":
-                previous = os.environ.get("PAPER_FETCH_SCIENCE_SUPPLEMENT_REFERENCE")
-                if previous:
-                    reference = Path(previous)
-                    expected_sha = hashlib.sha256(reference.read_bytes()).hexdigest()
-                    report["reference"] = {
-                        "path": str(reference.resolve()),
-                        "size": reference.stat().st_size,
-                        "sha256": expected_sha,
-                    }
-                    assert any(
-                        record["sha256"] == expected_sha for record in report["files"]
-                    ), (
-                        "Science supplement differs from the previous 43-page acquisition"
+            names = []
+            for record in report["files"]:
+                path = Path(record["path"])
+                if provider == "science":
+                    assert record["size"] == 6221008 and record["pages"] == 60
+                    assert (
+                        record["sha256"]
+                        == "a748d58ca85feffc32d3aab72e5479834642d7603d6676317330197c19dcbd50"
                     )
+                    names.append(Path(record["click"]["original_href"]).name)
+                elif provider == "mdpi":
+                    with ZipFile(path) as archive:
+                        names.extend(archive.namelist())
+                elif provider == "pnas":
+                    assert path.name == Path(record["click"]["original_href"]).name
+                    if path.suffix == ".xlsx":
+                        with ZipFile(path) as workbook:
+                            assert "xl/workbook.xml" in workbook.namelist()
+                    else:
+                        assert path.read_bytes().startswith(b"%PDF-")
+                    names.append(path.name)
+                else:
+                    names.append(path.name)
+            assert sorted(names) == sorted(expected_files)
             report["success"] = True
     except Exception as exc:
         report["error"] = {"type": type(exc).__name__, "message": str(exc)}

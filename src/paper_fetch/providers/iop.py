@@ -481,9 +481,21 @@ class IopClient(browser_workflow.BrowserWorkflowClient):
 __all__ = ["IopClient"]
 
 
+def _activate_directory_attachment(page, link, remaining_ms):
+    # The directory's cookie banner can cover an otherwise visible file link.
+    reject = page.locator(
+        '.cky-consent-container [data-cky-tag="reject-button"]:visible'
+    ).first
+    if reject.count():
+        reject.click(timeout=remaining_ms())
+    link.press("Enter", timeout=remaining_ms())
+
+
 PROVIDER_BUNDLE = ProviderBundle(
     browser_asset_policy=BrowserAssetPolicy(
-        click_supplements=True, body_scheduler=_download_iop_body_assets
+        click_supplements=True,
+        supplement_activate=_activate_directory_attachment,
+        body_scheduler=_download_iop_body_assets,
     ),
     client_factory=IopClient,
     catalog=_PROVIDER_SPEC,

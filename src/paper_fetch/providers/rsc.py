@@ -192,6 +192,24 @@ class RscClient(browser_workflow.BrowserWorkflowClient):
         return _rsc_html.extract_markdown(html_text, final_url, metadata=metadata)
 
 
+def _activate_supplement(page, link, remaining_ms):
+    link.scroll_into_view_if_needed(timeout=remaining_ms())
+    # The RSC widget can receive pointer events over its nested anchor.
+    position = link.evaluate(
+        """node => {
+        const rect = node.getBoundingClientRect();
+        const x = rect.width / 2, y = rect.height / 2;
+        return node.contains(document.elementFromPoint(rect.left + x, rect.top + y))
+            ? {x: x - node.clientLeft, y: y - node.clientTop} : null;
+    }""",
+        timeout=remaining_ms(),
+    )
+    if position is not None:
+        link.click(position=position, no_wait_after=True, timeout=remaining_ms())
+    else:
+        link.press("Enter", timeout=remaining_ms())
+
+
 PROVIDER_BUNDLE = ProviderBundle(
     client_factory=RscClient,
     catalog=_DEFINITION.catalog,
@@ -200,7 +218,12 @@ PROVIDER_BUNDLE = ProviderBundle(
         document_hosts=_DEFINITION.catalog.domains,
         remaining_review_candidates=_rsc_html.remaining_html_candidates,
     ),
-    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True,
+        supplement_exact_href=True,
+        supplement_control_scope=".widget-ArticleDataSupplements",
+        supplement_activate=_activate_supplement,
+    ),
     browser_pdf_only=True,
     html_rules=ProviderHtmlRules(
         name=_DEFINITION.rules_name,

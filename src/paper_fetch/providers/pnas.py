@@ -67,9 +67,17 @@ class PnasClient(browser_workflow.BrowserWorkflowClient):
         ]
 
 
+def _activate_attachment(page, link, remaining_ms):
+    link.evaluate("node => node.click()", timeout=remaining_ms())
+
+
 PROVIDER_BUNDLE = ProviderBundle(
     browser_asset_policy=BrowserAssetPolicy(
-        click_supplements=True, target_match_kinds=("*",), context_request_first=True
+        click_supplements=True,
+        supplement_exact_href=True,
+        supplement_activate=_activate_attachment,
+        target_match_kinds=("*",),
+        context_request_first=True,
     ),
     browser_page_policy=BrowserPagePolicy(
         empty_request=_is_sidebar_metrics_url,

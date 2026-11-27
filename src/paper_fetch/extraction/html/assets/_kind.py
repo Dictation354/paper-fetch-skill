@@ -271,6 +271,7 @@ def _figure_failure_template(
     if error_category:
         failure["error_category"] = error_category
     for key in (
+        "asset_id",
         "asset_type",
         "source_kind",
         "source_ref",

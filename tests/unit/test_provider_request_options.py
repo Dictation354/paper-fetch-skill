@@ -704,60 +704,52 @@ class ProviderRequestOptionsTests(unittest.TestCase):
     def test_elsevier_body_asset_download_uses_runtime_asset_concurrency_env(
         self,
     ) -> None:
-        urls = [
-            f"https://api.elsevier.com/content/object/eid/fig{index}"
-            for index in range(3)
-        ]
-        xml_body = (
-            b"<?xml version='1.0'?><full-text-retrieval-response>"
-            + b"".join(
-                (
-                    f"<object type='IMAGE-HIGH-RES' mimetype='image/png' ref='fig{index}'>"
-                    f"{url}</object>"
-                ).encode()
-                for index, url in enumerate(urls)
-            )
-            + b"</full-text-retrieval-response>"
-        )
-        state = {"active": 0, "max_active": 0}
-        lock = threading.Lock()
+        urls = [f"https://api.elsevier.com/content/object/eid/fig{n}" for n in range(4)]
+        xml_body = elsevier_body_asset_xml(urls)
 
-        class DelayedRecordingTransport(RecordingTransport):
+        class SynchronizedTransport(RecordingTransport):
+            def __init__(self, expected):
+                super().__init__({})
+                self.barrier = threading.Barrier(expected)
+                self.threads = set()
+                self.lock = threading.Lock()
+
             def request(self, method, url, **kwargs):
-                with lock:
-                    state["active"] += 1
-                    state["max_active"] = max(state["max_active"], state["active"])
-                try:
-                    time.sleep(0.01)
-                    return {
-                        "status_code": 200,
-                        "headers": {"content-type": "image/png"},
-                        "body": b"\x89PNG\r\n\x1a\n" + f"payload:{url}".encode(),
-                        "url": url,
-                    }
-                finally:
-                    with lock:
-                        state["active"] -= 1
+                with self.lock:
+                    self.threads.add(threading.get_ident())
+                self.barrier.wait(timeout=5)
+                return {
+                    "status_code": 200,
+                    "headers": {"content-type": "image/png"},
+                    "body": png_body(url.encode()),
+                    "url": url,
+                }
 
-        transport = DelayedRecordingTransport({})
-        context = RuntimeContext(
-            env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": "1"},
-            transport=transport,
-        )
-        with tempfile.TemporaryDirectory() as tmpdir:
-            result = download_elsevier_related_assets(
-                transport,
-                doi="10.1016/test",
-                xml_body=xml_body,
-                output_dir=Path(tmpdir),
-                headers={"User-Agent": "unit-test", "X-ELS-APIKey": "secret"},
-                asset_profile="body",
-                context=context,
-            )
+        for configured, expected in ((1, 1), (8, 4)):
+            with self.subTest(configured=configured):
+                transport = SynchronizedTransport(expected)
+                with (
+                    RuntimeContext(
+                        env={"PAPER_FETCH_ASSET_DOWNLOAD_CONCURRENCY": str(configured)},
+                        transport=transport,
+                    ) as context,
+                    tempfile.TemporaryDirectory() as tmpdir,
+                ):
+                    result = download_elsevier_related_assets(
+                        transport,
+                        doi="10.1016/test",
+                        xml_body=xml_body,
+                        output_dir=Path(tmpdir),
+                        headers={"User-Agent": "unit-test"},
+                        asset_profile="body",
+                        context=context,
+                    )
 
-        self.assertEqual(state["max_active"], 1)
-        self.assertEqual([asset["download_url"] for asset in result["assets"]], urls)
-        self.assertEqual(result["asset_failures"], [])
+                self.assertEqual(len(transport.threads), expected)
+                self.assertEqual(
+                    [asset["download_url"] for asset in result["assets"]], urls
+                )
+                self.assertEqual(result["asset_failures"], [])
 
     def test_elsevier_body_asset_transient_failure_is_retried_once_and_removed(
         self,

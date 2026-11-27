@@ -1026,6 +1026,7 @@ class FrontiersClient(ProviderClient):
         *,
         asset_profile: AssetProfile = "all",
         context: RuntimeContext | None = None,
+        discover_originals: bool = True,
     ) -> dict[str, list[dict[str, Any]]]:
         context = self._runtime_context(context, output_dir=output_dir)
         if output_dir is None or asset_profile == "none":
@@ -1052,9 +1053,9 @@ class FrontiersClient(ProviderClient):
             if normalize_text(
                 str(item.get("kind") or item.get("asset_type") or "")
             ).lower()
-            in {"figure", "formula"}
+            in {"figure", "formula", "table"}
         ]
-        if body_image_assets and content is not None:
+        if discover_originals and body_image_assets and content is not None:
             landing_metadata = content.merged_metadata or {}
             landing_url = normalize_text(
                 str(
@@ -1090,7 +1091,7 @@ class FrontiersClient(ProviderClient):
                     if normalize_text(
                         str(item.get("kind") or item.get("asset_type") or "")
                     ).lower()
-                    in {"figure", "formula"}
+                    in {"figure", "formula", "table"}
                 ]
         merged_metadata = content.merged_metadata if content is not None else None
         article_id = (

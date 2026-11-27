@@ -69,6 +69,7 @@ def section_index(markdown: str) -> dict[str, Any]:
             0,
         )
     sections: list[dict[str, Any]] = []
+    ancestors: list[dict[str, Any]] = []
     paragraph: list[str] = []
     for line_number, line in _markdown_lines(lines[body_start:], offset=body_start):
         if line is None:
@@ -97,21 +98,34 @@ def section_index(markdown: str) -> dict[str, Any]:
         paragraph.clear()
         if sections:
             sections[-1]["end_line"] = start_line - 1
+        while ancestors and ancestors[-1]["level"] >= level:
+            ancestors.pop()["subtree_end_line"] = start_line - 1
         sections.append(
             {
                 "title": title,
                 "level": level,
                 "start_line": start_line,
                 "end_line": len(lines),
+                "subtree_end_line": len(lines),
             }
         )
+        ancestors.append(sections[-1])
     return {"schema_version": 1, "sections": sections}
 
 
-def public_diagnostics(value: Any) -> Any:
+def public_diagnostics(value: Any, *, compact_body_metrics: bool = False) -> Any:
     if isinstance(value, dict):
         return {
-            str(k): public_diagnostics(v)
+            str(k): public_diagnostics(
+                {
+                    key: item
+                    for key, item in v.items()
+                    if key not in {"text", "abstract_text"}
+                }
+                if compact_body_metrics and k == "body_metrics" and isinstance(v, dict)
+                else v,
+                compact_body_metrics=compact_body_metrics,
+            )
             for k, v in value.items()
             if not is_sensitive_configuration_name(str(k))
             and str(k).lower()
@@ -125,7 +139,10 @@ def public_diagnostics(value: Any) -> Any:
             }
         }
     if isinstance(value, (list, tuple)):
-        return [public_diagnostics(item) for item in value]
+        return [
+            public_diagnostics(item, compact_body_metrics=compact_body_metrics)
+            for item in value
+        ]
     if isinstance(value, str):
         return redact_text_for_diagnostics(value)
     return value
@@ -188,6 +205,7 @@ def save_reading_artifacts(
     *,
     envelope: Any = None,
     error: Any = None,
+    artifact_mode: str = "none",
 ) -> list[ManifestOutputArtifactSpec]:
     store = ArtifactStore.from_download_dir(directory)
     directory.mkdir(parents=True, exist_ok=True)
@@ -238,12 +256,20 @@ def save_reading_artifacts(
         directory / "diagnostics.json",
         public_diagnostics(
             {
+                **({"body_path": str(body.resolve())} if markdown else {}),
                 "diagnostics": envelope.diagnostics,
                 "trace": envelope.to_dict().get("trace"),
                 "warnings": envelope.quality.warnings,
             }
             if envelope is not None
-            else error or {}
+            else error or {},
+            compact_body_metrics=bool(
+                markdown
+                and envelope.quality.has_fulltext
+                and artifact_mode != "all"
+                and TRUNCATION_WARNING not in envelope.quality.warnings
+                and TRUNCATION_WARNING not in markdown
+            ),
         ),
     )
     artifacts.append(

@@ -242,6 +242,11 @@ def fetch_ieee_multimedia_assets(
         if strict:
             raise ValueError("IEEE multimedia index is incomplete.")
         return []
+    listed_number = _article_number_from_metadata(payload)
+    if listed_number and listed_number != landing_attempt.article_number:
+        if strict:
+            raise ValueError("IEEE multimedia index belongs to a different article.")
+        return []
     response_url = _absolute_ieee_url(
         str(response.get("url") or multimedia_url), multimedia_url
     )
@@ -556,7 +561,7 @@ def download_ieee_related_assets(
             asset_profile=asset_profile,
             options=AssetDownloadOptions(
                 headers={"User-Agent": user_agent, "Referer": canonical_landing_url},
-                asset_download_concurrency=concurrency,
+                asset_download_concurrency=min(concurrency, 2),
                 provider_name="ieee",
                 runtime_context=runtime_context,
             ),

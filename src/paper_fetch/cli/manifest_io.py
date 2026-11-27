@@ -448,7 +448,10 @@ def _build_cli_manifest_record(
         artifacts = (
             *artifacts,
             *save_reading_artifacts(
-                delivery_dir, envelope=envelope, error=manifest_error
+                delivery_dir,
+                envelope=envelope,
+                error=manifest_error,
+                artifact_mode=options.artifact_mode,
             ),
         )
 

@@ -176,10 +176,34 @@ def test_section_index_uses_written_body_lines_and_leaves_stdout_export_intact(
     assert json.loads(Path(receipt["section_index_path"]).read_text()) == {
         "schema_version": 1,
         "sections": [
-            {"title": "Paper", "level": 1, "start_line": 5, "end_line": 6},
-            {"title": "Main", "level": 2, "start_line": 7, "end_line": 18},
-            {"title": "Results", "level": 2, "start_line": 19, "end_line": 22},
-            {"title": "Detail", "level": 3, "start_line": 23, "end_line": 24},
+            {
+                "title": "Paper",
+                "level": 1,
+                "start_line": 5,
+                "end_line": 6,
+                "subtree_end_line": 24,
+            },
+            {
+                "title": "Main",
+                "level": 2,
+                "start_line": 7,
+                "end_line": 18,
+                "subtree_end_line": 18,
+            },
+            {
+                "title": "Results",
+                "level": 2,
+                "start_line": 19,
+                "end_line": 22,
+                "subtree_end_line": 24,
+            },
+            {
+                "title": "Detail",
+                "level": 3,
+                "start_line": 23,
+                "end_line": 24,
+                "subtree_end_line": 24,
+            },
         ],
     }
     assert cli.main([*args, "--output", "-"]) == 0
@@ -444,3 +468,37 @@ def test_lookup_invalid_query_file_is_argument_error(tmp_path, command, exists, 
         cli.main([command, "--query-file", str(query_file)])
     assert error.value.code == 2
     assert "query file" in capsys.readouterr().err
+
+
+@pytest.mark.parametrize("mode", ["markdown-assets", "all"])
+def test_diagnostic_body_metrics_follow_saved_body_and_artifact_mode(
+    mode, isolated, monkeypatch, tmp_path, capsys
+):
+    envelope = _envelope()
+    metrics = {"text": "full body", "abstract_text": "abstract", "char_count": 9}
+    envelope.diagnostics.update(
+        availability_diagnostics={"body_metrics": metrics},
+        extraction=[{"body_metrics": metrics, "authorization": "private"}],
+    )
+    monkeypatch.setattr(cli, "fetch_paper", lambda *a, **kw: envelope)
+    assert (
+        cli.main(
+            [
+                "fetch",
+                "--query",
+                envelope.doi,
+                "--output-dir",
+                str(tmp_path),
+                "--artifact-mode",
+                mode,
+            ]
+        )
+        == 0
+    )
+    receipt = json.loads(capsys.readouterr().out)
+    saved = json.loads(Path(receipt["diagnostic_paths"][-1]).read_text())
+    assert saved["body_path"] == receipt["body_path"]
+    expected = metrics if mode == "all" else {"char_count": 9}
+    assert saved["diagnostics"]["availability_diagnostics"]["body_metrics"] == expected
+    assert saved["diagnostics"]["extraction"] == [{"body_metrics": expected}]
+    assert metrics["text"] == "full body" and metrics["abstract_text"] == "abstract"

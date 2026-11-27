@@ -243,7 +243,14 @@ def test_context_from_manifest_reads_acceptance_identity_doi(tmp_path):
         output_artifacts=artifacts,
     )
     manifest_path = write_manifest_record(delivery_dir / "manifest.json", record)
+    index_path = delivery_dir / "images.json"
+    index = json.loads(index_path.read_text())
+    index["assets"][0]["asset_id"] = "img_original"
+    # Historical descriptors may acquire a new URL while retaining their ID.
+    index["assets"][0]["source_url"] = index["assets"][1]["url"]
+    index_path.write_text(json.dumps(index))
     restored = assets.context_from_manifest(manifest_path)
+    assert restored.assets == index["assets"]
     assert restored.doi == "10.1000/example"
     assert restored.source_url == SOURCE
     assert len(restored.assets) == 3
@@ -348,3 +355,83 @@ def test_source_recovery_uses_serializable_seed_without_public_credentials(monke
     assert (
         state.browser_context_seed["browser_cookies"][0]["value"] == "restored-secret"
     )
+
+
+def test_batch_matches_ids_and_only_unique_legacy_urls(monkeypatch, tmp_path):
+    shared = "https://example.test/shared"
+    local_file = tmp_path / "local.gif"
+    local_file.write_bytes(b"local")
+    state = assets.AssetContext(
+        None,
+        "",
+        SOURCE,
+        discovery_complete=True,
+        assets=[
+            {
+                "kind": "figure",
+                "asset_id": key,
+                "url": f"{SOURCE}/{key}.gif",
+                "preview_url": shared,
+                "body_positions": [{"line": line, "column": 1}],
+            }
+            for line, key in enumerate(
+                ("first", "local", "bad", "legacy", "ambiguous"), 1
+            )
+        ],
+    )
+    state.assets[1]["path"] = str(local_file)
+
+    def download(_state, selected, directory, _runtime):
+        assert [asset["asset_id"] for asset in selected] == [
+            "first",
+            "bad",
+            "legacy",
+            "ambiguous",
+        ]
+        path = directory / "download.gif"
+        path.write_bytes(b"download")
+        return {
+            "assets": [
+                {"url": shared, "path": str(path)},
+                {
+                    "source_url": selected[2]["url"],
+                    "preview_url": shared,
+                    "path": str(path),
+                },
+                {"asset_id": "first", "path": str(path), "body_positions": []},
+            ],
+            "asset_failures": [{"asset_id": "bad", "reason": "HTTP 404"}],
+        }
+
+    monkeypatch.setattr(assets, "_download_selected", download)
+    urls = [item["url"] for item in state.assets]
+    with runtime(ImageTransport()) as context:
+        result = assets.fetch_selected_assets(
+            state, urls=[*urls, urls[0]], runtime=context
+        )
+    assert result["status"] == "partial"
+    assert [r["asset_id"] for r in result["results"]] == [
+        "first",
+        "local",
+        "bad",
+        "legacy",
+        "ambiguous",
+    ]
+    assert [r["status"] for r in result["results"]] == [
+        "ok",
+        "ok",
+        "failed",
+        "ok",
+        "failed",
+    ]
+    assert [r["body_positions"][0]["line"] for r in result["results"]] == [
+        1,
+        2,
+        3,
+        4,
+        5,
+    ]
+    assert result["results"][2]["failures"] == [
+        {"asset_id": "bad", "reason": "HTTP 404"}
+    ]
+    assert result["results"][4]["failures"] == []

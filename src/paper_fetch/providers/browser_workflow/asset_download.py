@@ -560,6 +560,7 @@ def _download_body_assets(
         asset_budget=getattr(recovery.runtime_context, "asset_budget", None),
         artifact_store=getattr(recovery.runtime_context, "artifact_store", None),
         provider_name=recovery.provider,
+        route_name="assets" if recovery.provider == "elsevier" else None,
         runtime_context=recovery.runtime_context,
         host_recovery_circuit=AssetHostRecoveryCircuit(),
     )
@@ -733,6 +734,7 @@ def _download_supplementary_assets(
         asset_budget=getattr(recovery.runtime_context, "asset_budget", None),
         artifact_store=getattr(recovery.runtime_context, "artifact_store", None),
         provider_name=recovery.provider,
+        route_name="assets" if recovery.provider == "elsevier" else None,
         runtime_context=recovery.runtime_context,
     )
     if recovery.runtime is not None and policy.click_supplements:
@@ -764,8 +766,8 @@ def _download_supplementary_assets(
         options=replace(
             common_options,
             file_document_fetcher=file_document_fetcher,
-            asset_download_concurrency=attempt_settings.get(
-                "asset_download_concurrency"
+            asset_download_concurrency=min(
+                2, attempt_settings.get("asset_download_concurrency") or 2
             ),
             fetch_policy=plan.fetch_policy,
         ),

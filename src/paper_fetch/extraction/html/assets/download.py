@@ -20,6 +20,7 @@ from ....image_tools import (
 )
 from ....models.schema import AssetProfile
 from ....provider_catalog import (
+    compile_route_execution_policy,
     compile_route_execution_policy_for_kind,
     effective_route_asset_scope,
 )
@@ -146,6 +147,7 @@ class AssetDownloadOptions:
     route_concurrency_cap: int | None = None
     allowed_hosts: Sequence[str] | None = None
     provider_name: str | None = None
+    route_name: str | None = None
     artifact_store: Any | None = None
     runtime_context: Any | None = None
     host_recovery_circuit: AssetHostRecoveryCircuit | None = None
@@ -934,8 +936,10 @@ def download_assets(
     asset_execution_policy = None
     if provider_name:
         with contextlib.suppress(ValueError):
-            asset_execution_policy = compile_route_execution_policy_for_kind(
-                provider_name, "assets"
+            asset_execution_policy = (
+                compile_route_execution_policy(provider_name, active_options.route_name)
+                if active_options.route_name
+                else compile_route_execution_policy_for_kind(provider_name, "assets")
             )
     asset_route_name = (
         asset_execution_policy.route if asset_execution_policy is not None else None

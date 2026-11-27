@@ -13,6 +13,22 @@ from ..asset_fields import best_url_from_srcset
 from ..parsing import choose_parser
 
 
+def supplementary_file_controls(html_text: str) -> str:
+    soup = BeautifulSoup(html_text, choose_parser())
+    controls = soup.select(".widget-ArticleDataSupplements .dataSuppLink a[href]")
+    if not controls:
+        # Older and abstract-only pages can expose the file control directly.
+        controls = soup.select(
+            'a[href*="/article-supplement/"], a[href*="/suppl_file/"]'
+        )
+    return "\n".join(
+        str(anchor)
+        for anchor in controls
+        if urlparse(str(anchor["href"])).scheme.lower() in {"", "https", "http"}
+        and not str(anchor["href"]).startswith("#")
+    )
+
+
 def promote_silverchair_srcset_originals(html_text: str) -> str:
     """Expose the largest Silverchair srcset rendition to neutral extraction."""
 

@@ -218,10 +218,6 @@ def run_fetch_assets_command(command: FetchAssetsCommand) -> int:
                 state = targeted_assets.context_from_query(command.query, runtime)
             # CLI files outlive this process so a host reader can open the paths.
             state.cleanup_temporary = output_dir is not None
-            if state.provider == "ams" and targeted_assets.selected_assets_need_network(
-                state, asset_ids=asset_ids, urls=urls, kind=command.kind
-            ):
-                _ensure_cli_ams_auth(command, runtime)
             payload = targeted_assets.fetch_selected_assets(
                 state,
                 asset_ids=asset_ids,
@@ -230,6 +226,9 @@ def run_fetch_assets_command(command: FetchAssetsCommand) -> int:
                 output_dir=output_dir,
                 overwrite=command.overwrite,
                 runtime=runtime,
+                before_network=(lambda: _ensure_cli_ams_auth(command, runtime))
+                if state.provider == "ams"
+                else None,
             )
             payload["query"] = command.query
             if not command.compact:

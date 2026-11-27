@@ -8,12 +8,15 @@ import json
 import shutil
 import tempfile
 import threading
-from collections.abc import Mapping, Sequence
+from collections import defaultdict
+from collections.abc import Callable, Mapping, Sequence
 from dataclasses import asdict, dataclass, field
 from pathlib import Path
 from typing import Any
 from urllib.parse import urljoin
 
+from .artifacts import ArtifactStore
+from .config import resolve_asset_download_concurrency
 from .extraction.html import decode_html
 from .extraction.html.assets import (
     FIGURE_KIND,
@@ -167,7 +170,25 @@ def discover_content_images(
             assets = extract_scoped_html_assets(
                 html, content.source_url, asset_profile="body", noise_profile=provider
             )
-    return image_index(assets)
+    indexed = image_index(assets)
+    if provider == "science":
+        extraction = content.diagnostics.get("extraction") or {}
+        captions = extraction.get("rendered_figure_captions") or []
+        by_dom_id = defaultdict(list)
+        by_url = defaultdict(list)
+        for asset in indexed:
+            if asset["kind"] == "figure":
+                if asset.get("dom_id"):
+                    by_dom_id[asset["dom_id"]].append(asset)
+                for url in asset_urls(asset):
+                    by_url[url].append(asset)
+        for caption in captions:
+            matches = by_dom_id.get(caption["dom_id"], [])
+            if len(matches) != 1 and caption["url"]:
+                matches = by_url.get(urljoin(content.source_url, caption["url"]), [])
+            if len(matches) == 1:
+                matches[0]["caption"] = caption["caption"]
+    return indexed
 
 
 def _xml_image_assets(
@@ -441,7 +462,7 @@ def _download_selected(
     content = ProviderContent(
         route_kind=state.route_kind,
         source_url=state.source_url,
-        content_type="text/html",
+        content_type="application/xml" if state.route_kind == "xml" else "text/html",
         body=b"",
         extracted_assets=selected,
         browser_context_seed=state.browser_context_seed,
@@ -459,9 +480,21 @@ def _download_selected(
             asset_profile="body",
             context=runtime,
             assets=selected,
+            body_fetch_policy="browser_only"
+            if state.provider in {"elsevier", "wiley"}
+            else None,
         )
     if (
-        state.provider in {"springer", "plos", "copernicus", "arxiv"}
+        state.provider
+        in {
+            "springer",
+            "plos",
+            "copernicus",
+            "arxiv",
+            "frontiers",
+            "oxfordacademic",
+            "ieee",
+        }
         and client is not None
     ):
         return client.download_related_assets(
@@ -469,22 +502,43 @@ def _download_selected(
             state.metadata,
             RawFulltextPayload(provider=state.provider, content=content),
             output,
-            asset_profile="body",
+            asset_profile="all"
+            if any(a.get("section") in {"appendix", "supplementary"} for a in selected)
+            else "body",
             context=runtime,
+            **({"discover_originals": False} if state.provider == "frontiers" else {}),
         )
+
+    if (
+        state.provider == "elsevier"
+        and client is not None
+        and state.route_kind == "xml"
+    ):
+        from .providers.elsevier import download_elsevier_related_assets
+
+        return download_elsevier_related_assets(
+            client.transport,
+            doi=state.doi or "",
+            xml_body=b"",
+            output_dir=output,
+            headers=client._base_headers("*/*"),
+            context=runtime,
+            selected_references=[
+                {
+                    **item,
+                    "asset_type": item.get("asset_type")
+                    or ("table_asset" if item["kind"] == "table" else "image"),
+                    "source_url": item.get("download_url")
+                    or item.get("url")
+                    or item.get("source_url"),
+                }
+                for item in selected
+            ],
+        )
+
     from .providers.browser_workflow.fetchers.image import (
         _build_shared_browser_image_fetcher,
     )
-
-    headers = None
-    header_filter = None
-    sensitive_headers: tuple[str, ...] = ()
-    if state.provider == "elsevier" and client is not None:
-        from .providers.elsevier import _object_request_headers
-
-        headers = client._base_headers("*/*")
-        header_filter = _object_request_headers
-        sensitive_headers = ("X-ELS-APIKey",)
 
     browser_fetcher = _build_shared_browser_image_fetcher(
         browser_context_seed_getter=lambda: state.browser_context_seed,
@@ -505,9 +559,9 @@ def _download_selected(
             asset_profile="body",
             options=AssetDownloadOptions(
                 browser_context_seed=state.browser_context_seed,
-                headers=headers,
-                candidate_headers_filter=header_filter,
-                sensitive_headers=sensitive_headers,
+                asset_download_concurrency=resolve_asset_download_concurrency(
+                    runtime.env
+                ),
                 image_document_fetcher=browser_fetcher,
                 provider_name=state.provider or None,
                 runtime_context=runtime,
@@ -518,28 +572,147 @@ def _download_selected(
         browser_fetcher.close()
 
 
+def _select_assets(
+    state: AssetContext,
+    asset_ids: list[str] | None,
+    urls: list[str] | None,
+    kind: str | None,
+) -> tuple[list[dict[str, Any]], list[dict[str, Any]]]:
+    if kind:
+        selected = {
+            asset["asset_id"]: asset for asset in state.assets if asset["kind"] == kind
+        }
+        return list(selected.values()), []
+    lookup = {}
+    for asset in state.assets:
+        keys = (asset["asset_id"],) if asset_ids is not None else asset_urls(asset)
+        for key in keys:
+            lookup.setdefault(key, asset)
+    selected = {}
+    missing = []
+    for selector in dict.fromkeys(asset_ids if asset_ids is not None else urls or []):
+        asset = lookup.get(selector)
+        if asset is None:
+            missing.append(
+                {"selector": selector, "status": "failed", "reason": "asset_not_found"}
+            )
+        else:
+            selected[asset["asset_id"]] = asset
+    return list(selected.values()), missing
+
+
+def _local_file(asset: Mapping[str, Any]) -> Path | None:
+    path = Path(asset["path"]).expanduser() if asset.get("path") else None
+    return path if path is not None and path.is_file() else None
+
+
 def selected_assets_need_network(state, *, asset_ids=None, urls=None, kind=None):
-    selectors = asset_ids if asset_ids is not None else urls
-    selected = [
-        asset
-        for asset in state.assets
-        if (kind is not None and asset["kind"] == kind)
-        or (asset_ids is not None and asset["asset_id"] in asset_ids)
-        or (urls is not None and asset_urls(asset).intersection(urls))
-    ]
-    indexed = selectors is not None and all(
-        any(
-            selector == asset["asset_id"]
-            if asset_ids is not None
-            else selector in asset_urls(asset)
-            for asset in state.assets
-        )
-        for selector in selectors
+    selected, missing = _select_assets(state, asset_ids, urls, kind)
+    return (not state.discovery_complete and bool(kind or missing)) or any(
+        _local_file(asset) is None for asset in selected
     )
-    return (not state.discovery_complete and not indexed) or any(
-        not asset.get("path") or not Path(asset["path"]).expanduser().is_file()
-        for asset in selected
-    )
+
+
+def _download_missing(
+    state: AssetContext, pending: list[dict[str, Any]], runtime: RuntimeContext
+) -> dict[str, dict[str, Any]]:
+    from .providers.browser_runtime.types import BrowserRuntimeFailure
+
+    by_id = {asset["asset_id"]: asset for asset in pending}
+    by_url = defaultdict(set)
+    for asset in state.assets:
+        for url in asset_urls(asset):
+            by_url[url].add(asset["asset_id"])
+
+    def matched_id(record: Mapping[str, Any]) -> str | None:
+        if record.get("asset_id"):
+            return record["asset_id"] if record["asset_id"] in by_id else None
+        matches = {
+            key
+            for url in asset_urls(record)
+            if len(by_url[url]) == 1
+            for key in by_url[url]
+        }
+        if len(matches) == 1:
+            key = next(iter(matches))
+            if key in by_id:
+                return key
+        return None
+
+    failures = {
+        key: {
+            "asset_id": key,
+            "kind": a["kind"],
+            "url": a.get("url"),
+            **(
+                {"body_positions": a["body_positions"]} if "body_positions" in a else {}
+            ),
+            "status": "failed",
+            "reason": "asset_download_failed",
+            "failures": [],
+        }
+        for key, a in by_id.items()
+    }
+    try:
+        downloaded = _download_selected(state, pending, state.temporary_dir(), runtime)
+    except (ProviderFailure, RequestFailure, BrowserRuntimeFailure, OSError) as error:
+        if isinstance(error, ProviderFailure) and error.code == AUTH_REQUIRED:
+            raise
+        for failure in failures.values():
+            failure["reason"] = (
+                error.kind
+                if isinstance(error, BrowserRuntimeFailure)
+                else getattr(error, "code", "asset_download_failed")
+            )
+        return failures
+    for failure in downloaded.get("asset_failures") or []:
+        if key := matched_id(failure):
+            failures[key]["failures"].append(failure)
+    for record in downloaded.get("assets") or []:
+        if (key := matched_id(record)) and _local_file(record) is not None:
+            by_id[key].update(
+                {
+                    k: v
+                    for k, v in record.items()
+                    if k not in {"asset_id", "kind", "body_positions", "caption"}
+                }
+            )
+            failures.pop(key, None)
+    return failures
+
+
+def _deliver_image(
+    asset: Mapping[str, Any],
+    local: Path,
+    source_page: str,
+    store: ArtifactStore | None,
+    overwrite: bool,
+) -> dict[str, Any]:
+    path = local.expanduser().resolve()
+    if store is not None:
+        assert store.download_dir is not None
+        destination = store.download_dir / f"{asset['asset_id']}{path.suffix}"
+        if destination != path:
+            try:
+                store.write_bytes_file(
+                    destination, path.read_bytes(), overwrite=overwrite
+                )
+            except OSError as exc:
+                return {
+                    "asset_id": asset["asset_id"],
+                    "status": "failed",
+                    **(
+                        {"body_positions": asset["body_positions"]}
+                        if "body_positions" in asset
+                        else {}
+                    ),
+                    "reason": "output_exists"
+                    if isinstance(exc, FileExistsError)
+                    else "output_write_failed",
+                    "path": str(destination),
+                }
+        path = destination
+    return {**asset, "path": str(path), "status": "ok", "source_page": source_page}
 
 
 def fetch_selected_assets(
@@ -551,6 +724,7 @@ def fetch_selected_assets(
     output_dir: str | None = None,
     overwrite: bool = False,
     runtime: RuntimeContext | None = None,
+    before_network: Callable[[], None] | None = None,
 ) -> dict[str, Any]:
     if (
         sum(value is not None for value in (asset_ids, urls, kind)) != 1
@@ -565,126 +739,40 @@ def fetch_selected_assets(
     runtime = runtime or RuntimeContext(artifact_mode="none")
     try:
         with state.lock:
-            selectors = asset_ids if asset_ids is not None else urls
-            indexed = selectors is not None and all(
-                any(
-                    (
-                        selector == asset["asset_id"]
-                        if asset_ids is not None
-                        else selector in asset_urls(asset)
-                    )
-                    for asset in state.assets
-                )
-                for selector in selectors
-            )
-            if not state.discovery_complete and not indexed:
+            selected, missing = _select_assets(state, asset_ids, urls, kind)
+            if not state.discovery_complete and (kind or missing):
+                if before_network is not None:
+                    before_network()
+                    before_network = None
                 _load_source(state, runtime)
-            selected: list[dict[str, Any]] = []
-            missing: list[dict[str, Any]] = []
-            if kind:
-                selected = [asset for asset in state.assets if asset["kind"] == kind]
-            else:
-                for selector in dict.fromkeys(
-                    asset_ids if asset_ids is not None else urls or []
-                ):
-                    asset = next(
-                        (
-                            asset
-                            for asset in state.assets
-                            if (
-                                selector == asset["asset_id"]
-                                if asset_ids is not None
-                                else selector in asset_urls(asset)
-                            )
-                        ),
-                        None,
-                    )
-                    if asset is None:
-                        missing.append(
-                            {
-                                "selector": selector,
-                                "status": "failed",
-                                "reason": "asset_not_found",
-                            }
-                        )
-                    elif asset not in selected:
-                        selected.append(asset)
+                selected, missing = _select_assets(state, asset_ids, urls, kind)
             output = (
                 Path(output_dir).expanduser().resolve()
                 if output_dir
                 else state.temporary_dir()
             )
             output.mkdir(parents=True, exist_ok=True)
-            results = list(missing)
+            store = ArtifactStore.from_download_dir(output) if output_dir else None
+            by_id = {}
+            pending = []
             for asset in selected:
-                local = Path(asset["path"]).expanduser() if asset.get("path") else None
-                if local is None or not local.is_file():
-                    try:
-                        downloaded = _download_selected(
-                            state, [asset], state.temporary_dir(), runtime
-                        )
-                    except (ProviderFailure, RequestFailure, OSError) as error:
-                        if (
-                            isinstance(error, ProviderFailure)
-                            and error.code == AUTH_REQUIRED
-                        ):
-                            raise
-                        results.append(
-                            {
-                                "asset_id": asset["asset_id"],
-                                "kind": asset["kind"],
-                                "url": asset.get("url"),
-                                "status": "failed",
-                                "reason": getattr(
-                                    error, "code", "asset_download_failed"
-                                ),
-                            }
-                        )
-                        continue
-                    successes = downloaded.get("assets") or []
-                    if not successes:
-                        results.append(
-                            {
-                                "asset_id": asset["asset_id"],
-                                "kind": asset["kind"],
-                                "url": asset.get("url"),
-                                "status": "failed",
-                                "reason": "asset_download_failed",
-                                "failures": downloaded.get("asset_failures") or [],
-                            }
-                        )
-                        continue
-                    positions = asset.get("body_positions")
-                    asset.update(successes[0])
-                    if positions is not None:
-                        asset["body_positions"] = positions
-                    local = Path(asset["path"]).resolve()
-                path = local.resolve()
-                if output_dir:
-                    destination = output / f"{asset['asset_id']}{path.suffix}"
-                    if destination != path:
-                        if destination.exists() and not overwrite:
-                            if destination.read_bytes() != path.read_bytes():
-                                results.append(
-                                    {
-                                        "asset_id": asset["asset_id"],
-                                        "status": "failed",
-                                        "reason": "output_exists",
-                                        "path": str(destination),
-                                    }
-                                )
-                                continue
-                        else:
-                            shutil.copyfile(path, destination)
-                    path = destination
-                results.append(
-                    {
-                        **asset,
-                        "path": str(path),
-                        "status": "ok",
-                        "source_page": state.source_url,
-                    }
-                )
+                local = _local_file(asset)
+                if local is None:
+                    pending.append(asset)
+                else:
+                    by_id[asset["asset_id"]] = _deliver_image(
+                        asset, local, state.source_url, store, overwrite
+                    )
+            if pending:
+                if before_network is not None:
+                    before_network()
+                failures = _download_missing(state, pending, runtime)
+                for asset in pending:
+                    key = asset["asset_id"]
+                    by_id[key] = failures.get(key) or _deliver_image(
+                        asset, Path(asset["path"]), state.source_url, store, overwrite
+                    )
+            results = [*missing, *(by_id[asset["asset_id"]] for asset in selected)]
             successes = sum(result["status"] == "ok" for result in results)
             payload = {
                 "status": "ok"
@@ -722,11 +810,22 @@ def context_from_manifest(path: Path) -> AssetContext:
     doi = record.acceptance.identity.doi
     if data.get("doi") != doi:
         raise ValueError("Image index identity does not match manifest.")
+    indexed = []
+    for asset in data.get("assets", []):
+        if not asset.get("asset_id"):
+            indexed.extend(image_index([asset]))
+        elif asset.get("kind") in IMAGE_KINDS:
+            asset_id = asset["asset_id"]
+            if not isinstance(asset_id, str) or not all(
+                c.isalnum() or c in "-_" for c in asset_id
+            ):
+                raise ValueError("Invalid asset ID in image index.")
+            indexed.append(asset)
     return AssetContext(
         doi=doi,
         provider=data["provider"],
         source_url=data["source_url"],
-        assets=image_index(data.get("assets", [])),
+        assets=indexed,
         metadata=data.get("metadata", {}),
         route_kind=data.get("route_kind", "html"),
         discovery_complete=True,

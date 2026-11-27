@@ -23,6 +23,7 @@ from paper_fetch.runtime import RuntimeContext
 from paper_fetch.targeted_assets import (
     capture_asset_context,
     context_from_manifest,
+    discover_content_images,
     fetch_selected_assets,
 )
 from tests.golden_criteria import golden_criteria_asset
@@ -680,12 +681,29 @@ class AtyponBrowserWorkflowMarkdownTests(unittest.TestCase):
     def test_science_adp0212_fixture_splits_display_equations_and_caption_sentences(
         self,
     ) -> None:
-        markdown, _ = self._extract_fixture_markdown(
+        markdown, extraction = self._extract_fixture_markdown(
             SCIENCE_ADP0212_FIXTURE,
             "https://www.science.org/doi/full/10.1126/science.adp0212",
             "science",
             "10.1126/science.adp0212",
         )
+
+        source = "https://www.science.org/doi/full/10.1126/science.adp0212"
+        images = discover_content_images(
+            ProviderContent(
+                route_kind="html",
+                source_url=source,
+                content_type="text/html",
+                body=SCIENCE_ADP0212_FIXTURE.read_bytes(),
+                diagnostics={"extraction": extraction},
+            ),
+            provider="science",
+        )
+        by_id = {asset.get("dom_id"): asset for asset in images}
+        for number in (1, 2):
+            caption = by_id[f"F{number}"]["caption"]
+            self.assertTrue(caption.startswith(f"**Figure {number}.**"))
+            self.assertIn(caption, markdown)
 
         self.assertIn(visible_markdown("**Equation 1.**"), visible_markdown(markdown))
         self.assertIn(visible_markdown("$$"), visible_markdown(markdown))

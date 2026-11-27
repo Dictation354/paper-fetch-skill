@@ -1,7 +1,7 @@
 """Original publisher links remain usable without changing body discovery."""
 
 import json
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qs, urljoin, urlsplit
 
 import pytest
 from bs4 import BeautifulSoup
@@ -146,9 +146,30 @@ def test_real_iop_directory_retains_attachment_id_and_original_link():
 
 
 @pytest.mark.parametrize(
-    "provider", ["science", "wiley", "mdpi", "annualreviews", "acs", "iop"]
+    ("provider", "files"),
+    [
+        ("science", ["sciadv.adl6155_sm.pdf"]),
+        ("wiley", ["gcb16414-sup-0001-FigureS1.docx"]),
+        ("mdpi", ["s1"]),
+        ("pnas", ["pnas.2322622121.sapp.pdf", "pnas.2322622121.sd01.xlsx"]),
+        (
+            "annualreviews",
+            [
+                "ne36_schiller_supmat.pdf",
+                *(f"schiller_video{i}.mpg" for i in range(1, 5)),
+            ],
+        ),
+        ("acs", ["ao4c03987_si_001"]),
+        ("aip", ["125205_1_epaps"]),
+        ("royalsocietypublishing", ["rsos150470supp1"]),
+        ("rsc", ["d5gc03562g1_suppl"]),
+        ("tandf", ["tgrs_a_2667034_sm1980.docx"]),
+        ("ams", ["10.1175_JCLI-D-23-0738.s1.pdf"]),
+    ],
 )
-def test_independent_supplementary_scope_replays_publisher_material_links(provider):
+def test_independent_supplementary_scope_replays_publisher_material_links(
+    provider, files
+):
     from paper_fetch.extraction.html._metadata import parse_html_metadata
     from paper_fetch.providers import annualreviews, mdpi
     from paper_fetch.providers.supplementary import _html_assets
@@ -162,18 +183,35 @@ def test_independent_supplementary_scope_replays_publisher_material_links(provid
         )
     elif provider == "mdpi":
         doi, url = "10.3390/s23010001", "https://www.mdpi.com/1424-8220/23/1/1"
+    elif provider == "pnas":
+        doi = "10.1073/pnas.2322622121"
+        url = "https://www.pnas.org/doi/full/" + doi
     elif provider == "annualreviews":
         doi = "10.1146/annurev-neuro-062111-150343"
         url = "https://www.annualreviews.org/content/journals/" + doi
+    elif provider == "royalsocietypublishing":
+        doi = "10.1098/rsos.150470"
+        url = "https://royalsocietypublishing.org/doi/" + doi
     html = golden_criteria_asset(doi, "original.html").read_text()
     client_class = {
+        "royalsocietypublishing": royalsocietypublishing.RoyalsocietypublishingClient,
         "mdpi": mdpi.MdpiClient,
         "annualreviews": annualreviews.AnnualreviewsClient,
     }.get(provider, CLIENTS.get(provider))
     client = client_class(None, {})
     with RuntimeContext(env={}) as context:
         assets, _ = _html_assets(client, html, url, context)
-    assert assets
+    names = []
+    for asset in assets:
+        target = urlsplit(asset["url"])
+        names.append(
+            parse_qs(target.query).get(
+                "file", [target.path.rstrip("/").rsplit("/", 1)[-1]]
+            )[0]
+        )
+    assert sorted(names) == sorted(files)
+    if provider == "pnas":
+        assert sorted(asset["filename_hint"] for asset in assets) == sorted(files)
     assert all(
         asset.get("kind") == "supplementary" or asset.get("section") == "supplementary"
         for asset in assets
@@ -189,6 +227,48 @@ def test_independent_supplementary_scope_replays_publisher_material_links(provid
             asset.get(field) in source_links
             for field in ("url", "download_url", "original_url")
         )
+
+
+def test_independent_iop_index_expands_only_declared_directory_files(monkeypatch):
+    from types import SimpleNamespace
+
+    from paper_fetch.providers import supplementary
+    from tests.support.iop_provider import (
+        _FakeIopSupplementaryIndexFetcher,
+        _iop_supplementary_test_deps,
+    )
+
+    doi = "10.1088/1748-9326/ab7d02"
+    page = "https://iopscience.iop.org/article/" + doi
+    directory = page + "/data"
+    index = _FakeIopSupplementaryIndexFetcher(
+        {
+            "body": golden_criteria_asset(
+                doi, "acquisition/network-repair/supplementary-index.html"
+            ).read_bytes(),
+            "url": directory,
+            "status_code": 200,
+            "headers": {"content-type": "text/html"},
+        }
+    )
+    client = CLIENTS["iop"](None, {}, deps=_iop_supplementary_test_deps(index))
+    monkeypatch.setattr(
+        supplementary,
+        "_fetch_browser_index",
+        lambda *args: SimpleNamespace(
+            html=golden_criteria_asset(doi, "original.html").read_text(),
+            browser_context_seed={},
+            final_url=page,
+        ),
+    )
+    with RuntimeContext(env={}) as context:
+        raw = supplementary._browser_index(client, doi, {"doi": doi}, context)
+    assert [call[0] for call in index.calls] == [directory]
+    assert not raw.content.diagnostics["supplementary_discovery_failures"]
+    assert [
+        (a["source_page_url"], a["source_ref"], a["filename_hint"])
+        for a in raw.content.extracted_assets
+    ] == [(directory, "supp1", "ERL_15_5_054014_suppdata.pdf")]
 
 
 def test_independent_springer_scope_keeps_extended_and_source_data():

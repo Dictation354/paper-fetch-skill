@@ -1284,7 +1284,13 @@ def fetch_browser_html(
             runtime_context.raise_if_cancelled()
         launch_config = (
             replace(config, timeout_ms=max(1, remaining_timeout_ms()))
+            # A shared profile starts the request's browser budget at admission.
+            # Its subsequent attachment clicks need the configured budget;
+            # the fast HTML attempt still uses local_deadline below.
             if config.backend == "byparr"
+            and not (
+                runtime_context is not None and runtime_context.asset_profile == "all"
+            )
             else config
         )
         manager, browser_context, page = _open_browser_html_context(

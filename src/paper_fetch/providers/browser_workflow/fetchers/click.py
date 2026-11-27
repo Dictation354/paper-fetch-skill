@@ -9,7 +9,7 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
-from urllib.parse import urljoin, urlsplit
+from urllib.parse import parse_qsl, urldefrag, urljoin, urlsplit
 
 from ....asset_budget import DEFAULT_ASSET_MAX_BYTES_PER_ASSET, AssetBudgetExceeded
 from ....extraction.html.assets import supplementary_response_block_reason
@@ -26,6 +26,14 @@ _CLICK_TIMEOUT_SECONDS = 60.0
 def _page_link(page, urls, asset, policy: BrowserAssetPolicy, remaining_ms):
     # Compare resolved hrefs, retaining the original DOM node. Never create an
     # anchor or assign a generated download URL to a publisher control.
+    if policy.supplement_exact_href and asset.get("source_href"):
+        value = json.dumps(asset["source_href"])
+        selector = f"a[href={value}]"
+        if policy.supplement_control_scope:
+            selector = f"{policy.supplement_control_scope} {selector}:visible"
+        # Attribute reads/activation auto-wait on the same exact selector.
+        return page.locator(selector).first, False
+
     selector = "a[href], button[data-url], a[data-url]"
     match = """(nodes, options) => {
         const {urls, preferVisible} = options;
@@ -49,7 +57,12 @@ def _page_link(page, urls, asset, policy: BrowserAssetPolicy, remaining_ms):
         return {tag: node.tagName.toLowerCase(), attribute,
                 value: node.getAttribute(attribute)};
     }"""
-    nodes = page.locator(selector)
+    parent = (
+        page.locator(policy.supplement_control_scope)
+        if policy.supplement_control_scope
+        else page
+    )
+    nodes = parent.locator(selector)
 
     def find_link():
         try:
@@ -79,8 +92,8 @@ def _page_link(page, urls, asset, policy: BrowserAssetPolicy, remaining_ms):
         found = find_link()
     # Re-resolve by the original href after a publisher redraws its DOM.
     selector = f"{found['tag']}[{found['attribute']}={json.dumps(found['value'])}]"
-    visible = page.locator(selector + ":visible")
-    return (visible if visible.count() else page.locator(selector)).first, False
+    visible = parent.locator(selector + ":visible")
+    return (visible if visible.count() else parent.locator(selector)).first, False
 
 
 def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any]):
@@ -115,6 +128,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
     listeners = []
     armed = False
     targets: set[str] = set()
+    redirect_targets = {}
     matched_requests = set()
     request_urls = set()
 
@@ -132,10 +146,16 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
             for expected in map(urlsplit, targets)
         )
 
-    def remaining_ms():
-        remaining = deadline - time.monotonic()
-        if fetcher._runtime_context is not None:
-            remaining = fetcher._runtime_context.remaining_seconds(remaining)
+    def remaining_ms(*, transfer_started=False):
+        # An admitted download can finish after the link activation window.
+        remaining = (
+            _CLICK_TIMEOUT_SECONDS if transfer_started else deadline - time.monotonic()
+        )
+        runtime = fetcher._runtime_context
+        if runtime is not None:
+            remaining = runtime.browser_remaining_seconds(
+                runtime.remaining_seconds(remaining)
+            )
         if remaining <= 0:
             raise TimeoutError("Supplementary click deadline exceeded.")
         return max(1, int(remaining * 1000))
@@ -144,64 +164,81 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         nonlocal phase
         phase = value
 
-    def owns_request(request):
-        # Responses from background prefetches, other pages, and previous
-        # attachments are excluded even when they have a plausible MIME type.
+    def request_page(request):
         try:
-            request_page = request.frame.page
-            if request_page not in [page, *popups]:
-                capture_popup(request_page)
-                if request_page not in popups:
-                    return False
+            owner = request.frame.page
         except Exception:
-            return False
-        return request_root(request) in matched_requests
+            return None  # Firefox popup navigation can precede frame creation.
+        if owner not in [page, *popups]:
+            capture_popup(owner)
+        return owner
+
+    def owns_request(request):
+        return request_page(request) in [page, *popups]
 
     def request_root(request):
         while request.redirected_from is not None:
             request = request.redirected_from
         return request
 
+    def clicked_url(url):
+        if url in targets:
+            return True
+        parameter = policy.supplement_added_query_parameter
+        if not parameter:
+            return False
+        actual = urlsplit(url)
+        query = parse_qsl(actual.query, keep_blank_values=True)
+        remaining = [(key, value) for key, value in query if key != parameter]
+        if len(query) != len(remaining) + 1:
+            return False
+        return any(
+            actual._replace(query="") == expected._replace(query="")
+            and remaining == parse_qsl(expected.query, keep_blank_values=True)
+            for expected in map(urlsplit, targets)
+        )
+
     def capture_request(request):
         if not armed:
             return
-        if request.redirected_from is None and request.url in targets:
-            if request.is_navigation_request():
-                # opener() can pump the sync loop before a popup's Page event,
-                # delivering its response/download reentrantly. Register the
-                # exact clicked navigation first; acceptance below still needs
-                # the verified page/opener relationship.
-                matched_requests.add(request)
-                request_urls.add(request.url)
-            try:
-                request_page = request.frame.page
-                if request_page not in [page, *popups]:
-                    capture_popup(request_page)
-                if request_page in [page, *popups]:
-                    matched_requests.add(request)
-            except Exception:
-                # Popup navigation can precede frame creation. Keep a pending
-                # root; response/download capture still requires an owned page.
-                if request.is_navigation_request():
-                    matched_requests.add(request)
         root = request_root(request)
+        if root not in matched_requests and root is request:
+            clicked = clicked_url(request.url)
+            if not clicked and request.url not in redirect_targets:
+                return
+            # Register a candidate before opener() can dispatch nested events.
+            # A known unrelated page can never contribute a response.
+            if clicked:
+                matched_requests.add(root)
+            owner = request_page(request)
+            if owner is not None and owner not in [page, *popups]:
+                matched_requests.discard(root)
+                return
+            if (
+                request.url in redirect_targets
+                and owner in redirect_targets[request.url]
+            ):
+                matched_requests.add(root)
         if root in matched_requests:
             request_urls.add(request.url)
 
     def capture_response(candidate):
         nonlocal response, pending_response
-        if (
-            armed
-            and request_root(candidate.request) in matched_requests
-            and not 300 <= candidate.status < 400
-        ):
-            if owns_request(candidate.request):
-                response = candidate
-            else:
-                # Firefox can deliver a redirected popup download before its
-                # Page/frame exists. A download from an owned page must confirm
-                # this response before it can supply any bytes or headers.
-                pending_response = candidate
+        if not armed or request_root(candidate.request) not in matched_requests:
+            return
+        owner = request_page(candidate.request)
+        if owner is not None and owner not in [page, *popups]:
+            return
+        if 300 <= candidate.status < 400:
+            location = candidate.headers.get("location")
+            if location and owner is not None:
+                url = urldefrag(urljoin(candidate.url, location)).url
+                redirect_targets.setdefault(url, set()).add(owner)
+            return
+        if owner is not None:
+            response = candidate
+        elif candidate.request.is_navigation_request():
+            pending_response = candidate
 
     def capture_finished(request):
         if armed and request_root(request) in matched_requests:
@@ -299,7 +336,11 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         ):
             raise ValueError("Supplementary control target changed.")
         visible_link = link
-        if policy.supplement_link is None and not filename_control:
+        if (
+            policy.supplement_link is None
+            and not filename_control
+            and not policy.supplement_exact_href
+        ):
             value = json.dumps(raw_href)
             visible_link = page.locator(
                 f"a[href={value}]:visible, a[data-url={value}]:visible, "
@@ -349,8 +390,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 (
                     item
                     for item in downloads
-                    if item.url in targets
-                    or (response is not None and item.url == response.url)
+                    if response is not None and item.url == response.url
                 ),
                 None,
             )
@@ -381,7 +421,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                             download.save_as(str(path))
                         else:
                             path = download.path()
-                        remaining_ms()
+                        remaining_ms(transfer_started=True)
                         if path is None:
                             record_failure(f"{prefix}_download_failed")
                             return None
@@ -420,7 +460,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                         detached_response = inline_response
                         continue
                     route["capture_event"] = "inline_response"
-                remaining_ms()
+                remaining_ms(transfer_started=download is not None)
                 reason = supplementary_response_block_reason(
                     headers.get("content-type", ""), body
                 )

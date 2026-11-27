@@ -262,8 +262,8 @@ def test_arxiv_ancillary_is_independent_of_html_pdf_and_source_archive():
     assert len(transport.calls) == 2
 
 
-@pytest.mark.parametrize("broken", [False, True])
-def test_ieee_multimedia_discovery_failure_is_not_an_empty_result(broken):
+@pytest.mark.parametrize("index", ["matching", "missing", "other_article"])
+def test_ieee_multimedia_discovery_failure_is_not_an_empty_result(index):
     import json
 
     from paper_fetch.providers.ieee import IeeeClient
@@ -274,9 +274,12 @@ def test_ieee_multimedia_discovery_failure_is_not_an_empty_result(broken):
     landing = f"<script>xplGlobal.document.metadata = {json.dumps({'doi': doi, 'articleNumber': '123', 'sections': {'multimedia': 'true'}})};</script>"
     api_body = (
         "{}"
-        if broken
+        if index == "missing"
         else json.dumps(
-            {"multimedia": [{"filePath": "/data/file.mp4", "fileName": "Video.mp4"}]}
+            {
+                "articleNumber": "456" if index == "other_article" else "123",
+                "multimedia": [{"filePath": "/data/file.mp4", "fileName": "Video.mp4"}],
+            }
         )
     )
     transport = RecordingTransport(
@@ -290,9 +293,10 @@ def test_ieee_multimedia_discovery_failure_is_not_an_empty_result(broken):
         result, _ = client.fetch_supplementary(
             doi, {"doi": doi, "landing_page_url": url}, None, context=context
         )
-    assert result.discovery_complete is not broken
-    if broken:
+    assert result.discovery_complete == (index == "matching")
+    if index != "matching":
         assert result.status == "ieee_multimedia_discovery_failed"
+        assert not result.assets
     else:
         assert result.assets[0]["url"].endswith("file.mp4")
 

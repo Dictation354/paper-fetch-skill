@@ -243,15 +243,21 @@ def test_owned_shared_session_collects_original_asset_bytes_and_cleans_processes
     base, assets, calls = site
     _set_home(monkeypatch, "pnas", base + "/")
     _set_home(monkeypatch, "elsevier", base + "/")
-    config = _config(tmp_path, provider)
-    with RuntimeContext(env={}) as runtime:
+    config = replace(_config(tmp_path, provider), timeout_ms=180000)
+    with RuntimeContext(env={}, asset_profile="all") as runtime:
         result = fetch_html_with_browser(
             [base + "/doi/full/10.1073/pnas.test"],
             publisher=provider,
             config=config,
             runtime_context=runtime,
             wait_seconds=0,
+            max_timeout_ms=120000,
             options=BrowserHtmlFetchOptions(readiness_budget_seconds=2),
+        )
+        assert runtime.browser_deadline_monotonic == pytest.approx(
+            runtime.browser_execution_started_at + config.timeout_ms / 1000,
+            abs=0.01,
+            rel=0,
         )
         context = runtime.new_browser_context_for_runtime_config(config)
         manager = context._paper_fetch_navigator

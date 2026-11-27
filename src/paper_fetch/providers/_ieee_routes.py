@@ -44,7 +44,7 @@ IEEE_ROUTES = (
         browser_optional=True,
         requires_playwright=True,
         timeout_seconds=20,
-        concurrency=2,
+        concurrency=4,
         transient_retries=0,
     ),
 )

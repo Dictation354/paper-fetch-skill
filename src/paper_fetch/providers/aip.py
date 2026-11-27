@@ -135,7 +135,9 @@ __all__ = ["AipClient"]
 
 
 PROVIDER_BUNDLE = ProviderBundle(
-    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True, supplement_added_query_parameter="_gl"
+    ),
     client_factory=AipClient,
     catalog=_PROVIDER_SPEC,
     html_rules=ProviderHtmlRules(

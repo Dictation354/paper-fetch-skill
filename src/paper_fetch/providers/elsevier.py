@@ -561,12 +561,15 @@ def download_elsevier_related_assets(
     context: RuntimeContext | None = None,
     source_url: str | None = None,
     asset_download_concurrency: int | None = None,
+    selected_references: list[dict[str, Any]] | None = None,
 ) -> dict[str, list[dict[str, Any]]]:
     if output_dir is None:
         return empty_asset_results()
 
     references = filter_elsevier_asset_references(
-        extract_elsevier_asset_references(
+        selected_references
+        if selected_references is not None
+        else extract_elsevier_asset_references(
             xml_body, context=context, source_url=source_url
         ),
         asset_profile=asset_profile,
@@ -627,12 +630,15 @@ def download_elsevier_related_assets(
             asset_profile=asset_profile,
             options=AssetDownloadOptions(
                 headers=headers,
+                candidate_headers_filter=_object_request_headers,
+                sensitive_headers=("X-ELS-APIKey",),
                 candidate_builder=lambda _transport, *, asset, **_kwargs: [
                     normalize_text(str(asset.get("source_url") or ""))
                 ],
                 asset_download_concurrency=concurrency,
                 fetch_policy="direct_then_browser",
                 provider_name="elsevier",
+                route_name="object_assets",
                 runtime_context=context,
             ),
         )

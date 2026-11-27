@@ -101,6 +101,9 @@ class BrowserAssetPolicy:
     supplement_reveal: Callable[..., None] | None = None
     supplement_activate: Callable[..., None] | None = None
     supplement_ignore_tracking_query: bool = False
+    supplement_added_query_parameter: str | None = None
+    supplement_exact_href: bool = False
+    supplement_control_scope: str | None = None
     supplement_prefer_visible: bool = False
     figure_page_ready_selector: str | None = None
     figure_page_wait_seconds: float = 2

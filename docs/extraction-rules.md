@@ -101,11 +101,13 @@
 | Wiley | `Supporting Information` accordion/content 内的 `downloadSupplement` 或 `sup-*` supporting file 链接；`file` / `filename` / `attachment` / 非布尔 `download` query 可作为落盘 `filename_hint`。 | 正文 `<figure>` 的 `/cms/asset/...fig-*` 只归 body figure，不并行归 supplementary；`download=true` 不作为文件名。 |
 | Science / PNAS | Atypon back matter 的真实 `Supplementary Material(s)` / `Supporting Information` section 子树和 publisher `/doi/suppl/.../suppl_file/...` 附件。 | 正文 figure/formula、Data Availability 链接、页内 `#supplementary-materials` 导航和 supplementary references 中的外部 PDF 不归 supplementary。 |
 | ACS | 当前 Silverchair `.widget-ArticleDataSupplements` 中的稳定 publisher `/article-supplement/` 附件。 | 嵌入 Figshare viewer/downloader、正文 figure/table asset、citation/download chrome 和机构 OpenURL 链接不归 canonical supplementary。 |
-| IEEE | 明确 Supplementary / Supporting Material / Multimedia section，IEEE 附件语义容器，或 landing metadata `sections.multimedia=true` 加 `/rest/document/{article_number}/multimedia` payload；只有 `asset_profile=all` 下载这些附件。 | `asset_profile=body` 只下载正文 figure/table/formula；正文 `data` / `dataset` / `code` / `media` / repository 链接和文件后缀不能单独触发 supplementary。 |
+| IEEE | `--target supplementary` 和正文的 `--asset-profile all` 均使用论文落地页和 Multimedia 附件列表。独立入口先核对落地页的论文身份和文章编号，再读取对应的 `/rest/document/{article_number}/multimedia`。 | `asset_profile=body` 只下载正文 figure/table/formula；正文 `data` / `dataset` / `code` / `media` / repository 链接和文件后缀不能单独触发 supplementary。 |
 | Copernicus | NLM/JATS XML 中的 `supplementary-material`、`inline-supplementary-material` 和明确 `xlink:href` 附件节点。 | 正文 Data/Code Availability 普通仓库链接不凭文本或后缀升级为 supplementary。 |
 | IOP | 正文页的 `#supplDataLink` 或同 DOI `/article/{doi}/data[N]` 入口只是索引；复用文章浏览器 cookie/Referer 打开索引页后，只接受 `#supplementarydata` 内 `id=SM数字` 的真实附件。 | `/data` HTML 本身、正文 figure 的 Standard/High-resolution 控件、页脚 WeChat QR 和未编号链接都不归 supplementary；索引 challenge、DOI 不匹配或空附件必须记录 asset failure。 |
 
 - 浏览器补充文件下载须从页面已有控件点击开始，不注入下载链接。[浏览器 provider](providers.md) 的附件使用串行 `browser_only`，失败不得回退 HTTP 直链或 context request。发现目录/JSON 与正文图片独立使用原策略；纯 HTTP 分支保留现有行为。点击页、原始链接和最终下载地址形成来源证据，下载事件/内联响应须关联本次目标及其重定向链，并通过统一字节、类型、预算与原子落盘验收。
+
+- 浏览器缺少重定向请求的父指针时，可用本次点击所属页面或弹窗实际收到的 `Location` 关联后续请求。AIP 控件允许在原链接上追加一个 `_gl` 参数。PNAS 按原始 `href` 识别附件，并沿用 `/suppl_file/` 链接中的文件名。
 
 - 边界说明：
   - 这条规则不定义每个 publisher 的完整 DOM selector、REST endpoint 或 URL allowlist；这些细节由 provider-specific helper 维护，本文只保留用户可见 contract。

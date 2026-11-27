@@ -127,7 +127,7 @@ def article_html(links):
     return (
         '<section class="article-section__content"><h2>Results</h2><p>'
         + "Article body. " * 120
-        + '</p><p>Second paragraph.</p></section><section class="article-section__supporting">'
+        + '</p><p>Second paragraph.</p></section><section class="article-section__supporting widget-ArticleDataSupplements">'
         + links
         + "</section>"
     )
@@ -646,3 +646,119 @@ def test_annualreviews_opens_existing_supplementary_tab(click_browser, dropdown)
         assert result is not None, fetcher.failure_for("https://example.test/si.zip")
         assert result["body"] == body
         context.close()
+
+
+@pytest.fixture(scope="module")
+def platform_click_browser(request):
+    from paper_fetch.browser_runtime_policy import engine_name
+
+    if engine_name() != "invisible":
+        yield request.getfixturevalue("click_browser")
+        return
+    invisible = pytest.importorskip("invisible_playwright")
+    from invisible_core.download import cache_dir_for_seal
+
+    if not cache_dir_for_seal().is_dir():
+        pytest.skip("requires the prepared Invisible browser")
+    with invisible.InvisiblePlaywright(
+        headless=True,
+        timezone="UTC",
+        locale="en-US",
+        extra_prefs={"pdfjs.disabled": True},
+    ) as browser:
+        yield browser
+
+
+@pytest.mark.parametrize(
+    "case",
+    [
+        "redirect",
+        "popup_redirect",
+        "tracking",
+        "wrong_query",
+        "other_page",
+        "miss",
+        "media_tab",
+    ],
+)
+def test_platform_attachment_control(
+    platform_click_browser, local_responses, monkeypatch, case
+):
+    from paper_fetch.providers.browser_workflow.fetchers import click
+
+    received = []
+    provider = {
+        "tracking": "aip",
+        "wrong_query": "aip",
+        "miss": "rsc",
+        "media_tab": "ieee",
+    }.get(case, "science")
+    href = "/file/si.pdf?id=1"
+    good = b"%PDF-1.7\nexpected attachment"
+    wrong = b"%PDF-1.7\nunrelated file"
+
+    def serve(path):
+        received.append(path)
+        if path == "/other":
+            return (
+                200,
+                {"Content-Type": "text/html"},
+                (b"<script>onstorage=()=>location.href='/file/si.pdf?id=1'</script>"),
+            )
+        if path == "/article":
+            if case == "media_tab":
+                panel = f"""<button role="tab" style="pointer-events:none"
+                    onclick="document.getElementById('media').hidden=false">Media</button>
+                    <div id="media" hidden><button onclick="location.href='{href}'">si.pdf</button></div>"""
+                return 200, {"Content-Type": "text/html"}, article_html(panel).encode()
+            action = {
+                "tracking": "this.href += '&_gl=abc'",
+                "wrong_query": "this.href = '/file/si.pdf?id=2&_gl=abc'",
+                "other_page": "event.preventDefault();localStorage.trigger='1';location.href='/other/si.pdf'",
+            }.get(case, "")
+            style = "pointer-events:none" if case == "miss" else ""
+            target = 'target="_blank"' if case == "popup_redirect" else ""
+            link = f'<a href="{href}" {target} style="{style}" onclick="{action}">Supplementary PDF</a>'
+            return 200, {"Content-Type": "text/html"}, article_html(link).encode()
+        if case in {"redirect", "popup_redirect"} and path == href:
+            return 302, {"Location": "../final/si.pdf"}, b""
+        return (
+            200,
+            {
+                "Content-Type": "application/pdf",
+                "Content-Disposition": 'attachment; filename="si.pdf"',
+            },
+            (wrong if case in {"other_page", "wrong_query"} else good),
+        )
+
+    base = local_responses(serve)
+    with RuntimeContext(env={}) as runtime:
+        context = platform_click_browser.new_context(accept_downloads=True)
+        try:
+            other = context.new_page()
+            other.goto(base + "/other")
+            fetcher = click_fetcher(
+                context, runtime, provider=provider, article=base + "/article"
+            )
+            if case in {"wrong_query", "other_page"}:
+                monkeypatch.setattr(click, "_CLICK_TIMEOUT_SECONDS", 5)
+            if case in {"redirect", "popup_redirect"}:
+                # Model the missing edge while retaining the actual browser's
+                # requests, redirect headers, response body and download event.
+                request_type = type(other.goto(base + "/other").request)
+                monkeypatch.setattr(
+                    request_type, "redirected_from", property(lambda self: None)
+                )
+            result = fetcher(base + href, {"source_href": href})
+            if case in {"wrong_query", "other_page"}:
+                assert not result
+                if case == "other_page":
+                    assert href in received and "/other/si.pdf" in received
+                else:
+                    assert "/file/si.pdf?id=2&_gl=abc" in received
+            else:
+                assert result is not None, fetcher.failure_for(base + href)
+                assert result["body"] == good
+                assert result.route_diagnostics["capture_event"] == "download"
+        finally:
+            context.close()

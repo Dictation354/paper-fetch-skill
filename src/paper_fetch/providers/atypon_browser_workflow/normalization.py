@@ -706,7 +706,9 @@ def _normalize_table_blocks(
     return entries
 
 
-def _normalize_figure_blocks(container: Tag, publisher: str) -> None:
+def _normalize_figure_blocks(
+    container: Tag, publisher: str, rendered_captions: list[dict[str, str]] | None
+) -> None:
     soup = _soup_root(container)
     if soup is None:
         return
@@ -723,12 +725,29 @@ def _normalize_figure_blocks(container: Tag, publisher: str) -> None:
             continue
         block = soup.new_tag("p")
         block.string = f"**{label}** {caption}".strip()
+        if rendered_captions is not None and caption:
+            rendered_captions.append(
+                {
+                    "dom_id": str(
+                        node.get("id")
+                        or node.get("data-content-id")
+                        or node.get("data-id")
+                        or ""
+                    ),
+                    "url": _table_image_url(node),
+                    "caption": str(block.string),
+                }
+            )
         block["data-paper-fetch-markdown"] = "1"
         node.replace_with(block)
 
 
 def _normalize_special_blocks(
-    container: Tag, publisher: str, losses: SemanticLosses | None = None
+    container: Tag,
+    publisher: str,
+    losses: SemanticLosses | None = None,
+    *,
+    rendered_captions: list[dict[str, str]] | None = None,
 ) -> list[dict[str, str]]:
     profile = _publisher_profile(publisher)
     hook = profile.dom_hooks.before_block_normalization
@@ -743,7 +762,7 @@ def _normalize_special_blocks(
     _normalize_inline_formula_image_nodes(container, losses)
     _normalize_boxed_text_blocks(container)
     table_entries = _normalize_table_blocks(container, publisher)
-    _normalize_figure_blocks(container, publisher)
+    _normalize_figure_blocks(container, publisher, rendered_captions)
     _normalize_non_table_inline_blocks(container)
     hook = profile.dom_hooks.after_block_normalization
     if hook is not None:

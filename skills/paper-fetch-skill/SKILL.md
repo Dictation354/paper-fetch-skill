@@ -28,7 +28,7 @@ paper-fetch fetch --query-file dois.txt --batch-concurrency 4 --output-dir ./pap
 读取方法章时，按每篇回执分别操作。
 
 1. 打开 `section_index_path`，按索引中的实际 `title` 找到方法章，例如 `2 **Materials and methods**`，记下其 `start_line` 和 `level`。
-2. 从该项向后查找第一个 `level` 小于或等于方法章的标题，以该标题的 `start_line - 1` 为末行。如果方法章是最后一章，以最后一个索引项的 `end_line` 为末行。
+2. 优先用该项的 `subtree_end_line` 作为整章末行。旧索引缺少该字段时，从该项向后查找第一个 `level` 小于或等于方法章的标题，以该标题的 `start_line - 1` 为末行。如果方法章是最后一章，以最后一个索引项的 `end_line` 为末行。
 3. 打开 `body_path`，从方法章的 `start_line` 读到上述末行（含）。即使父标题后紧接 `2.1`，这个范围也包含各子节的方法正文。
 
 依据读取工具**实际交付**的行、字符和截断信息续读，不能把请求的范围当成已读范围。区分取得全文与已阅读的内容。局部问题只需读取相关证据。核对公式定义、符号或图内数值时实际查看表达或图片，图注与链接不能替代原图。

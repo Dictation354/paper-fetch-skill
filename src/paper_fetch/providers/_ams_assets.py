@@ -420,10 +420,16 @@ def _extract_ams_supplementary_assets(
     assets: dict[str, dict[str, str]] = {}
     for asset in extract_supplementary_assets(html_text, source_url):
         url = asset["url"]
-        if _is_ams_article_supplement(url, source_url) or (
-            _atypon_browser_workflow_supplementary_asset_is_supported(asset)
-        ):
-            assets.setdefault(url, asset)
+        key = url
+        if _is_ams_article_supplement(url, source_url):
+            parsed = urllib.parse.urlsplit(url)
+            key = re.sub(r"/+", "/", parsed.path)
+            # Prefer the stable article link to its session-specific alias.
+            if key in assets and parsed.query:
+                continue
+        elif not _atypon_browser_workflow_supplementary_asset_is_supported(asset):
+            continue
+        assets[key] = asset
     return list(assets.values())
 
 

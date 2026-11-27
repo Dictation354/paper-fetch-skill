@@ -6,13 +6,17 @@ import re
 from collections.abc import Mapping
 from functools import partial
 from typing import Any
-from urllib.parse import urljoin
+from urllib.parse import urljoin, urlsplit
 
 from bs4 import BeautifulSoup, Tag
 
 from ..extraction.html.semantics import normalize_heading, parse_markdown_heading
 from ..quality.html_signals import PNAS_SIGNAL_SET, evaluate_datalayer_blocking_signals
 from ..utils import normalize_text
+from ._html_asset_engine import (
+    HtmlAssetExtractionPolicy,
+    extract_scoped_assets_with_policy,
+)
 from ._html_authors import (
     ATYPON_AUTHOR_COLLAPSE_UI_TEXT,
     ATYPON_AUTHOR_COUNT_PATTERN,
@@ -27,7 +31,7 @@ from ._html_section_markdown import render_container_markdown
 from .atypon_browser_workflow.asset_scopes import (
     _atypon_browser_workflow_supplementary_sections,
     extract_body_and_supplementary_html,
-    extract_scoped_html_assets,
+    extract_supplementary_assets,
 )
 from .atypon_browser_workflow.profile import (
     _drop_promotional_blocks,
@@ -248,5 +252,32 @@ def finalize_extraction(
     return markdown_text, finalized
 
 
-def scoped_asset_extractor(*args: Any, **kwargs: Any) -> list[dict[str, str]]:
-    return extract_scoped_html_assets(*args, **kwargs)
+def _supplementary_files(scope: str, source_url: str) -> list[dict[str, str]]:
+    assets = extract_supplementary_assets(scope, source_url)
+    for asset in assets:
+        # The final /action/downloadSupplement endpoint has no file extension.
+        path = urlsplit(asset["source_href"]).path
+        if "/suppl_file/" in path:
+            asset["filename_hint"] = path.rsplit("/", 1)[-1]
+    return assets
+
+
+def extract_supplementary_index(
+    html_text: str, source_url: str
+) -> list[dict[str, str]]:
+    sections = _atypon_browser_workflow_supplementary_sections(
+        BeautifulSoup(html_text, "lxml")
+    )
+    return _supplementary_files("\n".join(map(str, sections)), source_url)
+
+
+def scoped_asset_extractor(
+    body_html_text, source_url, *, asset_profile, supplementary_html_text=None
+):
+    return extract_scoped_assets_with_policy(
+        body_html_text,
+        source_url,
+        asset_profile=asset_profile,
+        supplementary_html_text=supplementary_html_text,
+        policy=HtmlAssetExtractionPolicy(supplementary_extractor=_supplementary_files),
+    )

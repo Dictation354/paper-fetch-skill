@@ -119,7 +119,10 @@ class ProviderCatalogTests(unittest.TestCase):
                 self.assertTrue(asset_routes)
                 policy = compile_route_execution_policy_for_kind(spec.name, "assets")
                 self.assertEqual(policy.timeout_seconds, 20)
-                self.assertEqual(policy.asset_concurrency_cap, 2)
+                self.assertEqual(
+                    policy.asset_concurrency_cap,
+                    {"arxiv": 2, "iop": 2, "wiley": 1}.get(spec.name, 4),
+                )
                 if spec.name in browser_recovery_without_direct_retries:
                     self.assertEqual(policy.transient_retries, 0)
 

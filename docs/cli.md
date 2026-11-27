@@ -35,9 +35,9 @@ fetch 默认为 temporary_read。完整 Markdown、逐篇 schema-v3 manifest、�
 
 `status` 保持任务生命周期含义；`target_satisfied` 直接复用退出码使用的目标满足判断。`error` 无异常为 null，有异常时投影 status、reason、provider、route、stage、http_status、retryable 并脱敏。顶层原因码稳定去重并包含资产验收 issue/failure codes，例如 `asset_not_archived`。
 
-完整 trace 和验收细节保存在 manifest 与诊断文件。取得全文（包括降级全文）退出 0；仅摘要、元数据或失败退出 1，保留结果；参数错误退出 2。正文截断标记不表示本地 reader 已读取的范围。
+完整 trace 和验收细节保存在 manifest 与诊断文件。完整正文落盘后，常规 `diagnostics.json` 保留 `body_path`、正文计数和验收信号。`--artifact-mode all` 同时保留脱敏后的 `body_metrics.text` 和 `body_metrics.abstract_text`。取得全文（包括降级全文）退出 0；仅摘要、元数据或失败退出 1，保留结果；参数错误退出 2。正文截断标记不表示本地 reader 已读取的范围。
 
-按 `section_index_path` 打开 `sections.json`，其中 `sections` 每项含 `title`、`level`、`start_line` 和 `end_line`。行号对应正文快照 `body.md`，从 1 开始，两端包含；已完成的全文结果统一提供经校验的 `body_path` 与 `section_index_path`。每章止于下一标题前一行或文末。Nature 的无标题引言可从 `Main` 起读。
+按 `section_index_path` 打开 `sections.json`，其中 `sections` 每项含 `title`、`level`、`start_line`、`end_line` 和 `subtree_end_line`。行号对应正文快照 `body.md`，从 1 开始，两端包含；已完成的全文结果统一提供经校验的 `body_path` 与 `section_index_path`。直属内容读到 `end_line`，含子节的整章读到 `subtree_end_line`。旧索引以之后首个同级或更高级标题的前一行作为整章末行，找不到时读到文末。Nature 的无标题引言可从 `Main` 起读。
 
 ## 单篇 manifest
 
@@ -85,7 +85,7 @@ paper-fetch fetch-assets --manifest /absolute/path/manifest.json --kind formula
 paper-fetch fetch-assets --query DOI --asset-url https://example.org/figure.png
 ```
 
-`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind {formula,figure,table}`，三种选择器互斥。`fetch-assets` 从 v3 manifest 恢复论文身份和已有图片索引。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
+`--manifest` 与 `--query` 互斥。`--asset-id`、`--asset-url` 可重复，或使用 `--kind {formula,figure,table}`，三种选择器互斥。`fetch-assets` 从 v3 manifest 恢复论文身份和已有图片索引。一次选择多图时，先复用本地文件，再将同篇缺图交给出版社下载器批量处理。默认文件保存在本次调用的系统临时目录，进程退出后仍可访问。用 `--output-dir` 指定存放位置。
 
 公式图、插图和表格图匹配到 `images.json` 中的资产后，该项带有 `body_positions`。每个 `{line, column}` 从 1 开始，指向落盘 Markdown 图片标记的起点。远程 URL 和改写后的本地链接均可匹配，重复出现时记录全部位置。按正文行范围选取已有 `asset_id`，再用原 manifest 补取。
 
