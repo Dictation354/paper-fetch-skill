@@ -198,12 +198,16 @@ def test_prepared_official_camoufox_bundle_launches_both_context_modes(
     # The offline wizard reuses the prepared runtime and fingerprint model,
     # then verifies only about:blank without downloads or provider state.
     from paper_fetch.offline_setup import Setup
-    from paper_fetch.providers.browser_runtime import byparr_preparation, preparation
+    from paper_fetch.providers.browser_runtime import byparr_preparation
 
+    # A fresh successful preparation record must also suppress version discovery.
+    # Installation is already guarded above for the runtime and fingerprint model.
     monkeypatch.setattr(
-        preparation,
-        "prepare_camoufox_managed_runtime",
-        lambda: pytest.fail("optional wizard must reuse the valid native bundle"),
+        pkgman,
+        "list_available_versions",
+        lambda *_args, **_kwargs: pytest.fail(
+            "optional wizard queried versions after a successful cache check"
+        ),
     )
     monkeypatch.setattr(
         byparr_preparation,
