@@ -58,7 +58,7 @@ browser = [
   "lxml>=6,<7",
   "playwright>=1.58,<1.63; (sys_platform != 'linux' and sys_platform != 'win32') or (platform_machine != 'x86_64' and platform_machine != 'AMD64' and platform_machine != 'amd64')",
   "playwright>=1.58,<2; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
-  "invisible-playwright==0.58.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
+  "invisible-playwright==0.59.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "invisible-core==68.80.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "trafilatura>=2.4,<3",
 ]
@@ -72,7 +72,7 @@ full = [
   "lxml>=6,<7",
   "playwright>=1.58,<1.63; (sys_platform != 'linux' and sys_platform != 'win32') or (platform_machine != 'x86_64' and platform_machine != 'AMD64' and platform_machine != 'amd64')",
   "playwright>=1.58,<2; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
-  "invisible-playwright==0.58.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
+  "invisible-playwright==0.59.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "invisible-core==68.80.0; (sys_platform == 'linux' or sys_platform == 'win32') and (platform_machine == 'x86_64' or platform_machine == 'AMD64' or platform_machine == 'amd64')",
   "PyMuPDF>=2,<3",
   "pymupdf4llm>=2,<3",
