@@ -4,13 +4,20 @@ from types import SimpleNamespace
 
 import pytest
 
+from paper_fetch.delivery.receipts import receipt_from_record
 from paper_fetch.failure import FailureDiagnostics
+from paper_fetch.manifest import build_manifest_record
+from paper_fetch.models import FetchEnvelope
 from paper_fetch.providers.base import (
     ProviderContent,
     ProviderFailure,
     RawFulltextPayload,
 )
-from paper_fetch.providers.springer import PdfFallbackStrategy, SpringerClient
+from paper_fetch.providers.springer import (
+    PdfFallbackStrategy,
+    PdfFetchFailure,
+    SpringerClient,
+)
 from paper_fetch.runtime import RuntimeContext
 from paper_fetch.tracing import trace_event
 from tests.support._paper_fetch_support import (
@@ -190,3 +197,111 @@ def test_springer_uses_only_page_identity_before_merging(page_title, status, met
         "doi": None,
         "title": page_title,
     }
+
+
+@pytest.mark.parametrize(
+    ("route", "heading"),
+    [("abstract_only", ""), ("pdf", ""), ("html", "Along the transect"), ("html", "")],
+)
+def test_springerlink_bilingual_preview_receipt(route, heading, monkeypatch, tmp_path):
+    doi = "10.1007/example"
+    url = f"https://link.springer.com/article/{doi}"
+    pdf_url = f"https://link.springer.com/content/pdf/{doi}.pdf"
+    abstract_en = "The abstract summarizes the measurements from all stations. " * 12
+    abstract_zh = "本研究摘要概述了各个站点的测量结果。" * 40
+    body = "Measurements across the entire transect showed a seasonal shift. " * 30
+    article_body = f"<h2>{heading}</h2>" if heading else ""
+    if route == "html":
+        article_body += f"<p>{body}</p>"
+    html = f"""
+    <meta name="citation_doi" content="{doi}">
+    <meta name="citation_pdf_url" content="{pdf_url}">
+    <article><h1>Transect observations</h1><div class="c-article-body">
+      <section aria-labelledby="Abs1" data-title="Abstract" lang="en">
+        <h2 id="Abs1">Abstract</h2><p>{abstract_en}</p></section>
+      <section aria-labelledby="Abs2" data-title="摘要" lang="zh">
+        <h2 id="Abs2">摘要</h2><p>{abstract_zh}</p></section>
+      {article_body}
+      <div class="c-pdf-preview"><h2>PDF preview</h2>
+        <p>{"Preview of the first page of the article. " * 12}</p></div>
+      <section data-title="Acknowledgements"><h2>Acknowledgements</h2>
+        <p>We thank our colleagues.</p></section>
+      <section data-title="Additional information"><h2>Additional information</h2>
+        <div><h3>Article Highlights</h3><ul><li>{"A summary of seasonal observations. " * 15}</li></ul></div></section>
+      <section><h2>References</h2><ol><li>Survey of stations.</li></ol></section>
+    </div></article>
+    """
+    transport = FixtureHtmlTransport(
+        {url: http_response(url, html.encode(), "text/html; charset=utf-8")}
+    )
+    client = SpringerClient(transport, {})
+
+    pdf_attempts = []
+
+    def fetch_pdf(strategy, urls):
+        pdf_attempts.append(urls)
+        assert pdf_url in urls
+        if route == "abstract_only":
+            raise PdfFetchFailure("pdf_download_failed", "PDF unavailable")
+        return SimpleNamespace(
+            final_url=pdf_url,
+            pdf_bytes=b"%PDF",
+            suggested_filename="paper.pdf",
+            markdown_text=body,
+        )
+
+    monkeypatch.setattr(PdfFallbackStrategy, "fetch", fetch_pdf)
+    with RuntimeContext(env={}, transport=transport) as context:
+        result = client.fetch_result(
+            doi,
+            {"doi": doi, "landing_page_url": url, "title": "Transect observations"},
+            None,
+            context=context,
+        )
+    assert len(pdf_attempts) == (0 if route == "html" else 1)
+    article = result.article
+    receipt = receipt_from_record(
+        build_manifest_record(
+            tool_version="test",
+            index=1,
+            attempt=1,
+            query=doi,
+            request_parameters={"target": "paper"},
+            asset_profile="none",
+            envelope=FetchEnvelope(
+                doi=doi, source=article.source, article=article, trace=result.trace
+            ),
+        ),
+        tmp_path / "manifest.json",
+    )
+    assert receipt["target_satisfied"] is (route != "abstract_only")
+    assert article.source == ("springer_pdf" if route == "pdf" else "springer_html")
+    if route != "html":
+        assert any(
+            event.component == "springer_html" and event.code == "abstract_only"
+            for event in result.trace
+        )
+    if route != "pdf":
+        assert [
+            (s.heading, s.text.strip())
+            for s in article.sections
+            if s.kind == "abstract"
+        ] == [("Abstract", abstract_en.strip()), ("摘要", abstract_zh)]
+        diagnostics = result.content.diagnostics
+        assert not any(
+            h["kind"] == "body"
+            and h["heading"] in {"摘要", "PDF preview", "Article Highlights"}
+            for h in diagnostics["extraction"]["section_hints"]
+        )
+        metrics = diagnostics["availability_diagnostics"]["body_metrics"]
+        if route == "abstract_only":
+            assert receipt["content_kind"] == "abstract_only"
+            assert metrics["char_count"] == metrics["body_paragraph_count"] == 0
+        else:
+            assert body.strip() in metrics["text"]
+            body_sections = [s for s in article.sections if s.kind == "body"]
+            assert body.strip() in [s.text for s in body_sections]
+            assert all(
+                s.heading not in {"摘要", "PDF preview", "Article Highlights"}
+                for s in body_sections
+            )

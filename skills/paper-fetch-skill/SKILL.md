@@ -9,13 +9,15 @@ description: "获取、下载或核验指定论文全文或补充材料，或探
 
 ## 核心流程
 
-先从同一任务已有的回执、manifest 或交接记录确认论文身份和验收范围。用 `paper-fetch lookup --doi <DOI> --output-dir <DIR>` 查单篇，用 `paper-fetch lookup --query-file <FILE> --output-dir <DIR>` 查一批 DOI。可重复传入 `--output-dir`。允许使用历史正文时，加 `--include-legacy` 回退到 v8/v2 sidecar、缺少 `sections.json` 的旧 manifest 或带受管 frontmatter 的 `.md` 文件。跨会话交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
-
-只有缺少所需正文时才调用 `fetch`。需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。
+有可读文件、回执、manifest 或交接记录时，核对论文身份和验收范围，直接复用满足要求的文件。正文回执中的 `body_path` 指向可读正文。只有 DOI 或链接且需要正文时，直接抓取。Unix 离线安装若未将命令加入 PATH，可用 `~/.local/bin/paper-fetch` 调用下例。
 
 ```bash
 paper-fetch fetch --progress text --query "10.1186/1471-2105-11-421"
 ```
+
+已知历史结果目录时，用 `paper-fetch lookup --doi <DOI> --output-dir <DIR>` 查单篇，用 `paper-fetch lookup --query-file <FILE> --output-dir <DIR>` 查一批 DOI。可重复传入 `--output-dir`。允许使用历史正文时，加 `--include-legacy` 回退到 v8/v2 sidecar、缺少 `sections.json` 的旧 manifest 或带受管 frontmatter 的 `.md` 文件。查到所需正文就直接读取，缺少时再用 `fetch`。只需解析论文身份时，用 `paper-fetch resolve --query <QUERY>`。
+
+需要跨会话保留新结果时，用 `--preset cacheable_read` 并通过 `--output-dir` 指定任务输出目录。交接时记录论文身份、验收范围、`body_path`、`section_index_path`、`manifest_path`、`image_index_path`，以及已下载图片的 asset ID 和实际路径。
 
 批量抓取时，在 `dois.txt` 中每行写一个 DOI。以下命令将 stdout 中的逐篇 JSON 回执写入 `receipts.jsonl`（每行一篇），进度仍输出到 stderr。
 

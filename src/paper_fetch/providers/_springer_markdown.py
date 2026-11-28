@@ -115,6 +115,14 @@ def extract_html_payload(
     markdown_text = _clean_springer_preview_markdown(
         extract_article_markdown(extraction_sidecars["cleaned_html"], source_url)
     )
+    body_html = extraction_sidecars.get("body_html")
+    body_markdown = (
+        _clean_springer_preview_markdown(
+            extract_article_markdown(body_html, source_url)
+        )
+        if body_html is not None
+        else None
+    )
     extracted_authors = extract_authors(html_text)
     reference_soup = BeautifulSoup(html_text, choose_parser())
     for anchor in reference_soup.select("a[href]"):
@@ -138,6 +146,8 @@ def extract_html_payload(
                 )
     return {
         "markdown_text": markdown_text,
+        "body_html": body_html,
+        "body_markdown": body_markdown,
         "abstract_sections": list(extraction_sidecars["abstract_sections"]),
         "section_hints": list(extraction_sidecars["section_hints"]),
         "cleaned_html": extraction_sidecars["cleaned_html"],

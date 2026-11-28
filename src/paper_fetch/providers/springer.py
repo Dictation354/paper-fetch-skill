@@ -199,6 +199,7 @@ class SpringerHtmlAttempt:
     inline_table_assets: list[dict[str, Any]]
     diagnostics: Any
     site_family: str
+    body_markdown: str | None = None
     asset_body_html: str = ""
     asset_supplementary_html: str = ""
     asset_source_data_html: str = ""
@@ -315,6 +316,11 @@ def _springer_extraction_diagnostics_payload(
             "abstract_text": normalize_text(attempt.abstract_sections[0]["text"])
             if attempt.abstract_sections
             else None,
+            **(
+                {"body_markdown": attempt.body_markdown}
+                if attempt.body_markdown is not None
+                else {}
+            ),
             "abstract_sections": list(attempt.abstract_sections),
             "section_hints": list(attempt.section_hints),
             "extracted_authors": list(attempt.extracted_authors),
@@ -623,6 +629,27 @@ def _springer_table_image_asset(
     if page_url and page_url != image_url:
         asset["figure_page_url"] = page_url
     return asset
+
+
+def _springer_markdown_with_tables(
+    markdown_text: str, table_entries: Sequence[Mapping[str, str]]
+) -> str:
+    markdown_text = inject_inline_table_blocks(
+        markdown_text,
+        table_entries=table_entries,
+        clean_markdown_fn=_springer_markdown.clean_markdown,
+    )
+    normalized_markdown_text = normalize_text(markdown_text)
+    appended_table_markdown: list[str] = []
+    for entry in table_entries:
+        rendered_table = normalize_text(str(entry.get("markdown") or ""))
+        if rendered_table and rendered_table not in normalized_markdown_text:
+            appended_table_markdown.append(str(entry.get("markdown") or ""))
+    if appended_table_markdown:
+        markdown_text = _springer_markdown.clean_markdown(
+            "\n\n".join([markdown_text, *appended_table_markdown])
+        )
+    return markdown_text
 
 
 def _springer_table_image_markdown(asset: Mapping[str, Any], *, label: str) -> str:
@@ -1206,26 +1233,29 @@ class SpringerClient(ProviderClient):
             response_url,
             title=str(merged_metadata.get("title") or "") or None,
         )
-        markdown_text = inject_inline_table_blocks(
-            extraction_payload[MARKDOWN_TEXT_KEY],
-            table_entries=table_entries,
-            clean_markdown_fn=_springer_markdown.clean_markdown,
+        markdown_text = _springer_markdown_with_tables(
+            extraction_payload[MARKDOWN_TEXT_KEY], table_entries
         )
-        normalized_markdown_text = normalize_text(markdown_text)
-        appended_table_markdown: list[str] = []
-        for entry in table_entries:
-            rendered_table = normalize_text(str(entry.get("markdown") or ""))
-            if rendered_table and rendered_table not in normalized_markdown_text:
-                appended_table_markdown.append(str(entry.get("markdown") or ""))
-        if appended_table_markdown:
-            markdown_text = _springer_markdown.clean_markdown(
-                "\n\n".join([markdown_text, *appended_table_markdown])
-            )
         abstract_sections = list(extraction_payload["abstract_sections"])
         section_hints = list(extraction_payload["section_hints"])
+        body_markdown = extraction_payload.get("body_markdown")
+        assessment_metadata = merged_metadata
+        if body_markdown is not None:
+            body_entries = [
+                entry
+                for entry in table_entries
+                if entry["placeholder"] in extraction_payload["body_html"]
+            ]
+            body_markdown = _springer_markdown_with_tables(body_markdown, body_entries)
+            if abstract_sections:
+                assessment_metadata = {
+                    **merged_metadata,
+                    "abstract": abstract_sections[0]["text"],
+                }
         diagnostics = HtmlQualityAssessor(self.name).assess(
-            markdown_text,
-            merged_metadata,
+            markdown_text if body_markdown is None else body_markdown,
+            assessment_metadata,
+            structure_html_text=extraction_payload.get("body_html"),
             html_text=access_html,
             title=str(merged_metadata.get("title") or ""),
             requested_url=landing_url,
@@ -1251,6 +1281,7 @@ class SpringerClient(ProviderClient):
             merged_metadata=dict(merged_metadata),
             warnings=list(table_warnings),
             markdown_text=markdown_text,
+            body_markdown=body_markdown,
             abstract_sections=abstract_sections,
             section_hints=section_hints,
             extracted_authors=list(extraction_payload.get("extracted_authors") or []),
@@ -2020,6 +2051,12 @@ class SpringerClient(ProviderClient):
                 markdown_text = str(
                     extraction_payload.get(MARKDOWN_TEXT_KEY) or ""
                 ).strip()
+        if isinstance(extraction_payload, Mapping) and extraction_payload.get(
+            "body_markdown"
+        ):
+            # The explicit abstract blocks below retain their own headings and prose.
+            # Parse body sections from the same DOM scope used for HTML acceptance.
+            markdown_text = str(extraction_payload["body_markdown"])
         abstract_sections = (
             list(extraction_payload.get("abstract_sections") or [])
             if isinstance(extraction_payload, Mapping)

@@ -37,6 +37,7 @@ from ..extraction.html.language import (
 from ..extraction.html.parsing import choose_parser
 from ..extraction.html.semantics import (
     BACK_MATTER_HEADINGS,
+    SECTION_HEADING_PATTERN,
     SUPPLEMENTARY_BACK_MATTER_HEADINGS,
     collect_html_section_hints,
     heading_category,
@@ -446,6 +447,77 @@ def _normalized_root_html(html_text: str) -> tuple[str, Any]:
     return str(active_root), active_root
 
 
+def _springerlink_body_scope(root: Tag) -> tuple[list[dict[str, Any]], str | None]:
+    """Separate publisher-owned abstract and auxiliary blocks before grading prose."""
+    abstract_nodes: list[Tag] = []
+    auxiliary_nodes = list(
+        root.select(
+            ".c-pdf-preview, #pdf-preview, #article-preview, "
+            "[data-test='pdf-preview'], [data-component='pdf-preview']"
+        )
+    )
+    translated_abstract = False
+    for section in root.find_all("section"):
+        heading = section.find(SECTION_HEADING_PATTERN)
+        if heading is not None and heading.find_parent("section") is not section:
+            heading = None
+        label = normalize_text(
+            str(
+                section.get("data-title")
+                or section.get("aria-label")
+                or (heading.get_text(" ", strip=True) if heading else "")
+            )
+        ).casefold()
+        markers = (
+            section.get("aria-labelledby"),
+            section.get("data-id"),
+            section.get("id"),
+            heading.get("id") if heading else None,
+        )
+        if (
+            any(
+                re.fullmatch(r"Abs\d+(?:-section)?", str(marker), re.I)
+                for marker in markers
+            )
+            or heading_category("h2", label) == "abstract"
+            or label == "摘要"
+        ):
+            abstract_nodes.append(section)
+            translated_abstract |= label not in {
+                "abstract",
+                "structured abstract",
+                "summary",
+            }
+        elif label in {"pdf preview", "article preview", "preview pdf", "preview"} or (
+            label == "additional information"
+            and any(
+                normalize_text(h.get_text(" ", strip=True)).casefold()
+                == "article highlights"
+                for h in section.find_all(SECTION_HEADING_PATTERN)
+            )
+        ):
+            auxiliary_nodes.append(section)
+
+    if not (auxiliary_nodes or translated_abstract or len(abstract_nodes) > 1):
+        return _clean_springer_abstract_sections(
+            collect_html_abstract_blocks(root)
+        ), None
+
+    for node in auxiliary_nodes:
+        node.extract()
+    if abstract_nodes:
+        # Limit multilingual sibling discovery to sections owned by the abstract.
+        abstracts = BeautifulSoup("", choose_parser())
+        for node in abstract_nodes:
+            node.extract()
+            node["class"] = [*node.get("class", []), "abstract"]
+            abstracts.append(node)
+        blocks = collect_html_abstract_blocks(abstracts)
+    else:
+        blocks = collect_html_abstract_blocks(root)
+    return _clean_springer_abstract_sections(blocks), str(root)
+
+
 def extract_html_extraction_sidecars(
     html_text: str,
     source_url: str,
@@ -463,6 +535,7 @@ def extract_html_extraction_sidecars(
         href = str(anchor["href"])
         if href.startswith(("/", "./", "../")):
             anchor["href"] = urllib.parse.urljoin(source_url, href)
+    body_html = None
     if is_nature_url(source_url):
         article_root = select_springer_nature_article_root(active_root) or active_root
         body_root = (
@@ -505,12 +578,15 @@ def extract_html_extraction_sidecars(
             abstract_sections = _clean_springer_abstract_sections(
                 collect_html_abstract_blocks(active_root)
             )
+    elif urllib.parse.urlsplit(source_url).hostname == "link.springer.com":
+        abstract_sections, body_html = _springerlink_body_scope(active_root)
     else:
         abstract_sections = _clean_springer_abstract_sections(
             collect_html_abstract_blocks(active_root)
         )
     return {
         "cleaned_html": cleaned_html,
+        "body_html": body_html,
         "abstract_sections": abstract_sections,
         "section_hints": _springer_section_hints(active_root, title=title),
     }
