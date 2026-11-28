@@ -29,8 +29,8 @@ def supported_platform() -> bool:
 
 BROWSER_PACKAGE_PINS = {
     "scrapling": "0.5.1",
-    "patchright": "1.62.1",
-    "playwright": "1.62.0",
+    "patchright": "1.64.4",
+    "playwright": "1.64.1",
 }
 
 

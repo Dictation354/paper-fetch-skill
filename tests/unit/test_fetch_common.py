@@ -172,7 +172,7 @@ class FetchCommonTests(unittest.TestCase):
                 for package in uv_lock["package"]
                 if package["name"].casefold() == name
             ]
-            self.assertEqual(locked, ["2.1"])
+            self.assertEqual(locked, ["2.2"])
 
     def test_browser_engine_packages_use_exact_dependency_constraints(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
@@ -188,8 +188,8 @@ class FetchCommonTests(unittest.TestCase):
 
         pinned_versions = {
             "scrapling": "0.5.1",
-            "patchright": "1.62.1",
-            "playwright": "1.62.0",
+            "patchright": "1.64.4",
+            "playwright": "1.64.1",
         }
         for dependency in dependencies:
             requirement = Requirement(dependency)

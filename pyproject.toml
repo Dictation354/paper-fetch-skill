@@ -55,8 +55,8 @@ Changelog = "https://github.com/Dictation354/paper-fetch-skill/blob/main/CHANGEL
 browser = [
   "httpx>=0.28,<1",
   "lxml>=6,<7",
-  "patchright==1.62.1",
-  "playwright==1.62.0",
+  "patchright==1.64.4",
+  "playwright==1.64.1",
   "scrapling[fetchers]==0.5.1",
   "trafilatura>=2.4,<3",
 ]
@@ -67,8 +67,8 @@ pdf = [
 full = [
   "httpx>=0.28,<1",
   "lxml>=6,<7",
-  "patchright==1.62.1",
-  "playwright==1.62.0",
+  "patchright==1.64.4",
+  "playwright==1.64.1",
   "scrapling[fetchers]==0.5.1",
   "PyMuPDF>=2,<3",
   "pymupdf4llm>=2,<3",
