@@ -154,25 +154,12 @@ def catalog_live_report(catalog_live_artifact_root: Path):
 
 
 @pytest.mark.parametrize(
-    "sample,backend",
-    [
-        (sample, backend)
-        for sample in iter_provider_benchmark_samples()
-        for backend in (
-            ("camoufox", "byparr") if sample.provider == "pnas" else ("auto",)
-        )
-    ],
-    ids=[
-        f"{sample.provider}-{backend}"
-        for sample in iter_provider_benchmark_samples()
-        for backend in (
-            ("camoufox", "byparr") if sample.provider == "pnas" else ("auto",)
-        )
-    ],
+    "sample",
+    list(iter_provider_benchmark_samples()),
+    ids=[sample.provider for sample in iter_provider_benchmark_samples()],
 )
 def test_catalog_provider_sample_live_body_acceptance(
     sample,
-    backend,
     catalog_live_env,
     catalog_live_artifact_root,
     catalog_live_report,
@@ -181,7 +168,6 @@ def test_catalog_provider_sample_live_body_acceptance(
     from paper_fetch.browser_runtime_policy import selected_backend
 
     catalog_live_env = type(catalog_live_env)(catalog_live_env)
-    catalog_live_env[f"PAPER_FETCH_{sample.provider.upper()}_BROWSER_BACKEND"] = backend
     active_backend = (
         selected_backend(catalog_live_env, provider=sample.provider)
         if provider_has_browser_route(sample.provider)
@@ -189,18 +175,14 @@ def test_catalog_provider_sample_live_body_acceptance(
     )
     catalog_live_artifact_root = catalog_live_artifact_root / active_backend
     catalog_live_artifact_root.mkdir(parents=True, exist_ok=True)
-    provider_output_dir = (
-        catalog_live_artifact_root
-        / "providers"
-        / (sample.provider if backend == "auto" else f"{sample.provider}-{backend}")
-    )
+    provider_output_dir = catalog_live_artifact_root / "providers" / sample.provider
     record_property("browser_backend", active_backend)
     sample_started_at = time.monotonic()
     preflight_seconds = 0.0
     terminal_record: dict[str, object] = {
         "provider": sample.provider,
         "backend": active_backend,
-        "requested_backend": backend,
+        "requested_backend": active_backend,
         "doi": normalize_doi(sample.doi),
         "terminal": {
             "status": "failed",
@@ -334,7 +316,7 @@ def test_catalog_provider_sample_live_body_acceptance(
         success_record = {
             "provider": sample.provider,
             "backend": active_backend,
-            "requested_backend": backend,
+            "requested_backend": active_backend,
             "doi": normalize_doi(sample.doi),
             "terminal": {"status": "failed", "reason_code": "validation_pending"},
             "preflight": None,

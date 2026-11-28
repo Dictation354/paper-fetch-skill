@@ -182,7 +182,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                         "url": url,
                     }
                 )
-                browser_fetcher.browser_backend = "camoufox"
+                browser_fetcher.browser_backend = "scrapling"
 
                 with tempfile.TemporaryDirectory() as tmpdir:
                     result = download_assets(
@@ -208,8 +208,8 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                     ],
                     ["direct", "browser"],
                 )
-                self.assertEqual(result["assets"][0]["browser_backend"], "camoufox")
-                self.assertEqual(result["assets"][0]["final_fetcher"], "camoufox")
+                self.assertEqual(result["assets"][0]["browser_backend"], "scrapling")
+                self.assertEqual(result["assets"][0]["final_fetcher"], "scrapling")
                 transport.request.assert_called_once()
                 browser_fetcher.assert_called_once()
 
@@ -251,7 +251,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             }
 
         browser_fetcher = mock.Mock(side_effect=browser_request)
-        browser_fetcher.browser_backend = "camoufox"
+        browser_fetcher.browser_backend = "scrapling"
         context = RuntimeContext()
 
         def fetch(article_id: str, names: list[str]):
@@ -466,7 +466,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
                 "url": url,
             }
         )
-        file_fetcher.browser_backend = "camoufox"
+        file_fetcher.browser_backend = "scrapling"
 
         with tempfile.TemporaryDirectory() as tmpdir:
             result = download_assets(
@@ -492,7 +492,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
 
         self.assertEqual(result["asset_failures"], [])
         self.assertEqual(result["assets"][0]["content_type"], "video/mp4")
-        self.assertEqual(result["assets"][0]["browser_backend"], "camoufox")
+        self.assertEqual(result["assets"][0]["browser_backend"], "scrapling")
         file_fetcher.assert_called_once_with(url, mock.ANY)
 
     def test_browser_recovery_predicate_rejects_local_failures(self) -> None:
@@ -667,7 +667,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         )
         recovery = BrowserAssetRecoveryContext(
             runtime=SimpleNamespace(
-                backend="camoufox",
+                backend="scrapling",
                 headless=False,
             ),
             provider="science",
@@ -786,7 +786,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             supplementary_assets=[],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="annualreviews",
             user_agent="Chrome fallback",
             browser_context_seed={
@@ -837,7 +837,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -909,7 +909,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -979,7 +979,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="science",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/final"},
@@ -1079,7 +1079,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
         browser_threads: list[int] = []
 
         class CallerThreadBrowserFetcher:
-            browser_backend = "camoufox"
+            browser_backend = "scrapling"
             requires_caller_thread = True
 
             def __init__(self) -> None:
@@ -1098,7 +1098,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
 
         image_fetcher = CallerThreadBrowserFetcher()
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="ieee",
             user_agent="test-agent",
             browser_context_seed={},
@@ -1420,7 +1420,7 @@ class BrowserWorkflowAssetDownloadTests(TestCase):
             ],
         )
         recovery = BrowserAssetRecoveryContext(
-            runtime=SimpleNamespace(backend="camoufox", headless=True),
+            runtime=SimpleNamespace(backend="scrapling", headless=True),
             provider="pnas",
             user_agent="test-agent",
             browser_context_seed={"browser_final_url": "https://example.test/article"},
@@ -1867,7 +1867,7 @@ def test_silverchair_later_figure_discovery_precedes_parallel_http(
     )
 
 
-@pytest.mark.parametrize("fetcher", ["direct_http", "camoufox"])
+@pytest.mark.parametrize("fetcher", ["direct_http", "scrapling"])
 def test_ieee_probe_merge_preserves_same_caption_figures(tmp_path, fetcher):
     assets = [
         {
@@ -1888,7 +1888,7 @@ def test_ieee_probe_merge_preserves_same_caption_figures(tmp_path, fetcher):
         figure_page_discovery=False,
     )
     recovery = BrowserAssetRecoveryContext(
-        runtime=SimpleNamespace(backend="camoufox", headless=True),
+        runtime=SimpleNamespace(backend="scrapling", headless=True),
         provider="ieee",
         user_agent="test",
         browser_context_seed={},
@@ -1953,7 +1953,7 @@ def test_ieee_merge_resolves_only_matching_image_failure():
     assert result["asset_failures"] == [second]
 
 
-@pytest.mark.parametrize("backend", [None, "", "camoufox"])
+@pytest.mark.parametrize("backend", [None, "", "scrapling"])
 def test_browser_recovery_preserves_optional_backend_without_stringifying_none(backend):
     from paper_fetch.extraction.html.assets.recovery import (
         fetch_document_fallback,

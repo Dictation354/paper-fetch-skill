@@ -86,8 +86,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
                 "download_tier": "preview",
                 "downloaded_bytes": 4096,
                 "preview_accepted": True,
-                "browser_backend": "camoufox",
-                "final_fetcher": "camoufox",
+                "browser_backend": "scrapling",
+                "final_fetcher": "scrapling",
                 "recovery_attempts": [
                     {"stage": "direct", "status": 403},
                     {"stage": "preview_fallback", "reason": "recovered"},
@@ -119,8 +119,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertEqual(figure["path"], "/tmp/gu1-3509573-small.gif")
         self.assertEqual(figure["original_url"], large)
         self.assertTrue(figure["preview_accepted"])
-        self.assertEqual(figure["browser_backend"], "camoufox")
-        self.assertEqual(figure["final_fetcher"], "camoufox")
+        self.assertEqual(figure["browser_backend"], "scrapling")
+        self.assertEqual(figure["final_fetcher"], "scrapling")
         self.assertEqual(figure["recovery_attempts"][0]["status"], 403)
         self.assertEqual(figure["asset_route"]["route"], "browser")
         self.assertEqual(figure["asset_timing"]["candidate_resolution_ms"], 1.25)
@@ -180,7 +180,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         preview_warmed = False
 
         class BrowserFetcher:
-            browser_backend = "camoufox"
+            browser_backend = "scrapling"
             requires_caller_thread = True
 
             def __call__(self, url, _asset):
@@ -253,7 +253,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         calls: list[str] = []
 
         class BrowserFetcher:
-            browser_backend = "camoufox"
+            browser_backend = "scrapling"
             requires_caller_thread = True
 
             def __call__(self, url, _asset):
@@ -302,7 +302,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         calls: list[str] = []
 
         class BrowserFetcher:
-            browser_backend = "camoufox"
+            browser_backend = "scrapling"
             requires_caller_thread = True
 
             def __call__(self, url, _asset):
@@ -350,7 +350,7 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
             "section": "body",
         }
         recovery = BrowserAssetRecoveryContext(
-            runtime=mock.Mock(backend="camoufox", headless=True),
+            runtime=mock.Mock(backend="scrapling", headless=True),
             provider="ieee",
             user_agent="test-agent",
             browser_context_seed={},
@@ -389,8 +389,8 @@ class IeeeProviderAssetDownloadTests(unittest.TestCase):
         self.assertEqual(len(result.body_results), 1)
         downloaded = result.body_results[0]
         self.assertEqual(downloaded["download_tier"], "preview")
-        self.assertEqual(downloaded["browser_backend"], "camoufox")
-        self.assertEqual(downloaded["final_fetcher"], "camoufox")
+        self.assertEqual(downloaded["browser_backend"], "scrapling")
+        self.assertEqual(downloaded["final_fetcher"], "scrapling")
         self.assertEqual(
             [attempt["stage"] for attempt in downloaded["recovery_attempts"]],
             ["direct", "browser", "preview_fallback"],
@@ -867,7 +867,7 @@ class IeeeArticleOriginalTests(unittest.TestCase):
             preserve_seed_page=True
         )
         session.bind(manager=None, context=context, page=page)
-        wrapped = mock.Mock(browser_backend="camoufox", requires_caller_thread=True)
+        wrapped = mock.Mock(browser_backend="scrapling", requires_caller_thread=True)
         fetcher = _ieee_asset_recovery._IeeePreviewWarmImageFetcher(wrapped, session)
         original = "https://ieeexplore.ieee.org/mediastore/fig-large.gif"
         preview = original.replace("large", "small")
@@ -928,7 +928,7 @@ class IeeeArticleOriginalTests(unittest.TestCase):
                 )
                 wrapped = mock.Mock(
                     return_value=None,
-                    browser_backend="camoufox",
+                    browser_backend="scrapling",
                     requires_caller_thread=True,
                 )
                 wrapped.failure_for.return_value = {"reason": "non_image_response"}

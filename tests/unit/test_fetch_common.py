@@ -97,7 +97,7 @@ class FetchCommonTests(unittest.TestCase):
 
         self.assertNotIn("arxiv", dependency_names)
 
-    def test_browser_extras_require_compatible_camoufox_api_version(self) -> None:
+    def test_browser_extras_require_scrapling_fetchers(self) -> None:
         with (REPO_ROOT / "pyproject.toml").open("rb") as handle:
             pyproject = tomllib.load(handle)
         with (REPO_ROOT / "uv.lock").open("rb") as handle:
@@ -106,27 +106,27 @@ class FetchCommonTests(unittest.TestCase):
         optional_dependencies = pyproject["project"]["optional-dependencies"]
 
         for extra_name in ("browser", "full"):
-            camoufox_requirements = [
+            scrapling_requirements = [
                 dependency
                 for dependency in optional_dependencies[extra_name]
-                if Requirement(dependency).name.casefold() == "camoufox"
+                if Requirement(dependency).name.casefold() == "scrapling"
             ]
             self.assertEqual(
-                [str(Requirement(r).specifier) for r in camoufox_requirements],
-                ["==0.5.9"],
+                [str(Requirement(r).specifier) for r in scrapling_requirements],
+                ["==0.5.1"],
             )
-            self.assertIsNone(Requirement(camoufox_requirements[0]).marker)
+            self.assertIsNone(Requirement(scrapling_requirements[0]).marker)
 
-        camoufox_packages = [
+        scrapling_packages = [
             package
             for package in uv_lock["package"]
-            if package["name"].casefold() == "camoufox"
+            if package["name"].casefold() == "scrapling"
         ]
-        self.assertEqual(len(camoufox_packages), 1)
-        locked_version = Version(camoufox_packages[0]["version"])
+        self.assertEqual(len(scrapling_packages), 1)
+        locked_version = Version(scrapling_packages[0]["version"])
         self.assertIn(
             locked_version,
-            Requirement("camoufox==0.5.9").specifier,
+            Requirement("scrapling==0.5.1").specifier,
         )
 
         project_package = next(
@@ -137,16 +137,16 @@ class FetchCommonTests(unittest.TestCase):
         locked_requirements = project_package["metadata"]["requires-dist"]
         for extra_name in ("browser", "full"):
             marker = f"extra == '{extra_name}'"
-            camoufox_edges = [
+            scrapling_edges = [
                 requirement
                 for requirement in locked_requirements
-                if requirement["name"].casefold() == "camoufox"
+                if requirement["name"].casefold() == "scrapling"
                 and marker in requirement.get("marker", "")
             ]
-            self.assertEqual(len(camoufox_edges), 1)
+            self.assertEqual(len(scrapling_edges), 1)
             self.assertEqual(
-                camoufox_edges[0].get("specifier"),
-                "==0.5.9",
+                scrapling_edges[0].get("specifier"),
+                "==0.5.1",
             )
 
     def test_pdf_extras_require_coordinated_pymupdf_2_line(self) -> None:
@@ -186,7 +186,11 @@ class FetchCommonTests(unittest.TestCase):
             for dependency in extra
         )
 
-        pinned_versions = {"camoufox": "0.5.9"}
+        pinned_versions = {
+            "scrapling": "0.5.1",
+            "patchright": "1.62.1",
+            "playwright": "1.62.0",
+        }
         for dependency in dependencies:
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}

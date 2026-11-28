@@ -30,9 +30,7 @@ PYTHONPATH=src uv run python -m pytest tests/golden -q
 `_scenarios` 最小场景，并使用转换 mock。具体拦截入口见
 [layer_policy.py](support/layer_policy.py)。
 
-原生 macOS 共享 Byparr 门禁通过 `PYTEST_XDIST_AUTO_NUM_WORKERS=2` 限制同时启动的
-浏览器及其 GPU 探测进程。浏览器测试使用运行时默认请求预算，隔离子进程复用预置的
-Camoufox 依赖缓存；出版社 profile、cookies 与 storage-state 仍在隔离目录中。
+原生 macOS Chromium 门禁通过 `PYTEST_XDIST_AUTO_NUM_WORKERS=2` 限制同时启动的浏览器数。测试复用预置的 Patchright 缓存，出版社 profile 在隔离目录中。
 
 ## 证据台账
 
@@ -67,16 +65,14 @@ PAPER_FETCH_REVIEW_READER_ROOT=/path/to/LitRoot \
 
 LitRoot 需已安装依赖；公式审阅工具用法见[部署指南](../docs/deployment.md#独立-markdown-公式审阅)。
 
-原生 Darwin arm64 验证需已预置 managed Camoufox 与 fpgen 模型：
+原生 Darwin arm64 验证从安装入口准备 Chromium，再运行受管上下文及 profile 重开测试。
 
 ```bash
-PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST=1 \
-  PYTHONPATH=src uv run python -m pytest tests/integration/test_camoufox_native_macos.py -q -n 0
+PYTHONPATH=src python -m paper_fetch.offline_setup --install-root <temp-dir> --prepare-browsers --non-interactive
+PYTHONPATH=src python -m pytest tests/integration/test_chromium_runtime.py tests/integration/test_elsevier_scrapling.py tests/integration/test_publisher_profiles.py -q
 ```
 
-该测试的临时和持久 context 共用本地 runtime，故串行执行。它复用预置版本、禁用默认扩展、
-使用固定 synthetic screen，验证本地启动与原生目录跨重启的 Cookie/localStorage 保留；
-不验证默认扩展，也不以 JSON 回放代替持久目录。Windows/WSL 不能替代原生 macOS 证据。
+这些测试使用本地端点验证 Chromium 真实响应、下载和原生目录跨重启的 Cookie/localStorage。Windows 与 WSL 证据各自对应运行的平台。
 
 ## Live 测试
 
@@ -123,12 +119,12 @@ PAPER_FETCH_RUN_LIVE=1 PAPER_FETCH_RUN_IEEE_BROWSER_LIVE=1 \
   -q -n 0 -o junit_family=legacy --junitxml=failures/live-ieee-protected.xml
 ```
 
-direct 成功接受 `direct_http`；仅在进入 browser recovery 时核对 Camoufox 与恢复 trace。
+direct 成功接受 `direct_http`；仅在进入 browser recovery 时核对 Scrapling Chromium 与恢复 trace。
 `asset-hashes.json` 保存目标和正文资产的 hash、size、fetcher、recovery 与 acceptance。
 持续 AWS WAF 页面在 readiness 结束后以 `aws_waf_challenge` skip，不能视为成功访问。
 
-补充材料点击专项使用新目录。`PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE` 可指定已有合法状态的根目录，
-测试从其中的 `<provider>-camoufox/storage-state.json` 复制 JSON 到隔离目录。
+补充材料点击专项使用新目录。`PAPER_FETCH_LIVE_CHROMIUM_PROFILE_SOURCE` 可指定已有合法状态的根目录，
+测试从其中的 `<provider>/chromium/` 复制已关闭的持久 profile 到隔离目录。
 无附件、缓存、skip 和访问阻断不算下载成功：
 
 ```bash

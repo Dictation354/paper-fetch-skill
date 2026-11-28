@@ -179,7 +179,7 @@ def fetch_browser_diagnostics(
             records.append({"path": str(path), "browser_runtime_trace": dict(trace)})
     # A completed runtime snapshot takes precedence over extraction failure summaries.
     runtime = next(
-        (row for row in records if Path(row["path"]).name == "byparr.json"), None
+        (row for row in records if Path(row["path"]).name == "scrapling.json"), None
     )
     trace = (runtime or records[-1])["browser_runtime_trace"] if records else {}
     candidates = trace.get("candidates") or []

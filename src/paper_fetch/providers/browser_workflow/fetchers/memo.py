@@ -179,7 +179,7 @@ class _MemoizedFigurePageFetcher:
             return future.result()
 
         try:
-            # A figure-page fetcher can own one Playwright/Camoufox page. Keep
+            # A figure-page fetcher can own one Playwright/Scrapling Chromium page. Keep
             # different URLs serialized as well as coalescing identical URLs.
             with self._fetch_lock:
                 value = self._fetcher(normalized_url)

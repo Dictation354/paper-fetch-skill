@@ -10,7 +10,6 @@ import pytest
 
 from paper_fetch.browser_preflight import BrowserPreflightResult
 from paper_fetch.config import (
-    BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
 )
@@ -20,8 +19,6 @@ from paper_fetch.providers.browser_runtime import (
 )
 from paper_fetch.tracing import trace_event
 from tests._environment import (
-    PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
-    PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
 from tests.live import _runtime_env
@@ -39,34 +36,6 @@ def _ready_preflight(provider: str = "wiley") -> BrowserPreflightResult:
         status="ready",
         reason_code="browser_preflight_ready",
     )
-
-
-def test_isolated_live_env_reuses_prepared_camoufox_executable(
-    tmp_path: Path,
-    monkeypatch,
-) -> None:
-    monkeypatch.setattr(
-        _runtime_env,
-        "engine_name",
-        lambda: "camoufox",
-    )
-    executable = tmp_path / "byparr"
-    executable.touch()
-
-    with mock.patch.dict(
-        os.environ,
-        {
-            PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR: str(executable),
-            PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR: "",
-        },
-    ):
-        env, tempdir = _runtime_env.build_isolated_live_env({})
-        try:
-            assert env[BROWSER_BINARY_PATH_ENV_VAR] == str(executable)
-            for name in ("XDG_DATA_HOME", "XDG_CACHE_HOME", "XDG_RUNTIME_DIR"):
-                assert Path(env[name]).is_relative_to(tempdir.name)
-        finally:
-            tempdir.cleanup()
 
 
 def test_isolated_live_env_derives_unique_provider_storage_paths() -> None:
@@ -93,27 +62,14 @@ def test_isolated_live_env_derives_unique_provider_storage_paths() -> None:
         tempdir.cleanup()
 
 
-def test_isolated_live_env_reuses_only_prepared_camoufox_dependency_cache(
-    tmp_path: Path,
-) -> None:
-    executable = tmp_path / "camoufox-cache" / "byparr"
-    executable.parent.mkdir()
-    executable.touch()
-    cache_home = tmp_path / "prepared-cache"
-    cache_home.mkdir()
-
-    with mock.patch.dict(
-        os.environ,
-        {
-            PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR: str(executable),
-            PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR: str(cache_home),
-        },
-    ):
+def test_isolated_live_env_reuses_only_prepared_chromium_cache(tmp_path):
+    cache = tmp_path / "chromium-cache"
+    with mock.patch.dict(os.environ, {"PLAYWRIGHT_BROWSERS_PATH": str(cache)}):
         env, tempdir = _runtime_env.build_isolated_live_env({})
         try:
-            assert env["XDG_CACHE_HOME"] == str(cache_home)
-            assert Path(env["XDG_DATA_HOME"]).is_relative_to(tempdir.name)
-            assert Path(env["XDG_RUNTIME_DIR"]).is_relative_to(tempdir.name)
+            assert env["PLAYWRIGHT_BROWSERS_PATH"] == str(cache)
+            for name in ("XDG_CACHE_HOME", "XDG_DATA_HOME", "XDG_RUNTIME_DIR"):
+                assert Path(env[name]).is_relative_to(tempdir.name)
         finally:
             tempdir.cleanup()
 
@@ -222,7 +178,7 @@ def test_live_preflight_uses_nested_browser_runtime_availability() -> None:
         )
 
     assert actual is result
-    assert cache == {("wiley", "byparr"): result}
+    assert cache == {("wiley", "scrapling"): result}
     preflight.assert_called_once_with(
         "wiley",
         env={},
@@ -274,12 +230,12 @@ def test_live_preflight_skips_nested_unavailable_browser_runtime() -> None:
                 "browser_runtime": {
                     "available": False,
                     "status": "not_configured",
-                    "notes": ["Camoufox runtime is unavailable."],
+                    "notes": ["Chromium runtime is unavailable."],
                 }
             },
         ),
         mock.patch.object(_runtime_env, "preflight_browser_provider") as preflight,
-        pytest.raises(unittest.SkipTest, match="Camoufox runtime is unavailable"),
+        pytest.raises(unittest.SkipTest, match="Chromium runtime is unavailable"),
     ):
         _runtime_env.preflight_selected_browser_or_skip(
             unittest.TestCase(),
@@ -396,7 +352,7 @@ def test_live_fetch_diagnostics_come_from_own_saved_artifact(tmp_path):
 
     from tests.support.live_acceptance import fetch_browser_diagnostics
 
-    path = tmp_path / "diagnostics" / "pnas" / "10.1073_test" / "byparr.json"
+    path = tmp_path / "diagnostics" / "pnas" / "10.1073_test" / "scrapling.json"
     path.parent.mkdir(parents=True)
     path.write_text(
         json.dumps(
@@ -464,9 +420,9 @@ def test_catalog_fetch_never_preflights_and_preserves_actual_failure(
         pytest.skip.Exception if status == "no_access" else PaperFetchFailure
     ):
         live.test_catalog_provider_sample_live_body_acceptance(
-            sample, "byparr", {}, tmp_path, records, lambda *a: None
+            sample, {}, tmp_path, records, lambda *a: None
         )
-    saved = json.loads((tmp_path / "byparr" / "live-acceptance.json").read_text())[
+    saved = json.loads((tmp_path / "scrapling" / "live-acceptance.json").read_text())[
         "providers"
     ][0]
     assert saved["preflight"] is None

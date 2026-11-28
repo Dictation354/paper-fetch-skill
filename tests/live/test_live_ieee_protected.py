@@ -56,7 +56,7 @@ class LiveIeeeProtectedAssetTests(unittest.TestCase):
         if cls.runtime_env_tempdir is not None:
             cls.runtime_env_tempdir.cleanup()
 
-    def test_camoufox_recovers_known_large_gif_to_local_markdown(self) -> None:
+    def test_scrapling_recovers_known_large_gif_to_local_markdown(self) -> None:
         artifact_root = _ieee_live_artifact_root()
         output_dir = Path(
             tempfile.mkdtemp(prefix="run-", dir=str(artifact_root.resolve()))
@@ -123,9 +123,9 @@ class LiveIeeeProtectedAssetTests(unittest.TestCase):
             self.assertGreater(len(payload), 10)
             self.assertGreater(int.from_bytes(payload[6:8], "little"), 0)
             self.assertGreater(int.from_bytes(payload[8:10], "little"), 0)
-            self.assertIn(asset.final_fetcher, {"direct_http", "camoufox"})
-            if asset.final_fetcher == "camoufox":
-                self.assertEqual(asset.browser_backend, "camoufox")
+            self.assertIn(asset.final_fetcher, {"direct_http", "scrapling"})
+            if asset.final_fetcher == "scrapling":
+                self.assertEqual(asset.browser_backend, "scrapling")
                 self.assertEqual(
                     [attempt.get("stage") for attempt in asset.recovery_attempts],
                     ["direct", "browser"],

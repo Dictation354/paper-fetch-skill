@@ -5,6 +5,7 @@ from __future__ import annotations
 import ctypes
 import hashlib
 import json
+import os
 import re
 import shutil
 import stat
@@ -18,9 +19,37 @@ from pathlib import Path, PurePosixPath, PureWindowsPath
 
 from .image_tools.convert import _tool_env
 from .offline_setup import atomic_write, protect, verify_image
-from .providers.browser_runtime.preparation import _path_chain_has_link
 
 INVENTORY = "optional-tools.json"
+
+
+def _is_link_or_reparse(path: Path) -> bool:
+    if path.is_symlink():
+        return True
+    is_junction = getattr(os.path, "isjunction", None)
+    if callable(is_junction) and is_junction(path):
+        return True
+    try:
+        attributes = int(getattr(path.lstat(), "st_file_attributes", 0))
+    except OSError:
+        return False
+    reparse_flag = int(getattr(stat, "FILE_ATTRIBUTE_REPARSE_POINT", 0x400))
+    return bool(attributes & reparse_flag)
+
+
+def _path_chain_has_link(root: Path, candidate: Path) -> bool:
+    current = root
+    if _is_link_or_reparse(current):
+        return True
+    try:
+        relative = candidate.relative_to(root)
+    except ValueError:
+        return True
+    for part in relative.parts:
+        current = current / part
+        if _is_link_or_reparse(current):
+            return True
+    return False
 
 
 def digest(path: Path) -> str:

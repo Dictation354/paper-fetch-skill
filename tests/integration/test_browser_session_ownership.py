@@ -41,11 +41,7 @@ def install_backend(monkeypatch, events, *, close_started=None, finish_close=Non
                 assert finish_close.wait(5)
 
     monkeypatch.setattr(
-        api,
-        "_backend",
-        lambda _: SimpleNamespace(
-            create_manager=lambda config, **kwargs: Manager(config)
-        ),
+        api, "create_runtime_manager", lambda config, **kwargs: Manager(config)
     )
 
 

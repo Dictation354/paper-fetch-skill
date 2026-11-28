@@ -196,10 +196,7 @@ function Build-ProjectWheelhouse {
 
     Write-Log "Downloading Windows dependency wheelhouse"
     Invoke-Native $PythonBin -m pip download --dest $wheelhouse --only-binary=:all: "$($projectWheelPath)[full]"
-    $camoufoxWheels = @(Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl" -ErrorAction SilentlyContinue)
-    if ($camoufoxWheels.Count -ne 1) {
-        throw "Expected one Camoufox wheel in the dependency wheelhouse."
-    }
+
 }
 
 function New-BuildVenv {
@@ -439,14 +436,13 @@ function Write-OfflineReadme {
 
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
-It bundles pinned Byparr source/private dependencies under `runtime/browser-components/byparr/`.
-Camoufox, its fingerprint model and Byparr are prepared after core installation, including silent installs.
-Use `/SKIPBROWSERPREPARE` to skip. single-backend failure preserves core installation.
+Scrapling, Patchright and Playwright are bundled at pinned versions.
+After core installation, including silent installs, preparation downloads and caches the Chromium revision pinned by Patchright.
+Use `/SKIPBROWSERPREPARE` to skip preparation. Failures preserve the core installation.
 See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers`.
-Successful Camoufox update checks are reused for 24 hours.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
 Upgrades preserve credentials and optional tools. Uninstall keeps optional tools by default; interactive cleanup removes only recorded owned tools via the official Ghostscript uninstaller or individually recorded libvips files, preserving user additions. Shared browser caches remain.
-Official Node.js and its license are bundled under `runtime/node/`; the version and official archive hashes are pinned in `installer/manifest.json`. Formula tools, Playwright and Byparr use `runtime/node/node.exe` through `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH`. Explicit environment overrides are preserved.
+Official Node.js and its license are bundled under `runtime/node/`; the version and official archive hashes are pinned in `installer/manifest.json`. Formula tools, Playwright and Patchright use `runtime/node/node.exe` through `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH`. Explicit environment overrides are preserved.
 
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 '@
@@ -478,7 +474,7 @@ function Write-ManifestAndChecksums {
     $skillBundle = ($skillBundleOutput -join [Environment]::NewLine) | ConvertFrom-Json
 
     $runtimePython = Join-Path $Staging "runtime/python.exe"
-    $browserVersions = & $runtimePython -c 'import json, sys; from paper_fetch.providers.browser_runtime.byparr_engine import engine_package_versions; print(json.dumps(engine_package_versions(sys.argv[1])))' (Join-Path $Staging "runtime/Lib/site-packages")
+    $browserVersions = & $runtimePython -c 'import json, sys; from paper_fetch.providers.browser_runtime.preparation import package_versions; print(json.dumps(package_versions(sys.argv[1])))' (Join-Path $Staging "runtime/Lib/site-packages")
     if ($LASTEXITCODE -ne 0) { throw "Could not verify installed browser package versions." }
     $browserVersions = ($browserVersions -join [Environment]::NewLine) | ConvertFrom-Json
 
@@ -534,10 +530,11 @@ function Write-ManifestAndChecksums {
             formula_tools = "formula-tools"
             node_runtime = (Get-Content -LiteralPath (Join-Path $Staging "runtime/node/node-runtime.json") -Raw | ConvertFrom-Json)
             image_tools = "image-tools"
-            camoufox = [ordered]@{
+            browser = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
-                python_package_version = $browserVersions.camoufox
-                playwright_version = $browserVersions.playwright
+                backend = "scrapling"
+                engine = "chromium"
+                package_versions = $browserVersions
                 browser_binary = "not_bundled"
             }
             installer = [ordered]@{
@@ -688,7 +685,6 @@ Build-ProjectWheelhouse
 $buildPython = New-BuildVenv
 Add-EmbeddedPythonRuntime $staging
 Install-EmbeddedPythonPackages $staging
-Invoke-Native $buildPython (Join-Path $RepoDir "scripts/build_browser_components.py") --destination (Join-Path $staging "runtime/browser-components/byparr")
 Invoke-Native $PythonBin (Join-Path $RepoDir "scripts/build_node_runtime.py") --staging $staging --target windows_node_x86_64 --manifest $InstallerManifestPath --cache-dir (Join-Path $BuildDir "node-archives")
 Add-FormulaTools -Staging $staging -BuildPython $buildPython
 Add-ImageTools -Staging $staging -BuildPython $buildPython

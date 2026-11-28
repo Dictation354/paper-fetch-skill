@@ -84,21 +84,25 @@ def test_live_supplement_click(provider, monkeypatch):
         env["ELSEVIER_API_KEY"] = ""  # Exercise the ScienceDirect browser route.
     # An explicitly selected existing legal session may be copied into the
     # isolated profile; attachment files and HTTP/artifact caches stay fresh.
-    state_root = os.environ.get("PAPER_FETCH_LIVE_STORAGE_STATE_SOURCE")
+    from paper_fetch.providers.browser_runtime.api import load_runtime_config
+    from paper_fetch.providers.browser_runtime.profile import profile_path
+
+    state_root = os.environ.get("PAPER_FETCH_LIVE_CHROMIUM_PROFILE_SOURCE")
     reused_state = False
     if state_root:
-        source = Path(state_root) / f"{provider}-camoufox" / "storage-state.json"
-        if source.is_file():
-            target = (
-                Path(env["XDG_DATA_HOME"])
-                / "paper-fetch"
-                / "publisher-browser-profiles"
-                / f"{provider}-camoufox"
-                / "storage-state.json"
+        source = Path(state_root) / provider / "chromium"
+        if source.is_dir():
+            target = profile_path(load_runtime_config(env, provider=provider, doi=doi))
+            shutil.copytree(
+                source,
+                target,
+                ignore=shutil.ignore_patterns(
+                    "Singleton*",
+                    "lockfile",
+                    "DevToolsActivePort",
+                    ".paper-fetch-*.lock",
+                ),
             )
-            target.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copyfile(source, target)
-            target.chmod(0o600)
             reused_state = True
     started = time.monotonic()
     report = {

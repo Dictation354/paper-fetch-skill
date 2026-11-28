@@ -20,7 +20,7 @@ provider 能力、API 约束、路由和 waterfall 的文档说明集中在本�
 | Provider | 元数据 | 全文主路径 | 资产下载 | Markdown 能力 | 备注 |
 | --- | --- | --- | --- | --- | --- |
 | `crossref` | 支持 | 不负责 publisher fulltext | 不支持 | 不适用 | 负责 resolve、routing signal、metadata merge 与 metadata-only fallback |
-| `elsevier` | 官方 API / Byparr | `API XML（DOI → 条件 PII 重试） -> Byparr HTML -> API PDF -> Byparr PDF` | XML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | XML、HTML 分别公开为 `elsevier_xml`、`elsevier_html`；两条 PDF 路线公开为 `elsevier_pdf`；PII fallback 来自 Crossref/landing metadata 中的 LinkingHub 或 ScienceDirect PII URL |
+| `elsevier` | 官方 API / Scrapling Chromium | `API XML（DOI → 条件 PII 重试） -> 浏览器 HTML -> API PDF -> 浏览器 PDF` | XML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | XML、HTML 分别公开为 `elsevier_xml`、`elsevier_html`；两条 PDF 路线公开为 `elsevier_pdf`；PII fallback 来自 Crossref/landing metadata 中的 LinkingHub 或 ScienceDirect PII URL |
 | `springer` | 依赖 Crossref merge | `direct HTML -> direct HTTP PDF` | HTML 路线支持 `none` / `body` / `all`；PDF fallback 在 `body/all` 且允许落盘时提取 PDF 图片到 `<doi>_assets/` | 强 | 对外保持单一 `springer` provider，内部按 `nature` / `springerlink` / `bmc` site-family profile 分类；HTML 成功公开 `springer_html`，PDF fallback 成功公开 `springer_pdf`；必要时可返回 provider `abstract_only` |
 | `wiley` | 依赖 Crossref merge | `selected-browser HTML -> browser-seeded publisher PDF/ePDF -> Wiley TDM API PDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 可提取 PDF 图片 | 中 | HTML 默认通过受管浏览器；TDM token 可在 browser runtime 不可用时继续官方 PDF lane |
 | `science` | 依赖 Crossref | `selected-browser HTML -> browser-seeded publisher PDF/ePDF` | HTML 路线支持 `none` / `body` / `all`；PDF/ePDF fallback 可提取 PDF 图片 | 中 | 与 Wiley 共用 selected-browser workflow；access gate 不满足时可降级 |
@@ -47,7 +47,7 @@ provider 能力、API 约束、路由和 waterfall 的文档说明集中在本�
 - 尤其 `wiley` / `science` / `pnas` / `ams` / `annualreviews` / `acs` / `iop` / `aip` / `mdpi` / `tandf` 的浏览器与 PDF/ePDF 路径，仍受 publisher 访问权限、paywall/challenge 与远端站点行为影响。
 - Provider/source/domain/API/fallback marker、候选 URL 模板、HTML artifact 持久化、XML provider 推断与正文阈值的事实来源是 `paper_fetch.provider_catalog.ProviderSpec`。`SOURCE_PROVIDER_MAP` 登记实际 envelope / `ArticleModel.source` 值；例如 Springer HTML / PDF fallback 分别公开 `springer_html` / `springer_pdf`，二者都映射到 `springer` provider。
 - CLI 宿主不应从工具 description 或本文抽取名单；使用 `paper-fetch doctor --catalog --json`。该 JSON 直接从启动时构造的不可变 runtime `ProviderBundle`/catalog 投影，包含 provider/source、逐 route transport/timeout/concurrency/QPS/retry/acceptance/assets、status/preflight 能力和资产默认值；它不是本地就绪或远端可访证明。
-- 浏览器 provider 共用受管 Byparr 和 Camoufox，并在同次抓取的同一出版社各阶段复用 context；状态模式、配置和线程所有权分别见 [浏览器后端](browser-backends.md)与 [runtime](browser-runtime.md)。
+- 浏览器 provider 共用受管 Scrapling Chromium，并在同次抓取的同一出版社各阶段复用 context；状态模式、配置和线程所有权分别见 [浏览器后端](browser-backends.md)与 [runtime](browser-runtime.md)。
 - Science、Wiley、PNAS、IEEE、AMS、MDPI、Royal Society、Annual Reviews、ACS、IOP、AIP、Taylor & Francis 的浏览器补充文件统一使用 `page_click`，从所在文章页或附件目录的已有链接/按钮串行下载。点击失败报告逐项诊断，不回退 HTTP 直链或 `BrowserContext.request.get()`；AMS 等纯 HTTP 分支及正文图片下载策略保持原行为。IOP 目录 HTML 与 IEEE multimedia JSON 是发现请求，继续使用 `context_request`。
 - PNAS 材料附件统一使用原生 profile 的 `page_click` 下载。
 - 点击下载支持下载事件与内联文件响应，只捕获当前控件目标及其重定向链；结束后恢复文章页、关闭本次 popup、移除监听器。Wiley 保留 supporting accordion 的重绘/展开处理，IOP 保留目录页与附件 ID，IEEE 通过 Media/Multimedia/Supplemental Items 标签、文件名或附件 DOI 定位已有附件控件，并限定同源文件路径的跟踪参数差异，Annual Reviews 打开 Supplemental Material 标签，MDPI 优先点击页面可见的既有文件链接，附件仅在 supplementary modal 中时先展开该模态框，并保留实际点击的原始链接以对应资产 URL。成功与失败均记录点击页、原始链接及最终地址，成功记录在资产 `recovery_attempts` 中保留点击关联证据；所有文件仍经共享验收、预算与原子落盘。
@@ -309,7 +309,7 @@ resolve
 ### 3. provider 全文主路径
 
 - `elsevier`
-  - 固定顺序是 `API XML（DOI → 条件 PII 重试） -> Byparr HTML -> API PDF -> Byparr 浏览器 PDF -> metadata-only`。每阶段通过身份和全文验收即返回。缺 key 跳过 API 阶段；API `NOT_ENTITLED` 仅拒绝该 API 路线，继续后续阶段。网页确认无全文权限时终止。
+  - 固定顺序是 `API XML（DOI → 条件 PII 重试） -> 浏览器 HTML -> API PDF -> 浏览器 PDF -> metadata-only`。每阶段通过身份和全文验收即返回。缺 key 跳过 API 阶段；API `NOT_ENTITLED` 仅拒绝该 API 路线，继续后续阶段。网页确认无全文权限时终止。
   - 直接输入 LinkingHub 或 ScienceDirect 的 `/pii/{PII}` URL 时，resolve 阶段会提取 PII 并跳过 publisher landing 抓取；metadata 阶段改用 Elsevier Abstract PII API 补 DOI，再进入官方全文主路径。
   - PII XML/API fallback 只在 DOI XML/API 出现 transient / rate-limit 类失败，且 merged metadata 中能从 LinkingHub 或 ScienceDirect URL 提取 PII 时启用；它仍使用 Elsevier 官方 Article API。HTML 由 Elsevier 自行编排的 browser workflow 获取。
   - XML/API 成功时公开 `source="elsevier_xml"`；ScienceDirect HTML 成功时公开 `source="elsevier_html"`。浏览器引擎按平台选择，见[浏览器后端](browser-backends.md)。
@@ -679,8 +679,8 @@ PAPER_FETCH_ENV_FILE=/path/to/.env
 
 #### `PAPER_FETCH_BROWSER_USER_AGENT`
 
-- 覆盖 publisher-facing HTML/PDF 直连的 `User-Agent`；Camoufox 忽略该变量，以保持生成的 Firefox UA、窗口、字体和 WebGL 指纹一致。
-- 未配置时，publisher direct HTTP 使用 `paper_fetch.config.DEFAULT_PUBLISHER_USER_AGENT`；Camoufox 使用自身生成的 UA。该变量不能改变 Camoufox 指纹，也不是处理 browser challenge 的开关。
+- 覆盖 publisher-facing HTML/PDF 直连的 `User-Agent`；该变量只用于直连请求。
+- 未配置时，publisher direct HTTP 使用 `paper_fetch.config.DEFAULT_PUBLISHER_USER_AGENT`；Scrapling Chromium 使用浏览器自身的 UA。
 
 #### `CROSSREF_MAILTO`
 
@@ -846,7 +846,7 @@ IEEE direct landing/REST HTML/PDF/资产与 selected-browser recovery 路线当�
 
 #### Browser runtime
 
-全部浏览器 provider 统一使用受管 Byparr，引擎按平台选择，后端兼容值不强制切换引擎。HTML、PDF fallback、资产、preflight 和 auth 共用所选后端；配置与状态模式见 [browser-backends.md](browser-backends.md)。
+全部浏览器 provider 统一使用Scrapling Chromium。HTML、PDF fallback、资产、preflight 和 auth 共用所选后端；配置与状态模式见 [browser-backends.md](browser-backends.md)。
 
 #### 通用 `PAPER_FETCH_BROWSER_*` 配置
 
@@ -869,7 +869,7 @@ Wiley、AMS 等 provider 的显式 profile 变量由[浏览器后端说明](brow
 - Science 直接进入单次正常 HTML attempt。使用请求剩余预算等待引用并展开 bibliography 的可见引用控件，引用完整时立即返回；预算耗尽后仍缺正文引用目标时记录 `reference_targets_missing` 和缺失 ID，统一 acceptance 为降级，不能将前几条引用当作完整书目。 完成条件按实际引用目标 ID 及当前候选列表中非空、可抽取的引用文本判断，ID 先到、空节点或仅含链接工具的节点不算完成，也不按列表长度推断编号。每轮合并读取引用与控件状态，未变化的引用片段复用已有文本判定，已选候选不会因序列化丢失祖先而被二次筛选；diagnostics 保留节点数并追加可抽取数、空引用 ID、缺失目标和准备预算。
 - Royal Society 的 Silverchair `.widget-ArticleFulltext .article-body`、`.widget-ArticleFulltext`、`.article-body` 与 `.article-content` 用于正文 readiness 判定，正文出现后即可继续。
 - 快速 HTML attempt 已确认同篇正文付费墙时直接停止；其他 challenge/access-boundary 失败在保守重试随后耗尽共享 deadline 时，最终保留首个稳定 reason code，并把重试 timeout 与两轮 attempt 写入 diagnostics；不会用后续超时覆盖可执行的 `auth`/entitlement 结论。
-- browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，不覆盖 Camoufox 指纹/User-Agent，并复用原生 profile；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
+- browser HTML fast path 失败后的正常重试复用首轮内存 `BrowserContextSeed` 中与目标 provider 匹配的 cookies，并复用原生 profile；诊断保留两轮状态、HTTP status、DOM readiness 和脱敏页面形态。
 - ACS 当前 readiness selector 是 `.article-body` 与 `.widget-ArticleFulltext`。HTTP 200、题名正确但无正文的页面仍为 `empty_article_shell`；相同 route/profile/storage/page SHA 的空壳立即停止重复尝试，仅候选或会话状态变化才允许重试。
 - 如果稳定正文 DOM 已出现，即使页面 shell 仍残留 Cloudflare / challenge 文案，也会继续进入 Markdown 抽取和 availability 判定；技术性 challenge 沿用恢复流程；确认正文付费墙后立即停止，隐藏正文不会触发 PDF 恢复。
 

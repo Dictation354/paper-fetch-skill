@@ -143,9 +143,9 @@ jobs:
             "$smoke_python" -c "import importlib.util; import paper_fetch.cli; assert importlib.util.find_spec('mcp') is None"
             "$smoke_python" -m paper_fetch.cli --version
             if [ "$install_kind" = "full" ]; then
-              "$smoke_python" -c "import fitz, lxml, playwright, pymupdf4llm, trafilatura; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()"
+              "$smoke_python" -c "import fitz, lxml, patchright, playwright, pymupdf4llm, scrapling, trafilatura; from paper_fetch.providers.browser_runtime.preparation import verify_package_installation; verify_package_installation()"
             else
-              "$smoke_python" -c "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ('camoufox', 'fitz', 'invisible_playwright', 'invisible_core', 'lxml', 'playwright', 'pymupdf4llm', 'trafilatura'))"
+              "$smoke_python" -c "import importlib.util; assert all(importlib.util.find_spec(name) is None for name in ('fitz', 'lxml', 'patchright', 'playwright', 'scrapling', 'pymupdf4llm', 'trafilatura'))"
             fi
           done
 
@@ -181,42 +181,24 @@ jobs:
         run: PYTHONPATH=src uv run python -m pytest tests/integration/test_node_runtime.py -q
       - name: Require native Apple Silicon runner
         run: test "$(uname -m)" = "arm64"
-      - name: Prepare latest compatible Camoufox runtime (including prereleases) and fingerprint model
-        env:
-          GITHUB_TOKEN: ${{ github.token }}
+      - name: Prepare pinned Chromium and verify local launch
         run: |
-          PYTHONPATH=src uv run python - <<'PY'
-          from paper_fetch.providers.browser_runtime.preparation import prepare_camoufox_managed_runtime
-          from camoufox.fpgen_model import ensure_fpgen_model
-          assert prepare_camoufox_managed_runtime().valid
-          ensure_fpgen_model()
-          from pathlib import Path
-          import os
-          from paper_fetch.providers.browser_runtime.byparr_preparation import prepare_source, PreparationBudget
-          prepare_source(Path(os.environ["RUNNER_TEMP"]) / "byparr-tests", PreparationBudget(600))
-          PY
-      - name: Verify shared Camoufox and Byparr contexts on native macOS
+          PYTHONPATH=src uv run python -m paper_fetch.offline_setup \
+            --install-root "$RUNNER_TEMP/chromium-setup" --prepare-browsers \
+            --non-interactive --result "$RUNNER_TEMP/chromium-setup.txt"
+          grep -F "Browser preparation: ready" "$RUNNER_TEMP/chromium-setup.txt"
+      - name: Verify native Scrapling Chromium sessions and publisher profile reopen
         env:
-          PAPER_FETCH_TEST_BYPARR_CACHE: ${{ runner.temp }}/byparr-tests
-          # Each launch also probes the host GPU with an owned browser.
           PYTEST_XDIST_AUTO_NUM_WORKERS: "2"
-        run: PYTHONPATH=src uv run python -m pytest tests/integration/test_pnas_byparr.py -q
-      - name: Verify official Camoufox macOS bundle contexts
-        env:
-          PAPER_FETCH_RUN_NATIVE_CAMOUFOX_TEST: "1"
-          PAPER_FETCH_BROWSER_COMPONENT_CACHE: ${{ runner.temp }}/byparr-tests
         run: >-
-          PYTHONPATH=src uv run python -m pytest
-          tests/integration/test_camoufox_native_macos.py -q -n 0
-      - name: Verify Camoufox package preparation on native macOS
-        run: >-
-          PYTHONPATH=src uv run python -m pytest
-          tests/integration/test_camoufox_backend.py
-          tests/integration/test_camoufox_preparation.py -q
+          PYTHONPATH=src uv run python -m pytest -q
+          tests/integration/test_chromium_runtime.py
+          tests/integration/test_elsevier_scrapling.py
+          tests/integration/test_publisher_profiles.py
       - name: Verify provider page preparation on native macOS
         run: |
           PYTHONPATH=src uv run python -m pytest -q \
-            tests/unit/test_camoufox_backend.py::test_camoufox_provider_page_preparation_runs_before_html_capture \
+            tests/unit/test_chromium_backend.py::test_chromium_provider_page_preparation_runs_before_html_capture \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_hydrates_official_csv_table \
             tests/unit/test_tandf_provider.py::test_tandf_browser_page_preparation_uses_bounded_embedded_table_fallback
       - name: Verify native macOS filesystem alias semantics
@@ -245,6 +227,7 @@ jobs:
       - name: Verify native macOS package
         env:
           PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE: "1"
+          PAPER_FETCH_OFFLINE_VERIFY_CHROMIUM: "1"
         run: |
           scripts/verify-offline-package.sh \
             dist/paper-fetch-skill-offline-macos-arm64-cp314.tar.gz

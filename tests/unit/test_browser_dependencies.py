@@ -1,7 +1,5 @@
 """Platform package markers and selected-engine dependency boundaries."""
 
-import builtins
-import json
 import tomllib
 from pathlib import Path
 from types import SimpleNamespace
@@ -10,11 +8,8 @@ import pytest
 from packaging.requirements import Requirement
 
 from paper_fetch import browser_runtime_policy as policy
-from paper_fetch.providers.base import ProviderFailure
-from paper_fetch.providers.browser_runtime import byparr_engine, preparation
-from paper_fetch.providers.browser_runtime.backends import byparr
+from paper_fetch.providers.browser_runtime import preparation
 
-_REAL_DETAILS = byparr._dependency_details
 ROOT = Path(__file__).resolve().parents[2]
 
 
@@ -32,7 +27,9 @@ ROOT = Path(__file__).resolve().parents[2]
         for machine in machines
     ],
 )
-def test_supported_platforms_use_camoufox(extra, python, system, machine, monkeypatch):
+def test_supported_platforms_use_pinned_chromium_packages(
+    extra, python, system, machine, monkeypatch
+):
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     env = {
         "sys_platform": system,
@@ -48,112 +45,9 @@ def test_supported_platforms_use_camoufox(extra, python, system, machine, monkey
     monkeypatch.setattr(policy, "sys", SimpleNamespace(platform=system))
     monkeypatch.setattr(policy, "platform", SimpleNamespace(machine=lambda: machine))
     assert policy.supported_platform()
-    assert policy.engine_name() == "camoufox"
-    assert active["camoufox"].specifier == Requirement("camoufox==0.5.9").specifier
-    assert (
-        active["playwright"].specifier
-        == Requirement("playwright>=1.58,<1.63").specifier
-    )
-    assert {"invisible-playwright", "invisible-core"}.isdisjoint(active)
-    shared = json.loads(policy.BYPARR_MANIFEST_PATH.read_text())
-    shared_active = {
-        r.name: r
-        for r in map(Requirement, shared["shared_packages"])
-        if not r.marker or r.marker.evaluate(env)
-    }
-    for name in ("camoufox", "invisible-playwright", "invisible-core", "playwright"):
-        assert (name in shared_active) == (name in active)
-        if name in active:
-            assert shared_active[name].specifier == active[name].specifier
-
-
-@pytest.mark.parametrize(
-    "missing,version",
-    [
-        ("invisible_core", "69.82.0"),
-        ("invisible_playwright", "0.59.0"),
-        (None, "61.61.0"),
-        (None, "69.82.0"),
-    ],
-)
-def test_invisible_status_and_readiness_never_touch_camoufox(
-    monkeypatch, tmp_path, missing, version
-):
-    from importlib import metadata, util
-
-    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "invisible")
-    monkeypatch.setattr(byparr, "_dependency_details", _REAL_DETAILS)
-    monkeypatch.setattr(
-        byparr, "_camoufox_dependency_details", lambda: pytest.fail("Camoufox probe")
-    )
-    versions = {
-        "playwright": "1.65.2",
-        "invisible_core": version,
-        "invisible_playwright": "0.59.0",
-    }
-    monkeypatch.setattr(metadata, "version", versions.__getitem__)
-    monkeypatch.setattr(
-        util, "find_spec", lambda name: None if name == missing else object()
-    )
-    original_import = builtins.__import__
-
-    def guarded_import(name, *args, **kwargs):
-        assert not (name == "camoufox" or name.startswith("camoufox."))
-        return original_import(name, *args, **kwargs)
-
-    monkeypatch.setattr(builtins, "__import__", guarded_import)
-    backend = byparr.DEFAULT_BYPARR_BACKEND
-    config = backend.load_runtime_config(
-        {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="probe://deps"
-    )
-    result = backend.probe_runtime_status(
-        {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas"
-    )
-    check = next(c for c in result.checks if c.name == "playwright_dependency")
-    ready = missing is None and version == "69.82.0"
-    assert check.details["package_ready"] is ready
-    assert "camoufox" not in check.details["packages"]
-    assert "Invisible" in check.message
-    if ready:
-        backend.ensure_runtime_ready(config)
-    else:
-        with pytest.raises(ProviderFailure):
-            backend.ensure_runtime_ready(config)
-
-
-def test_invisible_preparation_skips_camoufox_packages_and_models(monkeypatch):
-    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "invisible")
-    monkeypatch.setattr(
-        preparation, "find_spec", lambda _: pytest.fail("Camoufox dependency lookup")
-    )
-    preparation.FetchBrowserPreparation().require()
-
-
-@pytest.mark.parametrize("engine", ["invisible", "camoufox"])
-def test_package_inventory_uses_target_directory_and_rejects_other_engine(
-    monkeypatch, tmp_path, engine
-):
-    from importlib import metadata
-
-    monkeypatch.setattr(byparr_engine, "engine_name", lambda: engine)
-    inventory = {
-        "playwright": "1.65.2",
-        **(
-            {"invisible-playwright": "0.59.0", "invisible-core": "69.82.0"}
-            if engine == "invisible"
-            else {"camoufox": "0.5.9"}
-        ),
-    }
-
-    def distributions(*, path):
-        assert path == [str(tmp_path)]
-        return [
-            SimpleNamespace(metadata={"Name": name}, version=value)
-            for name, value in inventory.items()
-        ]
-
-    monkeypatch.setattr(metadata, "distributions", distributions)
-    assert byparr_engine.engine_package_versions(tmp_path) == inventory
-    inventory["camoufox" if engine == "invisible" else "invisible-core"] = "wrong"
-    with pytest.raises(RuntimeError, match="Unexpected browser engine"):
-        byparr_engine.engine_package_versions(tmp_path)
+    assert policy.engine_name() == "chromium"
+    for name, version in preparation.BROWSER_PACKAGE_PINS.items():
+        assert str(active[name].specifier) == f"=={version}"
+        assert active[name].marker is None
+    assert active["scrapling"].extras == {"fetchers"}
+    assert {"camoufox", "invisible-playwright", "invisible-core"}.isdisjoint(active)

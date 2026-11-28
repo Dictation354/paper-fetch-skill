@@ -30,7 +30,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertNotIn("camoufox.ensure_runtime()", linux_script)
         self.assertNotIn('assert hasattr(camoufox, "launch")', linux_script)
         self.assertIn(
-            "from paper_fetch.providers.browser_runtime.byparr_engine import "
+            "from paper_fetch.providers.browser_runtime.preparation import "
             "verify_package_installation",
             linux_script,
         )
@@ -71,16 +71,7 @@ class OfflineInstallTests(unittest.TestCase):
         self.assertIn("[UninstallDelete]", script)
         self.assertIn('Type: files; Name: "{app}\\install-helper.log"', script)
         self.assertIn('Type: files; Name: "{app}\\browser-setup-results.txt"', script)
-        model_data = "{app}\\runtime\\Lib\\site-packages\\fpgen\\data"
-        for filename in (
-            ".pinned-model",
-            "fingerprint-network.json.zst",
-            "values.dat.zst",
-            "values.json.zst",
-        ):
-            self.assertIn(f'Type: files; Name: "{model_data}\\{filename}"', script)
-        self.assertIn(f'Type: dirifempty; Name: "{model_data}"', script)
-        self.assertNotIn(f'Type: filesandordirs; Name: "{model_data}"', script)
+        self.assertNotIn("fpgen", script)
         self.assertIn('-LogPath "', script)
         self.assertIn('" -Action Install', script)
         self.assertIn("RestoreOfflineEnv;\n    RunPostInstallHelper;", script)

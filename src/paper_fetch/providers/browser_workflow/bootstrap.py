@@ -15,7 +15,7 @@ from ...reason_codes import NOT_SUPPORTED
 from ...runtime import RuntimeContext
 from .._elsevier_html import browser_pdf_candidates as elsevier_pdf_extractor
 from ..base import ProviderFailure
-from ..browser_runtime.types import BrowserRuntimeFailure
+from ..browser_runtime.types import BrowserRuntimeConfig, BrowserRuntimeFailure
 from . import html_extraction as _html_extraction
 from .profile import BrowserWorkflowBootstrapResult
 from .shared import (
@@ -43,7 +43,7 @@ def _structured_browser_failure_message(exc: BrowserRuntimeFailure) -> str:
     stderr_summary = str(failure_payload.get("stderr_summary") or "").strip()
     parts = [f"{stage}: {exc.message}" if stage else exc.message]
     if stderr_summary:
-        parts.append(f"Camoufox stderr: {stderr_summary}")
+        parts.append(f"Scrapling Chromium stderr: {stderr_summary}")
     message = " ".join(part for part in parts if part).strip()
     if len(message) > _BROWSER_FAILURE_MESSAGE_MAX_CHARS:
         message = "..." + message[-_BROWSER_FAILURE_MESSAGE_MAX_CHARS:]
@@ -82,6 +82,7 @@ def bootstrap_browser_workflow(
     allow_runtime_failure: bool = False,
     context: RuntimeContext | None = None,
     deps: BrowserWorkflowDeps | None = None,
+    runtime_config: BrowserRuntimeConfig | None = None,
 ) -> BrowserWorkflowBootstrapResult:
     deps = deps or default_browser_workflow_deps()
     context = client._runtime_context(context)
@@ -97,7 +98,7 @@ def bootstrap_browser_workflow(
     pdf_candidates = client.pdf_candidates(normalized_doi, metadata)
     result = BrowserWorkflowBootstrapResult(
         normalized_doi=normalized_doi,
-        runtime=None,
+        runtime=runtime_config,
         landing_page_url=landing_page_url,
         html_candidates=html_candidates,
         pdf_candidates=pdf_candidates,
@@ -128,7 +129,7 @@ def bootstrap_browser_workflow(
                 provider=client.name,
                 doi=normalized_doi,
             )
-            deps.ensure_runtime_ready(result.runtime)
+        deps.ensure_runtime_ready(result.runtime)
     except ProviderFailure as exc:
         if not allow_runtime_failure:
             raise

@@ -445,7 +445,7 @@ def test_shared_page_session_closes_partial_context_when_page_creation_fails() -
 def test_memoized_image_fetcher_preserves_caller_thread_requirement() -> None:
     inner_fetcher = mock.Mock()
     inner_fetcher.requires_caller_thread = True
-    inner_fetcher.browser_backend = "camoufox"
+    inner_fetcher.browser_backend = "scrapling"
     fetcher = browser_workflow._MemoizedImageDocumentFetcher(inner_fetcher)
 
     assert fetcher.requires_caller_thread is True
@@ -943,7 +943,7 @@ def test_image_fetcher_memo_preserves_actual_camoufox_backend(factory):
         browser_context_seed_getter=lambda: {}, seed_urls_getter=lambda: []
     )
     memo = browser_workflow._MemoizedImageDocumentFetcher(fetcher)
-    assert memo.browser_backend == "camoufox"
+    assert memo.browser_backend == "scrapling"
     memo.close()
 
 

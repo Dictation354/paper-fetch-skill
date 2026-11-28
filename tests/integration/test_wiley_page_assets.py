@@ -1,7 +1,5 @@
 """Real Camoufox contracts for Wiley's serial image navigation."""
 
-import json
-import os
 from pathlib import Path
 from unittest.mock import Mock
 
@@ -15,7 +13,7 @@ from paper_fetch.extraction.html.assets import (
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers._wiley_page_assets import WileyPageAssetFetcher
 from paper_fetch.runtime import RuntimeContext
-from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+from tests.support.offline_chromium import prepared_browser
 from tests.support.transport import configure_stream_transport
 from tests.support.wiley_page_assets import figure, formula, png_bytes
 
@@ -25,26 +23,7 @@ ARTICLE = ROOT + "/article"
 
 @pytest.fixture
 def browser(monkeypatch):
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    monkeypatch.setattr(
-        utils,
-        "installed_verstr",
-        lambda: json.loads(version_file.read_text())["version"],
-    )
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
-    with camoufox.Camoufox(
-        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
-    ) as instance:
+    with prepared_browser() as instance:
         yield instance
 
 

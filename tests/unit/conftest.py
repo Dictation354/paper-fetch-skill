@@ -17,15 +17,7 @@ def mock_tex_validation(monkeypatch):
 @pytest.fixture(autouse=True)
 def mock_browser_dependencies(monkeypatch):
     """Packages/runtime are explicit boundaries in ordinary unit scenarios."""
-    from paper_fetch.providers.browser_runtime.backends import byparr
+    from paper_fetch.providers.browser_runtime import api, preparation
 
-    monkeypatch.setattr(
-        byparr,
-        "_dependency_details",
-        lambda: {
-            "runtime_valid": False,
-            "packages": {"camoufox": False, "playwright": False},
-            "package_ready": False,
-            "runtime_installed": False,
-        },
-    )
+    monkeypatch.setattr(api, "package_versions", lambda: {})
+    monkeypatch.setattr(preparation, "package_versions", lambda: {})

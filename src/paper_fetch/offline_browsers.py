@@ -4,9 +4,11 @@ from __future__ import annotations
 
 import shlex
 import sys
+import tempfile
+from dataclasses import replace
+from pathlib import Path
 from typing import TYPE_CHECKING
 
-from . import offline_byparr as byparr
 from . import offline_setup as wizard
 
 if TYPE_CHECKING:
@@ -59,9 +61,27 @@ def prepare(setup: Setup, *, interactive: bool) -> None:
                 setup.report(
                     "Browser libraries", "ready", "System dependencies rechecked"
                 )
-    setup.step(
-        "Byparr",
-        lambda: byparr.prepare(
-            setup, interactive=interactive, system_dependencies=False
-        ),
+    setup.step("Chromium", lambda: prepare_browser(setup))
+
+
+def prepare_browser(setup: Setup) -> None:
+    from .providers.browser_runtime.api import load_runtime_config, prepare_runtime
+    from .providers.browser_runtime.context import browser_context
+
+    setup.report(
+        "Chromium", "preparing", "Using the Chromium revision pinned by Patchright"
+    )
+    config = load_runtime_config(
+        setup.env, provider="pnas", doi="probe://browser/installation"
+    )
+    executable = prepare_runtime(replace(config, timeout_ms=600_000))
+    with tempfile.TemporaryDirectory(prefix="paper-fetch-chromium-check-") as directory:
+        with browser_context(
+            replace(config, profile_dir=Path(directory), headless=True)
+        ) as session:
+            page = session.context.new_page()
+            page.goto("about:blank")
+            version = session.context.browser.version
+    setup.report(
+        "Chromium", "ready", f"Scrapling Chromium {version} launched: {executable}"
     )

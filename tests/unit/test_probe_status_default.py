@@ -1,6 +1,7 @@
 from __future__ import annotations
 
 import importlib.machinery
+from pathlib import Path
 from typing import Any
 
 from paper_fetch.provider_catalog import (
@@ -9,7 +10,7 @@ from paper_fetch.provider_catalog import (
     ProviderSpec,
 )
 from paper_fetch.providers.base import ProviderClient
-from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
+from paper_fetch.providers.browser_runtime import api as browser_api
 from paper_fetch.reason_codes import NOT_CONFIGURED, OK, READY
 
 
@@ -116,16 +117,12 @@ def test_default_probe_status_checks_playwright_requirement(monkeypatch: Any) ->
         "paper_fetch.providers.base.importlib.util.find_spec", fake_find_spec
     )
     monkeypatch.setattr(
-        byparr_backend,
-        "_dependency_details",
-        lambda: {
-            "runtime_valid": True,
-            "probe": "unit_test",
-            "packages": {"playwright": True, "camoufox": True},
-            "package_ready": True,
-            "runtime_installed": True,
-            "download_required": False,
-        },
+        browser_api,
+        "package_versions",
+        lambda: browser_api.BROWSER_PACKAGE_PINS,
+    )
+    monkeypatch.setattr(
+        browser_api, "inspect_chromium", lambda _: (Path("/test/chrome"), "151", True)
     )
     result = _client(catalog).probe_status()
 
@@ -144,16 +141,12 @@ def test_default_probe_status_checks_browser_runtime_without_launch(
     )
     _install_catalog(monkeypatch, catalog)
     monkeypatch.setattr(
-        byparr_backend,
-        "_dependency_details",
-        lambda: {
-            "runtime_valid": True,
-            "probe": "unit_test",
-            "packages": {"playwright": True, "camoufox": True},
-            "package_ready": True,
-            "runtime_installed": True,
-            "download_required": False,
-        },
+        browser_api,
+        "package_versions",
+        lambda: browser_api.BROWSER_PACKAGE_PINS,
+    )
+    monkeypatch.setattr(
+        browser_api, "inspect_chromium", lambda _: (Path("/test/chrome"), "151", True)
     )
 
     result = _client(catalog).probe_status()

@@ -126,7 +126,7 @@ Wiley TDM 和 Copernicus 直连 PDF 在逐篇 `diagnostics.json` 的 `diagnostic
 
 ## Browser 登录态
 
-Byparr 使用按平台选择的浏览器引擎。运行 `paper-fetch doctor --catalog` 查看当前环境的配置。
+浏览器路线使用 Scrapling Chromium。运行 `paper-fetch doctor --catalog` 查看当前环境的配置。
 
 所有浏览器路线使用配置解析后的实际 profile 路径作为资源键，展开用户目录、解析符号链接并按平台规范化大小写。不同 profile 可并行，同 profile 在批内与跨进程排队。等待者让出执行名额，不阻塞其他空闲 profile；HTTP/API 不申请 profile 资源，出版社限流独立保留。页面预算在取得锁后建立，同一请求内重用、页面重试及 fallback 共用剩余预算；HTTP 时限独立。
 

@@ -49,12 +49,12 @@ def test_page_diagnostic_persists_only_sanitized_html(tmp_path) -> None:
                 doi="10.1000/example",
                 target_url="https://user:pass@example.test/article?token=secret",
                 final_url="https://example.test/article?code=private",
-                backend="camoufox",
+                backend="scrapling",
                 response_status=200,
                 title="Contact account@example.com",
                 details={
                     "browser_runtime_trace": {
-                        "backend": "camoufox",
+                        "backend": "scrapling",
                         "candidates": [
                             {
                                 "status": 200,
@@ -241,7 +241,7 @@ def test_failure_before_page_load_persists_json_without_fake_html(tmp_path) -> N
                 html_text=None,
                 doi="10.1000/example",
                 target_url="https://example.test/article?token=secret",
-                backend="camoufox",
+                backend="scrapling",
                 details={"browser_runtime_trace": {"deadline_exhausted": True}},
             ),
         )

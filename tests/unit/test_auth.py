@@ -122,7 +122,7 @@ def _install_fake_browser_manager(monkeypatch) -> type[_FakeAuthBrowserManager]:
 
     from paper_fetch.providers.browser_runtime import profile
 
-    monkeypatch.setattr(profile, "ByparrManager", FakeManager)
+    monkeypatch.setattr(profile, "ScraplingManager", FakeManager)
     return FakeManager
 
 
@@ -184,7 +184,9 @@ def test_authenticate_provider_profile_rejects_user_agent_for_camoufox(
     _install_fake_browser_manager(monkeypatch)
     _patch_auth_runtime(monkeypatch, tmp_path)
 
-    with pytest.raises(ProviderFailure, match="cannot be used with Camoufox"):
+    with pytest.raises(
+        ProviderFailure, match="cannot be used with the Scrapling Chromium runtime"
+    ):
         auth.authenticate_provider_profile(
             provider="wiley",
             browser_user_agent="Mozilla/5.0 auth-test",
@@ -214,6 +216,7 @@ def test_auth_page_left_on_sso_host_does_not_modify_old_state(
         / "paper-fetch"
         / "publisher-browser-profiles"
         / "wiley-camoufox"
+        / "chromium"
         / "storage-state.json"
     )
     state_path.parent.mkdir(parents=True)
@@ -288,7 +291,8 @@ def test_auth_replays_same_native_profile_without_json(provider, monkeypatch, tm
         provider=provider, confirm=lambda _: None
     )
     assert result.verified
-    assert result.profile_dir.name == provider
+    assert result.profile_dir.name == "chromium"
+    assert result.profile_dir.parent.name == provider
     assert len(managers.instances) == 2
     assert (
         managers.instances[0].profile_dir

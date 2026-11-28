@@ -27,9 +27,9 @@ def open_browser_context(
                 "Runtime context does not support publisher browser contexts."
             )
         return None, factory(config)
-    from .api import _backend
+    from .api import create_runtime_manager
 
-    manager = _backend(config.backend).create_manager(config)
+    manager = create_runtime_manager(config)
     try:
         return manager, manager.new_context()
     except BaseException:

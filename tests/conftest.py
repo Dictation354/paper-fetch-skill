@@ -14,11 +14,9 @@ from pathlib import Path
 from typing import Any
 
 import pytest
-from platformdirs import user_cache_path, user_data_path
+from platformdirs import user_data_path
 
 from tests._environment import (
-    PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
-    PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
 
@@ -62,56 +60,6 @@ def _snapshot_tree(root: Path) -> dict[str, tuple[int, int, int]]:
     return snapshot
 
 
-def _preserve_installed_camoufox_executable() -> None:
-    """Retain the prepared runtime while pytest isolates writable cache roots."""
-
-    from paper_fetch.browser_runtime_policy import engine_name
-
-    if engine_name() == "invisible":
-        try:
-            from invisible_core.download import cache_dir_for_seal
-
-            engine_dir = cache_dir_for_seal()
-            if engine_dir.is_dir():
-                os.environ.setdefault(
-                    "INVISIBLE_PLAYWRIGHT_ENGINE_DIR", str(engine_dir.parent)
-                )
-        except ImportError:
-            pass
-        return
-    preserved_executable = os.environ.get(
-        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR, ""
-    ).strip()
-    preserved_cache_home = os.environ.get(
-        PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR, ""
-    ).strip()
-    if preserved_executable and preserved_cache_home:
-        return
-    try:
-        from camoufox import pkgman
-
-        from paper_fetch.providers.browser_runtime.preparation import (
-            probe_camoufox_managed_runtime,
-        )
-
-        if preserved_executable:
-            executable = Path(preserved_executable)
-        else:
-            # Upstream path resolution can update the active config after a
-            # package upgrade. Preserve user caches through the read-only probe.
-            probe = probe_camoufox_managed_runtime()
-            if not probe.valid or probe.executable_path is None:
-                return
-            executable = probe.executable_path
-    except Exception:
-        return
-    if executable.is_file() and (os.name == "nt" or os.access(executable, os.X_OK)):
-        os.environ[PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR] = str(executable)
-        os.environ[PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR] = str(
-            Path(pkgman.INSTALL_DIR).parent
-        )
-
-
 def _preserve_explicit_formula_tools_dir() -> None:
     """Retain an explicitly prepared read-only formula backend for live tests."""
 
@@ -142,14 +90,6 @@ def pytest_configure(config: pytest.Config) -> None:
 
     layer_policy.install()
     worker = _worker_id(config)
-    if os.environ.get("PAPER_FETCH_RUN_LIVE") == "1":
-        os.environ.setdefault(
-            "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
-            str(
-                Path(user_cache_path("paper-fetch", appauthor=False))
-                / "live-components/byparr"
-            ),
-        )
     _preserve_explicit_formula_tools_dir()
     isolated_root = Path(tempfile.mkdtemp(prefix=f"paper-fetch-tests-{worker}-"))
     config._paper_fetch_isolated_root = isolated_root
@@ -158,9 +98,11 @@ def pytest_configure(config: pytest.Config) -> None:
         value.mkdir(mode=0o700, parents=True, exist_ok=True)
         if name != "XDG_CACHE_HOME":
             os.environ[name] = str(value)
-    # Probe after isolating application paths, while upstream still sees the
-    # original dependency cache. Importing the probe initializes config defaults.
-    _preserve_installed_camoufox_executable()
+    from paper_fetch.providers.browser_runtime.preparation import browser_cache_dir
+
+    os.environ.setdefault(
+        "PLAYWRIGHT_BROWSERS_PATH", str(browser_cache_dir(os.environ))
+    )
     os.environ["XDG_CACHE_HOME"] = str(isolated_root / "xdg-cache-home")
     os.environ["TEXMATH_BIN"] = str(isolated_root / "unavailable-texmath")
     os.environ["MATHML_TO_LATEX_NODE_BIN"] = str(isolated_root / "unavailable-node")
@@ -232,13 +174,16 @@ def _paper_fetch_test_safety(request, monkeypatch):
         return
     layer_policy.UNIT_NODE = request.node.nodeid
     from paper_fetch.providers import _pdf_common
-    from paper_fetch.providers.browser_runtime import byparr_manager, html_fetcher
+    from paper_fetch.providers.browser_runtime import html_fetcher
+    from paper_fetch.providers.browser_runtime.backends.scrapling import (
+        ScraplingManager,
+    )
 
     def blocked(*args: Any, **kwargs: Any) -> None:
         layer_policy.reject("real browser runtime")
 
     monkeypatch.setattr(html_fetcher, "open_browser_context", blocked)
-    monkeypatch.setattr(byparr_manager.ByparrManager, "new_context", blocked)
+    monkeypatch.setattr(ScraplingManager, "new_context", blocked)
     original = _pdf_common._call_pdf_renderer_with_tessdata_retry
 
     def guarded_renderer(renderer, *args, **kwargs):

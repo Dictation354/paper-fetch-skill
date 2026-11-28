@@ -104,20 +104,15 @@ def test_all_skipped_never_installs_or_prepares(setup, monkeypatch):
     monkeypatch.setattr(wizard, "library_status", lambda _: "missing")
     monkeypatch.setattr(wizard, "apt_supported", lambda: True)
     monkeypatch.setattr(wizard, "apt_package", lambda names: names[0])
-    monkeypatch.setattr(
-        preparation,
-        "probe_camoufox_managed_runtime",
-        lambda: SimpleNamespace(state="missing", runtime_path=None, valid=False),
-    )
     install = Mock(side_effect=AssertionError("unselected install"))
     prepare = Mock(side_effect=AssertionError("unselected browser"))
     monkeypatch.setattr(setup, "install_packages", install)
-    monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", prepare)
+    monkeypatch.setattr(preparation, "prepare_chromium", prepare)
     setup.terminal()
     install.assert_not_called()
     prepare.assert_not_called()
     assert not setup.env_file.exists()
-    assert "Camoufox" not in setup.summary()
+    assert "Chromium" not in setup.summary()
 
 
 @pytest.mark.parametrize(
@@ -314,11 +309,11 @@ def test_macos_brew_uses_absolute_path_without_sudo(setup, monkeypatch):
 def test_browser_uses_combined_runtime_preparation(setup, monkeypatch):
     from paper_fetch import offline_browsers
 
-    prepare = Mock(side_effect=lambda setup, **kw: setup.report("Byparr", "ready"))
+    prepare = Mock(side_effect=lambda setup, **kw: setup.report("Chromium", "ready"))
     monkeypatch.setattr(offline_browsers, "prepare", prepare)
     setup.browser(selected=True)
     prepare.assert_called_once_with(setup, interactive=True)
-    assert "Byparr: ready" in setup.summary()
+    assert "Chromium: ready" in setup.summary()
 
 
 def test_browser_download_failure_preserves_core(setup, monkeypatch):
@@ -327,8 +322,8 @@ def test_browser_download_failure_preserves_core(setup, monkeypatch):
     monkeypatch.setattr(
         offline_browsers, "prepare", Mock(side_effect=OSError("offline"))
     )
-    setup.step("Byparr", lambda: setup.browser(selected=True))
-    assert "Byparr: failed" in setup.summary()
+    setup.step("Chromium", lambda: setup.browser(selected=True))
+    assert "Chromium: failed" in setup.summary()
     assert "core installation is preserved" in setup.summary()
 
 
@@ -576,12 +571,11 @@ def test_terminal_configuration_never_prepares_browsers(setup, monkeypatch):
     )
     monkeypatch.setattr(setup, "image", image)
     monkeypatch.setattr(setup, "browser", browser)
-    monkeypatch.setattr(setup, "browser_libraries", libraries)
     setup.terminal()
     assert [call.args[0] for call in image.call_args_list] == list(wizard.TOOL_KEYS)
     browser.assert_not_called()
     libraries.assert_not_called()
-    assert "Camoufox" not in setup.summary()
+    assert "Chromium" not in setup.summary()
 
 
 def test_summary_keeps_latest_results_without_progress(setup, capsys):
@@ -611,47 +605,3 @@ def test_detected_image_reports_ready_once_with_conversion_evidence(
     assert output.count("ghostscript: ready") == 1
     assert "Conversion verified:" in output
     assert setup.summary().count("ghostscript: ready") == 1
-
-
-def test_preparation_shortens_only_known_camoufox_warning(setup, monkeypatch, capsys):
-    import sys
-    import warnings
-    from types import SimpleNamespace
-
-    class LeakWarning(UserWarning):
-        pass
-
-    WARNINGS_DATA = {"canvas_noise": "Known Canvas warning"}
-    monkeypatch.setitem(
-        sys.modules,
-        "camoufox._warnings",
-        SimpleNamespace(LeakWarning=LeakWarning, WARNINGS_DATA=WARNINGS_DATA),
-    )
-    monkeypatch.setattr(
-        "paper_fetch.browser_runtime_policy.engine_name", lambda: "camoufox"
-    )
-
-    original = warnings.showwarning
-    manager = Mock()
-    manager.new_context.return_value.new_page.return_value.evaluate.return_value = 2
-
-    def new_context():
-        warnings.warn(WARNINGS_DATA["canvas_noise"], LeakWarning, stacklevel=2)
-        warnings.warn("unrelated leak warning", LeakWarning, stacklevel=2)
-        warnings.warn("ordinary warning", UserWarning, stacklevel=2)
-        return manager.new_context.return_value
-
-    manager.new_context.side_effect = new_context
-    with warnings.catch_warnings(record=True) as caught:
-        warnings.simplefilter("always")
-        with wizard.preparation_warnings():
-            new_context()
-    stderr = capsys.readouterr().err
-    canvas = [line for line in stderr.splitlines() if "Camoufox: Canvas/WebGL" in line]
-    assert len(canvas) == 1 and "random data" in canvas[0]
-    assert [str(item.message) for item in caught] == [
-        "unrelated leak warning",
-        "ordinary warning",
-    ]
-    assert "canvas_noise=False" not in stderr
-    assert warnings.showwarning is original

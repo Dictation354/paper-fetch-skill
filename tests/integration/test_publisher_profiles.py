@@ -15,9 +15,7 @@ import pytest
 from filelock import FileLock
 
 from paper_fetch.providers.browser_runtime import profile
-from paper_fetch.providers.browser_runtime.backends.byparr import (
-    DEFAULT_BYPARR_BACKEND,
-)
+from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.context import (
     browser_context,
     open_browser_context,
@@ -25,8 +23,6 @@ from paper_fetch.providers.browser_runtime.context import (
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeFailure
 from paper_fetch.runtime import RuntimeContext
 from tests.support.publisher_profiles import NativeProfileDouble
-
-load_runtime_config = DEFAULT_BYPARR_BACKEND.load_runtime_config
 
 
 @pytest.fixture
@@ -39,7 +35,7 @@ def config(tmp_path):
 def test_same_directory_threads_queue_and_different_publishers_do_not(
     config, monkeypatch
 ):
-    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
+    monkeypatch.setattr(profile, "ScraplingManager", NativeProfileDouble)
     first, _ = open_browser_context(config)
     entered = threading.Event()
     waiting = threading.Event()
@@ -78,7 +74,7 @@ def test_same_directory_threads_queue_and_different_publishers_do_not(
 def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
     config, monkeypatch
 ):
-    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
+    monkeypatch.setattr(profile, "ScraplingManager", NativeProfileDouble)
     path = profile.profile_path(config)
     path.mkdir(parents=True)
     process = subprocess.Popen(
@@ -114,7 +110,7 @@ def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
         def new_context(self):
             raise RuntimeError("native launch failed")
 
-    monkeypatch.setattr(profile, "ByparrManager", BrokenNative)
+    monkeypatch.setattr(profile, "ScraplingManager", BrokenNative)
     with pytest.raises(BrowserRuntimeFailure, match="native launch failed") as error:
         open_browser_context(config)
     assert error.value.kind == "browser_profile_load_failed"
@@ -123,48 +119,10 @@ def test_process_lease_wait_obeys_cancel_deadline_and_releases_on_exception(
 
 
 @pytest.fixture
-def native_config(config, monkeypatch):
-    if sys.platform == "darwin":
-        pytest.skip(
-            "managed macOS bundle persistence is exercised by the existing native bundle gate"
-        )
-    from paper_fetch.providers.browser_runtime import byparr_engine
-    from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+def native_config(config):
+    from tests.support.offline_chromium import prepared_executable
 
-    monkeypatch.setattr(byparr_engine, "engine_name", lambda: "camoufox")
-
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires prepared local Camoufox executable")
-    sync_api = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
-    from camoufox.fingerprints import Screen
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    version = json.loads(version_file.read_text())["version"]
-    monkeypatch.setattr(utils, "installed_verstr", lambda: version)
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
-    original = sync_api.launch_options
-    monkeypatch.setattr(
-        sync_api,
-        "launch_options",
-        lambda **kwargs: original(
-            exclude_addons=list(DefaultAddons),
-            screen=Screen(max_width=1920, max_height=1080),
-            **kwargs,
-        ),
-    )
-    return replace(
-        config,
-        binary_path=executable,
-        component_cache_dir=Path(os.environ["PAPER_FETCH_TEST_BYPARR_CACHE"])
-        if os.environ.get("PAPER_FETCH_TEST_BYPARR_CACHE")
-        else None,
-    )
+    return replace(config, binary_path=str(prepared_executable()))
 
 
 @pytest.fixture
@@ -347,46 +305,37 @@ def test_native_cookie_localstorage_survive_restart_and_all_entrypoints_borrow(
     assert profile.trusted_profile_digest(profile.profile_path(config), "pnas")
 
 
-@pytest.mark.skipif(os.name == "nt", reason="POSIX native Firefox lock protocol")
-def test_external_native_os_lock_is_reported_without_removing_files(
-    config, monkeypatch
-):
-    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
+@pytest.mark.skipif(os.name == "nt", reason="POSIX Chromium singleton socket")
+def test_external_native_socket_is_reported_without_removing_it(config, monkeypatch):
+    import socket
+
+    monkeypatch.setattr(profile, "ScraplingManager", NativeProfileDouble)
     path = profile.profile_path(config)
     path.mkdir(parents=True)
-    native_lock = path / ".parentlock"
-    native_lock.touch()
-    process = subprocess.Popen(
-        [
-            sys.executable,
-            "-u",
-            "-c",
-            "import fcntl, sys; f=open(sys.argv[1], 'r+b'); fcntl.lockf(f, fcntl.LOCK_EX); print('locked', flush=True); sys.stdin.readline()",
-            str(native_lock),
-        ],
-        stdin=subprocess.PIPE,
-        stdout=subprocess.PIPE,
-        text=True,
-    )
-    try:
-        assert process.stdout.readline().strip() == "locked"
+    native_lock = path / "SingletonSocket"
+    import tempfile
+
+    with (
+        tempfile.TemporaryDirectory(prefix="pf-socket-") as short_directory,
+        socket.socket(socket.AF_UNIX) as owner,
+    ):
+        actual_socket = Path(short_directory) / "socket"
+        owner.bind(str(actual_socket))
+        native_lock.symlink_to(actual_socket)
+        owner.listen()
         with pytest.raises(BrowserRuntimeFailure) as error:
             open_browser_context(config)
         assert error.value.kind == "browser_profile_external_occupancy"
         assert native_lock.exists()
-    finally:
-        process.communicate(input="release\n", timeout=5)
-    # Firefox leaves the file behind after releasing its OS lock. Reopening it
-    # must work without our code deleting or rewriting that file.
     manager, _ = open_browser_context(config)
     manager.close()
-    assert native_lock.exists()
+    assert native_lock.is_symlink()
 
 
 @pytest.mark.browser
 def test_auth_reopens_same_native_profile(native_config, monkeypatch):
     if (
-        os.name != "nt"
+        sys.platform == "linux"
         and not os.environ.get("DISPLAY")
         and not os.environ.get("WAYLAND_DISPLAY")
     ):
@@ -397,7 +346,7 @@ def test_auth_reopens_same_native_profile(native_config, monkeypatch):
         BROWSER_PROFILE_DIR_ENV_VAR,
     )
 
-    original = profile.ByparrManager.new_context
+    original = profile.ScraplingManager.new_context
     launches = []
 
     def routed_context(self):
@@ -412,15 +361,16 @@ def test_auth_reopens_same_native_profile(native_config, monkeypatch):
         )
         return context
 
-    monkeypatch.setattr(profile.ByparrManager, "new_context", routed_context)
+    monkeypatch.setattr(profile.ScraplingManager, "new_context", routed_context)
     monkeypatch.setattr(auth, "ensure_runtime_ready", lambda runtime: None)
     result = auth.authenticate_provider_profile(
         provider="pnas",
         confirm=lambda prompt: None,
         env={
-            "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
             BROWSER_BINARY_PATH_ENV_VAR: native_config.binary_path,
-            BROWSER_PROFILE_DIR_ENV_VAR: str(profile.profile_path(native_config)),
+            BROWSER_PROFILE_DIR_ENV_VAR: str(
+                profile.profile_path(native_config).parent
+            ),
         },
     )
     assert result.verified

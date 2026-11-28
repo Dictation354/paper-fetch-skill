@@ -6,7 +6,7 @@ import pytest
 
 from paper_fetch.providers import _tandf_html
 from paper_fetch.providers._ieee_asset_recovery import _IeeePreviewWarmImageFetcher
-from tests.support.offline_camoufox import prepared_browser
+from tests.support.offline_chromium import prepared_browser
 
 
 @pytest.mark.browser

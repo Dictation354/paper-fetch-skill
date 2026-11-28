@@ -68,12 +68,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
     def test_browser_boundary_drift_is_rejected(self) -> None:
         contract = validator.load_contract()
         contract["browser"]["native_engine"] = "invisible"
-        contract["browser"]["default_backend"] = "camoufox"
+        contract["browser"]["default_backend"] = "other"
         contract["browser"]["system_chrome_required"] = True
         contract["browser"]["runtime_bundle_built_in"] = True
-        contract["browser"]["python_package_spec"] = "camoufox>=0.5.9"
-        contract["browser"]["playwright_spec"] = ">=1.58,<2"
-        contract["browser"]["platform_dependencies_exclusive"] = False
+        contract["browser"]["python_requirements"] = ["scrapling>=0.5.1"]
 
         diagnostic = "\n".join(validator.validate_contract(contract))
 
@@ -81,15 +79,10 @@ class MacosAdaptationValidatorTests(unittest.TestCase):
             "browser.native_engine must match browser_runtime_policy on darwin",
             diagnostic,
         )
-        self.assertIn("browser.default_backend must be byparr", diagnostic)
+        self.assertIn("browser.default_backend must be scrapling", diagnostic)
+        self.assertIn("browser.python_requirements must match the pinned", diagnostic)
         self.assertIn("browser.system_chrome_required must be false", diagnostic)
         self.assertIn("browser.runtime_bundle_built_in must be false", diagnostic)
-        self.assertIn("browser.python_package_spec must be camoufox==0.5.9", diagnostic)
-        self.assertIn("browser.playwright_spec must be >=1.58,<1.63", diagnostic)
-        self.assertIn(
-            "browser.platform_dependencies_exclusive must be true", diagnostic
-        )
-        self.assertIn("byparr-manifest.json shared_packages", diagnostic)
 
     def test_codex_discovery_contract_drift_is_rejected(self) -> None:
         contract = validator.load_contract()

@@ -17,7 +17,7 @@ from ....extraction.html.assets.state import AssetBinaryPayload, AssetFetchRespo
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
 from ..._registry import BrowserAssetPolicy, browser_asset_policy
-from ...browser_runtime.navigation import managed_action, navigate_page, navigator_for
+from ...browser_runtime.navigation import managed_action, navigate_page
 from .context import _browser_response_headers, _browser_response_status
 
 _CLICK_TIMEOUT_SECONDS = 60.0
@@ -121,7 +121,6 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
     phase = "article_not_ready"
     response = None
     pending_response = None
-    detached_response = None
     finished = set()
     downloads = []
     popups: list[Any] = []
@@ -168,7 +167,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         try:
             owner = request.frame.page
         except Exception:
-            return None  # Firefox popup navigation can precede frame creation.
+            return None  # Popup navigation can precede frame creation.
         if owner not in [page, *popups]:
             capture_popup(owner)
         return owner
@@ -231,7 +230,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
             return
         if 300 <= candidate.status < 400:
             location = candidate.headers.get("location")
-            # Firefox can report the popup's entire redirect chain before it
+            # The browser can report the popup's entire redirect chain before it
             # has a frame. Keep its Location for the next navigation. A
             # frameless final response still needs an owned page or download.
             if location and (
@@ -251,7 +250,9 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
 
     def capture_download(candidate):
         nonlocal response
-        if armed and candidate.url in request_urls:
+        # Chromium can deliver downloads initiated by an HTML download
+        # attribute without exposing the request to the page's network client.
+        if armed and (candidate.url in request_urls or clicked_url(candidate.url)):
             downloads.append(candidate)
             if pending_response is not None and pending_response.url == candidate.url:
                 response = pending_response
@@ -378,7 +379,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 policy.supplement_activate(page, link, remaining_ms)
             else:
                 # A trusted pointer action gives target=_blank its user activation;
-                # a synthetic DOM click can be silently blocked by Firefox.
+                # a synthetic DOM click can be silently blocked by the browser.
                 link.click(no_wait_after=True, timeout=remaining_ms())
         while True:
             remaining_ms()
@@ -395,28 +396,37 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 (
                     item
                     for item in downloads
-                    if response is not None and item.url == response.url
+                    if (
+                        item.url == response.url
+                        if response is not None
+                        else clicked_url(item.url)
+                    )
                 ),
                 None,
             )
             # A download manager handoff need not finish the page request.
             # A local path or save_as() supplies the complete file; deadline/cancellation
             # and byte limits are checked before accepting it below.
-            if response is not None and (
-                download is not None or response.request in finished
+            if download is not None or (
+                response is not None and response.request in finished
             ):
-                headers = _browser_response_headers(response)
-                status = _browser_response_status(response)
+                headers = (
+                    _browser_response_headers(response) if response is not None else {}
+                )
+                status = (
+                    _browser_response_status(response) if response is not None else None
+                )
+                final_url = str(download.url if download is not None else response.url)
                 if download is not None:
                     shared_browser = (
                         getattr(
                             getattr(fetcher, "_browser_config", None), "backend", None
                         )
-                        == "byparr"
+                        == "scrapling"
                     )
                     with (
                         tempfile.TemporaryDirectory(
-                            prefix="paper-fetch-byparr-download-"
+                            prefix="paper-fetch-scrapling-download-"
                         )
                         if shared_browser
                         else contextlib.nullcontext()
@@ -439,31 +449,12 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                             return None
                         body = Path(path).read_bytes()
                     route["capture_event"] = "download"
-                elif (
-                    response is detached_response
-                    or "attachment" in headers.get("content-disposition", "").lower()
-                ):
+                elif "attachment" in headers.get("content-disposition", "").lower():
                     # Wait for the download event within the existing deadline.
                     page.wait_for_timeout(min(50, remaining_ms()))
                     continue
                 else:
-                    inline_response = response
-                    try:
-                        body = inline_response.body()
-                    except Exception as exc:
-                        navigator = navigator_for(page)
-                        if (
-                            getattr(navigator, "_invisible_session", None) is None
-                            or not inline_response.request.is_navigation_request()
-                            or "Network.getResponseBody: ERROR: cannot find session"
-                            not in str(exc)
-                        ):
-                            raise
-                        # Invisible can close a popup's protocol session when
-                        # its navigation becomes a download. The opener receives
-                        # the download event after the popup is detached.
-                        detached_response = inline_response
-                        continue
+                    body = response.body()
                     route["capture_event"] = "inline_response"
                 remaining_ms(transfer_started=download is not None)
                 reason = supplementary_response_block_reason(
@@ -487,7 +478,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 if len(body) > maximum:
                     record_failure("asset_bytes_per_asset_exceeded")
                     return None
-                route["final_url"] = redact_url_for_cache(str(response.url))
+                route["final_url"] = redact_url_for_cache(final_url)
                 fetcher._last_failure_by_url.pop(file_url, None)
                 return AssetFetchResponse(
                     payload=AssetBinaryPayload(
@@ -499,7 +490,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                     diagnostics={
                         "status_code": status,
                         "headers": headers,
-                        "url": str(response.url),
+                        "url": final_url,
                     },
                 )
             page.wait_for_timeout(min(50, remaining_ms()))

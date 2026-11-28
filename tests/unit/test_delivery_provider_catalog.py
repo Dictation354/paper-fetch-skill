@@ -157,24 +157,17 @@ def test_provider_catalog_payload_automatically_includes_discovered_changes() ->
 def test_catalog_runtime_facts_are_read_only_and_derived_from_runtime_owners(
     monkeypatch,
 ):
-    from paper_fetch.providers.browser_runtime import byparr_preparation, preparation
-    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
+    from paper_fetch.browser_runtime_policy import engine_name, package_versions
+    from paper_fetch.providers.browser_runtime import preparation
 
     def forbidden(*args, **kwargs):
         raise AssertionError("catalog must not prepare or download components")
 
-    monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", forbidden)
-    monkeypatch.setattr(byparr_preparation, "download", forbidden)
+    monkeypatch.setattr(preparation, "prepare_chromium", forbidden)
     facts = provider_catalog_payload()["browser_runtime"]
-    assert facts["backend"] == "byparr"
-    assert (
-        facts["byparr_version"]
-        == json.loads(byparr_preparation.MANIFEST_PATH.read_text())["version"]
-    )
+    assert facts["backend"] == "scrapling"
+    assert facts["required_versions"] == preparation.BROWSER_PACKAGE_PINS
+    assert facts["package_versions"] == package_versions()
     assert facts["platform_engine"] == engine_name()
     assert facts["preparation"] == "on_demand"
     assert facts["preparation_reuse_scope"] == "request_or_batch"
-    assert (
-        facts["update_check_interval_seconds"]
-        == preparation.UPDATE_CHECK_INTERVAL_SECONDS
-    )

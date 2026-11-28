@@ -279,7 +279,7 @@ class IeeeProviderPdfGoldenTests(unittest.TestCase):
             trace_facts(article.trace),
         )
         diagnostics = raw_payload.content.diagnostics["pdf_fallback"]
-        self.assertEqual(diagnostics["fetcher"], "camoufox_browser")
+        self.assertEqual(diagnostics["fetcher"], "scrapling_browser")
         self.assertEqual(diagnostics["browser_pdf_response"], "ieee_stamp_iframe")
         self.assertEqual(diagnostics["identity"]["status"], "match")
         self.assertEqual(raw_payload.content.route_name, "browser_pdf")

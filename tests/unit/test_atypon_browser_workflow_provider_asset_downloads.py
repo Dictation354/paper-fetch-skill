@@ -546,7 +546,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
 """
         transport = AssetTransport({})
         client = pnas_provider.PnasClient(
-            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
+            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling"}
         )
         initial_seed = {
             "browser_cookies": [
@@ -647,7 +647,7 @@ class AtyponBrowserWorkflowProviderAssetDownloadTests(
 """
         transport = AssetTransport({})
         client = pnas_provider.PnasClient(
-            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
+            transport=transport, env={"PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling"}
         )
         seed = {
             "browser_cookies": [

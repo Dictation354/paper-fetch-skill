@@ -4,7 +4,7 @@ from __future__ import annotations
 
 import contextlib
 import threading
-from dataclasses import dataclass, field, replace
+from dataclasses import dataclass, field
 from typing import TYPE_CHECKING, Any
 
 from .types import BrowserRuntimeFailure
@@ -27,10 +27,9 @@ class BrowserSessions:
     ) -> Any:
         """Borrow the publisher's thread-affine persistent context."""
         del context_kwargs
-        from .api import _backend
+        from .api import create_runtime_manager
         from .profile import profile_path
 
-        config = replace(config, backend="byparr")
         path = profile_path(config)
         key = (threading.get_ident(), bool(config.headless), str(path))
         with self.lock:
@@ -51,7 +50,7 @@ class BrowserSessions:
                 # Release the prior publisher before waiting for another directory.
                 # This prevents two requests from holding opposite profile leases.
                 self.close_browser_for_current_thread(runtime_context)
-                manager = _backend(config.backend).create_manager(
+                manager = create_runtime_manager(
                     config, runtime_context=runtime_context
                 )
                 self.managers[key] = manager

@@ -1,8 +1,5 @@
 from __future__ import annotations
 
-import json
-import subprocess
-import sys
 import threading
 from types import SimpleNamespace
 from unittest import mock
@@ -19,155 +16,25 @@ from paper_fetch.config import (
 )
 from paper_fetch.providers import browser_runtime
 from paper_fetch.providers.browser_runtime import (
-    camoufox_options,
-    html_fetcher,
-    preparation,
-    telemetry,
-)
-from paper_fetch.providers.browser_runtime import (
     context as browser_runtime_context,
 )
 from paper_fetch.providers.browser_runtime import (
+    html_fetcher,
+    telemetry,
+)
+from paper_fetch.providers.browser_runtime import (
     readiness as browser_readiness,
-)
-from paper_fetch.providers.browser_runtime.backends.byparr import (
-    ByparrBackend,
-    _dependency_details,
-)
-from paper_fetch.providers.browser_runtime.preparation import (
-    CamoufoxRuntimeProbe,
-    _launch_executable_path,
 )
 from paper_fetch.providers.browser_runtime.types import (
     BrowserHtmlReadiness,
     BrowserRuntimeConfig,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests.support.camoufox_backend import _Context, _Page, _Response
+from tests.support.chromium_backend import _Context, _Page, _Response
 
 
-@pytest.fixture(autouse=True)
-def mock_custom_fingerprint_preparation(monkeypatch):
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_fingerprint_model",
-        prepare,
-    )
-    return prepare
-
-
-def test_macos_empty_system_proxy_is_direct_in_browser_and_gpu_probe(monkeypatch):
-    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
-    query = mock.Mock(
-        return_value=SimpleNamespace(
-            stdout="<dictionary> {\n  HTTPEnable : 0\n  ProxyAutoConfigEnable : 0\n}"
-        )
-    )
-    monkeypatch.setattr(camoufox_options.subprocess, "run", query)
-    original = {"webgl.force-enabled": True}
-    original_probe = mock.Mock(return_value=("Apple", "Apple GPU"))
-    original_probe._paper_fetch_proxy_startup = False
-    rendering = SimpleNamespace(GPU_PREFS=original, _host_gpu=original_probe)
-    monkeypatch.setitem(sys.modules, "camoufox.host_rendering", rendering)
-    startup_env = {"CAMOU_PREFS_1": '{"network.proxy.type":0}'}
-    monkeypatch.setitem(
-        sys.modules,
-        "camoufox.utils",
-        SimpleNamespace(get_pref_env_vars=mock.Mock(return_value=startup_env)),
-    )
-
-    prefs = camoufox_options.macos_proxy_preferences()
-
-    assert prefs == {"network.proxy.type": 0}
-    assert {
-        key: value for key, value in prefs.items() if key in rendering.GPU_PREFS
-    } == prefs
-    assert rendering.GPU_PREFS["webgl.force-enabled"] is True
-    assert original == {"webgl.force-enabled": True}
-    assert query.call_args.args == (["/usr/sbin/scutil", "--proxy"],)
-    probe = rendering._host_gpu
-    assert probe("/browser", True, (("DISPLAY", ":1"),), tuple(prefs.items())) == (
-        "Apple",
-        "Apple GPU",
-    )
-    assert dict(original_probe.call_args.args[2]) == {
-        "DISPLAY": ":1",
-        **startup_env,
-    }
-    assert camoufox_options.macos_proxy_preferences() == prefs
-    assert rendering._host_gpu is probe
-    probe("/browser", True, (("DISPLAY", ":1"),), (("network.proxy.type", 1),))
-    assert dict(original_probe.call_args.args[2]) == {"DISPLAY": ":1"}
-
-
-@pytest.mark.parametrize(
-    "settings",
-    [
-        "<dictionary> {\n  HTTPEnable : 1\n}",
-        "<dictionary> {\n  SOCKSEnable : 1\n}",
-        "<dictionary> {\n  ProxyAutoConfigEnable : 1\n}",
-        "<dictionary> {\n  ProxyAutoDiscoveryEnable : 1\n}",
-        "unexpected output",
-    ],
-)
-def test_macos_configured_or_unknown_system_proxy_is_preserved(monkeypatch, settings):
-    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
-    monkeypatch.setattr(
-        camoufox_options.subprocess,
-        "run",
-        mock.Mock(return_value=SimpleNamespace(stdout=settings)),
-    )
-    assert camoufox_options.macos_proxy_preferences() == {}
-
-
-@pytest.mark.parametrize(
-    "failure",
-    [OSError("unavailable"), subprocess.TimeoutExpired("scutil", 5)],
-)
-def test_macos_proxy_query_failure_preserves_system_proxy(monkeypatch, failure):
-    monkeypatch.setattr(camoufox_options.sys, "platform", "darwin")
-    monkeypatch.setattr(
-        camoufox_options.subprocess, "run", mock.Mock(side_effect=failure)
-    )
-    assert camoufox_options.macos_proxy_preferences() == {}
-
-
-def test_other_platforms_do_not_query_macos_proxy(monkeypatch):
-    monkeypatch.setattr(camoufox_options.sys, "platform", "linux")
-    query = mock.Mock(side_effect=AssertionError("macOS system proxy queried"))
-    monkeypatch.setattr(camoufox_options.subprocess, "run", query)
-    assert camoufox_options.macos_proxy_preferences() == {}
-    query.assert_not_called()
-
-
-def test_camoufox_context_failure_closes_at_backend_boundary(
-    monkeypatch, tmp_path
-) -> None:
-    profile_manager = mock.Mock()
-    profile_manager.return_value.new_context.side_effect = RuntimeError(
-        "camoufox failed"
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr.PublisherProfileManager",
-        profile_manager,
-    )
-    config = BrowserRuntimeConfig(
-        provider="ieee",
-        doi="10.1109/example",
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent=None,
-    )
-
-    with pytest.raises(RuntimeError, match="camoufox failed"):
-        browser_runtime_context.open_browser_context(config)
-
-    profile_manager.assert_called_once()
-    profile_manager.return_value.close.assert_called_once_with()
-
-
-def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) -> None:
-    executable = tmp_path / "camoufox"
+def test_chromium_config_uses_generic_settings_and_separate_profile(tmp_path) -> None:
+    executable = tmp_path / "scrapling"
     executable.write_text("runtime", encoding="utf-8")
     executable.chmod(0o755)
     env = {
@@ -195,12 +62,13 @@ def test_camoufox_config_uses_generic_settings_and_separate_profile(tmp_path) ->
         / "paper-fetch"
         / "publisher-browser-profiles"
         / "annualreviews"
+        / "chromium"
     )
 
 
-def test_camoufox_generic_profile_override(tmp_path) -> None:
+def test_chromium_generic_profile_override(tmp_path) -> None:
     profile = tmp_path / "profile"
-    config = ByparrBackend().load_runtime_config(
+    config = browser_runtime.load_runtime_config(
         {
             BROWSER_PROFILE_DIR_ENV_VAR: str(profile),
             XDG_DATA_HOME_ENV_VAR: str(tmp_path / "xdg"),
@@ -208,7 +76,7 @@ def test_camoufox_generic_profile_override(tmp_path) -> None:
         provider="acs",
         doi="10.1021/example",
     )
-    assert config.profile_dir == profile
+    assert config.profile_dir == profile / "chromium"
     assert config.user_data_dir is None
 
 
@@ -294,225 +162,10 @@ def test_open_wiley_context_without_storage_state_has_no_state_capability_use(
     assert not list(tmp_path.rglob("storage-state.json"))
 
 
-def test_camoufox_first_launch_prepares_official_runtime(monkeypatch) -> None:
-    prepare = mock.Mock()
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_managed_runtime",
-        prepare,
-    )
-    runtime_path = object()
-    pkgman = SimpleNamespace(
-        camoufox_path=mock.Mock(return_value=runtime_path),
-        launch_path=mock.Mock(return_value="/runtime/camoufox"),
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.preparation.import_module",
-        lambda name: (
-            pkgman
-            if name == "camoufox.pkgman"
-            else pytest.fail(f"unexpected module import: {name}")
-        ),
-    )
-
-    assert _launch_executable_path(None) is None
-    prepare.assert_called_once_with()
-    pkgman.camoufox_path.assert_not_called()
-    pkgman.launch_path.assert_not_called()
-
-
-def test_camoufox_static_probe_reads_runtime_without_fetching(
-    monkeypatch, tmp_path
-) -> None:
-    active_version = "browsers/official/test-version"
-    runtime_path = tmp_path / active_version
-    runtime_path.mkdir(parents=True)
-    executable = runtime_path / "camoufox"
-    executable.touch()
-
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr.byparr_engine.engine_name",
-        lambda: "camoufox",
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr.importlib_util.find_spec",
-        lambda _name: object(),
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr.importlib_metadata.version",
-        lambda name: {"playwright": "1.62.0", "camoufox": "0.5.9"}[name],
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr.probe_camoufox_managed_runtime",
-        lambda: CamoufoxRuntimeProbe(
-            state="ready",
-            installed=True,
-            valid=True,
-            runtime_path=runtime_path,
-            executable_path=executable,
-            version="test-version",
-            active_spec=active_version,
-            managed_path_safe=True,
-        ),
-    )
-
-    details = _dependency_details()
-
-    assert details["runtime_installed"] is True
-    assert details["package_ready"] is True
-    assert details["download_required"] is False
-    assert details["runtime_path"] == str(runtime_path)
-
-
-def test_camoufox_probe_validates_managed_executable_without_fetching(
-    monkeypatch, tmp_path
-) -> None:
-    active_spec = "browsers/official/152.0.4-beta.28"
-    runtime_path = tmp_path / active_spec
-    executable = runtime_path / "camoufox"
-    executable.parent.mkdir(parents=True)
-    executable.touch()
-    config_path = tmp_path / "config.json"
-    config_path.write_text(
-        json.dumps({"active_version": active_spec}),
-        encoding="utf-8",
-    )
-    version = SimpleNamespace(
-        full_string="152.0.4-beta.28",
-        is_supported=lambda: True,
-    )
-    version_type = SimpleNamespace(from_path=mock.Mock(return_value=version))
-    pkgman = SimpleNamespace(
-        INSTALL_DIR=tmp_path,
-        Version=version_type,
-        launch_path=mock.Mock(return_value=str(executable)),
-    )
-    multiversion = SimpleNamespace(CONFIG_FILE=config_path)
-    monkeypatch.setattr(
-        preparation,
-        "import_module",
-        lambda name: pkgman if name == "camoufox.pkgman" else multiversion,
-    )
-
-    probe = preparation.probe_camoufox_managed_runtime()
-
-    assert probe.valid is True
-    assert probe.runtime_path == runtime_path
-    assert probe.executable_path == executable
-    version_type.from_path.assert_called_once_with(runtime_path)
-    pkgman.launch_path.assert_called_once_with(runtime_path)
-
-
-def test_camoufox_probe_rejects_link_in_managed_runtime_path(
-    monkeypatch, tmp_path
-) -> None:
-    real_parent = tmp_path / "real-official"
-    real_parent.mkdir()
-    browsers = tmp_path / "browsers"
-    browsers.mkdir()
-    try:
-        (browsers / "official").symlink_to(real_parent, target_is_directory=True)
-    except OSError:
-        pytest.skip("symlink creation is unavailable on this platform")
-    (real_parent / "152.0.4-beta.28").mkdir()
-    config_path = tmp_path / "config.json"
-    config_path.write_text(
-        '{"active_version":"browsers/official/152.0.4-beta.28"}',
-        encoding="utf-8",
-    )
-    pkgman = SimpleNamespace(INSTALL_DIR=tmp_path)
-    multiversion = SimpleNamespace(CONFIG_FILE=config_path)
-    monkeypatch.setattr(
-        preparation,
-        "import_module",
-        lambda name: pkgman if name == "camoufox.pkgman" else multiversion,
-    )
-
-    probe = preparation.probe_camoufox_managed_runtime()
-
-    assert probe.valid is False
-    assert probe.managed_path_safe is False
-    assert probe.state == "corrupt"
-
-
-def test_camoufox_probe_rejects_reparse_attribute_without_isjunction(
-    monkeypatch,
-) -> None:
-    path = mock.Mock()
-    path.is_symlink.return_value = False
-    path.lstat.return_value = SimpleNamespace(st_file_attributes=0x400)
-    monkeypatch.setattr(preparation.os.path, "isjunction", None, raising=False)
-
-    assert preparation._is_link_or_reparse(path) is True
-
-
-def test_camoufox_probe_rejects_parent_traversal(tmp_path) -> None:
-    candidate, safe = preparation._managed_candidate(
-        tmp_path,
-        "browsers/../unexpected-runtime",
-    )
-
-    assert candidate == tmp_path / "browsers" / ".." / "unexpected-runtime"
-    assert safe is False
-
-
-def test_camoufox_runtime_readiness_allows_missing_runtime_for_launch_preparation(
-    monkeypatch, tmp_path
-) -> None:
-    backend = ByparrBackend()
-    config = BrowserRuntimeConfig(
-        provider="science",
-        doi="10.1126/example",
-        artifact_dir=tmp_path,
-        headless=True,
-        user_agent=None,
-    )
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
-        lambda: {
-            "runtime_valid": False,
-            "packages": {"playwright": True, "camoufox": True},
-            "package_ready": True,
-            "runtime_installed": False,
-            "download_required": True,
-        },
-    )
-    monkeypatch.setattr(
-        subprocess,
-        "Popen",
-        mock.Mock(side_effect=AssertionError("readiness must not spawn a process")),
-    )
-
-    backend.ensure_runtime_ready(config)
-
-
-def test_camoufox_status_distinguishes_package_and_runtime_readiness(
-    monkeypatch,
-) -> None:
-    monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.backends.byparr._dependency_details",
-        lambda: {
-            "runtime_valid": False,
-            "packages": {"playwright": True, "camoufox": True},
-            "package_ready": True,
-            "runtime_installed": False,
-            "download_required": True,
-            "runtime_path": None,
-        },
-    )
-
-    result = ByparrBackend().probe_runtime_status({}, provider="science")
-    checks = {check.name: check for check in result.checks}
-
-    assert result.status == "not_configured"
-    assert checks["playwright_dependency"].status == "ok"
-    assert checks["browser_runtime"].status == "not_configured"
-    assert checks["browser_runtime"].details["download_required"] is True
-
-
-def test_runtime_context_closes_camoufox_on_owning_worker_thread() -> None:
+def test_runtime_context_closes_scrapling_on_owning_worker_thread() -> None:
     runtime = RuntimeContext(env={})
     manager = SimpleNamespace(close=mock.Mock())
-    key = (threading.get_ident(), True, "/runtime/camoufox")
+    key = (threading.get_ident(), True, "/runtime/scrapling")
     runtime._browser_sessions.managers[key] = manager
 
     runtime.close_browser_for_current_thread()
@@ -578,7 +231,7 @@ def test_browser_candidate_uses_native_navigation_without_context_guard(
     assert context.route_handler is None
 
 
-def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
+def test_chromium_html_retry_applies_provider_seed_before_page_creation(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -620,7 +273,7 @@ def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
                     "path": "/",
                 },
             ],
-            "browser_user_agent": "must-not-override-camoufox",
+            "browser_user_agent": "must-not-override-scrapling",
         },
     )
 
@@ -635,10 +288,10 @@ def test_camoufox_html_retry_applies_provider_seed_before_page_creation(
         "reason": "cookies_applied",
     }
     assert "private-value" not in str(result.diagnostics)
-    assert "must-not-override-camoufox" not in str(result.diagnostics)
+    assert "must-not-override-scrapling" not in str(result.diagnostics)
 
 
-def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
+def test_chromium_html_retry_rejects_invalid_seed_without_logging_cookie_value(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -688,7 +341,7 @@ def test_camoufox_html_retry_rejects_invalid_seed_without_logging_cookie_value(
     }
 
 
-def test_camoufox_html_navigation_uses_commit_and_keeps_images(
+def test_chromium_html_navigation_uses_commit_and_keeps_images(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -719,7 +372,7 @@ def test_camoufox_html_navigation_uses_commit_and_keeps_images(
     )
 
     assert result.response_status == 200
-    assert result.diagnostics["browser_runtime_trace"]["backend"] == "byparr"
+    assert result.diagnostics["browser_runtime_trace"]["backend"] == "scrapling"
     assert context.page.goto_kwargs["wait_until"] == "commit"
 
     image_route = mock.Mock()
@@ -935,7 +588,7 @@ def test_main_document_diagnostics_distinguish_finished_response_from_loading_sh
     assert "private-value" not in str(loading_trace)
 
 
-def test_camoufox_trace_does_not_report_unimported_json_as_used(
+def test_chromium_trace_does_not_report_unimported_json_as_used(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -1640,7 +1293,7 @@ def test_figure_page_fetches_reuse_one_runtime_context_and_page(
     assert second_trace["runtime_page_navigation_count"] == 2
 
 
-def test_camoufox_provider_page_preparation_runs_before_html_capture(
+def test_chromium_provider_page_preparation_runs_before_html_capture(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -1691,7 +1344,7 @@ def test_camoufox_provider_page_preparation_runs_before_html_capture(
     assert candidate["provider_page_preparation_seconds"] >= 0
 
 
-def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
+def test_chromium_candidate_deadline_preserves_observed_access_boundary(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -1750,7 +1403,7 @@ def test_camoufox_candidate_deadline_preserves_observed_access_boundary(
     assert len(failure.details["trace"]["candidates"]) == 1
 
 
-def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary(
+def test_chromium_candidate_transport_failure_preserves_observed_access_boundary(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -1799,7 +1452,7 @@ def test_camoufox_candidate_transport_failure_preserves_observed_access_boundary
     assert failure.kind == "cloudflare_challenge"
     assert failure.details["subsequent_candidate_failures"] == [
         {
-            "failure_code": "byparr_request_failed",
+            "failure_code": "scrapling_request_failed",
             "message": "Page.goto: Timeout 84000ms exceeded.",
         }
     ]
@@ -1916,7 +1569,7 @@ def test_lightweight_warm_reports_no_cookie_change(monkeypatch, tmp_path) -> Non
     assert result.cookie_delta == {"added": 0, "updated": 0, "removed": 0}
 
 
-def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
+def test_chromium_figure_page_waits_for_image_selector_without_fixed_sleep(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -1964,7 +1617,7 @@ def test_camoufox_figure_page_waits_for_image_selector_without_fixed_sleep(
     assert trace["candidates"][0]["selector_readiness_ready"] is True
 
 
-def test_camoufox_figure_page_selector_timeout_is_best_effort(
+def test_chromium_figure_page_selector_timeout_is_best_effort(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()
@@ -2001,7 +1654,7 @@ def test_camoufox_figure_page_selector_timeout_is_best_effort(
     assert trace["candidates"][0]["selector_readiness_ready"] is False
 
 
-def test_camoufox_figure_page_without_selector_uses_fixed_wait(
+def test_chromium_figure_page_without_selector_uses_fixed_wait(
     monkeypatch, tmp_path
 ) -> None:
     context = _Context()

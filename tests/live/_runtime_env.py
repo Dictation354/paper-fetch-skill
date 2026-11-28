@@ -1,6 +1,5 @@
 from __future__ import annotations
 
-import importlib.util
 import os
 import tempfile
 from collections.abc import Mapping, Sequence
@@ -11,21 +10,22 @@ from paper_fetch.browser_preflight import (
     preflight_browser_provider,
     static_browser_capabilities,
 )
-from paper_fetch.browser_runtime_policy import engine_name, selected_backend
+from paper_fetch.browser_runtime_policy import selected_backend
 from paper_fetch.config import (
-    BROWSER_BINARY_PATH_ENV_VAR,
     BROWSER_PROFILE_DIR_ENV_VAR,
     BROWSER_USER_DATA_DIR_ENV_VAR,
     build_runtime_env,
-    resolve_user_data_dir,
 )
 from paper_fetch.formula.paths import FORMULA_TOOLS_DIR_ENV_VAR
+from paper_fetch.providers.browser_runtime.preparation import (
+    BROWSER_PACKAGE_PINS,
+    browser_cache_dir,
+    package_versions,
+)
 from paper_fetch.providers.browser_workflow.shared import normalize_browser_url
 from paper_fetch.publisher_identity import normalize_doi
 from paper_fetch.reason_codes import NO_ACCESS
 from tests._environment import (
-    PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
-    PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
     PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR,
 )
 
@@ -46,8 +46,7 @@ def build_isolated_live_env(
     tempdir = tempfile.TemporaryDirectory(prefix="paper-fetch-live-xdg-")
     env = SecretSafeEnvironment(build_runtime_env(base_env))
     env.setdefault(
-        "PAPER_FETCH_BROWSER_COMPONENT_CACHE",
-        str(resolve_user_data_dir(env) / "byparr"),
+        "PLAYWRIGHT_BROWSERS_PATH", str(browser_cache_dir({**os.environ, **env}))
     )
     isolated_root = Path(tempdir.name)
     env["XDG_DATA_HOME"] = str(isolated_root / "data")
@@ -58,23 +57,6 @@ def build_isolated_live_env(
         BROWSER_USER_DATA_DIR_ENV_VAR,
     ):
         env.pop(name, None)
-    preserved_executable = os.environ.get(
-        PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR, ""
-    ).strip()
-    if (
-        engine_name() == "camoufox"
-        and preserved_executable
-        and not env.get(BROWSER_BINARY_PATH_ENV_VAR, "").strip()
-    ):
-        env[BROWSER_BINARY_PATH_ENV_VAR] = preserved_executable
-    preserved_camoufox_cache_home = os.environ.get(
-        PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR, ""
-    ).strip()
-    if preserved_executable and preserved_camoufox_cache_home:
-        # Camoufox keeps immutable browser bundles, font resources, and default
-        # addons under its package cache. Reuse that prepared dependency cache;
-        # publisher profiles and storage state remain isolated under XDG data.
-        env["XDG_CACHE_HOME"] = preserved_camoufox_cache_home
     preserved_formula_tools = os.environ.get(
         PRESERVED_FORMULA_TOOLS_DIR_ENV_VAR, ""
     ).strip()
@@ -91,21 +73,8 @@ def build_isolated_live_env(
 
 
 def require_browser_or_skip(testcase, env: Mapping[str, str], *, provider: str) -> None:
-    if importlib.util.find_spec("playwright") is None:
-        testcase.skipTest("Playwright Python package is not installed.")
-    selected_backend(env, provider=provider)
-    packages = (
-        ("invisible_playwright", "invisible_core")
-        if engine_name() == "invisible"
-        else ("camoufox",)
-    )
-    for package in packages:
-        if importlib.util.find_spec(package) is None:
-            testcase.skipTest(f"{package} Python package is not installed.")
-
-
-def require_camoufox_or_skip(testcase, env: Mapping[str, str]) -> None:
-    require_browser_or_skip(testcase, env, provider="science")
+    if package_versions() != BROWSER_PACKAGE_PINS:
+        testcase.skipTest("Pinned Scrapling Chromium packages are not installed.")
 
 
 def is_machine_readable_no_access(payload: Mapping[str, object]) -> bool:

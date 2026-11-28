@@ -100,7 +100,7 @@ class AtyponBrowserWorkflowBrowserRuntimeTests(unittest.TestCase):
 
     def test_merge_browser_context_seeds_preserves_fetcher_marker(self) -> None:
         merged = browser_runtime.merge_browser_context_seeds(
-            {"paper_fetch_html_fetcher": "camoufox"},
+            {"paper_fetch_html_fetcher": "scrapling"},
             {"paper_fetch_html_fetcher": "direct_http"},
         )
 

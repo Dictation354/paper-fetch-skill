@@ -332,7 +332,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             }
         )
         client = IeeeClient(transport, {})
-        runtime = mock.Mock(backend="byparr")
+        runtime = mock.Mock(backend="scrapling")
         browser_result = browser_runtime.BrowserFetchedHtml(
             source_url=landing_url,
             final_url=landing_url,
@@ -344,7 +344,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
             browser_context_seed={
                 "browser_cookies": [{"name": "sid", "value": "one"}],
                 "browser_final_url": landing_url,
-                "paper_fetch_html_fetcher": "byparr",
+                "paper_fetch_html_fetcher": "scrapling",
             },
         )
 
@@ -363,12 +363,12 @@ class IeeeProviderRouteTests(unittest.TestCase):
             )
 
         self.assertEqual(attempt.article_number, article_number)
-        self.assertEqual(attempt.acquisition_source, "camoufox_browser")
+        self.assertEqual(attempt.acquisition_source, "scrapling_browser")
         self.assertEqual(
             attempt.browser_context_seed["browser_cookies"][0]["name"], "sid"
         )
         self.assertTrue(attempt.diagnostics["browser_attempted"])
-        self.assertEqual(attempt.diagnostics["browser_backend"], "byparr")
+        self.assertEqual(attempt.diagnostics["browser_backend"], "scrapling")
         mocked_load.assert_called_once()
         mocked_browser.assert_called_once()
         browser_kwargs = mocked_browser.call_args.kwargs
@@ -890,7 +890,7 @@ class IeeeProviderRouteTests(unittest.TestCase):
         )
 
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.content.fetcher, "camoufox_ieee_html")
+        self.assertEqual(raw_payload.content.fetcher, "scrapling_ieee_html")
         self.assertEqual(
             raw_payload.content.diagnostics["browser_html"]["payload_source"],
             "dom_article",

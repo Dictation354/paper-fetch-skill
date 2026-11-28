@@ -55,12 +55,13 @@ def test_main_response_matches_url_pii_and_doi():
 def test_backend_and_profile_are_isolated_from_pnas(monkeypatch, tmp_path):
     env = {
         "XDG_DATA_HOME": str(tmp_path),
-        "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
+        "PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling",
     }
     other = load_runtime_config(env, provider="pnas", doi="10.1073/test")
     actual = load_runtime_config(env, provider="elsevier", doi=DOI)
-    assert actual.backend == "byparr"
-    assert actual.user_data_dir.name == "elsevier"
+    assert actual.backend == "scrapling"
+    assert actual.user_data_dir.name == "chromium"
+    assert actual.user_data_dir.parent.name == "elsevier"
     assert actual.user_data_dir != other.user_data_dir
 
 

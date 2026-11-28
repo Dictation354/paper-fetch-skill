@@ -683,7 +683,7 @@ exit 73
             (
                 BUILD_OFFLINE_PACKAGE.read_text(encoding="utf-8"),
                 "verify_macos_arm64_binary",
-                "sign_macos_playwright_node",
+                "sign_macos_browser_drivers",
             ),
             (
                 VERIFY_OFFLINE_PACKAGE.read_text(encoding="utf-8"),

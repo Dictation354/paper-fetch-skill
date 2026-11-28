@@ -131,9 +131,9 @@ def test_pnas_direct_download_precedes_browser_in_both_state_modes(
     client = PnasClient(
         transport,
         {
-            "PAPER_FETCH_PNAS_BROWSER_BACKEND": "byparr"
+            "PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling"
             if state_mode == "json"
-            else "camoufox"
+            else "scrapling"
         },
     )
     raw = _typed_raw_payload(

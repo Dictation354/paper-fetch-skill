@@ -17,7 +17,7 @@ from paper_fetch.providers.browser_runtime import (
     html_fetcher as fetcher,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests.support.offline_camoufox import prepared_browser
+from tests.support.offline_chromium import prepared_browser
 
 
 @pytest.fixture

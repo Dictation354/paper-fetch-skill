@@ -1,12 +1,6 @@
 # Browser runtime ownership
 
-浏览器请求统一使用受管 Byparr 3.1.1 和 Camoufox，由 `paper_fetch.providers.browser_runtime`
-管理线程、context、状态目录与资源释放。组件和状态模式见[浏览器后端](browser-backends.md)，
-安装与预置见[部署指南](deployment.md#浏览器安装与准备)。
-
-`browser` 与 `full` 在所有已支持平台使用 Camoufox 0.5.9 和 Playwright
-`>=1.58,<1.63`（锁定 1.62.0）。首次准备浏览器时按平台获取 Camoufox 可执行文件和 fpgen 模型。
-Linux arm64 继续通过在线安装使用。
+`main` 源码的浏览器请求统一使用受管 Scrapling Chromium，由 `paper_fetch.providers.browser_runtime` 管理线程、context、状态目录与资源释放。旧实现分别保留在 `feat/byparr` 和 `feat/FlareSolverr`，稳定版安装包使用其 Release 标签对应的实现。分支用途和状态目录见[浏览器后端](browser-backends.md)，安装方式见[部署指南](deployment.md#浏览器安装与准备)。
 
 ## 依赖方向
 
@@ -15,14 +9,12 @@ provider/browser workflow
         ↓
 browser_runtime facade (api / html_fetcher / readiness / telemetry) + BrowserRuntimeConfig
         ↓
-backends.byparr.ByparrBackend
-        ↓
 RuntimeContext.new_browser_context_for_runtime_config → BrowserSessions（请求独立、线程归属）
         ↓
-PublisherProfileManager / ByparrManager
+PublisherProfileManager → ScraplingManager → AsyncStealthySession (Chromium)
 ```
 
-浏览器 HTML 导航与原子 DOM 快照、就绪探测和页面遥测分别归位在 `providers.browser_runtime.{html_fetcher,readiness,telemetry}`，后端层拍平为单一 `ByparrBackend`。`RuntimeContext` 仅保留委托给 `BrowserSessions` 的会话方法。provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，也不直接导入引擎私有实现。缺少 `browser` extra 时，静态状态返回结构化缺失依赖；core import 和非 browser provider 仍可正常工作。
+浏览器 HTML 导航与原子 DOM 快照、就绪探测和页面遥测分别归位在 `providers.browser_runtime.{html_fetcher,readiness,telemetry}`。`RuntimeContext` 仅保留委托给 `BrowserSessions` 的会话方法。provider 只读取显式 `BrowserRuntimeConfig`，不探测 backend、不持有全局 browser，也不直接导入引擎私有实现。缺少 `browser` extra 时，静态状态返回结构化缺失依赖；core import 和非 browser provider 仍可正常工作。
 
 ## 生命周期与线程边界
 
@@ -39,9 +31,9 @@ bundle 的 `BrowserAssetPolicy` 显式声明附件点击和 figure page 能力�
 所有 provider 由原生 profile owner 管理持久上下文、出版社归属与目录锁；认证、预检、正文及资产共享相同目录。
 规范化目录使用进程间排他锁，同目录请求排队，不同出版社可并行；等待遵守取消和
 请求期限。切换出版社前关闭上一会话并释放锁，不交叉持锁等待。外部占用、归属冲突、
-元数据损坏和等待超时明确报错，不删除 Firefox 原生锁或回退临时会话。
+元数据损坏和等待超时明确报错，不删除 Chromium 原生锁或回退临时会话。
 
-显式指定 Camoufox executable 时，运行时读取相邻的 `version.json` 核对版本。配置项见[浏览器后端](browser-backends.md#选择与配置)。
+受管子进程启动 Chromium，调用线程经本机 CDP 拿到同一上下文。退出时由 Windows Job Object 或 POSIX 进程组清理所属进程。配置项见[浏览器后端](browser-backends.md#选择与配置)。
 启动进度与错误写 stderr；CLI stdout 默认只承载逐篇 JSON 回执。
 
 ## HTML 策略与资源阻断
@@ -143,9 +135,9 @@ Cookie、Authorization、storage-state 或原始失败 HTML。
 ## 配置
 
 后端选择、环境变量及状态目录见[浏览器配置](browser-backends.md#选择与配置)，
-渠道、pin、检查间隔和失败重试见[浏览器安装与准备](deployment.md#浏览器安装与准备)。
+版本配对、下载缓存和失败重试见[浏览器安装与准备](deployment.md#浏览器安装与准备)。
 CLI 和 Python API 入口只建立准备作用域，首次使用后端才准备；批次共享准备
-结果，浏览器会话、clients 和认证状态仍按请求隔离。原生 Camoufox 本地验证入口见
+结果，浏览器会话、clients 和认证状态仍按请求隔离。原生 Chromium 本地验证入口见
 [测试说明](../tests/README.md)。
 
 ## 诊断边界
@@ -154,15 +146,15 @@ CLI 和 Python API 入口只建立准备作用域，首次使用后端才准备�
 `browser-preflight` 在首次实际启动前准备 runtime。预检随后执行 live 页面访问与可选
 原生 profile 更新。受支持的 Cloudflare interstitial 可在原预算内自动处理；登录、
 付费、entitlement 与不支持的 challenge 仍遵守访问边界，详见
-[受管 Byparr](browser-backends.md#统一受管-byparr)。
+[Scrapling Chromium](browser-backends.md#scrapling-chromium)。
 
 IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：它最多等待
 15 秒，直到 `#article` 包含目标文章号。持续的 AWS WAF 页使用
 `reason_code=aws_waf_challenge`、`status=challenge`，diagnostics 保留
 `challenge_provider=aws_waf` 。
 
-离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供各平台的 Playwright 与 Byparr 使用。`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。pyee 锁定为 13.0.1。
+离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供各平台的 Playwright 与 Patchright 使用。`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。pyee 锁定为 13.0.1。
 
 ### AMS 认证前置
 
-AMS 正文、附件发现／下载及定向补图联网前检查 provider 归属、原生状态摘要及人工认证重开验证标记。仅有目录、Cookie 或普通抓取状态不够；正常 Cookie 更新可刷新当前摘要，无需与初次认证摘要一致。已有认证标记无需迁移。CLI 在身份与缓存判断后，在交互终端先认证再继续；批量调度线程按实际 profile 集中认证，跨 CLI 用独立认证锁协调并在取得锁后复查，等待可取消。不预持后续抓取的 profile 租约。非交互及 control-stdin 返回 auth_required，提示写 stderr；Python 入口只报告要求。失败与取消不经 fallback 继续 AMS 获取，也不转换成元数据成功。兼容缓存及已存在的本地文件可复用；resolve/check 不自动认证。portable 检查不替代原生 macos-15 gate。
+AMS 正文、附件发现／下载及定向补图联网前检查 provider 归属、原生状态摘要及人工认证重开验证标记。仅有目录、Cookie 或普通抓取状态不够；正常 Cookie 更新可刷新当前摘要，无需与初次认证摘要一致。旧 Firefox profile 保留，Chromium 使用重新认证获得的标记。CLI 在身份与缓存判断后，在交互终端先认证再继续；批量调度线程按实际 profile 集中认证，跨 CLI 用独立认证锁协调并在取得锁后复查，等待可取消。不预持后续抓取的 profile 租约。非交互及 control-stdin 返回 auth_required，提示写 stderr；Python 入口只报告要求。失败与取消不经 fallback 继续 AMS 获取，也不转换成元数据成功。兼容缓存及已存在的本地文件可复用；resolve/check 不自动认证。portable 检查不替代原生 macos-15 gate。

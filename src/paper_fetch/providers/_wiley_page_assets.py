@@ -62,7 +62,7 @@ _LOADED = r"""urls => [...document.images].some(img => {
 class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
     """Caller-thread, request-scoped raw capture; one navigation per candidate."""
 
-    browser_backend = "byparr"
+    browser_backend = "scrapling"
 
     def __init__(self, *, assets: list[dict[str, Any]], **kwargs) -> None:
         super().__init__(**kwargs)
@@ -172,7 +172,7 @@ class WileyPageAssetFetcher(_BaseBrowserDocumentFetcher):
                         body=body,
                         downloaded_bytes=len(body),
                     ),
-                    final_fetcher="camoufox",
+                    final_fetcher="scrapling",
                     diagnostics={
                         "url": response.url,
                         "status_code": response.status,

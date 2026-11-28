@@ -23,8 +23,8 @@ class BrowserRuntimeConfig:
     binary_path: str | None = None
     profile_dir: Path | None = None
     user_data_dir: Path | None = None
-    backend: str = "byparr"
-    component_cache_dir: Path | None = None
+    backend: str = "scrapling"
+    browser_cache_dir: Path | None = None
 
 
 @dataclass(frozen=True)

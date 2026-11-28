@@ -156,7 +156,7 @@ def _fake_python_script(
       if [[ "$code" == *'installer_manifest_values'* ]]; then
         exec "$REAL_PYTHON" -I "$@"
       fi
-      if [[ "$code" == *'camoufox'* ]]; then
+      if [[ "$code" == *'verify_package_installation'* ]]; then
         exit 0
       fi
       exit 0
@@ -286,7 +286,7 @@ class OfflineInstallTests(unittest.TestCase):
             bundle / "scripts" / "skill_integrity.py",
         )
         _write_file(
-            bundle / "runtime" / "site-packages" / "camoufox" / "__init__.py", "\n"
+            bundle / "runtime" / "site-packages" / "scrapling" / "__init__.py", "\n"
         )
         _write_executable(
             bundle / "runtime" / "node" / "bin" / "node",
@@ -437,7 +437,7 @@ class OfflineInstallTests(unittest.TestCase):
                 install_dir=install_root,
                 extra_env={
                     "PAPER_FETCH_BROWSER_BINARY_PATH": str(
-                        Path(tmpdir) / "missing-camoufox"
+                        Path(tmpdir) / "missing-chromium"
                     )
                 },
             )
@@ -495,7 +495,7 @@ class OfflineInstallTests(unittest.TestCase):
                 f"{fake_bin / 'python3'}\n",
             )
             self.assertIn(
-                "Default browser backend: Byparr + platform engine for all browser providers (headless: true)",
+                "Default browser backend: Scrapling Chromium (headless: true)",
                 result.stdout,
             )
 
@@ -1159,7 +1159,7 @@ exec /bin/mv "$@"
             self.assertNotIn("CLOAKBROWSER_", offline_env)
             self.assertIn('PAPER_FETCH_BROWSER_HEADLESS="false"', offline_env)
             self.assertIn(
-                "Default browser backend: Byparr + platform engine (headless: false)",
+                "Default browser backend: Scrapling Chromium (headless: false)",
                 result.stdout,
             )
             self.assertIn("--prepare-browsers", result.stdout)

@@ -233,26 +233,12 @@ def test_resolve_rejects_target_mismatch_before_running_pip(tmp_path: Path) -> N
 def test_resolve_downloads_full_runtime_extra(
     tmp_path: Path, monkeypatch: pytest.MonkeyPatch
 ) -> None:
-    from scripts import build_browser_components
-
-    monkeypatch.setattr(
-        build_browser_components,
-        "build",
-        lambda *_a, **_kw: pytest.fail("component builder must run in a child process"),
-    )
-
     commands: list[list[str]] = []
     _project_name, project_version = module._project_metadata(REPO_ROOT)
     project_wheel = f"paper_fetch_skill-{project_version}-py3-none-any.whl"
 
     def fake_run(command: list[str], *, cwd: Path | None = None) -> None:
         commands.append(command)
-        if "-c" in command:
-            assert cwd == REPO_ROOT
-            assert Path(command[-2]).is_dir()
-            return
-        if "install" in command:
-            return
         if "wheel" in command and "--no-deps" in command:
             destination = Path(command[command.index("--wheel-dir") + 1])
             destination.mkdir(parents=True, exist_ok=True)
@@ -268,7 +254,7 @@ def test_resolve_downloads_full_runtime_extra(
             (destination / "wheel-0.46.1-py3-none-any.whl").write_bytes(b"wheel")
         else:
             (destination / project_wheel).write_bytes(b"project")
-            (destination / "camoufox-0.5.4-py3-none-any.whl").write_bytes(b"camoufox")
+            (destination / "scrapling-0.5.1-py3-none-any.whl").write_bytes(b"scrapling")
 
     monkeypatch.setattr(module, "_run", fake_run)
     target = f"{module._host_platform()}-{module._host_arch()}-{module._python_tag()}"
@@ -293,10 +279,4 @@ def test_resolve_downloads_full_runtime_extra(
     )
     assert runtime_download[-1].endswith(f"{project_wheel}[full]")
 
-    if (
-        module._host_platform() in {"linux", "windows"}
-        and module._host_arch() == "x86_64"
-    ):
-        builder = next(command for command in commands if "-c" in command)
-        assert "from scripts.build_browser_components import build" in builder[2]
-        assert not Path(builder[-2]).exists()
+    assert not any("-c" in command or "install" in command for command in commands)

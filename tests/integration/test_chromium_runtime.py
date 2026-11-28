@@ -1,4 +1,4 @@
-"""Real shared Camoufox/Byparr lifecycle and local HTTP/browser contracts."""
+"""Real shared Scrapling Chromium lifecycle and local HTTP/browser contracts."""
 
 import base64
 import contextlib
@@ -11,14 +11,6 @@ from pathlib import Path
 
 import pytest
 
-from paper_fetch import offline_byparr
-from paper_fetch.browser_runtime_policy import supported_platform
-from paper_fetch.providers.browser_runtime import (
-    byparr_manager as managed,
-)
-from paper_fetch.providers.browser_runtime import (
-    byparr_preparation as prep,
-)
 from paper_fetch.providers.browser_runtime.api import fetch_html_with_browser
 from paper_fetch.providers.browser_runtime.navigation import navigate_page
 from paper_fetch.providers.browser_runtime.types import (
@@ -32,113 +24,19 @@ from paper_fetch.runtime import RuntimeContext
 pytestmark = pytest.mark.browser
 
 
-def _owned_processes(owner):
-    session = getattr(owner, "_invisible_session", None)
-    if session is not None:
-        from invisible_core.process import find_processes
+@pytest.fixture
+def prepared(monkeypatch):
+    from tests.support.offline_chromium import prepared_executable
 
-        return find_processes(session._session_token)
-    return [owner.process] if owner.process is not None else []
+    monkeypatch.setenv("PAPER_FETCH_BROWSER_BINARY_PATH", str(prepared_executable()))
+
+
+def _owned_processes(owner):
+    return [owner.process.process] if owner.process is not None else []
 
 
 def _exited(process):
-    if hasattr(process, "poll"):
-        return process.poll() is not None
-    return not process.is_running() or process.status() == "zombie"
-
-
-@pytest.fixture
-def prepared(monkeypatch):
-    cache = os.environ.get("PAPER_FETCH_TEST_BYPARR_CACHE")
-    if not cache or not supported_platform():
-        pytest.skip("requires preprepared Byparr component and platform engine")
-    cache = Path(cache)
-    root, _, identity = prep.runtime_location(cache)
-    if (cache / "ready.json").is_file():
-        root = cache
-    if not prep.valid_cache(root, identity):
-        pytest.skip("locked Byparr cache is unavailable for this Python")
-    monkeypatch.setattr(prep, "prepare_source", lambda cache, budget: root)
-    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
-
-    if engine_name() == "invisible":
-        monkeypatch.setenv("BROWSER_TIMEZONE", "UTC")
-        monkeypatch.setenv("BROWSER_LOCALE", "en-US")
-        from invisible_core.download import cache_dir_for_seal
-
-        if not cache_dir_for_seal().exists():
-            pytest.skip("requires preprepared sealed Invisible engine")
-        monkeypatch.delenv("PAPER_FETCH_BROWSER_BINARY_PATH", raising=False)
-    else:
-        from tests._environment import (
-            PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR,
-            PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR,
-        )
-
-        executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-        cache_home = os.environ.get(PRESERVED_CAMOUFOX_CACHE_HOME_ENV_VAR)
-        if not executable or not cache_home:
-            pytest.skip("requires prepared Camoufox executable and dependency cache")
-        monkeypatch.setenv("XDG_CACHE_HOME", cache_home)
-        monkeypatch.setenv("PAPER_FETCH_BROWSER_BINARY_PATH", executable)
-        monkeypatch.setattr(
-            "paper_fetch.providers.browser_runtime.preparation._launch_executable_path",
-            lambda _: None if os.sys.platform == "darwin" else executable,
-        )
-    yield
-    assert prep.valid_cache(root, identity), (
-        "Byparr must not mutate its shared component"
-    )
-
-
-@pytest.mark.parametrize("cancel", [False, True])
-def test_installer_local_check_never_restores_or_navigates_and_cleans_processes(
-    prepared,
-    monkeypatch,
-    tmp_path,
-    cancel,
-):
-    owners = []
-    processes = []
-    directories = []
-
-    class Owner(managed.ByparrManager):
-        def __init__(self, *args, **kwargs):
-            super().__init__(*args, **kwargs)
-            owners.append(self)
-
-        def _restore_state(self):
-            pytest.fail("Installer must not restore publisher state")
-
-        def refresh(self):
-            pytest.fail("Installer must not inspect publisher state")
-
-        def navigate(self, *args, **kwargs):
-            pytest.fail("Installer must not visit publisher homepage")
-
-        def new_context(self, **kwargs):
-            context = super().new_context(**kwargs)
-            processes.extend(_owned_processes(self))
-            directories.append(self.work_dir)
-            assert not context.cookies()
-            assert all(
-                page.url in {"about:blank", "chrome://newtab/"}
-                for page in context.pages
-            )
-            if cancel:
-                raise KeyboardInterrupt()
-            return context
-
-    monkeypatch.setattr(offline_byparr, "ByparrManager", Owner)
-    runtime = prep.prepare_source(tmp_path, prep.PreparationBudget(10))
-    if cancel:
-        with pytest.raises(KeyboardInterrupt):
-            offline_byparr.local_check({}, runtime)
-    else:
-        offline_byparr.local_check({}, runtime)
-    assert processes and all(_exited(process) for process in processes)
-    assert all(not directory.exists() for directory in directories)
-    assert all(owner.browser is None and owner.process is None for owner in owners)
+    return process.poll() is not None
 
 
 @pytest.fixture
@@ -176,20 +74,6 @@ def site():
                 body = b'<html><title>Just a moment...</title><script>setTimeout(() => {document.cookie="clearance=local; path=/"; location.replace("/recover");}, 150)</script><body>Automatic verification</body></html>'
             elif self.path == "/recover":
                 mime, body = "application/octet-stream", bytes(range(256))
-            elif self.path == "/delayed-challenge":
-                status, challenge, mime = 403, True, "text/html"
-                body = b"""<html><title>Loading verification</title><body>
-<script>setTimeout(() => {
-  const indicator = document.createElement('script');
-  indicator.type = 'application/json';
-  indicator.src = '/cdn-cgi/challenge-platform/local.js';
-  document.head.appendChild(indicator);
-  const widget = document.createElement('div');
-  widget.style = 'width:300px;height:70px;background:#eee';
-  widget.innerHTML = '<input type="hidden" name="cf-turnstile-response"><span>Verify</span>';
-  widget.onclick = () => location.replace('/article');
-  document.body.appendChild(widget);
-}, 1100);</script></body></html>"""
             elif self.path == "/slow":
                 time.sleep(2)
                 mime, body = "text/html", b"<html><title>Slow article</title></html>"
@@ -245,8 +129,8 @@ def _config(tmp_path, provider="pnas"):
         tmp_path / "artifacts",
         True,
         None,
-        user_data_dir=tmp_path / f"{provider}-byparr",
-        backend="byparr",
+        user_data_dir=tmp_path / f"{provider}-scrapling",
+        backend="scrapling",
     )
 
 
@@ -275,12 +159,14 @@ def test_owned_shared_session_collects_original_asset_bytes_and_cleans_processes
         )
         context = runtime.new_browser_context_for_runtime_config(config)
         manager = context._paper_fetch_navigator
-        process = manager.process
+        process = manager.process.process
         owned_processes = _owned_processes(manager)
-        work = manager.work_dir
+        work = Path(manager.work_dir.name)
         assert manager.new_context() is context
         assert manager.diagnostics["context_reused"]
-        assert result.browser_context_seed["diagnostics"]["browser_backend"] == "byparr"
+        assert (
+            result.browser_context_seed["diagnostics"]["browser_backend"] == "scrapling"
+        )
         assert (
             result.browser_context_seed["diagnostics"]["browser_engine"]
             == manager.diagnostics["engine"]
@@ -311,7 +197,7 @@ def test_owned_shared_session_collects_original_asset_bytes_and_cleans_processes
                 assert fetched["body"] == expected
         finally:
             fetcher.close()
-        assert manager.process is process
+        assert manager.process.process is process
     assert process is None or process.poll() is not None
     assert owned_processes and all(_exited(p) for p in owned_processes)
     assert manager.context is None and manager.browser is None and not work.exists()
@@ -333,11 +219,11 @@ def test_api_ok_does_not_accept_verification_page(
                 readiness=BrowserHtmlReadiness(wait_for_article_body=False),
             )
         context = runtime.new_browser_context_for_runtime_config(_config(tmp_path))
-        assert context._paper_fetch_navigator.diagnostics["byparr_navigations"]
-        assert not (tmp_path / "pnas-byparr/storage-state.json").exists()
+        assert context._paper_fetch_navigator.diagnostics["navigations"]
+        assert not (tmp_path / "pnas-scrapling/storage-state.json").exists()
 
 
-def test_native_profile_restores_persistent_credentials_in_fresh_owned_camoufox(
+def test_native_profile_restores_persistent_credentials_in_fresh_owned_chromium(
     prepared, site, monkeypatch, tmp_path
 ):
     base, _, _ = site
@@ -370,7 +256,6 @@ def test_native_profile_restores_persistent_credentials_in_fresh_owned_camoufox(
                     "domain": "www.pnas.org",
                     "path": "/",
                     "secure": True,
-                    "expires": time.time() + 3600,
                 }
             ]
         )
@@ -396,9 +281,10 @@ def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_
     config = _config(tmp_path)
     context = runtime.new_browser_context_for_runtime_config(config)
     manager = context._paper_fetch_navigator
-    process = manager.process
+    process = manager.process.process
+    groups = manager.process.groups.copy()
     owned_processes = _owned_processes(manager)
-    work = manager.work_dir
+    work = Path(manager.work_dir.name)
     monkeypatch.setattr(
         runtime,
         "raise_if_cancelled",
@@ -412,6 +298,11 @@ def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_
     assert process is None or process.poll() is not None
     assert owned_processes and all(_exited(p) for p in owned_processes)
     assert manager.context is None and manager.browser is None and not work.exists()
+    if os.name != "nt":
+        assert groups
+        for group in groups:
+            with pytest.raises(ProcessLookupError):
+                os.killpg(group, 0)
 
 
 @pytest.mark.parametrize(
@@ -419,7 +310,7 @@ def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_
     [("/article", "/paper.pdf"), ("/supplements", "/redirect/si.pdf")],
     ids=["direct", "popup_redirect"],
 )
-def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
+def test_native_pdf_click_uses_download_bytes_in_same_chromium(
     prepared, site, monkeypatch, tmp_path, article, href
 ):
     from paper_fetch.providers.browser_workflow.fetchers.context import (
@@ -453,7 +344,7 @@ def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
             if href == "/redirect/si.pdf":
                 assert calls.count("/download/si.pdf") == 1
                 assert result.route_diagnostics["capture_event"] == "download"
-            assert context._paper_fetch_navigator.diagnostics["engine"] == "camoufox"
+            assert context._paper_fetch_navigator.diagnostics["engine"] == "chromium"
             assert runtime.new_browser_context_for_runtime_config(config) is context
         finally:
             fetcher.close()
@@ -636,7 +527,7 @@ def test_elsevier_pdf_route_downloads_in_owned_context_without_http_lane(
         )
         assert result.content.body == original
         assert runtime.new_browser_context_for_runtime_config(config) is context
-        assert context._paper_fetch_navigator.home_url == home
+        assert context._paper_fetch_navigator.config.provider == "elsevier"
 
 
 def _set_home(monkeypatch, provider, url):
@@ -713,55 +604,10 @@ def test_challenged_get_recovers_once_in_same_context(prepared, site, tmp_path):
         assert (
             calls.count("/recover") == 4
         )  # original GET, page GET, automatic redirect, one retry GET
-        events = [
-            event
-            for item in context._paper_fetch_navigator.diagnostics["byparr_navigations"]
-            for event in item["events"]
-        ]
-        assert any(event["kind"] == "challenge_detected" for event in events)
-        assert not any(
-            event["kind"] in {"solver_called", "solver_click"} for event in events
-        )
+        navigations = context._paper_fetch_navigator.diagnostics["navigations"]
+        assert any(entry["stage"] == "cloudflare_challenge" for entry in navigations)
         browser = context._paper_fetch_navigator.browser
         assert browser is context or browser.contexts == [context]
-    finally:
-        owner.close()
-
-
-def test_invisible_delayed_challenge_calls_upstream_and_receives_article(
-    prepared, site, tmp_path
-):
-    from paper_fetch.providers.browser_runtime.byparr_engine import engine_name
-    from paper_fetch.providers.browser_runtime.context import open_browser_context
-
-    if engine_name() != "invisible":
-        pytest.skip("Invisible sync polling contract")
-    base, _, calls = site
-    owner, context = open_browser_context(_config(tmp_path))
-    try:
-        page = context.new_page()
-        response = navigate_page(
-            page,
-            base + "/delayed-challenge",
-            timeout_ms=15000,
-            wait_until="domcontentloaded",
-        )
-        assert response.status == 200
-        assert response.url == base + "/article"
-        assert b"Scientific results demonstrate" in response.body()
-        assert "Scientific results demonstrate" in page.content()
-        assert calls.count("/delayed-challenge") == calls.count("/article") == 1
-        operation = context._paper_fetch_navigator.diagnostics["byparr_navigations"][-1]
-        assert [doc["status"] for doc in operation["documents"]] == [403, 200]
-        events = operation["events"]
-        assert sum(event["kind"] == "solver_called" for event in events) == 1
-        assert sum(event["kind"] == "solver_click" for event in events) == 1
-        assert any(
-            event["kind"] == "challenge_result"
-            and event["outcome"] == "awaiting_response"
-            for event in events
-        )
-        assert events[-1]["outcome"] == "cleared"
     finally:
         owner.close()
 
@@ -825,18 +671,8 @@ def test_click_popup_and_iframe_automatic_validation_keep_relationships(
         )
 
         settle_page_navigation(page, timeout_ms=10000)
-        events = [
-            event
-            for item in context._paper_fetch_navigator.diagnostics["byparr_navigations"]
-            for event in item["events"]
-        ]
-        assert sum(event["kind"] == "navigation_managed" for event in events) >= 3
-        assert any(
-            event["kind"] == "challenge_detected"
-            and event.get("response_sequence") is not None
-            for event in events
-        ), owner.diagnostics
-        assert not any(event["kind"] == "solver_click" for event in events)
+        records = context._paper_fetch_navigator.diagnostics["navigations"]
+        assert any(record.get("download_started") for record in records)
     finally:
         owner.close()
 
@@ -848,7 +684,7 @@ def test_cancellation_interrupts_inflight_managed_navigation(prepared, site, tmp
     runtime = RuntimeContext(env={})
     context = runtime.new_browser_context_for_runtime_config(_config(tmp_path))
     owner = context._paper_fetch_navigator
-    process = owner.process
+    process = owner.process.process
     owned_processes = _owned_processes(owner)
     page = context.new_page()
     timer = threading.Timer(0.15, runtime.fence_commits)
@@ -866,7 +702,7 @@ def test_cancellation_interrupts_inflight_managed_navigation(prepared, site, tmp
     assert owner.context is None and owner.browser is None
 
 
-def test_ieee_iframe_pdf_keeps_real_response_or_download_under_byparr(
+def test_ieee_iframe_pdf_keeps_real_response_or_download_under_scrapling(
     prepared, tmp_path
 ):
     from paper_fetch.providers._ieee_pdf import navigate_stamp_pdf
@@ -905,12 +741,12 @@ def test_ieee_iframe_pdf_keeps_real_response_or_download_under_byparr(
             assert destination.read_bytes() == body
         else:
             assert response.status == 200 and response.body() == body
-        assert context._paper_fetch_navigator.diagnostics["backend"] == "byparr"
+        assert context._paper_fetch_navigator.diagnostics["backend"] == "scrapling"
     finally:
         owner.close()
 
 
-def test_wiley_page_image_captures_original_bytes_under_byparr(prepared, tmp_path):
+def test_wiley_page_image_captures_original_bytes_under_scrapling(prepared, tmp_path):
     from paper_fetch.providers._wiley_page_assets import WileyPageAssetFetcher
     from paper_fetch.providers.browser_workflow.fetchers.context import (
         BrowserDocumentFetcherOptions,
@@ -943,6 +779,6 @@ def test_wiley_page_image_captures_original_bytes_under_byparr(prepared, tmp_pat
             assert result is not None, fetcher.failure_for(asset["url"])
             assert result["body"] == body
             assert fetcher.navigation_count == 1
-            assert fetcher.browser_backend == "byparr"
+            assert fetcher.browser_backend == "scrapling"
         finally:
             fetcher.close()

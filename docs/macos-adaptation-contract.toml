@@ -48,14 +48,11 @@ current_skill_path_only = true
 check_is_read_only = true
 
 [browser]
-# The browser/full extras use this Camoufox and Playwright pair on every supported platform.
-native_engine = "camoufox"
-default_backend = "byparr"
+native_engine = "chromium"
+default_backend = "scrapling"
 system_chrome_required = false
 runtime_bundle_built_in = false
-python_package_spec = "camoufox==0.5.9"
-playwright_spec = ">=1.58,<1.63"
-platform_dependencies_exclusive = true
+python_requirements = ["scrapling[fetchers]==0.5.1", "patchright==1.62.1", "playwright==1.62.0"]
 
 [release]
 installer_manifest = "installer/manifest.json"

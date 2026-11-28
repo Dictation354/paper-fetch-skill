@@ -69,27 +69,24 @@ def _validate_darwin_requirements(
     requirement_strings: list[str],
     *,
     source_label: str,
-    expected_camoufox: Requirement,
-    expected_playwright: Requirement,
+    expected: set[Requirement],
     errors: list[str],
 ) -> None:
     requirements = [Requirement(value) for value in requirement_strings]
     for machine in ("arm64", "aarch64", "x86_64"):
         env = {"sys_platform": "darwin", "platform_machine": machine}
         active = {
-            req.name: req
+            Requirement(str(req).split(";")[0])
             for req in requirements
             if not req.marker or req.marker.evaluate(env)
         }
-        camoufox = active.get("camoufox")
-        if camoufox is None or camoufox.specifier != expected_camoufox.specifier:
-            errors.append(f"browser.python_package_spec must match {source_label}")
-        playwright = active.get("playwright")
-        if playwright is None or playwright.specifier != expected_playwright.specifier:
-            errors.append(f"browser.playwright_spec must match {source_label}")
-        if {"invisible-playwright", "invisible-core"} & active.keys():
+        if not expected <= active or {req.name for req in active} & {
+            "camoufox",
+            "invisible-playwright",
+            "invisible-core",
+        }:
             errors.append(
-                f"browser.platform_dependencies_exclusive must match {source_label}"
+                f"browser.python_requirements must match {source_label} on {machine}"
             )
 
 
@@ -256,8 +253,6 @@ def validate_contract(
     for key in ("system_chrome_required", "runtime_bundle_built_in"):
         if browser.get(key) is not False:
             errors.append(f"browser.{key} must be false")
-    if browser.get("platform_dependencies_exclusive") is not True:
-        errors.append("browser.platform_dependencies_exclusive must be true")
     expected_backend = policy.selected_backend({}, provider="pnas")
     if browser.get("default_backend") != expected_backend:
         errors.append(f"browser.default_backend must be {expected_backend}")
@@ -278,38 +273,29 @@ def validate_contract(
         errors.append(
             "browser.native_engine must match browser_runtime_policy on darwin"
         )
-    if browser.get("python_package_spec") != "camoufox==0.5.9":
-        errors.append("browser.python_package_spec must be camoufox==0.5.9")
-    if browser.get("playwright_spec") != ">=1.58,<1.63":
-        errors.append("browser.playwright_spec must be >=1.58,<1.63")
+    pinned = {
+        Requirement("scrapling[fetchers]==0.5.1"),
+        Requirement("patchright==1.62.1"),
+        Requirement("playwright==1.62.0"),
+    }
     try:
-        expected_camoufox = Requirement(str(browser.get("python_package_spec") or ""))
-        expected_playwright = Requirement(
-            f"playwright{browser.get('playwright_spec') or ''}"
+        declared = {
+            Requirement(value) for value in browser.get("python_requirements", [])
+        }
+    except (TypeError, ValueError):
+        declared = set()
+    if declared != pinned:
+        errors.append(
+            "browser.python_requirements must match the pinned Scrapling, Patchright and Playwright versions"
         )
-    except Exception:
-        expected_camoufox = Requirement("camoufox==0.5.9")
-        expected_playwright = Requirement("playwright>=1.58,<1.63")
-
     extras = project.get("project", {}).get("optional-dependencies", {})
     for extra in ("browser", "full"):
         _validate_darwin_requirements(
             list(extras.get(extra, [])),
             source_label=f"project {extra} extra",
-            expected_camoufox=expected_camoufox,
-            expected_playwright=expected_playwright,
+            expected=pinned,
             errors=errors,
         )
-    byparr_manifest = json.loads(
-        Path(policy.BYPARR_MANIFEST_PATH).read_text(encoding="utf-8")
-    )
-    _validate_darwin_requirements(
-        list(byparr_manifest.get("shared_packages", [])),
-        source_label="byparr-manifest.json shared_packages",
-        expected_camoufox=expected_camoufox,
-        expected_playwright=expected_playwright,
-        errors=errors,
-    )
 
     release = contract.get("release", {})
     installer_manifest = release.get("installer_manifest")

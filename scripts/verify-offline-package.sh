@@ -5,6 +5,7 @@ set -euo pipefail
 
 PACKAGE_PATH="${1:-}"
 VERIFY_MODE="${2:-}"
+VERIFY_CHROMIUM="${PAPER_FETCH_OFFLINE_VERIFY_CHROMIUM:-0}"
 SKIP_FETCH_SMOKE="${PAPER_FETCH_OFFLINE_SKIP_FETCH_SMOKE:-0}"
 HOST_PYTHON_BIN="${PAPER_FETCH_OFFLINE_PYTHON_BIN:-python3}"
 TARGET_PLATFORM=""
@@ -454,6 +455,7 @@ verify_macos_native_bundle() {
   done < <(find "$BUNDLE_SOURCE_ROOT/formula-tools/lib" -type f -print0 2>/dev/null)
   verify_macos_node_runtime "$playwright_node"
   verify_macos_node_runtime "$BUNDLE_SOURCE_ROOT/runtime/site-packages/playwright/driver/node"
+  verify_macos_node_runtime "$BUNDLE_SOURCE_ROOT/runtime/site-packages/patchright/driver/node"
 }
 
 check_macos_bundle_quarantine() {
@@ -615,7 +617,7 @@ grep -F -q "PYTHONUTF8=\"1\"" "$INSTALL_ROOT/offline.env"
 grep -F -q "PYTHONIOENCODING=\"utf-8\"" "$INSTALL_ROOT/offline.env"
 grep -F -q 'PAPER_FETCH_BROWSER_HEADLESS="true"' "$INSTALL_ROOT/offline.env" || die "Offline install did not configure generic browser headless mode."
 if grep -E -q '^[[:space:]]*PAPER_FETCH_BROWSER_USER_AGENT=' "$INSTALL_ROOT/offline.env"; then
-  die "Offline install must not override the default Camoufox fingerprint user agent."
+  die "Offline install must not override the Chromium user agent."
 fi
 
 log "Verifying user shell and skill integration"
@@ -734,8 +736,31 @@ log "Verifying browser runtime package entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'
 import playwright
 import pymupdf
-from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()
+from paper_fetch.providers.browser_runtime.preparation import verify_package_installation; verify_package_installation()
 PY
+
+if [ "$VERIFY_CHROMIUM" = "1" ]; then
+  log "Verifying first Chromium preparation and cache reuse from the installed runtime"
+  CHROMIUM_CACHE="$TMP_ROOT/chromium-cache"
+  for attempt in 1 2; do
+    PLAYWRIGHT_BROWSERS_PATH="$CHROMIUM_CACHE" "$RUNTIME_PYTHON" -m paper_fetch.offline_setup \
+      --install-root "$INSTALL_ROOT" --prepare-browsers --non-interactive \
+      --result "$TMP_ROOT/chromium-$attempt.txt"
+    grep -F -q "Browser preparation: ready" "$TMP_ROOT/chromium-$attempt.txt"
+    "$RUNTIME_PYTHON" - "$CHROMIUM_CACHE" > "$TMP_ROOT/chromium-cache-$attempt.txt" <<'PYTHON'
+import sys
+from pathlib import Path
+
+cache = Path(sys.argv[1])
+markers = sorted(cache.glob("*/INSTALLATION_COMPLETE"))
+assert any(marker.parent.name.startswith("chromium-") for marker in markers)
+assert not list(cache.glob("chromium_headless_shell-*"))
+for marker in markers:
+    print(marker, marker.stat().st_mtime_ns)
+PYTHON
+  done
+  cmp "$TMP_ROOT/chromium-cache-1.txt" "$TMP_ROOT/chromium-cache-2.txt"
+fi
 
 log "Verifying provider_status payload entrypoint"
 "$RUNTIME_PYTHON" - <<'PY'

@@ -315,12 +315,6 @@ build_project_runtime() {
     --only-binary=:all: \
     "${wheels[0]}[full]"
 
-  shopt -s nullglob
-  local browser_wheels=("$wheelhouse"/camoufox-*.whl)
-  shopt -u nullglob
-  [ "${#browser_wheels[@]}" -eq 1 ] \
-    || die "Expected one Camoufox dependency wheel, found ${#browser_wheels[@]}."
-
   log "Installing project runtime into package"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
   "$PYTHON_BIN" -m pip install \
@@ -330,13 +324,13 @@ build_project_runtime() {
     --only-binary=:all: \
     "${wheels[0]}[full]"
 
-  BROWSER_PACKAGE_VERSIONS="$(PYTHONPATH="$site_packages" "$PYTHON_BIN" -c 'import json, sys; from paper_fetch.providers.browser_runtime.byparr_engine import engine_package_versions; print(json.dumps(engine_package_versions(sys.argv[1])))' "$site_packages")"
+  BROWSER_PACKAGE_VERSIONS="$(PYTHONPATH="$site_packages" "$PYTHON_BIN" -c 'import json, sys; from paper_fetch.providers.browser_runtime.preparation import package_versions; print(json.dumps(package_versions(sys.argv[1])))' "$site_packages")"
 
   log "Precompiling Python runtime bytecode"
   "$PYTHON_BIN" -m compileall -q "$site_packages"
 
   PYTHONPATH="$site_packages${PYTHONPATH:+:$PYTHONPATH}" \
-    "$PYTHON_BIN" -X utf8 -c 'import playwright; import pymupdf; import paper_fetch.cli; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
+    "$PYTHON_BIN" -X utf8 -c 'import playwright; import pymupdf; import paper_fetch.cli; from paper_fetch.providers.browser_runtime.preparation import verify_package_installation; verify_package_installation()'
 
   staging_is_owned "$staging" "$package_name" \
     || die "Offline staging ownership changed during runtime assembly: $staging"
@@ -359,26 +353,25 @@ verify_macos_arm64_binary() {
     || die "$description must be a thin arm64 Mach-O binary; detected ${architectures:-<unknown>}: $path"
 }
 
-sign_macos_playwright_node() {
+sign_macos_browser_drivers() {
   local staging="$1"
   local target_platform="$2"
-  local playwright_node tool
+  local driver driver_node tool
 
   [ "$target_platform" = "macos" ] || return 0
   for tool in file lipo codesign; do
     command -v "$tool" >/dev/null 2>&1 \
-      || die "$tool is required to prepare the native macOS Playwright runtime."
+      || die "$tool is required to prepare the native macOS browser drivers."
   done
 
-  playwright_node="$staging/runtime/site-packages/playwright/driver/node"
-  [ -x "$playwright_node" ] \
-    || die "Bundled Playwright Node runtime is missing or not executable: $playwright_node"
-  verify_macos_arm64_binary "$playwright_node" "Bundled Playwright Node runtime"
-
-  log "Applying an ad-hoc signature to the bundled Playwright Node runtime"
-  codesign --force --sign - --timestamp=none "$playwright_node"
-  codesign --verify --strict "$playwright_node" \
-    || die "Bundled Playwright Node runtime failed code-signature verification."
+  for driver in patchright playwright; do
+    driver_node="$staging/runtime/site-packages/$driver/driver/node"
+    [ -x "$driver_node" ] || die "Bundled $driver Node runtime is missing: $driver_node"
+    verify_macos_arm64_binary "$driver_node" "Bundled $driver Node runtime"
+    log "Applying an ad-hoc signature to the bundled $driver Node runtime"
+    codesign --force --sign - --timestamp=none "$driver_node"
+    codesign --verify --strict "$driver_node"
+  done
 }
 
 sign_macos_node_runtime() {
@@ -638,7 +631,7 @@ This package includes an installed Python runtime under `runtime/site-packages`,
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 The `bin/` directory exposes paper-fetch commands only; it does not include a generic `python` wrapper.
 The package includes official Node.js under `runtime/node/`, with its license and source archive hashes; the version is pinned in `installer/manifest.json`.
-`MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH` default to `runtime/node/bin/node` for formula tools, Playwright and Byparr. Explicit environment overrides are preserved.
+`MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH` default to `runtime/node/bin/node` for formula tools, Playwright and Patchright. Explicit environment overrides are preserved.
 The package includes Python dependencies, not a Python interpreter. Linux installation defaults to `/usr/bin/python3`; macOS defaults to `python3` on PATH.
 Pass `--python /path/to/python` (or `--python=/path/to/python`) to select an interpreter matching the package ABI. Command names are also accepted.
 Selection priority is `--python`, then `PAPER_FETCH_OFFLINE_PYTHON_BIN`, then the platform default. The selected absolute path is recorded in `runtime/python-bin` and reused by CLI.
@@ -652,15 +645,12 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-All browser routes use Byparr with Camoufox.
-Linux and macOS bundle pinned Byparr source and private Python dependencies under
-`runtime/browser-components/byparr/`.
-Preparation installs Camoufox and its fingerprint model. Successful browser update checks
-are reused for 24 hours. Failed or cancelled checks can retry.
+All browser routes use Scrapling Chromium with pinned Scrapling, Patchright and Playwright wheels.
+Preparation downloads Patchright's Chromium revision and reuses the same cache on first use.
 See `browser-setup-results.txt`, or rerun the shared preparation command above.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
-The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`. It does not override Camoufox's generated Firefox user agent or fingerprint settings.
+The installer writes `PAPER_FETCH_BROWSER_HEADLESS=true` into `offline.env`.
 `activate-offline.sh` parses `offline.env` with python-dotenv and exports valid key/value pairs; it does not source the file as shell code.
 EOF
 }
@@ -768,8 +758,9 @@ if any(installed.get(name) != version for name, version in resolved_browser_vers
     raise SystemExit("Offline manifest browser versions differ from installed packages")
 browser_component = {
     "python_package": "runtime/site-packages",
-    "python_package_version": installed["camoufox"],
-    "playwright_version": installed["playwright"],
+    "backend": "scrapling",
+    "engine": "chromium",
+    "package_versions": resolved_browser_versions,
     "browser_binary": "not_bundled",
 }
 manifest_name_key = f"{target_platform}_manifest_name"
@@ -801,7 +792,7 @@ payload = {
         "formula_tools": "formula-tools",
         "node_runtime": json.loads((staging / "runtime/node/node-runtime.json").read_text(encoding="utf-8")),
         "image_tools": "image-tools",
-        "camoufox": browser_component,
+        "browser": browser_component,
     },
 }
 
@@ -1001,14 +992,10 @@ main() {
 
   copy_runtime_assets "$staging"
   build_project_runtime "$staging" "$package_name"
-  if [ "$target_platform" = "linux" ] || [ "$target_platform" = "macos" ]; then
-    PYTHONPATH="$staging/runtime/site-packages" "$PYTHON_BIN" "$REPO_DIR/scripts/build_browser_components.py" \
-      --destination "$staging/runtime/browser-components/byparr" >/dev/null
-  fi
   "$PYTHON_BIN" "$REPO_DIR/scripts/build_node_runtime.py" \
     --staging "$staging" --target "${target_platform}_node_${target_arch}" \
     --manifest "$INSTALLER_MANIFEST_FILE" --cache-dir "$BUILD_DIR/node-archives"
-  sign_macos_playwright_node "$staging" "$target_platform"
+  sign_macos_browser_drivers "$staging" "$target_platform"
   sign_macos_node_runtime "$staging" "$target_platform"
   bundle_formula_tools "$staging"
   bundle_image_tools "$staging"

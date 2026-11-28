@@ -260,7 +260,7 @@ def test_deleted_browser_state_cannot_read_state_backed_sidecar(tmp_path: Path) 
     env = {"PAPER_FETCH_BROWSER_PROFILE_DIR": str(state.parent)}
     use = BrowserStateCapabilityUse.from_path(
         provider="wiley",
-        backend="camoufox",
+        backend="scrapling",
         profile_dir=state.parent,
     )
     use = replace(use, content_sha256="1" * 64)

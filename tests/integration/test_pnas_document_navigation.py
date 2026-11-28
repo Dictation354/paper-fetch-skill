@@ -1,9 +1,7 @@
 """PNAS document replacement and candidate readiness in a real offline browser."""
 
 import json
-import os
 from dataclasses import replace
-from pathlib import Path
 
 import pytest
 
@@ -15,7 +13,7 @@ from paper_fetch.providers.browser_runtime import (
     BrowserRuntimeFailure,
     html_fetcher,
 )
-from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
+from tests.support.offline_chromium import prepared_browser
 
 
 @pytest.mark.browser
@@ -23,26 +21,7 @@ from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 def test_pnas_uses_completed_document_and_waits_for_each_candidate(
     monkeypatch, tmp_path, scenario
 ):
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires the existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    monkeypatch.setattr(
-        utils,
-        "installed_verstr",
-        lambda: json.loads(version_file.read_text())["version"],
-    )
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
-    # Keep all network interception in this offline context. Sidebar blocking has
-    # its own contract; a page route's continue_ would bypass context fixtures.
-
+    # Keep all network interception in this offline context.
     pnas_bundle = replace(
         pnas.PROVIDER_BUNDLE,
         browser_page_policy=replace(
@@ -79,9 +58,7 @@ def test_pnas_uses_completed_document_and_waits_for_each_candidate(
             )
         route.fulfill(status=status, content_type="text/html", body=html)
 
-    with camoufox.Camoufox(
-        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
-    ) as browser:
+    with prepared_browser() as browser:
         context = browser.new_context()
         context.route("**/*", serve)
         monkeypatch.setattr(
@@ -140,31 +117,12 @@ def test_pnas_readiness_samples_body_text_without_layout_resets(monkeypatch, sce
         wait_for_atypon_body_dom_ready,
     )
 
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires the existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    monkeypatch.setattr(
-        utils,
-        "installed_verstr",
-        lambda: json.loads(version_file.read_text())["version"],
-    )
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
     body = (
         '<main id="bodymatter"><div role="paragraph">'
         + "Scientific evidence. " * 80
         + '</div><div role="paragraph">Second paragraph.</div><span id="layout">Layout text</span></main>'
     )
-    with camoufox.Camoufox(
-        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
-    ) as browser:
+    with prepared_browser() as browser:
         page = browser.new_page()
         if scenario == "delayed":
             page.set_content("<body></body>")

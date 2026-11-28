@@ -33,7 +33,7 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     staging = tmp_path / "staging"
     site_packages = staging / "runtime" / "Lib" / "site-packages"
     _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
-    _install_fake_distribution(site_packages, "camoufox", "0.5.9")
+    _install_fake_distribution(site_packages, "scrapling", "0.5.9")
     _install_fake_distribution(site_packages, "playwright", "1.62.0")
 
     formula_package = staging / "formula-tools" / "node_modules" / "mathml-to-latex"

@@ -153,7 +153,7 @@ def browser_context_seed_from_session(
         "paper_fetch_html_fetcher": fetcher_name,
         "diagnostics": {
             "browser_backend": backend_name,
-            "browser_engine": engine_name() if backend_name == "byparr" else "camoufox",
+            "browser_engine": engine_name(),
         },
     }
 

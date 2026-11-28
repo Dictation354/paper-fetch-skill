@@ -193,7 +193,7 @@ class CliTests(unittest.TestCase):
                 "preset default: none",
                 "--asset-profile {none,body,all}",
                 "default for the paper target: none",
-                f"platform-selected engine ({paper_fetch_cli.engine_name()} here)",
+                "Browser routes use managed Scrapling Chromium.",
                 "paper-fetch doctor --catalog",
                 "Only the supplementary target downloads attachments by default.",
                 "Use all to download supplementary materials alongside the paper",
@@ -682,8 +682,8 @@ class CliTests(unittest.TestCase):
             Asset(
                 kind="figure",
                 heading="Figure 1",
-                browser_backend="camoufox",
-                final_fetcher="camoufox",
+                browser_backend="scrapling",
+                final_fetcher="scrapling",
                 recovery_attempts=[{"stage": "direct", "status": 403}],
             )
         ]
@@ -735,8 +735,8 @@ class CliTests(unittest.TestCase):
                         self.assertIn("article", payload)
                         self.assertIn("markdown", payload)
                         serialized_asset = payload["article"]["assets"][0]
-                    self.assertEqual(serialized_asset["browser_backend"], "camoufox")
-                    self.assertEqual(serialized_asset["final_fetcher"], "camoufox")
+                    self.assertEqual(serialized_asset["browser_backend"], "scrapling")
+                    self.assertEqual(serialized_asset["final_fetcher"], "scrapling")
                     self.assertEqual(
                         serialized_asset["recovery_attempts"][0]["status"], 403
                     )

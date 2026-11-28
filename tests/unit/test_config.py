@@ -235,7 +235,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
-                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
+                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling",
             }
             expected = Path(tmpdir) / "paper-fetch" / "downloads"
 
@@ -320,7 +320,7 @@ class ConfigTests(unittest.TestCase):
         with tempfile.TemporaryDirectory() as tmpdir:
             env = {
                 config.XDG_DATA_HOME_ENV_VAR: tmpdir,
-                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox",
+                "PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling",
             }
             science_runtime = browser_runtime.load_runtime_config(
                 env,
@@ -336,8 +336,12 @@ class ConfigTests(unittest.TestCase):
         expected_root = (
             Path(tmpdir).expanduser() / "paper-fetch" / "publisher-browser-profiles"
         )
-        self.assertEqual(science_runtime.user_data_dir, expected_root / "science")
-        self.assertEqual(pnas_runtime.user_data_dir, expected_root / "pnas")
+        self.assertEqual(
+            science_runtime.user_data_dir, expected_root / "science" / "chromium"
+        )
+        self.assertEqual(
+            pnas_runtime.user_data_dir, expected_root / "pnas" / "chromium"
+        )
         self.assertNotEqual(science_runtime.user_data_dir, pnas_runtime.user_data_dir)
 
     def test_camoufox_runtime_config_does_not_use_shared_tool_user_agent_for_browser(

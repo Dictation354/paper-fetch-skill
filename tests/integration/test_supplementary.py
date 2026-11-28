@@ -216,7 +216,7 @@ def test_browser_index_accepts_paywalled_abstract_without_body(monkeypatch, tmp_
         BrowserRuntimeConfig,
     )
     from paper_fetch.providers.browser_runtime import html_fetcher as browser_fetcher
-    from tests.support.offline_camoufox import prepared_browser
+    from tests.support.offline_chromium import prepared_browser
 
     with prepared_browser(monkeypatch) as browser:
         context = browser.new_context()

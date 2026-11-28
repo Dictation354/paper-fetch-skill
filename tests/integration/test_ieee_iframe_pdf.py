@@ -1,16 +1,13 @@
 """Real offline browser: IEEE iframe PDF has no click/download event."""
 
-import json
-import os
-from pathlib import Path
 from unittest import mock
 
 import pytest
 
 from paper_fetch.providers import _pdf_common, _pdf_fallback
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
-from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 from tests.support._paper_fetch_support import fulltext_pdf_bytes
+from tests.support.offline_chromium import prepared_browser
 
 
 @pytest.mark.browser
@@ -30,23 +27,6 @@ from tests.support._paper_fetch_support import fulltext_pdf_bytes
 def test_ieee_stamp_captures_subframe_response_without_download(
     tmp_path, monkeypatch, case
 ):
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires the existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, utils
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    monkeypatch.setattr(
-        utils,
-        "installed_verstr",
-        lambda: json.loads(version_file.read_text())["version"],
-    )
-    monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
     doi = "10.1109/MPER.1985.5526567"
     landing = "https://ieeexplore.ieee.org/document/5526567/"
     stamp = "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5526567"
@@ -105,9 +85,7 @@ def test_ieee_stamp_captures_subframe_response_without_download(
         else:
             route.abort()
 
-    with camoufox.Camoufox(
-        headless=True, executable_path=executable, exclude_addons=list(DefaultAddons)
-    ) as browser:
+    with prepared_browser() as browser:
         context = browser.new_context()
         context.route("**/*", route_response)
         borrowed_page = context.new_page()
@@ -165,7 +143,9 @@ def test_ieee_stamp_captures_subframe_response_without_download(
             assert result.source_url == (
                 target if case in {"pdf", "click_pdf", "click_popup"} else stamp
             )
-            if case != "download":
+            if case == "direct_pdf" and downloads:
+                assert result.diagnostics["bytes_transport"] == "browser_download"
+            elif case != "download":
                 assert result.final_url == result.source_url
                 assert result.diagnostics["browser_pdf_response"] == (
                     "ieee_article_click"
@@ -186,7 +166,8 @@ def test_ieee_stamp_captures_subframe_response_without_download(
             )
             assert not list(tmp_path.glob("*.pdf"))
         assert context.pages == [borrowed_page]
-    assert bool(downloads) is (case == "download")
+    if case != "direct_pdf":
+        assert bool(downloads) is (case == "download")
     assert requests[0][0] == landing
     headers = next(headers for url, headers in requests if url == stamp)
     assert headers["referer"] == landing

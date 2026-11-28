@@ -115,7 +115,7 @@ def build_ieee_browser_payload(
             },
         },
         reason=source.reason,
-        fetcher="camoufox_ieee_html",
+        fetcher="scrapling_ieee_html",
         browser_context_seed=dict(source.browser_context_seed),
         extracted_assets=request.extraction_assets(extraction, landing_attempt),
         trace_events=[

@@ -8,7 +8,7 @@ from paper_fetch.providers.acs import AcsClient
 from paper_fetch.providers.aip import AipClient
 from paper_fetch.providers.ams import AmsClient
 from paper_fetch.providers.arxiv import ArxivClient
-from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
+from paper_fetch.providers.browser_runtime import api as browser_api
 from paper_fetch.providers.crossref import CrossrefClient
 from paper_fetch.providers.elsevier import ElsevierClient
 from paper_fetch.providers.ieee import IeeeClient
@@ -19,22 +19,8 @@ from paper_fetch.providers.springer import SpringerClient
 from paper_fetch.providers.wiley import WILEY_TDM_CLIENT_TOKEN_ENV_VAR, WileyClient
 
 CAMOUFOX_ENV = {}
-CAMOUFOX_DEPENDENCIES_READY = {
-    "runtime_valid": True,
-    "probe": "unit_test",
-    "packages": {"playwright": True, "camoufox": True},
-    "package_ready": True,
-    "runtime_installed": True,
-    "download_required": False,
-}
-CAMOUFOX_DEPENDENCIES_MISSING = {
-    "runtime_valid": False,
-    "probe": "unit_test",
-    "packages": {"playwright": False, "camoufox": False},
-    "package_ready": False,
-    "runtime_installed": False,
-    "download_required": False,
-}
+CHROMIUM_PACKAGES_READY = browser_api.BROWSER_PACKAGE_PINS
+CHROMIUM_PACKAGES_MISSING = {}
 
 
 class DummyTransport:
@@ -42,8 +28,17 @@ class DummyTransport:
 
 
 class ProviderStatusTests(unittest.TestCase):
+    def setUp(self):
+        package_probe = mock.patch.object(
+            browser_api,
+            "inspect_chromium",
+            return_value=(config.Path("/test/chrome"), "151", True),
+        )
+        package_probe.start()
+        self.addCleanup(package_probe.stop)
+
     def _browser_client(self, provider: str, env: dict[str, str]):
-        env = {**env, "PAPER_FETCH_PNAS_BROWSER_BACKEND": "camoufox"}
+        env = {**env, "PAPER_FETCH_PNAS_BROWSER_BACKEND": "scrapling"}
         if provider == "acs":
             return AcsClient(DummyTransport(), env)
         if provider == "aip":
@@ -123,9 +118,9 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_wiley_browser_runtime_ready_with_camoufox(self) -> None:
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_READY,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_READY,
         ):
             result = WileyClient(DummyTransport(), dict(CAMOUFOX_ENV)).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -141,9 +136,9 @@ class ProviderStatusTests(unittest.TestCase):
         self,
     ) -> None:
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_MISSING,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_MISSING,
         ):
             result = WileyClient(DummyTransport(), {}).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -157,9 +152,9 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_wiley_status_is_partial_when_only_tdm_token_is_configured(self) -> None:
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_MISSING,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_MISSING,
         ):
             result = WileyClient(
                 DummyTransport(),
@@ -178,9 +173,9 @@ class ProviderStatusTests(unittest.TestCase):
     ) -> None:
         env = {**CAMOUFOX_ENV, WILEY_TDM_CLIENT_TOKEN_ENV_VAR: "secret"}
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_READY,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_READY,
         ):
             result = WileyClient(DummyTransport(), env).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -201,9 +196,9 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    byparr_backend,
-                    "_dependency_details",
-                    return_value=CAMOUFOX_DEPENDENCIES_READY,
+                    browser_api,
+                    "package_versions",
+                    return_value=CHROMIUM_PACKAGES_READY,
                 ),
             ):
                 result = self._browser_client(
@@ -219,9 +214,9 @@ class ProviderStatusTests(unittest.TestCase):
 
     def test_ams_status_reports_browser_runtime_requirement(self) -> None:
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_READY,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_READY,
         ) as dependency:
             result = AmsClient(DummyTransport(), dict(CAMOUFOX_ENV)).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -247,9 +242,9 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    byparr_backend,
-                    "_dependency_details",
-                    return_value=CAMOUFOX_DEPENDENCIES_MISSING,
+                    browser_api,
+                    "package_versions",
+                    return_value=CHROMIUM_PACKAGES_MISSING,
                 ),
             ):
                 result = self._browser_client(provider, {}).probe_status()
@@ -269,9 +264,9 @@ class ProviderStatusTests(unittest.TestCase):
             config.BROWSER_BINARY_PATH_ENV_VAR: "/definitely/missing/camoufox",
         }
         with mock.patch.object(
-            byparr_backend,
-            "_dependency_details",
-            return_value=CAMOUFOX_DEPENDENCIES_READY,
+            browser_api,
+            "package_versions",
+            return_value=CHROMIUM_PACKAGES_READY,
         ):
             result = ScienceClient(DummyTransport(), env).probe_status()
         checks = {check.name: check for check in result.checks}
@@ -291,9 +286,9 @@ class ProviderStatusTests(unittest.TestCase):
                 }
 
                 with mock.patch.object(
-                    byparr_backend,
-                    "_dependency_details",
-                    return_value=CAMOUFOX_DEPENDENCIES_READY,
+                    browser_api,
+                    "package_versions",
+                    return_value=CHROMIUM_PACKAGES_READY,
                 ):
                     result = self._browser_client(provider, env).probe_status()
 
@@ -307,9 +302,9 @@ class ProviderStatusTests(unittest.TestCase):
             with (
                 self.subTest(provider=provider),
                 mock.patch.object(
-                    byparr_backend,
-                    "_dependency_details",
-                    return_value=CAMOUFOX_DEPENDENCIES_READY,
+                    browser_api,
+                    "package_versions",
+                    return_value=CHROMIUM_PACKAGES_READY,
                 ),
             ):
                 result = self._browser_client(

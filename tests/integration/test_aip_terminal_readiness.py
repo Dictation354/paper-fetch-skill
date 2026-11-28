@@ -13,7 +13,7 @@ from paper_fetch.providers.browser_workflow.fetchers.readiness import (
     wait_for_atypon_body_dom_ready,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests.support.offline_camoufox import prepared_browser
+from tests.support.offline_chromium import prepared_browser
 
 
 def _validation_route(text, status):

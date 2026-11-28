@@ -185,9 +185,7 @@ def _build_session_context_seed(
             "paper_fetch_html_fetcher": backend_name,
             "diagnostics": {
                 "browser_backend": backend_name,
-                "browser_engine": (
-                    engine_name() if backend_name == "byparr" else "camoufox"
-                ),
+                "browser_engine": engine_name(),
             },
         },
     )
@@ -466,7 +464,7 @@ def _open_browser_html_context(
         trace["runtime_page_reused"] = reused
         trace["browser_connect_seconds"] = round(time.monotonic() - connect_started, 3)
         return manager, browser_context, page
-    except BrowserRuntimeFailure:
+    except (BrowserRuntimeFailure, RequestCancelledError):
         if not reused:
             _safe_close(manager)
         raise
@@ -1237,7 +1235,7 @@ def fetch_browser_html(
     normalized_wait_for_selector = normalize_text(readiness.selector)
     trace: dict[str, Any] = {
         "backend": backend_name,
-        "engine": engine_name() if backend_name == "byparr" else "camoufox",
+        "engine": engine_name(),
         "candidate_count": len(candidate_urls),
         "candidates": [],
         "navigation_count": 0,
@@ -1287,8 +1285,7 @@ def fetch_browser_html(
             # A shared profile starts the request's browser budget at admission.
             # Its subsequent attachment clicks need the configured budget;
             # the fast HTML attempt still uses local_deadline below.
-            if config.backend == "byparr"
-            and not (
+            if not (
                 runtime_context is not None and runtime_context.asset_profile == "all"
             )
             else config
@@ -1396,7 +1393,7 @@ def fetch_browser_html(
                         "_paper_fetch_navigator"
                     )
                     if navigator is not None:
-                        candidate_trace["byparr"] = dict(navigator.diagnostics)
+                        candidate_trace[backend_name] = dict(navigator.diagnostics)
                 candidate_trace["navigation_seconds"] = round(
                     time.monotonic() - request_started, 3
                 )
@@ -1472,13 +1469,8 @@ def fetch_browser_html(
                 )
                 if isinstance(exc, BrowserRuntimeFailure):
                     candidate_failure = exc
-                    if backend_name == "byparr":
-                        candidate_failure.details.setdefault(
-                            "browser_runtime_trace", trace
-                        )
-                        candidate_failure.details.setdefault(
-                            "stage", "byparr_navigation"
-                        )
+                    candidate_failure.details.setdefault("browser_runtime_trace", trace)
+                    candidate_failure.details.setdefault("stage", "navigation")
                 else:
                     candidate_failure = BrowserRuntimeFailure(
                         f"{backend_name}_request_failed",
@@ -1515,7 +1507,7 @@ def fetch_browser_html(
     raise last_failure
 
 
-fetch_browser_html.paper_fetch_html_fetcher_name = "byparr"  # type: ignore[attr-defined]
+fetch_browser_html.paper_fetch_html_fetcher_name = "scrapling"  # type: ignore[attr-defined]
 
 
 def warm_browser_html_context(

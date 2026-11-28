@@ -78,6 +78,7 @@ class NativeProfileDouble:
         self.path = Path(user_data_dir)
         self.headless = headless
         self.context = ProfileContext()
+        self.diagnostics = {}
         self.instances.append(self)
 
     def new_context(self):

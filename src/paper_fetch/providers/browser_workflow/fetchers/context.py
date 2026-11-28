@@ -235,7 +235,9 @@ def _new_browser_context(
     browser_config: BrowserRuntimeConfig | None = None,
 ) -> tuple[Any | None, Any | None, Any]:
     if browser_config is None:
-        raise RuntimeError("browser asset fetch requires a Camoufox runtime config")
+        raise RuntimeError(
+            "browser asset fetch requires a Scrapling Chromium runtime config"
+        )
 
     active_config = replace(
         browser_config,

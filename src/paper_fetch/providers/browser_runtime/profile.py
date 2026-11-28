@@ -5,7 +5,6 @@ from __future__ import annotations
 import contextlib
 import errno
 import hashlib
-import importlib
 import json
 import os
 import threading
@@ -18,7 +17,7 @@ from filelock import Timeout as FileLockTimeout
 
 from ...http import RequestCancelledError
 from ...http.transport import request_cancel_check
-from .byparr_manager import ByparrManager
+from .backends.scrapling import ScraplingManager
 from .paths import _atomic_write_json, default_provider_user_data_dir
 from .types import BrowserRuntimeConfig, BrowserRuntimeFailure
 
@@ -53,13 +52,12 @@ def _native_stamp(path: Path) -> str:
     """Detect native state changes made outside the context that produced a summary."""
     facts = []
     for name in (
-        "cookies.sqlite",
-        "cookies.sqlite-wal",
-        "storage.sqlite",
-        "storage",
-        "webappsstore.sqlite",
-        "sessionstore.jsonlz4",
-        "sessionstore-backups",
+        "Default/Cookies",
+        "Default/Cookies-journal",
+        "Default/Network/Cookies",
+        "Default/Network/Cookies-journal",
+        "Default/Local Storage",
+        "Default/IndexedDB",
     ):
         root = path / name
         candidates = [root, *root.rglob("*")] if root.is_dir() else [root]
@@ -75,26 +73,29 @@ def _native_stamp(path: Path) -> str:
 
 
 def _native_profile_occupied(path: Path) -> bool:
-    """Probe the native OS lock without unlinking Firefox's persistent lock files."""
-    filename = path / ("parent.lock" if os.name == "nt" else ".parentlock")
-    if not filename.exists():
+    """Check Chromium's singleton ownership without modifying native locks."""
+    if os.name == "nt":
+        try:
+            with (path / "lockfile").open("r+b"):
+                return False
+        except FileNotFoundError:
+            return False
+        except OSError as exc:
+            if exc.errno in {errno.EACCES, errno.EPERM}:
+                return True
+            raise
+    import socket
+
+    native_socket = path / "SingletonSocket"
+    if not native_socket.exists():
         return False
     try:
-        with filename.open("r+b") as handle:
-            if os.name == "nt":
-                msvcrt = importlib.import_module("msvcrt")
-                msvcrt.locking(handle.fileno(), msvcrt.LK_NBLCK, 1)
-                msvcrt.locking(handle.fileno(), msvcrt.LK_UNLCK, 1)
-            else:
-                import fcntl
-
-                fcntl.lockf(handle.fileno(), fcntl.LOCK_EX | fcntl.LOCK_NB)
-                fcntl.lockf(handle.fileno(), fcntl.LOCK_UN)
-    except OSError as exc:
-        if exc.errno in {errno.EACCES, errno.EAGAIN, errno.EPERM}:
-            return True
-        raise
-    return False
+        with socket.socket(socket.AF_UNIX) as connection:
+            connection.settimeout(0.1)
+            connection.connect(str(native_socket.resolve()))
+        return True
+    except (FileNotFoundError, ConnectionRefusedError):
+        return False
 
 
 def trusted_profile_digest(
@@ -137,7 +138,7 @@ class PublisherProfileManager:
         self.runtime_context = runtime_context
         self.owner_thread = threading.get_ident()
         self.lock = FileLock(str(self.path / PROFILE_LOCK_FILENAME), thread_local=False)
-        self.manager: ByparrManager | None = None
+        self.manager: ScraplingManager | None = None
         self.context: Any = None
         self.execution_started_at: float | None = None
         self.metadata: dict[str, Any] = {}
@@ -155,7 +156,7 @@ class PublisherProfileManager:
             )
 
     def _acquire(self) -> None:
-        self.path.mkdir(parents=True, exist_ok=True)
+        self.path.mkdir(parents=True, exist_ok=True, mode=0o700)
         from ...workflow.execution_slots import profile_wait
 
         started = time.monotonic()
@@ -200,6 +201,7 @@ class PublisherProfileManager:
         self._assert_owner()
         if self.context is not None:
             self.diagnostics.update(context_reused=True, native_profile_loaded=False)
+            self.manager.diagnostics["context_reused"] = True
             self.refresh()
             return self.context
         try:
@@ -213,28 +215,28 @@ class PublisherProfileManager:
                     "browser_profile_provider_conflict",
                     f"Publisher profile {self.path} belongs to {owner}; cannot use it for {self.config.provider}.",
                 )
-            # Never remove Firefox's own locks; a live external owner must fail clearly.
+            # Never remove Chromium's own locks; a live external owner must fail clearly.
             if _native_profile_occupied(self.path):
                 raise BrowserRuntimeFailure(
                     "browser_profile_external_occupancy",
-                    f"Native Firefox profile is externally occupied (or has a native lock): {self.path}",
+                    f"Native Chromium profile is externally occupied (or has a native lock): {self.path}",
                 )
-            native_exists = self.metadata.get(
+            self.diagnostics["native_profile_reopened"] = self.metadata.get(
                 "native_initialized",
                 any(
                     (self.path / name).exists()
                     for name in (
-                        "prefs.js",
-                        "cookies.sqlite",
-                        "storage",
-                        "compatibility.ini",
+                        "Local State",
+                        "Default/Preferences",
                     )
                 ),
             )
-            self.metadata.setdefault("native_initialized", bool(native_exists))
+            self.metadata.setdefault(
+                "native_initialized", self.diagnostics["native_profile_reopened"]
+            )
             self.metadata["provider"] = self.config.provider
             _atomic_write_json(self.path / METADATA_FILENAME, self.metadata)
-            self.manager = ByparrManager(
+            self.manager = ScraplingManager(
                 self.config,
                 runtime_context=self.runtime_context,
                 native_profile=self.path,
@@ -305,7 +307,7 @@ class PublisherProfileManager:
         if self.runtime_context is not None:
             self.runtime_context.record_browser_state_capability_use(
                 provider=self.config.provider,
-                backend="byparr",
+                backend=self.config.backend,
                 profile_dir=self.path,
                 content_sha256=digest,
             )

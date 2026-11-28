@@ -28,12 +28,21 @@ from .types import BrowserRuntimeConfig
 
 def default_provider_user_data_dir(env: Mapping[str, str], *, provider: str) -> Path:
     provider_key = sanitize_filename(normalize_text(provider).lower() or "browser")
-    return resolve_user_data_dir(env) / "publisher-browser-profiles" / provider_key
+    return (
+        resolve_user_data_dir(env)
+        / "publisher-browser-profiles"
+        / provider_key
+        / "chromium"
+    )
+
+
+def chromium_profile_dir(root: Path) -> Path:
+    return root.expanduser() / "chromium"
 
 
 def configured_user_data_dir(env: Mapping[str, str]) -> Path | None:
     value = str(env.get(BROWSER_USER_DATA_DIR_ENV_VAR, "")).strip()
-    return Path(value).expanduser() if value else None
+    return chromium_profile_dir(Path(value)) if value else None
 
 
 def configured_profile_dir(
@@ -41,7 +50,7 @@ def configured_profile_dir(
 ) -> Path | None:
     del provider
     generic_value = str(env.get(BROWSER_PROFILE_DIR_ENV_VAR, "")).strip()
-    return Path(generic_value).expanduser() if generic_value else None
+    return chromium_profile_dir(Path(generic_value)) if generic_value else None
 
 
 def runtime_with_default_profile(

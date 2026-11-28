@@ -36,7 +36,13 @@ BROWSER_LIBRARIES = {
     "libgdk-3.so.0": ("libgtk-3-0t64", "libgtk-3-0"),
     "libgobject-2.0.so.0": ("libglib2.0-0t64", "libglib2.0-0"),
     "libdbus-1.so.3": ("libdbus-1-3",),
-    "libdbus-glib-1.so.2": ("libdbus-glib-1-2",),
+    "libnss3.so": ("libnss3",),
+    "libnspr4.so": ("libnspr4",),
+    "libatk-1.0.so.0": ("libatk1.0-0t64", "libatk1.0-0"),
+    "libatk-bridge-2.0.so.0": ("libatk-bridge2.0-0t64", "libatk-bridge2.0-0"),
+    "libgbm.so.1": ("libgbm1",),
+    "libdrm.so.2": ("libdrm2",),
+    "libxkbcommon.so.0": ("libxkbcommon0",),
     "libX11.so.6": ("libx11-6",),
     "libX11-xcb.so.1": ("libx11-xcb1",),
     "libxcb.so.1": ("libxcb1",),
@@ -303,34 +309,6 @@ def apt_supported() -> bool:
     return bool(ids & {"debian", "ubuntu"}) and bool(shutil.which("apt-get"))
 
 
-@contextmanager
-def preparation_warnings():
-    """Shorten only the known Canvas warning during installer launch checks."""
-    from .browser_runtime_policy import engine_name
-
-    if engine_name() == "invisible":
-        yield
-        return
-    from camoufox._warnings import WARNINGS_DATA, LeakWarning
-
-    with warnings.catch_warnings():
-        original = warnings.showwarning
-
-        def showwarning(message, category, filename, lineno, file=None, line=None):
-            if issubclass(category, LeakWarning) and str(message).startswith(
-                WARNINGS_DATA["canvas_noise"]
-            ):
-                print(
-                    "Camoufox: Canvas/WebGL readback returns random data (privacy fingerprint protection).",
-                    file=file or sys.stderr,
-                )
-            else:
-                original(message, category, filename, lineno, file=file, line=line)
-
-        warnings.showwarning = showwarning
-        yield
-
-
 class Setup:
     def __init__(self, root: Path, env_file: Path, *, readonly: bool = False):
         self.root, self.env_file, self.readonly = root, env_file, readonly
@@ -472,74 +450,15 @@ class Setup:
                 f"Exit {status}; packages already installed are preserved. Retry: {shlex.join(command)}",
             )
 
-    def browser_libraries(self) -> None:
-        if sys.platform != "linux":
-            self.report(
-                "Browser system libraries",
-                "unverified",
-                "Use local launch validation; no Linux packages or quarantine changes",
-            )
-            return
-        missing = []
-        for soname in BROWSER_LIBRARIES:
-            state = library_status(soname)
-            if state != "ready":
-                self.report(soname, state)
-            if state == "missing":
-                missing.append(soname)
-        if not missing:
-            self.report(
-                "Browser library detection",
-                "completed",
-                "Local launch remains the functional check",
-            )
-            return
-        if not apt_supported():
-            self.report(
-                "Browser libraries",
-                "unverified",
-                "Ask your distribution's package manager to provide: "
-                + ", ".join(missing),
-            )
-            return
-        packages = []
-        for soname in missing:
-            package = apt_package(BROWSER_LIBRARIES[soname])
-            if package:
-                packages.append(package)
-            else:
-                self.report(
-                    soname,
-                    "unverified",
-                    "APT candidate unavailable: "
-                    + " / ".join(BROWSER_LIBRARIES[soname]),
-                )
-        if not packages:
-            return
-        command = ["sudo", "apt-get", "install", "--", *sorted(set(packages))]
-        if not confirm(
-            "Install browser system libraries? Network, system directories; sudo alone receives your password.\n"
-            + shlex.join(command)
-        ):
-            self.report("Browser libraries", "skipped")
-            return
-        self.install_packages("Browser libraries", command)
-        for soname in missing:
-            self.report(
-                soname,
-                library_status(soname),
-                "Rechecked after APT; local launch still required",
-            )
-
     def browser(self, *, selected: bool | None = None) -> None:
         """Prepare and validate through the real backend with temporary state."""
         if selected is None:
             selected = confirm(
-                "Prepare and locally test Camoufox + Byparr in the user cache?"
+                "Prepare and locally test Scrapling Chromium in the user cache?"
             )
         if not selected:
             self.report(
-                "Camoufox", "skipped", "Runtime automatic preparation remains enabled"
+                "Chromium", "skipped", "Runtime automatic preparation remains enabled"
             )
             return
         from .offline_browsers import prepare
@@ -592,7 +511,7 @@ def main(argv=None) -> int:
     parser.add_argument(
         "--prepare-browsers",
         action="store_true",
-        help="Prepare the selected platform engine and Byparr",
+        help="Prepare Scrapling Chromium",
     )
     parser.add_argument("--initialize-request", type=Path)
     parser.add_argument("--request", type=Path)
@@ -641,6 +560,11 @@ def main(argv=None) -> int:
             from .offline_browsers import prepare
 
             setup.env = resolve_runtime_env(env_file=setup.env_file).values
+            node = setup.root / (
+                "runtime/node/node.exe" if os.name == "nt" else "runtime/node/bin/node"
+            )
+            if node.is_file():
+                setup.env.setdefault("PLAYWRIGHT_NODEJS_PATH", str(node))
             interactive = (
                 not args.non_interactive and sys.stdin.isatty() and sys.stdout.isatty()
             )
@@ -677,7 +601,7 @@ def main(argv=None) -> int:
                     ),
                 )
             if lines[2] == "1":
-                setup.step("Byparr", lambda: setup.browser(selected=True))
+                setup.step("Chromium", lambda: setup.browser(selected=True))
         else:
             setup.terminal()
     except (KeyboardInterrupt, EOFError):
@@ -688,16 +612,11 @@ def main(argv=None) -> int:
         if args.request:
             args.request.unlink(missing_ok=True)
     if args.prepare_browsers:
-        backends = ("Byparr",)
         if any(
             name in setup.results for name in ("Browsers", "Optional configuration")
         ):
             state = "not ready"
-        elif not backends:
-            state = "skipped"
-        elif all(
-            setup.results.get(name, (None, ""))[0] == "ready" for name in backends
-        ):
+        elif setup.results.get("Chromium", (None, ""))[0] == "ready":
             state = "ready"
         else:
             state = "not ready"

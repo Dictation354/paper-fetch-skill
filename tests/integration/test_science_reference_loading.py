@@ -12,7 +12,7 @@ from paper_fetch.providers._science_html import (
 
 @pytest.fixture
 def science_page(monkeypatch):
-    from tests.support.offline_camoufox import prepared_browser
+    from tests.support.offline_chromium import prepared_browser
 
     with prepared_browser(monkeypatch) as browser:
         context = browser.new_context()
@@ -105,10 +105,9 @@ def test_science_waits_for_growing_unstable_bibliography(
         </script>
     """
     page = science_page
-    page.set_content(html)
-    # Camoufox evaluates in an isolated world. Install the controllable loading
-    # boundary there too, while sharing the actual DOM with the page scripts.
-    setup = html.split("<script>")[1].split("</script>")[0]
+    markup, script = html.split("<script>", 1)
+    page.set_content(markup)
+    setup = script.split("</script>", 1)[0]
     page.evaluate(
         "delay => {"
         + setup

@@ -109,13 +109,13 @@ class DeliveryPayloadCacheTests(unittest.TestCase):
             "conversion_degraded",
         ]
         payload["assets"][0]["preview_accepted"] = False
-        payload["assets"][0]["browser_backend"] = "camoufox"
-        payload["assets"][0]["final_fetcher"] = "camoufox"
+        payload["assets"][0]["browser_backend"] = "scrapling"
+        payload["assets"][0]["final_fetcher"] = "scrapling"
         payload["assets"][0]["recovery_attempts"] = [
             {"stage": "direct", "status": 403},
             {
                 "stage": "browser",
-                "browser_backend": "camoufox",
+                "browser_backend": "scrapling",
                 "reason": "recovered",
             },
         ]
@@ -130,8 +130,8 @@ class DeliveryPayloadCacheTests(unittest.TestCase):
         self.assertEqual(asset.download_url, "https://example.test/figure-preview.png")
         self.assertEqual(asset.width, 640)
         self.assertEqual(asset.height, 480)
-        self.assertEqual(asset.browser_backend, "camoufox")
-        self.assertEqual(asset.final_fetcher, "camoufox")
+        self.assertEqual(asset.browser_backend, "scrapling")
+        self.assertEqual(asset.final_fetcher, "scrapling")
         self.assertEqual(asset.recovery_attempts[0]["status"], 403)
         self.assertEqual(asset.provenance, ["conversion_degraded"])
 
@@ -165,8 +165,8 @@ class DeliveryPayloadCacheTests(unittest.TestCase):
                 kind="figure",
                 heading="Figure 1",
                 download_tier="full_size",
-                browser_backend="camoufox",
-                final_fetcher="camoufox",
+                browser_backend="scrapling",
+                final_fetcher="scrapling",
                 recovery_attempts=[
                     {"stage": "direct", "status": 403},
                     {"stage": "browser", "reason": "recovered"},
@@ -194,8 +194,10 @@ class DeliveryPayloadCacheTests(unittest.TestCase):
         self.assertEqual(
             round_trip.quality.asset_failures[0]["challenge_provider"], "aws_waf"
         )
-        self.assertEqual(payload["article"]["assets"][0]["browser_backend"], "camoufox")
-        self.assertEqual(round_trip.article.assets[0].final_fetcher, "camoufox")
+        self.assertEqual(
+            payload["article"]["assets"][0]["browser_backend"], "scrapling"
+        )
+        self.assertEqual(round_trip.article.assets[0].final_fetcher, "scrapling")
         self.assertEqual(
             round_trip.article.assets[0].recovery_attempts[0]["status"], 403
         )

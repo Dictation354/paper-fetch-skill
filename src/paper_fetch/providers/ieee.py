@@ -153,7 +153,7 @@ class IeeeClient(ProviderClient):
                         f"is {browser_status.status}."
                     ),
                     details={
-                        "backend": "byparr",
+                        "backend": "scrapling",
                         "fallback_status": browser_status.status,
                         "fallback_available": browser_status.available,
                         "notes": list(browser_status.notes),
@@ -477,7 +477,7 @@ class IeeeClient(ProviderClient):
                         pdf_result = run_browser_pdf(Path(tempdir))
                 else:
                     pdf_result = run_browser_pdf(artifact_dir)
-                fetcher = "camoufox_browser"
+                fetcher = "scrapling_browser"
             except PdfFetchFailure as browser_exc:
                 propagate_paywall(browser_exc)
                 raise PdfFetchFailure(

@@ -418,7 +418,7 @@ assert "providers" in payload
     $browserRuntimeCheck = @'
 import playwright
 import pymupdf
-from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()
+from paper_fetch.providers.browser_runtime.preparation import verify_package_installation; verify_package_installation()
 '@
     Invoke-RuntimePythonScript -Script $browserRuntimeCheck
     Invoke-RuntimePythonScript -Arguments @($texmath) -Script @'

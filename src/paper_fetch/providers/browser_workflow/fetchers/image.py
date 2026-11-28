@@ -156,7 +156,7 @@ class _SharedBrowserImageDocumentFetcher(_BaseBrowserDocumentFetcher):
         return (
             self._browser_config.backend
             if self._browser_config is not None
-            else "camoufox"
+            else "scrapling"
         )
 
     def __init__(

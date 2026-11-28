@@ -33,7 +33,8 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     staging = tmp_path / "staging"
     site_packages = staging / "runtime" / "Lib" / "site-packages"
     _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
-    _install_fake_distribution(site_packages, "camoufox", "0.5.9")
+    _install_fake_distribution(site_packages, "scrapling", "0.5.1")
+    _install_fake_distribution(site_packages, "patchright", "1.62.1")
     _install_fake_distribution(site_packages, "playwright", "1.62.0")
 
     formula_package = staging / "formula-tools" / "node_modules" / "mathml-to-latex"
@@ -139,7 +140,8 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert {
         (item["name"], item["version"]) for item in dependency["python_packages"]
     } == {
-        ("camoufox", "0.5.9"),
+        ("scrapling", "0.5.1"),
+        ("patchright", "1.62.1"),
         ("playwright", "1.62.0"),
         ("paper-fetch-skill", "5.6.0"),
     }
@@ -152,7 +154,10 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
         "texmath.exe",
     }
     assert dependency["browser"] == {
-        "camoufox_python_package": {"name": "camoufox", "version": "0.5.9"},
+        "backend": "scrapling",
+        "engine": "chromium",
+        "scrapling_python_package": {"name": "scrapling", "version": "0.5.1"},
+        "patchright_python_package": {"name": "patchright", "version": "1.62.1"},
         "playwright_python_package": {"name": "playwright", "version": "1.62.0"},
         "browser_binary": "not_bundled",
     }
@@ -194,7 +199,8 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     component_names = {component["name"] for component in sbom["components"]}
     assert {"invisible-playwright", "invisible-core"}.isdisjoint(component_names)
     assert {
-        "camoufox",
+        "scrapling",
+        "patchright",
         "playwright",
         "paper-fetch-skill",
         "mathml-to-latex",

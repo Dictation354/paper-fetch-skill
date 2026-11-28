@@ -302,8 +302,8 @@ def fetch_ieee_browser_html_payload(
                 active_browser_context,
                 final_url=browser_final_url,
                 user_agent=browser_page_user_agent(page) or browser_user_agent,
-                backend="byparr",
-                fetcher="camoufox_ieee_html",
+                backend="scrapling",
+                fetcher="scrapling_ieee_html",
             ),
         )
         return build_ieee_browser_payload(
@@ -318,8 +318,8 @@ def fetch_ieee_browser_html_payload(
                 response_headers=response_headers,
                 browser_context_seed=browser_context_seed,
                 browser_diagnostics={
-                    "fetcher": "camoufox_ieee_html",
-                    "backend": "byparr",
+                    "fetcher": "scrapling_ieee_html",
+                    "backend": "scrapling",
                     "payload_source": payload_source,
                     "final_url": redact_url_for_diagnostics(browser_final_url),
                     "navigation_status": navigation_status,
@@ -336,7 +336,7 @@ def fetch_ieee_browser_html_payload(
                 },
                 reason=(
                     "Downloaded full text from the IEEE Xplore "
-                    "Camoufox HTML fallback route."
+                    "Scrapling Chromium HTML fallback route."
                 ),
             ),
         )

@@ -1,6 +1,5 @@
 """Component preparation results and request scopes, with no browser/network I/O."""
 
-import json
 import threading
 from concurrent.futures import ThreadPoolExecutor
 from unittest.mock import Mock
@@ -10,32 +9,11 @@ import pytest
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.models.codec import envelope_from_payload, model_to_payload
 from paper_fetch.providers.browser_runtime import (
-    byparr_preparation as flare,
-)
-from paper_fetch.providers.browser_runtime import (
     preparation as prep,
 )
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import sample_envelope
 from tests.support.transport import configure_stream_transport
-
-
-def test_latest_failure_overrides_earlier_success(tmp_path):
-    record = tmp_path / "check.json"
-    identity = {"component": "test"}
-    prep._write_update_check(tmp_path, record, identity)
-    assert prep._recent_update_check(record, identity)
-    success = json.loads(record.read_text())["checked_at"]
-    with pytest.raises(OSError), prep._record_update_check(tmp_path, record, identity):
-        raise OSError("offline")
-    assert not prep._recent_update_check(record, identity)
-    assert json.loads(record.read_text())["checked_at"] == success
-
-
-def test_legacy_record_is_not_success(tmp_path):
-    record = tmp_path / "check.json"
-    record.write_text(json.dumps({"checked_at": prep.time.time()}))
-    assert not prep._recent_update_check(record, {})
 
 
 @pytest.mark.parametrize(
@@ -66,16 +44,6 @@ def test_concurrent_scope_preparation_is_shared():
         release.set()
         assert [future.result() for future in futures] == ["ready"] * 5
     action.assert_called_once()
-
-
-def test_offline_component_missing_never_downloads(tmp_path, monkeypatch):
-    monkeypatch.setattr(flare, "bundled_component_root", lambda: tmp_path / "missing")
-    download = Mock(side_effect=AssertionError("offline source must not download"))
-    monkeypatch.setattr(flare, "download", download)
-    with pytest.raises(flare.BrowserRuntimeFailure) as error:
-        flare.prepare_source(tmp_path / "cache", flare.PreparationBudget(1))
-    assert error.value.kind == "byparr_installation_error"
-    download.assert_not_called()
 
 
 def test_clients_stay_lazy_and_child_transport_is_borrowed(monkeypatch):
@@ -119,27 +87,4 @@ def test_all_prepares_only_supported_backends(monkeypatch):
     monkeypatch.setattr(offline_browsers.sys, "platform", "darwin")
     setup = Mock()
     offline_browsers.prepare(setup, interactive=False)
-    assert [call.args[0] for call in setup.step.call_args_list] == ["Byparr"]
-
-
-def test_byparr_scope_reuses_verified_component_and_retries_damage(
-    tmp_path, monkeypatch
-):
-    root = tmp_path / "runtime"
-    root.mkdir()
-    ready = [True]
-    action = Mock(return_value=root)
-    monkeypatch.setattr(flare, "prepare_source", action)
-    monkeypatch.setattr(flare, "runtime_location", lambda _: (root, {}, "identity"))
-    monkeypatch.setattr(flare, "valid_cache", lambda *_: ready[0])
-    token = prep.fetch_browser_preparation.set(prep.FetchBrowserPreparation())
-    try:
-        budget = flare.PreparationBudget(5)
-        assert flare.prepare_components(tmp_path, budget) == root
-        assert flare.prepare_components(tmp_path, budget) == root
-        assert action.call_count == 1
-        ready[0] = False
-        assert flare.prepare_components(tmp_path, budget) == root
-        assert action.call_count == 2
-    finally:
-        prep.fetch_browser_preparation.reset(token)
+    assert [call.args[0] for call in setup.step.call_args_list] == ["Chromium"]

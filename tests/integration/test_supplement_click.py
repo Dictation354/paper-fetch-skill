@@ -4,7 +4,6 @@ from __future__ import annotations
 
 import hashlib
 import json
-import os
 from html import escape
 from pathlib import Path
 from types import SimpleNamespace
@@ -28,8 +27,8 @@ from paper_fetch.providers.browser_workflow.fetchers.file import (
     _SharedBrowserFileDocumentFetcher,
 )
 from paper_fetch.runtime import RuntimeContext
-from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 from tests.support._paper_fetch_support import build_pdf_bytes
+from tests.support.offline_chromium import prepared_browser
 from tests.support.transport import configure_stream_transport
 
 pytestmark = pytest.mark.browser
@@ -80,30 +79,8 @@ def local_click_deadline(monkeypatch):
 
 @pytest.fixture(scope="module")
 def click_browser():
-    executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
-    if not executable or not Path(executable).is_file():
-        pytest.skip("requires the existing local Camoufox executable")
-    camoufox = pytest.importorskip("camoufox.sync_api")
-    from camoufox import DefaultAddons, pkgman, utils
-
-    version_file = next(
-        parent / "version.json"
-        for parent in Path(executable).parents
-        if (parent / "version.json").is_file()
-    )
-    with pytest.MonkeyPatch.context() as patch:
-        patch.setattr(
-            utils,
-            "installed_verstr",
-            lambda: json.loads(version_file.read_text())["version"],
-        )
-        patch.setattr(pkgman, "camoufox_path", lambda: version_file.parent)
-        with camoufox.Camoufox(
-            headless=True,
-            executable_path=executable,
-            exclude_addons=list(DefaultAddons),
-        ) as browser:
-            yield browser
+    with prepared_browser() as browser:
+        yield browser
 
 
 def click_fetcher(
@@ -330,7 +307,9 @@ def test_click_response_and_failure_boundaries(
             else:
                 route.fulfill(
                     body=b"" if scenario == "empty" else body,
-                    content_type="application/pdf",
+                    content_type="text/plain"
+                    if scenario == "inline"
+                    else "application/pdf",
                     headers={}
                     if scenario in {"inline", "popup_inline"}
                     else {"Content-Disposition": 'attachment; filename="si.pdf"'},
@@ -381,15 +360,13 @@ def test_click_response_and_failure_boundaries(
                 assert not result["asset_failures"], result
                 saved = result["assets"][0]
                 assert Path(saved["path"]).read_bytes() == body
-                if scenario == "popup_inline":
+                if scenario in {"inline", "popup_inline"}:
                     assert saved["asset_route"]["capture_event"] in {
                         "inline_response",
                         "download",
                     }
                 else:
-                    assert saved["asset_route"]["capture_event"] == (
-                        "inline_response" if scenario == "inline" else "download"
-                    )
+                    assert saved["asset_route"]["capture_event"] == ("download")
                 if scenario in {"redirect", "popup_redirect"}:
                     assert saved["asset_route"]["final_url"].endswith("/final.pdf")
                 if scenario == "redirecting_page":
@@ -648,27 +625,6 @@ def test_annualreviews_opens_existing_supplementary_tab(click_browser, dropdown)
         context.close()
 
 
-@pytest.fixture(scope="module")
-def platform_click_browser(request):
-    from paper_fetch.browser_runtime_policy import engine_name
-
-    if engine_name() != "invisible":
-        yield request.getfixturevalue("click_browser")
-        return
-    invisible = pytest.importorskip("invisible_playwright")
-    from invisible_core.download import cache_dir_for_seal
-
-    if not cache_dir_for_seal().is_dir():
-        pytest.skip("requires the prepared Invisible browser")
-    with invisible.InvisiblePlaywright(
-        headless=True,
-        timezone="UTC",
-        locale="en-US",
-        extra_prefs={"pdfjs.disabled": True},
-    ) as browser:
-        yield browser
-
-
 @pytest.mark.parametrize(
     "case",
     [
@@ -681,9 +637,7 @@ def platform_click_browser(request):
         "media_tab",
     ],
 )
-def test_platform_attachment_control(
-    platform_click_browser, local_responses, monkeypatch, case
-):
+def test_platform_attachment_control(click_browser, local_responses, monkeypatch, case):
     from paper_fetch.providers.browser_workflow.fetchers import click
 
     received = []
@@ -733,7 +687,7 @@ def test_platform_attachment_control(
 
     base = local_responses(serve)
     with RuntimeContext(env={}) as runtime:
-        context = platform_click_browser.new_context(accept_downloads=True)
+        context = click_browser.new_context(accept_downloads=True)
         try:
             other = context.new_page()
             other.goto(base + "/other")

@@ -151,8 +151,11 @@ def _python_inventory(staging: Path, site_packages: Path) -> list[dict[str, Any]
 def _node_inventory(staging: Path) -> list[dict[str, Any]]:
     roots = (
         staging / "formula-tools",
-        staging / "runtime" / "site-packages" / "playwright" / "driver",
-        staging / "runtime" / "Lib" / "site-packages" / "playwright" / "driver",
+        *(
+            staging / site / driver / "driver"
+            for site in ("runtime/site-packages", "runtime/Lib/site-packages")
+            for driver in ("patchright", "playwright")
+        ),
     )
     inventory: list[dict[str, Any]] = []
     seen: set[Path] = set()
@@ -203,21 +206,23 @@ def _native_inventory(staging: Path) -> list[dict[str, Any]]:
                 }
             )
 
-    for relative in (
-        Path("runtime/site-packages/playwright/driver/node"),
-        Path("runtime/Lib/site-packages/playwright/driver/node.exe"),
+    for root, executable in (
+        ("runtime/site-packages", "node"),
+        ("runtime/Lib/site-packages", "node.exe"),
     ):
-        path = staging / relative
-        if path.is_file():
-            inventory.append(
-                {
-                    "name": "playwright-driver-node",
-                    "path": relative.as_posix(),
-                    "category": "browser-driver",
-                    "size": path.stat().st_size,
-                    "sha256": _sha256(path),
-                }
-            )
+        for driver in ("patchright", "playwright"):
+            relative = Path(root) / driver / "driver" / executable
+            path = staging / relative
+            if path.is_file():
+                inventory.append(
+                    {
+                        "name": f"{driver}-driver-node",
+                        "path": relative.as_posix(),
+                        "category": "browser-driver",
+                        "size": path.stat().st_size,
+                        "sha256": _sha256(path),
+                    }
+                )
     inventory.sort(key=lambda item: item["path"])
     return inventory
 
@@ -604,29 +609,8 @@ def generate_evidence(
             ),
             None,
         )
-        for name in ("camoufox", "invisible-playwright", "invisible-core", "playwright")
+        for name in ("scrapling", "patchright", "playwright")
     }
-
-    component_root = staging / "runtime/browser-components/byparr"
-    browser_components = []
-    if component_root.is_dir():
-        component_manifest = json.loads(
-            (component_root / "component-manifest.json").read_text()
-        )
-        files = sorted(p for p in component_root.rglob("*") if p.is_file())
-        browser_components.append(
-            {
-                "name": "Byparr",
-                "version": component_manifest["version"],
-                "license": component_manifest["license"],
-                "commit": component_manifest["commit"],
-                "path": component_root.relative_to(staging).as_posix(),
-                "content_sha256": _tree_digest(staging, files),
-                "source": component_manifest["source"],
-                "packages": component_manifest["packages"],
-                "file_count": len(files),
-            }
-        )
 
     dependency_manifest = {
         "schema_version": 1,
@@ -636,10 +620,11 @@ def generate_evidence(
         "python_packages": python_packages,
         "node_packages": node_packages,
         "node_runtime": node_runtime,
-        "browser_components": browser_components,
         "native_components": native_components,
         "setup_components": setup_components,
         "browser": {
+            "backend": "scrapling",
+            "engine": "chromium",
             **{
                 name.replace("-", "_") + "_python_package": {
                     "name": package["name"],
@@ -680,39 +665,6 @@ def generate_evidence(
         setup_components=setup_components,
         python_packages=python_packages,
     )
-    for component in browser_components:
-        sbom.setdefault("components", []).append(
-            {
-                "type": "application",
-                "bom-ref": "paper-fetch:browser:byparr",
-                "licenses": [{"license": {"id": component["license"]}}],
-                "externalReferences": [
-                    {"type": "distribution", "url": component["source"]["url"]}
-                ],
-                "name": component["name"],
-                "version": component["version"],
-                "hashes": [{"alg": "SHA-256", "content": component["content_sha256"]}],
-                "properties": _component_properties(
-                    component["path"], "browser-component"
-                ),
-            }
-        )
-        for package in component["packages"]:
-            if sys.platform not in package["platforms"]:
-                continue
-            sbom["components"].append(
-                {
-                    "type": "library",
-                    "bom-ref": f"paper-fetch:byparr:{package['name']}",
-                    "name": package["name"],
-                    "version": package["version"],
-                    "purl": f"pkg:pypi/{package['name']}@{package['version']}",
-                    "properties": _component_properties(
-                        component["path"] + "/lib", "private-python"
-                    ),
-                }
-            )
-    offline_manifest["browser_components"] = browser_components
     _validate_sbom(sbom)
     sbom_path = output_dir / SBOM_NAME
     _write_json_atomic(sbom_path, sbom)

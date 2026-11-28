@@ -417,14 +417,8 @@ def authenticate_provider_profile(
         if browser_user_agent:
             raise ProviderFailure(
                 ERROR,
-                "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
+                "--browser-user-agent cannot be used with the Scrapling Chromium runtime.",
             )
-        if profile_dir is None:
-            raise ProviderFailure(
-                ERROR,
-                "Camoufox authentication requires a provider profile directory.",
-            )
-        profile_dir.mkdir(parents=True, exist_ok=True)
         manager = PublisherProfileManager(runtime)
         context = manager.new_context()
         if provider_key == "ams":

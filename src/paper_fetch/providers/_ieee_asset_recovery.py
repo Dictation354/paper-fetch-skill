@@ -415,7 +415,7 @@ def download_ieee_assets_with_browser(
                         "reason": "multimedia_discovery_failed",
                         "diagnostic": {
                             "stage": "multimedia_discovery",
-                            "browser_backend": "byparr",
+                            "browser_backend": "scrapling",
                             "browser_attempted": True,
                             **(dict(failure) if isinstance(failure, Mapping) else {}),
                         },
@@ -486,7 +486,7 @@ def download_ieee_assets_with_browser(
                 ),
             )
         )
-        memoized_fetcher.browser_backend = "byparr"
+        memoized_fetcher.browser_backend = "scrapling"
         return _IeeePreviewWarmImageFetcher(memoized_fetcher, shared_page_session)
 
     def file_fetcher_factory(**request: Any):
@@ -505,7 +505,7 @@ def download_ieee_assets_with_browser(
             ),
             thread_local=True,
         )
-        fetcher.browser_backend = "byparr"
+        fetcher.browser_backend = "scrapling"
         return fetcher
 
     try:

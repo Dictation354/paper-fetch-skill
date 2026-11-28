@@ -3,10 +3,7 @@
 from __future__ import annotations
 
 import contextlib
-import re
 import time
-
-from .byparr_adapter import supported_challenge
 
 
 def navigator_for(page):
@@ -45,10 +42,11 @@ def _challenge_payload(*, body=b"", headers=None, title=""):
     html = (
         body.decode("utf-8", errors="replace") if isinstance(body, bytes) else str(body)
     )
-    if not title:
-        match = re.search(r"<title\b[^>]*>(.*?)</title>", html, re.I | re.S)
-        title = match[1] if match else ""
-    return supported_challenge(title=title, html=html, headers=headers)
+    if (headers or {}).get("cf-mitigated", "").lower() == "challenge":
+        return True
+    from scrapling.engines._browsers._base import StealthySessionMixin
+
+    return bool(StealthySessionMixin._detect_cloudflare(html))
 
 
 def _recover(context, url, *, deadline, page=None):
@@ -73,19 +71,15 @@ def _recover(context, url, *, deadline, page=None):
 def context_get(context, url, *, timeout=30000, page=None, **kwargs):
     deadline = time.monotonic() + timeout / 1000
     navigator = getattr(context, "__dict__", {}).get("_paper_fetch_navigator")
-    get = (
-        navigator.context_request_get
-        if navigator is not None
-        and getattr(navigator, "_invisible_session", None) is not None
-        else context.request.get
-    )
+    get = context.request.get
     response = get(url, timeout=timeout, **kwargs)
     if navigator is None:
         return response
     headers = response.headers
-    if "html" not in headers.get(
-        "content-type", ""
-    ).lower() and not supported_challenge(headers=headers):
+    if (
+        "html" not in headers.get("content-type", "").lower()
+        and (headers or {}).get("cf-mitigated", "").lower() != "challenge"
+    ):
         return response
     if _challenge_payload(body=response.body(), headers=headers) and _recover(
         context, url, deadline=deadline, page=page
@@ -120,10 +114,5 @@ def evaluate_get(page, expression, args):
 
 
 def evaluate_main_world(page, expression: str):
-    """Read page-owned JS state through Camoufox's explicit main-world API."""
-    navigator = navigator_for(page)
-    return page.evaluate(
-        "mw:" + expression
-        if navigator is not None and navigator.diagnostics.get("engine") == "camoufox"
-        else expression
-    )
+    """Read JavaScript state in the Chromium page world."""
+    return page.evaluate(expression)

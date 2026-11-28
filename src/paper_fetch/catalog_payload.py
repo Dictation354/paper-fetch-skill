@@ -11,9 +11,9 @@ from typing import Any
 
 from . import provider_catalog as runtime_catalog
 from .browser_runtime_policy import (
-    BYPARR_MANIFEST_PATH,
-    UPDATE_CHECK_INTERVAL_SECONDS,
+    BROWSER_PACKAGE_PINS,
     engine_name,
+    package_versions,
     selected_backend,
 )
 from .config import DEFAULT_USER_AGENT, build_runtime_env
@@ -116,13 +116,11 @@ def provider_catalog_payload() -> dict[str, Any]:
         "source_provider_map": source_provider_map,
         "browser_runtime": {
             "backend": selected_backend(build_runtime_env(), provider="pnas"),
-            "byparr_version": json.loads(
-                BYPARR_MANIFEST_PATH.read_text(encoding="utf-8")
-            )["version"],
+            "required_versions": BROWSER_PACKAGE_PINS,
+            "package_versions": package_versions(),
             "platform_engine": engine_name(),
             "preparation": "on_demand",
             "preparation_reuse_scope": "request_or_batch",
-            "update_check_interval_seconds": UPDATE_CHECK_INTERVAL_SECONDS,
         },
     }
 

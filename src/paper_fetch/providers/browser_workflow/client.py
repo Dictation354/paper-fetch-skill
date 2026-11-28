@@ -626,7 +626,7 @@ class BrowserWorkflowClient(ProviderClient):
                 doi=normalized_doi,
             )
             self.deps.ensure_runtime_ready(runtime)
-        camoufox_backend = runtime is not None
+        scrapling_backend = runtime is not None
         asset_download_concurrency = resolve_asset_download_concurrency(context.env)
         recovery = BrowserAssetRecoveryContext(
             runtime=runtime,
@@ -651,7 +651,7 @@ class BrowserWorkflowClient(ProviderClient):
             "transport": self.transport,
             "asset_download_concurrency": asset_download_concurrency,
             "figure_page_fetcher_factory": _MemoizedFigurePageFetcher,
-            "serial_browser_assets": camoufox_backend,
+            "serial_browser_assets": scrapling_backend,
         }
         image_fetcher_factory = (
             (lambda **_request: None)

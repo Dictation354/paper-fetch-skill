@@ -409,7 +409,7 @@ def _build_parser_bundle() -> tuple[
         help="Fetch one paper or a query-file batch.",
         description=(
             "Fetch AI-friendly full text for a paper by DOI, URL, or title. "
-            f"Managed Byparr uses the platform-selected engine ({cli_pkg.engine_name()} here)."
+            "Browser routes use managed Scrapling Chromium."
         ),
         epilog="See `paper-fetch doctor --catalog` for the browser catalog.",
     )

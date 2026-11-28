@@ -13,9 +13,7 @@ from paper_fetch.provider_catalog import (
     provider_has_browser_route,
 )
 from paper_fetch.providers.browser_runtime import profile
-from paper_fetch.providers.browser_runtime.backends.byparr import (
-    DEFAULT_BYPARR_BACKEND,
-)
+from paper_fetch.providers.browser_runtime.api import load_runtime_config
 from paper_fetch.providers.browser_runtime.context import (
     browser_context,
     open_browser_context,
@@ -24,13 +22,11 @@ from paper_fetch.providers.browser_runtime.types import BrowserRuntimeFailure
 from paper_fetch.runtime import RuntimeContext
 from tests.support.publisher_profiles import NativeProfileDouble
 
-load_runtime_config = DEFAULT_BYPARR_BACKEND.load_runtime_config
-
 
 @pytest.fixture
 def config(tmp_path, monkeypatch):
     NativeProfileDouble.instances = []
-    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
+    monkeypatch.setattr(profile, "ScraplingManager", NativeProfileDouble)
     return load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas", doi="10.1073/pnas.test"
     )
@@ -47,14 +43,15 @@ def config(tmp_path, monkeypatch):
 def test_every_browser_provider_opens_persistent_directory(
     tmp_path, monkeypatch, provider
 ):
-    monkeypatch.setattr(profile, "ByparrManager", NativeProfileDouble)
+    monkeypatch.setattr(profile, "ScraplingManager", NativeProfileDouble)
     config = load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider=provider, doi="test"
     )
     with RuntimeContext(env={}) as runtime:
         manager, context = open_browser_context(config, runtime_context=runtime)
         assert manager is None
-        assert profile.profile_path(config).name == provider
+        assert profile.profile_path(config).name == "chromium"
+        assert profile.profile_path(config).parent.name == provider
         assert profile.profile_path(config).is_dir()
         assert not context.closed
     assert context.closed
@@ -100,7 +97,7 @@ def test_native_locks_are_preserved_and_reported(config, monkeypatch):
 
 def test_native_summary_changes_cache_scope_and_unavailable_disables_cache(config):
     with RuntimeContext(
-        env={"XDG_DATA_HOME": str(profile.profile_path(config).parents[2])}
+        env={"XDG_DATA_HOME": str(profile.profile_path(config).parents[3])}
     ) as runtime:
         _, context = open_browser_context(config, runtime_context=runtime)
         first = capability_scope_from_runtime_context(runtime)
@@ -122,7 +119,8 @@ def test_idle_native_state_change_invalidates_summary(config):
     manager.close()
     path = profile.profile_path(config)
     assert profile.trusted_profile_digest(path, "pnas")
-    (path / "cookies.sqlite").write_bytes(b"external update")
+    (path / "Default").mkdir(exist_ok=True)
+    (path / "Default/Cookies").write_bytes(b"external update")
     assert profile.trusted_profile_digest(path, "pnas") is None
 
 
@@ -133,7 +131,7 @@ def test_provider_switch_releases_previous_profile_before_acquiring_next(config)
             replace(
                 config,
                 provider="aip",
-                user_data_dir=config.user_data_dir.parent / "aip-camoufox",
+                user_data_dir=config.user_data_dir.parent / "aip-chromium",
             ),
             runtime_context=runtime,
         )
@@ -167,7 +165,7 @@ def test_switching_publishers_discards_cached_pages_from_previous_context(config
             replace(
                 config,
                 provider="aip",
-                user_data_dir=config.user_data_dir.parent / "aip-camoufox",
+                user_data_dir=config.user_data_dir.parent / "aip-chromium",
             ),
             runtime_context=runtime,
         )
@@ -204,7 +202,7 @@ def test_native_profile_does_not_require_optional_json_snapshot_to_exist(
     (path / "prefs.js").touch()
     runtime_config = load_runtime_config(
         {
-            "PAPER_FETCH_BROWSER_PROFILE_DIR": str(path),
+            "PAPER_FETCH_BROWSER_PROFILE_DIR": str(path.parent),
             "PAPER_FETCH_WILEY_STORAGE_STATE_JSON": str(snapshot),
         },
         provider="wiley",

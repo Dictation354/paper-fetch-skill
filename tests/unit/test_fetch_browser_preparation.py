@@ -9,7 +9,6 @@ import pytest
 from paper_fetch import cli, service
 from paper_fetch.http import RequestCancelledError
 from paper_fetch.providers.browser_runtime import preparation
-from paper_fetch.providers.browser_runtime.preparation import _launch_executable_path
 from paper_fetch.runtime import RuntimeContext
 from tests.support.fetch_fixtures import sample_article
 
@@ -19,15 +18,13 @@ _PREPARE_FETCH_BROWSER = preparation.FetchBrowserPreparation.prepare
 @pytest.fixture
 def prepare(monkeypatch):
     monkeypatch.setattr(
-        "paper_fetch.providers.browser_runtime.byparr_engine.engine_name",
-        lambda: "camoufox",
-    )
-    monkeypatch.setattr(
         preparation.FetchBrowserPreparation, "prepare", _PREPARE_FETCH_BROWSER
     )
-    check = Mock(return_value=preparation.CamoufoxRuntimeProbe("ready", True, True))
-    monkeypatch.setattr(preparation, "find_spec", lambda _name: object())
-    monkeypatch.setattr(preparation, "prepare_camoufox_managed_runtime", check)
+    check = Mock(return_value=None)
+    monkeypatch.setattr(
+        preparation, "package_versions", lambda: preparation.BROWSER_PACKAGE_PINS
+    )
+    monkeypatch.setattr(preparation, "prepare_chromium", check)
     return check
 
 
@@ -49,7 +46,7 @@ def test_cli_batch_prepares_before_scheduling_and_children_inherit(
 
     def fetch(_args, *, context, query, **_kwargs):
         result = service.fetch_paper(query, context=context)
-        assert _launch_executable_path(None) is None
+        context.prepare_fetch_browser()
         return cli.SingleFetchResult(result)
 
     monkeypatch.setattr(cli, "_resolve_cli_batch_item_lane", resolve)
@@ -67,7 +64,7 @@ def test_cli_batch_prepares_before_scheduling_and_children_inherit(
         )
         == 0
     )
-    prepare.assert_called_once()
+    assert prepare.call_count == 2
 
 
 @pytest.mark.parametrize("skip", ["core", "custom"])
@@ -76,9 +73,9 @@ def test_fetch_skips_managed_update_for_core_and_custom_executable(
 ):
     monkeypatch.setattr(service, "fetch_article", lambda *_a, **_kw: sample_article())
     if skip == "core":
-        monkeypatch.setattr(preparation, "find_spec", lambda _name: None)
+        monkeypatch.setattr(preparation, "package_versions", lambda: {})
     env = (
-        {"PAPER_FETCH_BROWSER_BINARY_PATH": "/custom/camoufox"}
+        {"PAPER_FETCH_BROWSER_BINARY_PATH": "/custom/chromium"}
         if skip == "custom"
         else {}
     )
@@ -92,10 +89,10 @@ def test_preparation_failure_can_retry_at_next_launch(prepare, monkeypatch):
     with RuntimeContext(env={}) as context:
         with context.fetch_browser_preparation():
             with pytest.raises(RuntimeError, match="runtime unavailable"):
-                _launch_executable_path(None)
+                context.prepare_fetch_browser()
             with context.fetch_browser_preparation():
                 with pytest.raises(RuntimeError, match="runtime unavailable"):
-                    _launch_executable_path(None)
+                    context.prepare_fetch_browser()
     assert prepare.call_count == 2
 
 
@@ -104,7 +101,7 @@ def test_request_cancellation_during_preparation_propagates(prepare):
     with RuntimeContext(env={}) as context:
         with context.fetch_browser_preparation():
             with pytest.raises(RequestCancelledError):
-                _launch_executable_path(None)
+                context.prepare_fetch_browser()
     assert preparation.fetch_browser_preparation.get() is None
 
 

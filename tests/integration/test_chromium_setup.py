@@ -10,9 +10,9 @@ from paper_fetch.browser_runtime_policy import supported_platform
 
 
 @pytest.mark.skipif(
-    not supported_platform(), reason="Byparr supports Windows/Linux x64"
+    not supported_platform(), reason="requires a supported browser platform"
 )
-def test_invalid_explicit_camoufox_reports_not_ready_preserving_core(tmp_path):
+def test_invalid_explicit_chromium_reports_not_ready_preserving_core(tmp_path):
     core = tmp_path / "installed-core"
     core.write_text("success")
     config = tmp_path / "offline.env"
@@ -39,7 +39,7 @@ def test_invalid_explicit_camoufox_reports_not_ready_preserving_core(tmp_path):
         timeout=30,
     )
     assert result.returncode == 0, result.stderr
-    assert "Byparr: not ready" in result.stdout
+    assert "Browser preparation: not ready" in result.stdout
     assert "ProviderFailure" in result_file.read_text()
     assert "Retry:" in result_file.read_text()
     assert core.read_text() == "success"

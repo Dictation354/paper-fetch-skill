@@ -228,8 +228,8 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
         self.assertEqual(raw_payload.content.route_kind, "html")
-        self.assertEqual(raw_payload.content.fetcher, "byparr")
-        self.assertEqual(raw_payload.content.diagnostics["html_fetcher"], "byparr")
+        self.assertEqual(raw_payload.content.fetcher, "scrapling")
+        self.assertEqual(raw_payload.content.diagnostics["html_fetcher"], "scrapling")
         self.assertEqual(raw_payload.content.browser_context_seed, seed)
         self.assertIn(
             trace_facts(trace_event("fulltext", "pnas_html", "ok")),
@@ -281,7 +281,7 @@ class AtyponBrowserWorkflowProviderFallbackTests(AtyponBrowserWorkflowProviderTe
         )
         self.assertIsNotNone(raw_payload.content)
         assert raw_payload.content is not None
-        self.assertEqual(raw_payload.content.fetcher, "byparr")
+        self.assertEqual(raw_payload.content.fetcher, "scrapling")
 
     def test_wiley_provider_fetch_result_returns_abstract_only_when_pdf_recovery_fails(
         self,

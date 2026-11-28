@@ -59,7 +59,7 @@ def test_capability_scope_binds_final_browser_state_path_and_digest(
     _write_state(native)
     scopes = capability_scopes_for_query(env, "10.1002/unit-test")
     use = BrowserStateCapabilityUse.from_path(
-        provider="wiley", backend="byparr", profile_dir=native
+        provider="wiley", backend="scrapling", profile_dir=native
     )
     builder = CapabilityScopeBuilder(env).add_browser_state_use(use)
     assert scopes[0] == builder.build()
@@ -82,7 +82,7 @@ def test_runtime_scope_only_records_browser_state_after_actual_use(
         assert capability_scope_from_runtime_context(context) == PUBLIC_CREDENTIAL_SCOPE
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="byparr",
+            backend="scrapling",
             profile_dir=state,
             content_sha256=trusted_profile_digest(state, "wiley"),
         )
@@ -93,7 +93,7 @@ def test_runtime_scope_only_records_browser_state_after_actual_use(
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="wiley",
-                backend="byparr",
+                backend="scrapling",
                 profile_dir=state,
             )
         )
@@ -108,7 +108,7 @@ def test_actually_used_state_never_degrades_to_public_if_file_disappears(
     with RuntimeContext(env={}) as context:
         context.record_browser_state_capability_use(
             provider="wiley",
-            backend="byparr",
+            backend="scrapling",
             profile_dir=state,
             content_sha256=trusted_profile_digest(state, "wiley"),
         )
@@ -137,7 +137,7 @@ def test_scope_builder_ignores_incomplete_unused_and_missing_state_facts(
     )
     unused = BrowserStateCapabilityUse.from_path(
         provider="wiley",
-        backend="byparr",
+        backend="scrapling",
         profile_dir=tmp_path / "unused.json",
         used=False,
     )
@@ -153,7 +153,7 @@ def test_scope_builder_deduplicates_used_state_and_handles_static_context(
     state = _write_state(tmp_path / "state.json")
     use = BrowserStateCapabilityUse.from_path(
         provider="wiley",
-        backend="byparr",
+        backend="scrapling",
         profile_dir=state,
     )
     builder = CapabilityScopeBuilder({})
@@ -180,7 +180,9 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
     )
 
     for provider in ("wiley", "science"):
-        native = root / "paper-fetch" / "publisher-browser-profiles" / provider
+        native = (
+            root / "paper-fetch" / "publisher-browser-profiles" / provider / "chromium"
+        )
         native.mkdir(parents=True)
         (native / METADATA_FILENAME).write_text(
             json.dumps(
@@ -202,9 +204,13 @@ def test_query_scope_does_not_fall_back_to_another_provider_private_state(
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
                 provider="science",
-                backend="byparr",
+                backend="scrapling",
                 profile_dir=(
-                    root / "paper-fetch" / "publisher-browser-profiles" / "science"
+                    root
+                    / "paper-fetch"
+                    / "publisher-browser-profiles"
+                    / "science"
+                    / "chromium"
                 ),
             )
         )
@@ -219,7 +225,7 @@ def test_state_content_and_provider_are_scope_bound(tmp_path: Path) -> None:
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="wiley", backend="byparr", profile_dir=state
+                provider="wiley", backend="scrapling", profile_dir=state
             )
         )
         .build()
@@ -229,7 +235,7 @@ def test_state_content_and_provider_are_scope_bound(tmp_path: Path) -> None:
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="wiley", backend="byparr", profile_dir=state
+                provider="wiley", backend="scrapling", profile_dir=state
             )
         )
         .build()
@@ -238,7 +244,7 @@ def test_state_content_and_provider_are_scope_bound(tmp_path: Path) -> None:
         CapabilityScopeBuilder({})
         .add_browser_state_use(
             BrowserStateCapabilityUse.from_path(
-                provider="science", backend="byparr", profile_dir=state
+                provider="science", backend="scrapling", profile_dir=state
             )
         )
         .build()

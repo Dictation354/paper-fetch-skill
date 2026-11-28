@@ -24,7 +24,7 @@ from paper_fetch.providers.atypon_browser_workflow import (
 from paper_fetch.providers.atypon_browser_workflow.asset_scopes import (
     extract_browser_workflow_asset_html_scopes,
 )
-from paper_fetch.providers.browser_runtime.backends import byparr as byparr_backend
+from paper_fetch.providers.browser_runtime import api as browser_api
 from paper_fetch.providers.browser_workflow import BrowserWorkflowClient
 from paper_fetch.providers.browser_workflow.fetchers.readiness import (
     atypon_body_ready_selectors,
@@ -391,13 +391,9 @@ def test_acs_silverchair_missing_original_retains_preview_and_viewer_reference()
 
 def test_acs_probe_status_uses_browser_runtime_requirements() -> None:
     with mock.patch.object(
-        byparr_backend,
-        "_dependency_details",
-        return_value={
-            "runtime_valid": True,
-            "probe": "unit_test",
-            "packages": {"playwright": True, "camoufox": True},
-        },
+        browser_api,
+        "package_versions",
+        return_value=browser_api.BROWSER_PACKAGE_PINS,
     ):
         result = AcsClient(transport=None, env={}).probe_status()
 

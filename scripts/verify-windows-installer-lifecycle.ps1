@@ -66,9 +66,10 @@ if agy_path.exists():
     antigravity = json.loads(agy_path.read_text())
     assert "paper-fetch" not in antigravity.get("mcpServers", {})
 os.environ["PLAYWRIGHT_NODEJS_PATH"] = str(node)
-from playwright.sync_api import sync_playwright
-with sync_playwright() as driver:
-    assert driver.chromium.name == "chromium"
+from paper_fetch.providers.browser_runtime.api import probe_runtime_status
+result = probe_runtime_status(os.environ, provider="pnas")
+assert result.available, result
+assert next(check for check in result.checks if check.name == "browser_runtime").details["backend"] == "scrapling"
 '@
     Invoke-NativeChecked -FilePath $runtime -Arguments @("-X", "utf8", "-c", $runtimeCheck, $InstallRoot)
 
@@ -207,12 +208,15 @@ $installRoot = Join-Path $testRoot "install"
 $fakeProfile = Join-Path $testRoot "profile"
 $fakeAntigravity = Join-Path $testRoot "antigravity"
 $originalUserProfile = $env:USERPROFILE
+$originalBrowserCache = $env:PLAYWRIGHT_BROWSERS_PATH
+$browserCache = Join-Path $testRoot "chromium-cache"
 $originalAntigravityHome = $env:ANTIGRAVITY_HOME
 $originalUserPath = [Environment]::GetEnvironmentVariable("Path", "User")
 
 try {
     New-Item -ItemType Directory -Force -Path $fakeProfile, $fakeAntigravity | Out-Null
     $env:USERPROFILE = $fakeProfile
+    $env:PLAYWRIGHT_BROWSERS_PATH = $browserCache
     $env:ANTIGRAVITY_HOME = $fakeAntigravity
 
     $installArguments = @(
@@ -229,6 +233,26 @@ try {
     Set-Content -LiteralPath $codexConfig -Encoding UTF8 -Value 'user_lifecycle_sentinel = "preserve"'
     Write-Host "==> Silent fresh install of final cp314 EXE"
     Invoke-NativeChecked -FilePath $SetupPath -Arguments $installArguments
+    $browserResults = Join-Path $installRoot "browser-setup-results.txt"
+    if (-not (Select-String -LiteralPath $browserResults -SimpleMatch "Browser preparation: ready" -Quiet)) {
+        throw "Silent fresh install did not launch Scrapling Chromium."
+    }
+    $markers = @(Get-ChildItem -LiteralPath $browserCache -Recurse -Filter INSTALLATION_COMPLETE)
+    if (-not ($markers | Where-Object { $_.Directory.Name -match '^chromium-\d+$' })) {
+        throw "Silent install did not populate the pinned Chromium cache."
+    }
+    $firstMarkers = @($markers | ForEach-Object { "$($_.FullName)|$($_.LastWriteTimeUtc.Ticks)" })
+    $installedRuntime = Join-Path $installRoot "runtime/python.exe"
+    Invoke-NativeChecked -FilePath $installedRuntime -Arguments @(
+        "-m", "paper_fetch.offline_setup", "--install-root", $installRoot,
+        "--non-interactive", "--prepare-browsers", "--result", $browserResults
+    )
+    $reusedMarkers = @(Get-ChildItem -LiteralPath $browserCache -Recurse -Filter INSTALLATION_COMPLETE |
+        ForEach-Object { "$($_.FullName)|$($_.LastWriteTimeUtc.Ticks)" })
+    if ((Compare-Object $firstMarkers $reusedMarkers) -or
+        -not (Select-String -LiteralPath $browserResults -SimpleMatch "Browser preparation: ready" -Quiet)) {
+        throw "Installed runtime did not reuse the prepared Chromium cache."
+    }
     Invoke-InstalledSmoke -InstallRoot $installRoot
     if ($PreviousSetupPath) {
         $freshUninstallLog = Join-Path $testRoot "fresh-uninstall.log"
@@ -344,6 +368,7 @@ try {
     }
 } finally {
     [Environment]::SetEnvironmentVariable("Path", $originalUserPath, "User")
+    $env:PLAYWRIGHT_BROWSERS_PATH = $originalBrowserCache
     $env:USERPROFILE = $originalUserProfile
     $env:ANTIGRAVITY_HOME = $originalAntigravityHome
     if ($testRoot.StartsWith(

@@ -139,7 +139,7 @@ Environment:
   PAPER_FETCH_OFFLINE_PYTHON_BIN Select Python unless --python is supplied.
   PAPER_FETCH_BROWSER_HEADLESS Set to false for a headful managed browser runtime.
 
-Browser preparation runs by default and may download browser components and fingerprint models.
+Browser preparation runs by default and may download the pinned Chromium build.
 Optional Ghostscript/libvips installs default to No.
 EOF
 }
@@ -1252,7 +1252,7 @@ EOF
 check_browser_runtime_package() {
   local runtime_python
   runtime_python="$(runtime_python_bin)"
-  "$runtime_python" -c 'import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.byparr_engine import verify_package_installation; verify_package_installation()'
+  "$runtime_python" -c 'import playwright; import pymupdf; from paper_fetch.providers.browser_runtime.preparation import verify_package_installation; verify_package_installation()'
 }
 
 run_smoke_checks() {
@@ -1536,13 +1536,9 @@ main() {
   echo "Install directory: $INSTALL_ROOT"
   echo "Python interpreter: $PYTHON_BIN"
   echo "Open a new shell, or activate the current one with: source $INSTALL_ROOT/activate-offline.sh"
-  if [ "$HOST_PLATFORM" = "linux" ]; then
-    echo "Default browser backend: Byparr + platform engine for all browser providers (headless: $(browser_headless_value))"
-  else
-    echo "Default browser backend: Byparr + platform engine (headless: $(browser_headless_value))"
-  fi
+  echo "Default browser backend: Scrapling Chromium (headless: $(browser_headless_value))"
   browser_preparation_summary
-  echo "Browser preparation runs by default and may download browser components and fingerprint models."
+  echo "Browser preparation runs by default and may download the pinned Chromium build."
   echo "--skip-browser-prepare skips installation preparation only; runtime automatic preparation remains enabled."
   echo "Restart Codex, Claude Code, and the Antigravity CLI so they rescan skills."
   echo "Elsevier setup: request a key at https://dev.elsevier.com/, then add ELSEVIER_API_KEY=\"...\" to $OFFLINE_ENV_FILE before fetching Elsevier papers."

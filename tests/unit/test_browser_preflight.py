@@ -79,7 +79,7 @@ def _preflight_deps(markdown_title: str = "Sample"):
 
 def test_static_browser_capabilities_never_claims_live_health(monkeypatch) -> None:
     monkeypatch.setattr(
-        "paper_fetch.browser_runtime_policy.engine_name", lambda: "camoufox"
+        "paper_fetch.browser_runtime_policy.engine_name", lambda: "scrapling"
     )
     status = ProviderStatusResult(
         provider="wiley",
@@ -92,7 +92,7 @@ def test_static_browser_capabilities_never_claims_live_health(monkeypatch) -> No
                 "ok",
                 "configured",
                 details={
-                    "backend": "camoufox",
+                    "backend": "scrapling",
                 },
             ),
             build_provider_status_check(
@@ -101,7 +101,7 @@ def test_static_browser_capabilities_never_claims_live_health(monkeypatch) -> No
                 "dependencies import",
                 details={
                     "runtime_valid": True,
-                    "packages": {"playwright": True, "camoufox": True},
+                    "packages": {"playwright": True, "scrapling": True},
                 },
             ),
         ],
@@ -115,7 +115,7 @@ def test_static_browser_capabilities_never_claims_live_health(monkeypatch) -> No
     assert report["live_checked"] is False
     assert report["publisher_page_checked"] is False
     assert report["playwright"]["available"] is True
-    assert report["camoufox"]["available"] is True
+    assert report["scrapling"]["available"] is True
 
 
 def test_browser_preflight_adds_provider_storage_path_for_camoufox(
@@ -184,7 +184,7 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
         result.final_url == "https://onlinelibrary.wiley.com/doi/full/10.1111/gcb.15322"
     )
     assert result.profile_dir == (
-        tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+        tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley" / "chromium"
     )
     assert captured["publisher"] == "wiley"
     assert captured["candidate_urls"] == [
@@ -195,7 +195,11 @@ def test_browser_preflight_adds_provider_storage_path_for_camoufox(
     assert isinstance(runtime, BrowserRuntimeConfig)
     assert (
         runtime.user_data_dir
-        == tmp_path / "paper-fetch" / "publisher-browser-profiles" / "wiley"
+        == tmp_path
+        / "paper-fetch"
+        / "publisher-browser-profiles"
+        / "wiley"
+        / "chromium"
     )
     ensure_runtime_ready.assert_called_once_with(runtime)
     runtime_env = captured["env"]
@@ -382,7 +386,7 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
 
     assert result.ready is True
     assert result.target_url == target_url
-    assert result.profile_dir == state_path
+    assert result.profile_dir == state_path / "chromium"
     assert captured["doi"] == "10.1111/custom.123"
     assert captured["publisher"] == "wiley"
     candidate_urls = captured["candidate_urls"]
@@ -390,7 +394,7 @@ def test_browser_preflight_uses_custom_target_and_disables_storage_write(
     assert candidate_urls[0] == target_url
     runtime = captured["config"]
     assert isinstance(runtime, BrowserRuntimeConfig)
-    assert runtime.profile_dir == state_path
+    assert runtime.profile_dir == state_path / "chromium"
     assert runtime.user_data_dir is None
 
 
@@ -538,7 +542,8 @@ def test_browser_preflight_uses_provider_html_candidates_for_aip(
 
     assert result.ready is True
     assert result.provider == "aip"
-    assert result.profile_dir.name == "aip"
+    assert result.profile_dir.name == "chromium"
+    assert result.profile_dir.parent.name == "aip"
     assert captured["candidate_urls"] == [
         (
             "https://pubs.aip.org/aip/adv/article/12/12/125205/2820011/"

@@ -10,8 +10,8 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## 8.2.3 - 2026-11-28
 
-- Switch Linux and Windows x86-64 to the shared Byparr and Camoufox runtime. The browser and full extras use Camoufox 0.5.9 and Playwright `>=1.58,<1.63` (locked to 1.62.0).
-- Fix supplementary PDF downloads when a new tab redirects before Firefox reports its frame.
+- Use Scrapling Chromium for publisher browsing on Linux, Windows, and macOS. The `browser` and `full` extras pin Scrapling 0.5.1 with fetchers, Patchright 1.62.1, and Playwright 1.62.0. Chromium has its own persistent profile. Run `paper-fetch auth <provider>` to sign in again after moving from Firefox.
+- Capture supplementary file downloads when Chromium emits a download event without a matching network response.
 - Fix SpringerLink pages that passed full-text checks on the strength of multilingual abstracts, PDF previews and article highlights. When the HTML has only abstracts, try the same article’s PDF and retain the abstracts if the PDF is unavailable. Advance the extraction revision to 17 so cached results are reassessed on fetch.
 - Clarify when the Skill should reuse a file or receipt, look up a known results directory, fetch full text or resolve identity. Add executable Unix and Windows examples for locating the offline Python interpreter and reading PDF attachments.
 

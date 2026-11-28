@@ -30,7 +30,10 @@ from .providers.browser_runtime import (
     load_runtime_config,
     probe_runtime_status,
 )
-from .providers.browser_runtime.paths import runtime_with_default_profile
+from .providers.browser_runtime.paths import (
+    chromium_profile_dir,
+    runtime_with_default_profile,
+)
 from .providers.browser_workflow.client import BrowserWorkflowClient
 from .providers.browser_workflow.shared import (
     BrowserWorkflowDeps,
@@ -88,6 +91,7 @@ _NETWORK_TIMEOUT_REASON_CODES = frozenset(
         "pool_timeout",
         "browser_connect_timeout",
         "browser_navigation_timeout",
+        "scrapling_timeout",
         "browser_rest_wait_timeout",
     }
 )
@@ -117,6 +121,7 @@ _RUNTIME_REASON_CODES = frozenset(
         "browser_dependency_missing",
         "browser_runtime_configuration_error",
         "state_save_failed",
+        "scrapling_preparation_failed",
     }
 )
 
@@ -212,7 +217,7 @@ def _runtime_with_preflight_profile(
     if profile_dir is not None:
         runtime = replace(
             runtime,
-            profile_dir=profile_dir.expanduser(),
+            profile_dir=chromium_profile_dir(profile_dir),
         )
     else:
         runtime = runtime_with_default_profile(
@@ -224,7 +229,9 @@ def _runtime_with_preflight_profile(
 
 
 def _profile_dir(runtime: BrowserRuntimeConfig) -> Path | None:
-    return runtime.profile_dir or runtime.user_data_dir
+    from .providers.browser_runtime.profile import profile_path
+
+    return profile_path(runtime)
 
 
 def _dedupe_providers(providers: Iterable[str]) -> tuple[str, ...]:
@@ -249,7 +256,7 @@ def _runtime_env(
     if normalized_user_agent:
         raise ProviderFailure(
             ERROR,
-            "--browser-user-agent cannot be used with Camoufox because it would make the generated Firefox fingerprint inconsistent.",
+            "--browser-user-agent cannot be used with the Scrapling Chromium runtime.",
         )
     return runtime_env
 
@@ -287,23 +294,20 @@ def static_browser_capabilities(
     )
     packages = dependency_details.get("packages")
     package_states = packages if isinstance(packages, Mapping) else {}
+    version_details = dependency_details.get("package_versions")
+    versions = version_details if isinstance(version_details, Mapping) else {}
     selected_backend = choose_backend(env, provider=provider_key)
 
     def package_capability(package: str) -> dict[str, object]:
-        from .browser_runtime_policy import engine_name
-
         available = (
-            False
-            if package == "camoufox" and engine_name() == "invisible"
-            else bool(
-                package_states.get(package)
-                if package in package_states
-                else importlib_util.find_spec(package) is not None
-            )
+            bool(package_states[package])
+            if package in package_states
+            else importlib_util.find_spec(package) is not None
         )
         return {
             "status": "ready" if available else "not_configured",
             "available": available,
+            "version": versions.get(package),
             "reason_code": (
                 "local_dependency_ready"
                 if available
@@ -336,10 +340,10 @@ def static_browser_capabilities(
             "browser_user_agent_ignored",
             "profile_dir",
             "download_required",
+            "engine",
             "runtime_state",
             "runtime_version",
-            "chrome_path",
-            "chrome_version",
+            "runtime_path",
             "runtime_installed",
         }
     }
@@ -353,7 +357,8 @@ def static_browser_capabilities(
         "live_checked": False,
         "publisher_page_checked": False,
         "playwright": package_capability("playwright"),
-        "camoufox": package_capability("camoufox"),
+        "patchright": package_capability("patchright"),
+        "scrapling": package_capability("scrapling"),
         "browser_runtime": {
             "backend": selected_backend,
             "status": runtime_status,
@@ -420,7 +425,7 @@ def _failure_result(
                     diagnostic_payload.get("browser_runtime_trace")
                     or diagnostic_payload.get("trace")
                     or {}
-                ).get("backend", "byparr"),
+                ).get("backend", "scrapling"),
                 details=diagnostic_payload,
             ),
         )

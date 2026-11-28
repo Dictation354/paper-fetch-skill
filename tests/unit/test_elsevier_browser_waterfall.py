@@ -182,8 +182,8 @@ def test_macos_keeps_elsevier_browser_stages(monkeypatch, tmp_path):
     config = load_runtime_config(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="elsevier", doi=DOI
     )
-    assert selection.selected_backend({}, provider="elsevier") == "byparr"
-    assert (config.profile_dir or config.user_data_dir).name == "elsevier"
+    assert selection.selected_backend({}, provider="elsevier") == "scrapling"
+    assert config.user_data_dir.parent.name == "elsevier"
 
 
 def test_first_page_api_pdf_is_rejected_before_conversion(monkeypatch):
@@ -239,7 +239,7 @@ def test_real_html_paywall_signal_stops_before_both_pdf_routes(monkeypatch):
     client.deps = replace(
         client.deps,
         load_runtime_config=lambda *a, **k: SimpleNamespace(
-            timeout_ms=120000, backend="byparr"
+            timeout_ms=120000, backend="scrapling"
         ),
         ensure_runtime_ready=lambda config: None,
         fetch_html_with_browser=lambda *a, **k: BrowserFetchedHtml(

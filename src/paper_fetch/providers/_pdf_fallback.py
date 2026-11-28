@@ -962,14 +962,12 @@ def _pdf_browser_session(run: _BrowserPdfRun) -> Iterator[_BrowserPdfSession]:
     manager = browser_context = page = None
     initial_pages: list[Any] = []
     try:
-        launch_config = run.browser_config
-        if launch_config.backend == "byparr":
-            remaining_seconds = _remaining_pdf_timeout_seconds(
-                None, run.deadline, maximum=run.budget_seconds
-            )
-            launch_config = replace(
-                launch_config, timeout_ms=max(1, int(remaining_seconds * 1000))
-            )
+        remaining_seconds = _remaining_pdf_timeout_seconds(
+            None, run.deadline, maximum=run.budget_seconds
+        )
+        launch_config = replace(
+            run.browser_config, timeout_ms=max(1, int(remaining_seconds * 1000))
+        )
         manager, browser_context = _open_pdf_browser_context(
             launch_config, runtime=run.runtime
         )
@@ -1148,6 +1146,8 @@ def _recover_pdf_after_download_timeout(
             )
         except PdfFetchFailure as exc:
             return None, exc, True
+        except RequestCancelledError:
+            raise
         except Exception:
             response = None
 
@@ -1398,6 +1398,8 @@ def fetch_pdf_with_browser(
                 if exc.kind == "pdf_fallback_timeout":
                     break
                 continue
+            except RequestCancelledError:
+                raise
             except Exception as exc:
                 propagate_paywall(exc)
                 last_failure = PdfFetchFailure(
