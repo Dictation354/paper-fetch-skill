@@ -8,6 +8,12 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.3 - 2026-11-28
+
+- Linux 和 Windows x86-64 浏览器运行时升级至 InvisiblePlaywright 0.59.0，并同步升级其指定的 invisible-core 69.82.0。
+- 修复 SpringerLink 将多语摘要、PDF 预览和附加信息中的文章要点误判为全文的问题。HTML 只有摘要时尝试同篇 PDF，PDF 不可用时保留摘要。提取修订号升至 17，重新抓取时按新规则验收旧缓存对应的论文。
+- 明确 Skill 复用文件或回执、查询已知历史目录、抓取全文和解析身份的适用条件。新增 Unix 和 Windows 可执行示例，用于定位离线安装的 Python 并读取 PDF 附件。
+
 ## 8.2.2 - 2026-11-27
 
 - 修复 macOS 上 Camoufox 下载 PNAS 补充材料时，附件链接在新标签页打开会超时的问题。

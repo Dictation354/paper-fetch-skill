@@ -1,6 +1,6 @@
 """Native Invisible session and owner-thread execution of Byparr's solver.
 
-Invisible 0.58.0 owns its Python protocol transport. No Node bridge or second
+Invisible 0.59.0 owns its Python protocol transport. No Node bridge or second
 connection is used. The pinned async solver is compiled for the sync owner;
 only async/await and import bindings change, preserving its polling algorithm.
 """
@@ -143,7 +143,7 @@ def start(owner, binary, runtime):
     owner.diagnostics.update(
         engine="invisible",
         byparr_version="3.1.1",
-        invisible_playwright_version="0.58.0",
+        invisible_playwright_version="0.59.0",
     )
     if not owner.local_check and owner.native_profile is None:
         owner._restore_state()

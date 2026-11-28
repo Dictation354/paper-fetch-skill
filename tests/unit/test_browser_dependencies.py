@@ -70,10 +70,10 @@ def test_platform_dependencies_are_exclusive(
 @pytest.mark.parametrize(
     "missing,version",
     [
-        ("invisible_core", "68.80.0"),
-        ("invisible_playwright", "0.58.0"),
+        ("invisible_core", "69.82.0"),
+        ("invisible_playwright", "0.59.0"),
         (None, "61.61.0"),
-        (None, "68.80.0"),
+        (None, "69.82.0"),
     ],
 )
 def test_invisible_status_and_readiness_never_touch_camoufox(
@@ -89,7 +89,7 @@ def test_invisible_status_and_readiness_never_touch_camoufox(
     versions = {
         "playwright": "1.65.2",
         "invisible_core": version,
-        "invisible_playwright": "0.58.0",
+        "invisible_playwright": "0.59.0",
     }
     monkeypatch.setattr(metadata, "version", versions.__getitem__)
     monkeypatch.setattr(
@@ -110,7 +110,7 @@ def test_invisible_status_and_readiness_never_touch_camoufox(
         {"XDG_DATA_HOME": str(tmp_path)}, provider="pnas"
     )
     check = next(c for c in result.checks if c.name == "playwright_dependency")
-    ready = missing is None and version == "68.80.0"
+    ready = missing is None and version == "69.82.0"
     assert check.details["package_ready"] is ready
     assert "camoufox" not in check.details["packages"]
     assert "Invisible" in check.message
@@ -139,7 +139,7 @@ def test_package_inventory_uses_target_directory_and_rejects_other_engine(
     inventory = {
         "playwright": "1.65.2",
         **(
-            {"invisible-playwright": "0.58.0", "invisible-core": "68.80.0"}
+            {"invisible-playwright": "0.59.0", "invisible-core": "69.82.0"}
             if engine == "invisible"
             else {"camoufox": "0.5.9"}
         ),

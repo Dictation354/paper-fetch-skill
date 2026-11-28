@@ -828,7 +828,7 @@ wheels = [
 
 [[package]]
 name = "invisible-core"
-version = "68.80.0"
+version = "69.82.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "maxminddb" },
@@ -837,14 +837,14 @@ dependencies = [
     { name = "requests", extra = ["socks"] },
     { name = "tzdata" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/ee/63/34da5dde854c0198028dd949372ddbfe7a076b06edf31ca1cd9d90fe40e6/invisible_core-68.80.0.tar.gz", hash = "sha256:d2b928ddcaed4bf2338a91794b69c229e30d19dcc86b9dff8d8c1470cb4f1865", size = 1847774, upload-time = "2026-11-21T08:55:36.345Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/01/ea/0503d1c70c0d3d7c4136570e041faed67efb4a68208d5b53581e759f598a/invisible_core-69.82.0.tar.gz", hash = "sha256:2ebd13d7908f7ff8222eccce352ff714d4c7aae831de0e2745afece2e8bbb599", size = 1848331, upload-time = "2026-11-24T08:30:29.546Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/c5/a2/04d2b4a5881b87febd79bb976adbe9a41f1ce90569d99237dc895e041bfd/invisible_core-68.80.0-py3-none-any.whl", hash = "sha256:39e00881f20ce5eeb6c7311b8faabc488c966578e7d013078b413dd21b1a6a7a", size = 1238219, upload-time = "2026-11-21T08:55:34.543Z" },
+    { url = "https://files.pythonhosted.org/packages/84/92/2d31858729b51980c0ffca2d4c1af9c616dc1e2849770e2d20eadc9448a6/invisible_core-69.82.0-py3-none-any.whl", hash = "sha256:63e430994b33779c8979b37c7a2b504beb2c45836e5139c180af2ac2bfa16ad7", size = 1238532, upload-time = "2026-11-24T08:30:28.143Z" },
 ]
 
 [[package]]
 name = "invisible-playwright"
-version = "0.58.0"
+version = "0.59.0"
 source = { registry = "https://pypi.org/simple" }
 dependencies = [
     { name = "greenlet" },
@@ -852,9 +852,9 @@ dependencies = [
     { name = "psutil" },
     { name = "pyee" },
 ]
-sdist = { url = "https://files.pythonhosted.org/packages/18/03/eec25be256296c654c54daba1b730a9085ef9b8ed64983e7402b0b38dd69/invisible_playwright-0.58.0.tar.gz", hash = "sha256:8c35642ad765d48f59f8db4aa86e7d08323b3d6b6388caa16ddb1efaadb71f14", size = 1899660, upload-time = "2026-11-21T10:59:50.859Z" }
+sdist = { url = "https://files.pythonhosted.org/packages/c5/e0/f6c263130bd698f9a9cc1e9d81237fbd79d3e056c263f2b78df3d4e374b6/invisible_playwright-0.59.0.tar.gz", hash = "sha256:46b56d113ec3b2241ad4d2156d36fa05687cfe0a506764b396672eb338b17859", size = 2537638, upload-time = "2026-11-24T10:52:18.939Z" }
 wheels = [
-    { url = "https://files.pythonhosted.org/packages/b6/51/1a3061117e80ca90e708e2e1671e7a6050c07db453fb5362c8a8a1c9e426/invisible_playwright-0.58.0-py3-none-any.whl", hash = "sha256:48ab39f70c3ec19c77a99e1193df65dba12ccd3b9f2b732ef1441cd520c3a0be", size = 653595, upload-time = "2026-11-21T10:59:48.667Z" },
+    { url = "https://files.pythonhosted.org/packages/85/a6/71bb60eabd2f06dd4eabece142131dbd3b2771349a8be28669cee5b367a7/invisible_playwright-0.59.0-py3-none-any.whl", hash = "sha256:a7fed72e4104843313c93f1040cc378693f497a66aaf41edbcdd3193731418c8", size = 668928, upload-time = "2026-11-24T10:52:17.174Z" },
 ]
 
 [[package]]
@@ -1730,7 +1730,7 @@ wheels = [
 
 [[package]]
 name = "paper-fetch-skill"
-version = "8.2.2"
+version = "8.2.3"
 source = { editable = "." }
 dependencies = [
     { name = "beautifulsoup4" },
@@ -1802,10 +1802,10 @@ requires-dist = [
     { name = "httpx", marker = "extra == 'full'", specifier = ">=0.28,<1" },
     { name = "idutils", specifier = ">=1.5,<2" },
     { name = "imagesize", specifier = ">=1.4,<3" },
-    { name = "invisible-core", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'browser')", specifier = "==68.80.0" },
-    { name = "invisible-core", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'full')", specifier = "==68.80.0" },
-    { name = "invisible-playwright", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'browser')", specifier = "==0.58.0" },
-    { name = "invisible-playwright", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'full')", specifier = "==0.58.0" },
+    { name = "invisible-core", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'browser')", specifier = "==69.82.0" },
+    { name = "invisible-core", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'full')", specifier = "==69.82.0" },
+    { name = "invisible-playwright", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'browser') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'browser') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'browser')", specifier = "==0.59.0" },
+    { name = "invisible-playwright", marker = "(platform_machine == 'AMD64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'linux' and extra == 'full') or (platform_machine == 'AMD64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'amd64' and sys_platform == 'win32' and extra == 'full') or (platform_machine == 'x86_64' and sys_platform == 'win32' and extra == 'full')", specifier = "==0.59.0" },
     { name = "jsonschema", marker = "extra == 'dev'", specifier = ">=4,<5" },
     { name = "lxml", marker = "extra == 'browser'", specifier = ">=6,<7" },
     { name = "lxml", marker = "extra == 'full'", specifier = ">=6,<7" },

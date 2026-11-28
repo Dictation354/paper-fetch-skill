@@ -126,7 +126,7 @@ paper-fetch-skill-windows-x86_64-setup.exe
 #### 锁定依赖与更新
 
 `browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
-安装 InvisiblePlaywright 0.58.0、invisible-core 68.80.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
+安装 InvisiblePlaywright 0.59.0、invisible-core 69.82.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
 不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
 `>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
 x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。

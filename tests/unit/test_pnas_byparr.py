@@ -303,8 +303,8 @@ def test_shared_playwright_version_boundary(
     versions = {
         "playwright": version,
         "camoufox": "0.5.9",
-        "invisible_playwright": "0.58.0",
-        "invisible_core": "68.80.0",
+        "invisible_playwright": "0.59.0",
+        "invisible_core": "69.82.0",
     }
     monkeypatch.setattr(importlib.metadata, "version", versions.__getitem__)
     config = BrowserRuntimeConfig("pnas", "doi", tmp_path, True, None, backend="byparr")

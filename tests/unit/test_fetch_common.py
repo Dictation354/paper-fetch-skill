@@ -188,8 +188,8 @@ class FetchCommonTests(unittest.TestCase):
 
         pinned_versions = {
             "camoufox": "0.5.9",
-            "invisible-playwright": "0.58.0",
-            "invisible-core": "68.80.0",
+            "invisible-playwright": "0.59.0",
+            "invisible-core": "69.82.0",
         }
         for dependency in dependencies:
             requirement = Requirement(dependency)

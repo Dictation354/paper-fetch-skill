@@ -33,8 +33,8 @@ def _fixture(tmp_path: Path) -> tuple[Path, Path, Path]:
     staging = tmp_path / "staging"
     site_packages = staging / "runtime" / "Lib" / "site-packages"
     _install_fake_distribution(site_packages, "paper-fetch-skill", "5.6.0")
-    _install_fake_distribution(site_packages, "invisible-playwright", "0.58.0")
-    _install_fake_distribution(site_packages, "invisible-core", "68.80.0")
+    _install_fake_distribution(site_packages, "invisible-playwright", "0.59.0")
+    _install_fake_distribution(site_packages, "invisible-core", "69.82.0")
 
     formula_package = staging / "formula-tools" / "node_modules" / "mathml-to-latex"
     formula_package.mkdir(parents=True)
@@ -139,8 +139,8 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert {
         (item["name"], item["version"]) for item in dependency["python_packages"]
     } == {
-        ("invisible-playwright", "0.58.0"),
-        ("invisible-core", "68.80.0"),
+        ("invisible-playwright", "0.59.0"),
+        ("invisible-core", "69.82.0"),
         ("paper-fetch-skill", "5.6.0"),
     }
     assert {item["name"] for item in dependency["node_packages"]} == {
@@ -154,11 +154,11 @@ def test_evidence_is_derived_from_actual_staged_target(tmp_path: Path) -> None:
     assert dependency["browser"] == {
         "invisible_playwright_python_package": {
             "name": "invisible-playwright",
-            "version": "0.58.0",
+            "version": "0.59.0",
         },
         "invisible_core_python_package": {
             "name": "invisible-core",
-            "version": "68.80.0",
+            "version": "69.82.0",
         },
         "browser_binary": "not_bundled",
     }
