@@ -53,7 +53,11 @@ from ._pdf_common import (
     pdf_max_bytes,
 )
 from .browser_runtime.context import open_browser_context
-from .browser_runtime.navigation import context_get, navigate_page
+from .browser_runtime.navigation import (
+    context_get,
+    navigate_page,
+    refetch_browser_response,
+)
 from .browser_runtime.seed import filter_browser_cookies_for_url
 from .browser_runtime.types import BrowserRuntimeConfig, BrowserRuntimeFailure
 
@@ -1039,19 +1043,41 @@ def _try_ieee_stamp_pdf_hook(
         diagnostics=diagnostics,
     )
     if iframe_response is not None:
+
+        def read_result(candidate: Any) -> PdfFetchResult | None:
+            return _response_to_pdf_result(
+                candidate,
+                artifact_dir=run.artifact_dir,
+                asset_profile=run.asset_profile,
+                asset_output_dir=run.asset_output_dir,
+                allow_pdf_only=run.allow_pdf_only,
+                source_url=iframe_response.url,
+                final_url=iframe_response.url,
+                request=run.request,
+            )
+
         _remaining_pdf_timeout_seconds(
             run.runtime, run.deadline, maximum=run.budget_seconds
         )
-        result = _response_to_pdf_result(
-            iframe_response,
-            artifact_dir=run.artifact_dir,
-            asset_profile=run.asset_profile,
-            asset_output_dir=run.asset_output_dir,
-            allow_pdf_only=run.allow_pdf_only,
-            source_url=iframe_response.url,
-            final_url=iframe_response.url,
-            request=run.request,
-        )
+        try:
+            result = read_result(iframe_response)
+        except PdfFetchFailure as failure:
+            if "Network.getResponseBody" not in str(failure.__cause__):
+                raise
+            timeout_ms = (
+                _remaining_pdf_timeout_seconds(
+                    run.runtime, run.deadline, maximum=run.budget_seconds
+                )
+                * 1000
+            )
+            with refetch_browser_response(
+                page.context, iframe_response, timeout_ms=timeout_ms
+            ) as refreshed:
+                _remaining_pdf_timeout_seconds(
+                    run.runtime, run.deadline, maximum=run.budget_seconds
+                )
+                result = read_result(refreshed)
+                diagnostics["browser_pdf_refetched"] = True
         if result is not None:
             enriched = replace(
                 result,

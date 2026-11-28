@@ -20,6 +20,7 @@ from paper_fetch.providers.browser_runtime.types import (
     BrowserRuntimeFailure,
 )
 from paper_fetch.runtime import RuntimeContext
+from tests.support.local_http import local_responses as local_responses
 
 pytestmark = pytest.mark.browser
 
@@ -703,33 +704,34 @@ def test_cancellation_interrupts_inflight_managed_navigation(prepared, site, tmp
 
 
 def test_ieee_iframe_pdf_keeps_real_response_or_download_under_scrapling(
-    prepared, tmp_path
+    prepared, tmp_path, monkeypatch, local_responses
 ):
-    from paper_fetch.providers._ieee_pdf import navigate_stamp_pdf
+    from paper_fetch.providers import _ieee_pdf
     from paper_fetch.providers.browser_runtime.context import open_browser_context
+    from paper_fetch.providers.browser_runtime.navigation import (
+        refetch_browser_response,
+    )
 
-    config = replace(
-        _config(tmp_path),
-        provider="ieee",
-        doi="10.1109/test",
-    )
-    owner, context = open_browser_context(config)
+    config = replace(_config(tmp_path), provider="ieee", doi="10.1109/test")
     body = b"%PDF-1.7\nlocal IEEE original bytes\n%%EOF"
-    stamp = "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=12345"
-    pdf = "https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?arnumber=12345"
-    context.route(
-        stamp,
-        lambda route: route.fulfill(
-            content_type="text/html", body=f'<html><iframe src="{pdf}"></iframe></html>'
-        ),
-    )
-    context.route(
-        pdf, lambda route: route.fulfill(content_type="application/pdf", body=body)
-    )
+    stamp_path = "/stamp/stamp.jsp?arnumber=12345"
+    pdf_path = "/stampPDF/getPDF.jsp?arnumber=12345"
+
+    def server_response(path, _headers):
+        if path == stamp_path:
+            html = f'<html><iframe src="{pdf_path}"></iframe></html>'
+            return 200, {"Content-Type": "text/html"}, html.encode()
+        if path == pdf_path:
+            return 200, {"Content-Type": "application/pdf"}, body
+        return 404, {}, b""
+
+    origin = local_responses(server_response)
+    monkeypatch.setattr(_ieee_pdf, "_IEEE_ORIGIN", origin)
+    owner, context = open_browser_context(config)
     try:
-        initial, response, download = navigate_stamp_pdf(
+        initial, response, download = _ieee_pdf.navigate_stamp_pdf(
             context.new_page(),
-            stamp,
+            origin + stamp_path,
             goto_kwargs={"wait_until": "domcontentloaded", "timeout": 10000},
             timeout_ms=10000,
             expected_identity={"doi": "10.1109/test"},
@@ -740,7 +742,11 @@ def test_ieee_iframe_pdf_keeps_real_response_or_download_under_scrapling(
             download.save_as(destination)
             assert destination.read_bytes() == body
         else:
-            assert response.status == 200 and response.body() == body
+            assert response.status == 200
+            with refetch_browser_response(
+                context, response, timeout_ms=10000
+            ) as refreshed:
+                assert refreshed.body() == body
         assert context._paper_fetch_navigator.diagnostics["backend"] == "scrapling"
     finally:
         owner.close()

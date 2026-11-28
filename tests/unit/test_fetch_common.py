@@ -189,7 +189,7 @@ class FetchCommonTests(unittest.TestCase):
         pinned_versions = {
             "scrapling": "0.5.1",
             "patchright": "1.64.4",
-            "playwright": "1.64.1",
+            "playwright": "1.65.2",
         }
         for dependency in dependencies:
             requirement = Requirement(dependency)

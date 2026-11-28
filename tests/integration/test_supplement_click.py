@@ -28,44 +28,11 @@ from paper_fetch.providers.browser_workflow.fetchers.file import (
 )
 from paper_fetch.runtime import RuntimeContext
 from tests.support._paper_fetch_support import build_pdf_bytes
+from tests.support.local_http import local_responses as local_responses
 from tests.support.offline_chromium import prepared_browser
 from tests.support.transport import configure_stream_transport
 
 pytestmark = pytest.mark.browser
-
-
-@pytest.fixture
-def local_responses():
-    import threading
-    from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
-
-    servers = []
-
-    def start(responder):
-        class Handler(BaseHTTPRequestHandler):
-            def do_GET(self):
-                status, headers, body = responder(self.path)
-                self.send_response(status)
-                for key, value in headers.items():
-                    self.send_header(key, value)
-                self.send_header("Content-Length", str(len(body)))
-                self.end_headers()
-                self.wfile.write(body)
-
-            def log_message(self, *args):
-                pass
-
-        server = ThreadingHTTPServer(("127.0.0.1", 0), Handler)
-        thread = threading.Thread(target=server.serve_forever, daemon=True)
-        thread.start()
-        servers.append((server, thread))
-        return f"http://127.0.0.1:{server.server_port}"
-
-    yield start
-    for server, thread in servers:
-        server.shutdown()
-        server.server_close()
-        thread.join()
 
 
 @pytest.fixture(autouse=True)
@@ -217,9 +184,9 @@ def test_click_response_and_failure_boundaries(
 
     body = build_pdf_bytes(["Supplementary Material", "Inline response contract"])
     base = "https://example.test"
-    if scenario in {"redirect", "popup_redirect"}:
+    if scenario in {"redirect", "popup_redirect", "inline"}:
 
-        def server_response(path):
+        def server_response(path, _headers):
             if path == "/article":
                 return (
                     200,
@@ -230,6 +197,8 @@ def test_click_response_and_failure_boundaries(
                         + ">Supplement</a>"
                     ).encode(),
                 )
+            if path == "/si.pdf" and scenario == "inline":
+                return 200, {"Content-Type": "text/plain"}, body
             if path == "/si.pdf":
                 return 302, {"Location": "/final.pdf"}, b""
             return (
@@ -307,15 +276,14 @@ def test_click_response_and_failure_boundaries(
             else:
                 route.fulfill(
                     body=b"" if scenario == "empty" else body,
-                    content_type="text/plain"
-                    if scenario == "inline"
-                    else "application/pdf",
+                    content_type="application/pdf",
                     headers={}
-                    if scenario in {"inline", "popup_inline"}
+                    if scenario == "popup_inline"
                     else {"Content-Disposition": 'attachment; filename="si.pdf"'},
                 )
 
-        context.route("https://example.test/**", route)
+        if base == "https://example.test":
+            context.route("https://example.test/**", route)
         if scenario == "cancel":
             original = fetcher._page.wait_for_timeout
 
@@ -360,7 +328,10 @@ def test_click_response_and_failure_boundaries(
                 assert not result["asset_failures"], result
                 saved = result["assets"][0]
                 assert Path(saved["path"]).read_bytes() == body
-                if scenario in {"inline", "popup_inline"}:
+                if scenario == "inline":
+                    assert saved["asset_route"]["capture_event"] == "inline_response"
+                    assert saved["asset_route"]["bytes_transport"] == "browser_request"
+                elif scenario == "popup_inline":
                     assert saved["asset_route"]["capture_event"] in {
                         "inline_response",
                         "download",
@@ -393,7 +364,7 @@ def test_iop_directory_click_and_mdpi_original_url_mapping(
 ):
     body = b"PK\x03\x04directory-supplement"
 
-    def response(path):
+    def response(path, _headers):
         if path == "/data":
             return (
                 200,
@@ -553,7 +524,7 @@ def test_mdpi_existing_modal_link_maps_to_normalized_asset(
         + "</div>"
     )
 
-    def responder(path):
+    def responder(path, _headers):
         if path == "/article":
             return 200, {"Content-Type": "text/html"}, html.encode()
         if path == "/raw.zip":
@@ -651,7 +622,7 @@ def test_platform_attachment_control(click_browser, local_responses, monkeypatch
     good = b"%PDF-1.7\nexpected attachment"
     wrong = b"%PDF-1.7\nunrelated file"
 
-    def serve(path):
+    def serve(path, _headers):
         received.append(path)
         if path == "/other":
             return (

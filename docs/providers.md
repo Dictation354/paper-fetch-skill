@@ -192,6 +192,7 @@ resolve DOI / landing URL
 - selected-browser PDF fallback 只复用操作者当前运行环境可合法取得的页面上下文和 cookies；不会处理 CAPTCHA、登录自动化或权限绕过。
 - IEEE 直接 stamp 未取得 PDF 时，在剩余预算内访问同篇官方 `/document/{article_number}`，点击可见且 article number 匹配的 PDF 链接，支持同页与 popup。仅接收同篇官方 stamp/getPDF 文档或下载响应，仍执行原有 PDF 验收；诊断 `browser_pdf_response=ieee_article_click` 保留初始 stamp 状态和文章页来源。
 - IEEE `stamp.jsp` 在导航前监听 PDF 子响应与 download 事件：只收取包装页明确声明、官方 `getPDF.jsp` 路径及 article number 匹配的子 iframe；保留 landing 预热、会话和 Referer。没有按钮点击或下载事件时也能收取 `application/pdf` 字节，仍须通过现有大小、结构和 DOI 身份验收。主导航直接 PDF 与既有 download 路径继续支持；来源诊断保留包装页、PDF 子响应及此前 HTML 失败，成功仍为 PDF 降级。
+- Chromium 无法读取已匹配的 IEEE PDF 响应体时，使用同一浏览器 context 对原 URL 再请求一次。点击附件后收到内联 `text/plain` 响应时也用此方式读取原始字节。两种恢复都只接受原 GET 的 URL，并继续执行文件验收。
 - PDF fallback 只接受真实 PDF payload；如果 browser route 仍返回 access gate、challenge、APM/temporary unavailable 页面或非 PDF wrapper，会被拒绝并继续降级。失败诊断会记录 candidate URL、final URL、status、content-type、title/body 摘要；配置了 `download_dir` 且 artifact mode 为 `all` 时会在 `ieee_pdf_fallback/pdf.failure.html` 留下最后的非 PDF HTML 产物。
 - 动态 HTML 的正文清洗会删除裸露 `SECTION I.` 这类 Xplore section marker；`div.section` / `div.section_2` 按嵌套层级输出 Markdown heading，主节为 `##`，`A.` / `B.` 子节为 `###`，`1)` 子节为 `####`。
 - IEEE HTML cleanup 只声明 Xplore REST fragment 或站点专属增量，例如 `accesstype`、`select` / `textarea`、`.zoom-container`、`.document-actions`、`button[data-docId]` 和 `javascript:` action 链接；`script` / `style` / `noscript` / `iframe` / `button` / `input` 等通用 chrome 继续由默认站点规则和 browser workflow 负责。

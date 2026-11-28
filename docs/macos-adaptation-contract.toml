@@ -52,7 +52,7 @@ native_engine = "chromium"
 default_backend = "scrapling"
 system_chrome_required = false
 runtime_bundle_built_in = false
-python_requirements = ["scrapling[fetchers]==0.5.1", "patchright==1.64.4", "playwright==1.64.1"]
+python_requirements = ["scrapling[fetchers]==0.5.1", "patchright==1.64.4", "playwright==1.65.2"]
 
 [release]
 installer_manifest = "installer/manifest.json"

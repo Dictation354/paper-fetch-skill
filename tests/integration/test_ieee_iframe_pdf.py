@@ -4,9 +4,10 @@ from unittest import mock
 
 import pytest
 
-from paper_fetch.providers import _pdf_common, _pdf_fallback
+from paper_fetch.providers import _ieee_pdf, _pdf_common, _pdf_fallback
 from paper_fetch.providers.browser_runtime.types import BrowserRuntimeConfig
 from tests.support._paper_fetch_support import fulltext_pdf_bytes
+from tests.support.local_http import local_responses as local_responses
 from tests.support.offline_chromium import prepared_browser
 
 
@@ -25,12 +26,12 @@ from tests.support.offline_chromium import prepared_browser
     ],
 )
 def test_ieee_stamp_captures_subframe_response_without_download(
-    tmp_path, monkeypatch, case
+    tmp_path, monkeypatch, case, local_responses
 ):
     doi = "10.1109/MPER.1985.5526567"
-    landing = "https://ieeexplore.ieee.org/document/5526567/"
-    stamp = "https://ieeexplore.ieee.org/stamp/stamp.jsp?arnumber=5526567"
-    target = "https://ieeexplore.ieee.org/stampPDF/getPDF.jsp?arnumber=5526567"
+    landing_path = "/document/5526567/"
+    stamp_path = "/stamp/stamp.jsp?arnumber=5526567"
+    target_path = "/stampPDF/getPDF.jsp?arnumber=5526567"
     payload = fulltext_pdf_bytes(
         doi="10.1109/other.123456"
         if case in {"wrong_identity", "click_wrong_identity"}
@@ -40,54 +41,47 @@ def test_ieee_stamp_captures_subframe_response_without_download(
     downloads = []
     responses = []
 
-    def route_response(route):
-        request = route.request
-        requests.append((request.url, request.headers))
-        if request.url.rstrip("/") == landing.rstrip("/"):
+    def server_response(path, headers):
+        requests.append((origin + path, headers))
+        if path.rstrip("/") == landing_path.rstrip("/"):
+            target_attr = ' target="_blank"' if case == "click_popup" else ""
             control = (
-                (
-                    f'<a href="{stamp}&tp=" target="_blank">PDF</a>'
-                    if case == "click_popup"
-                    else f'<a href="{stamp}&tp=">PDF</a>'
-                )
+                f'<a href="{stamp_path}&tp="{target_attr}>PDF</a>'
                 if case.startswith("click_")
                 else ""
             )
-            route.fulfill(
-                body=f"<html><body>Article landing {control}</body></html>",
-                content_type="text/html",
-                headers={"set-cookie": "article_warm=1; Path=/; Secure"},
+            return (
+                200,
+                {"Content-Type": "text/html", "Set-Cookie": "article_warm=1; Path=/"},
+                f"<html><body>Article landing {control}</body></html>".encode(),
             )
-        elif request.url == stamp and case.startswith("click_"):
-            route.fulfill(status=502, body="Bad gateway", content_type="text/html")
-        elif request.url == stamp + "&tp=":
-            route.fulfill(
-                body=f'<iframe src="{target}"></iframe>', content_type="text/html"
+        if path == stamp_path and case.startswith("click_"):
+            return 502, {"Content-Type": "text/html"}, b"Bad gateway"
+        if path == stamp_path and case in {"direct_pdf", "download"}:
+            headers = {"Content-Type": "application/pdf"}
+            if case == "download":
+                headers["Content-Disposition"] = "attachment; filename=article.pdf"
+            return 200, headers, payload
+        if path in {stamp_path, stamp_path + "&tp="}:
+            return (
+                200,
+                {"Content-Type": "text/html"},
+                f'<html><iframe src="{target_path}"></iframe></html>'.encode(),
             )
-        elif request.url == stamp and case in {"direct_pdf", "download"}:
-            route.fulfill(
-                body=payload,
-                content_type="application/pdf",
-                headers={"content-disposition": "attachment; filename=article.pdf"}
-                if case == "download"
-                else {},
-            )
-        elif request.url == stamp:
-            route.fulfill(
-                body=f'<html><body><iframe src="{target}"></iframe></body></html>',
-                content_type="text/html",
-            )
-        elif request.url == target:
-            route.fulfill(
-                body=b"<html>No PDF</html>" if case == "not_pdf" else payload,
-                content_type="text/html" if case == "not_pdf" else "application/pdf",
-            )
-        else:
-            route.abort()
+        if path == target_path:
+            if case == "not_pdf":
+                return 200, {"Content-Type": "text/html"}, b"<html>No PDF</html>"
+            return 200, {"Content-Type": "application/pdf"}, payload
+        return 404, {}, b""
+
+    origin = local_responses(server_response)
+    monkeypatch.setattr(_ieee_pdf, "_IEEE_ORIGIN", origin)
+    landing, stamp, target = [
+        origin + path for path in (landing_path, stamp_path, target_path)
+    ]
 
     with prepared_browser() as browser:
         context = browser.new_context()
-        context.route("**/*", route_response)
         borrowed_page = context.new_page()
         page = context.new_page()
         page.on("download", lambda download: downloads.append(download))
@@ -134,7 +128,10 @@ def test_ieee_stamp_captures_subframe_response_without_download(
             referer=landing,
             allow_pdf_only=True,
             request=_pdf_fallback.PdfRequestContext(
-                expected_identity={"doi": doi}, provider_name="ieee", timeout_seconds=20
+                expected_identity={"doi": doi},
+                provider_name="ieee",
+                timeout_seconds=20,
+                allowed_hosts=("127.0.0.1",),
             ),
         )
         if case in {"pdf", "direct_pdf", "download", "click_pdf", "click_popup"}:
@@ -175,3 +172,16 @@ def test_ieee_stamp_captures_subframe_response_without_download(
     assert (stamp, 502 if case.startswith("click_") else 200) in responses
     if case not in {"direct_pdf", "download", "click_popup"}:
         assert (target, 200) in responses
+    if case in {
+        "pdf",
+        "click_pdf",
+        "click_popup",
+        "wrong_identity",
+        "click_wrong_identity",
+    }:
+        target_requests = [headers for url, headers in requests if url == target]
+        assert len(target_requests) == 2
+        assert all(
+            "article_warm=1" in headers.get("cookie", "") for headers in target_requests
+        )
+        assert target_requests[0]["referer"] == target_requests[1]["referer"]

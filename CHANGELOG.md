@@ -10,11 +10,12 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 ## 8.2.3 - 2026-11-28
 
-- Use Scrapling Chromium for publisher browsing on Linux, Windows, and macOS. The `browser` and `full` extras pin Scrapling 0.5.1 with fetchers, Patchright 1.64.4, and Playwright 1.64.1. Chromium has its own persistent profile. Run `paper-fetch auth <provider>` to sign in again after moving from Firefox.
+- Use Scrapling Chromium for publisher browsing on Linux, Windows, and macOS. The `browser` and `full` extras pin Scrapling 0.5.1 with fetchers, Patchright 1.64.4, and Playwright 1.65.2. Chromium has its own persistent profile. Run `paper-fetch auth <provider>` to sign in again after moving from Firefox.
 - Update compatible Python and formula-tool dependencies, including the PyMuPDF packages at 2.2 and `brace-expansion` at 5.1.0.
 - Offline installers include the Chromium runtime dependencies. Prepare the browser during setup or let the first browser operation download it on demand.
 - After manual verification, `paper-fetch auth ams` reopens the same Chromium profile to verify that the saved state works before marking it ready for subsequent requests.
 - Capture supplementary file downloads when Chromium emits a download event without a matching network response.
+- Recover the original bytes of IEEE iframe PDFs and inline `text/plain` attachments using the same browser session.
 - Fix SpringerLink pages that passed full-text checks on the strength of multilingual abstracts, PDF previews and article highlights. When the HTML has only abstracts, try the same article’s PDF and retain the abstracts if the PDF is unavailable. Advance the extraction revision to 17 so cached results are reassessed on fetch.
 - Clarify when the Skill should reuse a file or receipt, look up a known results directory, fetch full text or resolve identity. Add executable Unix and Windows examples for locating the offline Python interpreter and reading PDF attachments.
 

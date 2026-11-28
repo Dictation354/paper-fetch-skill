@@ -10,11 +10,12 @@
 
 ## 8.2.3 - 2026-11-28
 
-- Linux、Windows 和 macOS 的出版社浏览器统一使用 Scrapling Chromium。`browser` 和 `full` 锁定 Scrapling 0.5.1（含 fetchers）、Patchright 1.64.4 和 Playwright 1.64.1。Chromium 使用独立持久 profile，从 Firefox 迁移后用 `paper-fetch auth <provider>` 重新登录。
+- Linux、Windows 和 macOS 的出版社浏览器统一使用 Scrapling Chromium。`browser` 和 `full` 锁定 Scrapling 0.5.1（含 fetchers）、Patchright 1.64.4 和 Playwright 1.65.2。Chromium 使用独立持久 profile，从 Firefox 迁移后用 `paper-fetch auth <provider>` 重新登录。
 - 更新兼容的 Python 和公式工具依赖，包括 2.2 版 PyMuPDF 相关包和 `brace-expansion` 5.1.0。
 - 离线安装包内置 Chromium 运行时依赖。可在安装时预置浏览器，也可由首次浏览器操作按需下载。
 - 在 AMS 网页完成人工验证后，`paper-fetch auth ams` 会重开同一 Chromium profile，确认保存的状态可用，再将其标记为可供后续请求使用。
 - Chromium 发出下载事件但未报告对应网络响应时，仍可接收补充文件。
+- 在同一浏览器会话中恢复 IEEE iframe PDF 和内联 `text/plain` 附件的原始字节。
 - 修复 SpringerLink 将多语摘要、PDF 预览和附加信息中的文章要点误判为全文的问题。HTML 只有摘要时尝试同篇 PDF，PDF 不可用时保留摘要。提取修订号升至 17，重新抓取时按新规则验收旧缓存对应的论文。
 - 明确 Skill 复用文件或回执、查询已知历史目录、抓取全文和解析身份的适用条件。新增 Unix 和 Windows 可执行示例，用于定位离线安装的 Python 并读取 PDF 附件。
 

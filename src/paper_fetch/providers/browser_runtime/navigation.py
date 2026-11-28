@@ -90,6 +90,28 @@ def context_get(context, url, *, timeout=30000, page=None, **kwargs):
     return response
 
 
+@contextlib.contextmanager
+def refetch_browser_response(context, response, *, timeout_ms):
+    """Read the original bytes of an already matched, successful browser GET."""
+    if response.status != 200 or response.request.method != "GET":
+        raise ValueError("Only a complete browser GET can be read again.")
+    referer = response.request.header_value("referer")
+    refreshed = context.request.get(
+        response.url,
+        headers={"Referer": referer} if referer else {},
+        timeout=timeout_ms,
+        max_redirects=0,
+    )
+    try:
+        if refreshed.status != 200:
+            raise ValueError(
+                f"Browser response refetch returned HTTP {refreshed.status}."
+            )
+        yield refreshed
+    finally:
+        refreshed.dispose()
+
+
 def recover_get_result(page, url, result, *, deadline):
     if not isinstance(result, dict) or navigator_for(page) is None:
         return False

@@ -6,7 +6,7 @@
 
 Linux、Windows 和 macOS 的浏览器路线统一使用 Scrapling Chromium。正文 HTML、浏览器 PDF、图片、附件、认证和预检都通过 `paper_fetch.providers.browser_runtime`。受管子进程启动 Scrapling 的持久 session，Playwright 在调用线程经本机 CDP 接入同一 Chromium 上下文。Cloudflare 页面由 Scrapling 的处理逻辑在请求预算内处理。
 
-`browser` 和 `full` 固定使用 `scrapling[fetchers]==0.5.1`、`patchright==1.64.4` 和 `playwright==1.64.1`。
+`browser` 和 `full` 固定使用 `scrapling[fetchers]==0.5.1`、`patchright==1.64.4` 和 `playwright==1.65.2`。
 
 ## 选择与配置
 

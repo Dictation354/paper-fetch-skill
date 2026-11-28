@@ -13,12 +13,13 @@ from ..extraction.html.parsing import choose_parser
 from ..quality.access_boundary import raise_for_paywall
 from .browser_runtime.navigation import managed_action, navigate_page
 
+_IEEE_ORIGIN = "https://ieeexplore.ieee.org"
+
 
 def _article_number(url: str, path: str) -> str:
     parsed = urlsplit(url)
     if (
-        parsed.scheme != "https"
-        or parsed.netloc.lower() != "ieeexplore.ieee.org"
+        f"{parsed.scheme}://{parsed.netloc.lower()}" != _IEEE_ORIGIN
         or parsed.path != path
     ):
         return ""
@@ -126,7 +127,7 @@ def navigate_stamp_pdf(
                 diagnostics.update(
                     {
                         "browser_pdf_response": "ieee_article_click",
-                        "article_url": f"https://ieeexplore.ieee.org/document/{article_number}",
+                        "article_url": f"{_IEEE_ORIGIN}/document/{article_number}",
                         "stamp_initial_status": initial_response.status
                         if initial_response
                         else None,
@@ -182,7 +183,7 @@ def _click_article_pdf(
     try:
         navigate_page(
             page,
-            f"https://ieeexplore.ieee.org/document/{article_number}",
+            f"{_IEEE_ORIGIN}/document/{article_number}",
             wait_until="domcontentloaded",
             timeout=remaining(),
             mode="file",

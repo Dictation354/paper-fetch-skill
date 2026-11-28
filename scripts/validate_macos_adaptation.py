@@ -276,7 +276,7 @@ def validate_contract(
     pinned = {
         Requirement("scrapling[fetchers]==0.5.1"),
         Requirement("patchright==1.64.4"),
-        Requirement("playwright==1.64.1"),
+        Requirement("playwright==1.65.2"),
     }
     try:
         declared = {

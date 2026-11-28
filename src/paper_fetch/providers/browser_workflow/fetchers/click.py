@@ -17,7 +17,11 @@ from ....extraction.html.assets.state import AssetBinaryPayload, AssetFetchRespo
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
 from ..._registry import BrowserAssetPolicy, browser_asset_policy
-from ...browser_runtime.navigation import managed_action, navigate_page
+from ...browser_runtime.navigation import (
+    managed_action,
+    navigate_page,
+    refetch_browser_response,
+)
 from .context import _browser_response_headers, _browser_response_status
 
 _CLICK_TIMEOUT_SECONDS = 60.0
@@ -456,8 +460,20 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                         # Wait for the download event within the existing deadline.
                         page.wait_for_timeout(min(50, remaining_ms()))
                         continue
-                    body = response.body()
                     route["capture_event"] = "inline_response"
+                    mime_type = (
+                        headers.get("content-type", "").split(";", 1)[0].strip().lower()
+                    )
+                    if mime_type == "text/plain" and status == 200:
+                        # Chromium can transcode a binary file served as text.
+                        with refetch_browser_response(
+                            context, response, timeout_ms=remaining_ms()
+                        ) as refreshed:
+                            headers = _browser_response_headers(refreshed)
+                            body = refreshed.body()
+                        route["bytes_transport"] = "browser_request"
+                    else:
+                        body = response.body()
                 remaining_ms(transfer_started=download is not None)
                 reason = supplementary_response_block_reason(
                     headers.get("content-type", ""), body

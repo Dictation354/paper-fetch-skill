@@ -86,7 +86,7 @@ paper-fetch-skill-windows-x86_64-setup.exe
 
 #### 锁定依赖与更新
 
-`browser` 与 `full` 固定使用 Scrapling 0.5.1、Patchright 1.64.4 和 Playwright 1.64.1。Linux arm64 通过在线安装使用。
+`browser` 与 `full` 固定使用 Scrapling 0.5.1、Patchright 1.64.4 和 Playwright 1.65.2。Linux arm64 通过在线安装使用。
 
 `uv.lock` 固定开发和 CI 版本。离线构建核对目标 wheelhouse 和实际安装的包，`offline-manifest.json` 的 `components.browser` 记录实际包版本、后端、引擎和浏览器可执行文件的分发状态。
 SBOM 与依赖快照从实际目标安装生成。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
