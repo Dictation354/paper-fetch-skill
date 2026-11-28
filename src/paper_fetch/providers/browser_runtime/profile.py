@@ -200,6 +200,7 @@ class PublisherProfileManager:
     def new_context(self) -> Any:
         self._assert_owner()
         if self.context is not None:
+            assert self.manager is not None
             self.diagnostics.update(context_reused=True, native_profile_loaded=False)
             self.manager.diagnostics["context_reused"] = True
             self.refresh()

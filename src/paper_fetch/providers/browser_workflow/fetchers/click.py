@@ -416,8 +416,8 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                 status = (
                     _browser_response_status(response) if response is not None else None
                 )
-                final_url = str(download.url if download is not None else response.url)
                 if download is not None:
+                    final_url = str(download.url)
                     shared_browser = (
                         getattr(
                             getattr(fetcher, "_browser_config", None), "backend", None
@@ -449,11 +449,13 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                             return None
                         body = Path(path).read_bytes()
                     route["capture_event"] = "download"
-                elif "attachment" in headers.get("content-disposition", "").lower():
-                    # Wait for the download event within the existing deadline.
-                    page.wait_for_timeout(min(50, remaining_ms()))
-                    continue
                 else:
+                    assert response is not None
+                    final_url = str(response.url)
+                    if "attachment" in headers.get("content-disposition", "").lower():
+                        # Wait for the download event within the existing deadline.
+                        page.wait_for_timeout(min(50, remaining_ms()))
+                        continue
                     body = response.body()
                     route["capture_event"] = "inline_response"
                 remaining_ms(transfer_started=download is not None)

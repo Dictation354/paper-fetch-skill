@@ -23,7 +23,7 @@ from paper_fetch.workflow.acceptance import evaluate_fetch_acceptance
 from tests.support._paper_fetch_support import RecordingTransport
 from tests.support.acquired_ieee_paywall_flow import DOI, URL, _captured_landing
 from tests.support.acquired_publisher_inputs import _record, _response
-from tests.support.camoufox_backend import _Context
+from tests.support.chromium_backend import _Context
 from tests.support.ieee_provider_routes import (
     _FakeIeeeBrowserContext,
     _FakeIeeeBrowserPage,

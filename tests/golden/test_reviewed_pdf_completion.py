@@ -12,6 +12,7 @@ from paper_fetch.http import HttpTransport
 from paper_fetch.providers._pdf_common import pdf_fetch_result_from_bytes
 from paper_fetch.providers._registry import provider_bundle
 from paper_fetch.providers.base import ProviderContent, RawFulltextPayload
+from paper_fetch.providers.browser_runtime.preparation import FetchBrowserPreparation
 from tests.golden_corpus import golden_corpus_fixture_for_doi
 from tests.support.reviewed_block_provider_paths import _fetch_through_service
 
@@ -53,9 +54,7 @@ def completed_pdf(request):
     # Module fixtures run before the function-scoped offline preparation mock.
     with (
         mock.patch.object(client, "fetch_raw_fulltext", return_value=payload),
-        mock.patch(
-            "paper_fetch.providers.browser_runtime.preparation.prepare_camoufox_managed_runtime"
-        ),
+        mock.patch.object(FetchBrowserPreparation, "prepare"),
     ):
         envelope = _fetch_through_service(client, fixture, metadata)
     assert envelope.article is not None

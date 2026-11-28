@@ -160,7 +160,7 @@ def browser_cache_dir(env: Mapping[str, str]) -> Path:
         driver = metadata.distribution("patchright").locate_file(
             "patchright/driver/package"
         )
-        return Path(driver) / ".local-browsers"
+        return Path(str(driver)) / ".local-browsers"
     if configured:
         return Path(configured).expanduser().resolve()
     if sys.platform == "win32":
@@ -179,7 +179,7 @@ def browser_cache_dir(env: Mapping[str, str]) -> Path:
 def inspect_chromium(cache: Path) -> tuple[Path, str, bool]:
     distribution = metadata.distribution("patchright")
     driver = distribution.locate_file("patchright/driver/package/browsers.json")
-    manifest = json.loads(driver.read_text(encoding="utf-8"))
+    manifest = json.loads(Path(str(driver)).read_text(encoding="utf-8"))
     browser = next(item for item in manifest["browsers"] if item["name"] == "chromium")
     arm64 = platform.machine().lower() in {"aarch64", "arm64"}
     if sys.platform == "win32":

@@ -1,6 +1,7 @@
 """Real access evidence, independent of PDF conversion/formatting quality."""
 
 import json
+from dataclasses import replace
 from types import SimpleNamespace
 from urllib.parse import unquote
 
@@ -10,6 +11,8 @@ from bs4 import BeautifulSoup
 from paper_fetch.extraction.html.signals import HtmlExtractionFailure
 from paper_fetch.http import HttpTransport, RequestFailure
 from paper_fetch.providers import elsevier, iop
+from paper_fetch.providers.base import ProviderFailure
+from paper_fetch.reason_codes import NOT_CONFIGURED
 from paper_fetch.tracing import trace_event
 from paper_fetch.xml_security import parse_xml
 from tests.block_fixtures import execute_block_fixture, iter_block_samples
@@ -134,6 +137,13 @@ def test_legacy_elsevier_real_full_view_failures_exhaust_current_api_waterfall(d
     client = elsevier.ElsevierClient(
         CapturedTransport(), {"ELSEVIER_API_KEY": "offline-fixture-key"}
     )
+
+    def unavailable_browser(*args, **kwargs):
+        raise ProviderFailure(
+            NOT_CONFIGURED, "This fixture replays Elsevier API responses."
+        )
+
+    client.deps = replace(client.deps, load_runtime_config=unavailable_browser)
     fixture = SimpleNamespace(
         doi=doi, provider="elsevier", source_url=metadata.get("landing_page_url")
     )

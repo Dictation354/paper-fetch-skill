@@ -6,6 +6,7 @@ from tempfile import TemporaryDirectory
 from unittest import mock
 
 from paper_fetch import service
+from paper_fetch.auth import ams_profile_path
 from paper_fetch.config import BROWSER_PROFILE_DIR_ENV_VAR
 from tests.support._paper_fetch_support import FixtureProvider
 from tests.support.publisher_profiles import write_verified_ams_profile
@@ -36,8 +37,8 @@ def _fetch_through_service(
         if fixture.provider == "ams":
             # Captured responses exercise provider behavior after authentication.
             profile = Path(stack.enter_context(TemporaryDirectory()))
-            write_verified_ams_profile(profile)
             runtime_env[BROWSER_PROFILE_DIR_ENV_VAR] = str(profile)
+            write_verified_ams_profile(ams_profile_path(runtime_env))
             stack.enter_context(mock.patch.object(client, "env", runtime_env))
         stack.enter_context(
             mock.patch.object(service, "resolve_paper", return_value=resolved)
