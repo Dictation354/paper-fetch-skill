@@ -6,12 +6,9 @@ The verified component retains the complete upstream source and LICENSE. Its
 `.dockerignore` symlink is materialized from the in-archive `.gitignore`.
 
 The component and private pure-Python dependencies remain SHA-256 locked.
-InvisiblePlaywright 0.59.0 and its required invisible-core 69.82.0 are installed
-with the browser/full extra. The core's release seal verifies its Firefox engine.
-Windows/Linux x64 use Invisible's native Python protocol transport. macOS and
-ARM retain Camoufox 0.5.9 and the host Playwright shared-browser transport; no
-unsupported Invisible binary is downloaded. Host Playwright stays >=1.58,<1.63
-for Camoufox compatibility; it is not Invisible's browser protocol client.
+All supported platforms use Camoufox 0.5.9 with the host Playwright shared-browser
+transport. The browser and full extras require Playwright >=1.58,<1.63.
+The Invisible adapter is retained in source for reference.
 On macOS without an enabled system proxy, both the host-GPU probe and the owned
 browser explicitly use a direct connection. This avoids beta.42's unhandled
 empty PACURI read during Juggler startup while retaining configured system

@@ -19,13 +19,6 @@ def selected_backend(env: Mapping[str, str], *, provider: str) -> str:
 
 
 def engine_name() -> str:
-    # Invisible's sealed release publishes these two native legs. Keep the
-    # established Camoufox runtime on macOS and ARM rather than removing support.
-    if sys.platform in {"linux", "win32"} and platform.machine().lower() in {
-        "amd64",
-        "x86_64",
-    }:
-        return "invisible"
     return "camoufox"
 
 

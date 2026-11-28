@@ -80,20 +80,12 @@ def test_tandf_batches_controls_and_injection_with_partial_csv_failure(monkeypat
 
 @pytest.mark.browser
 def test_wiley_runtime_original_binds_only_its_own_mathml(monkeypatch):
-    from paper_fetch.browser_runtime_policy import engine_name
     from paper_fetch.providers import _wiley_html
 
-    if engine_name() == "invisible":
-        from invisible_core.download import cache_dir_for_seal
-        from invisible_playwright import InvisiblePlaywright
-
-        if not cache_dir_for_seal().is_dir():
-            pytest.skip("requires the prepared platform browser")
-        session = InvisiblePlaywright(headless=True, timezone="UTC", locale="en-US")
-    else:
-        session = prepared_browser(monkeypatch)
-    with session as browser:
+    with prepared_browser(monkeypatch, main_world_eval=True) as browser:
         page = browser.new_page()
+        # The Byparr context identifies Camoufox for reads of page-owned MathJax.
+        page.context._paper_fetch_navigator = Mock(diagnostics={"engine": "camoufox"})
         page.set_content(
             '<article><mjx-container id="a"></mjx-container><mjx-container id="b"></mjx-container></article><script>window.MathJax={startup:{document:{getMathItemsWithin:()=>[{typesetRoot:document.querySelector("#a"),math:"<math><mi>x</mi></math>"},{typesetRoot:document.querySelector("#b"),math:"x+1"}]}}}</script>'
         )

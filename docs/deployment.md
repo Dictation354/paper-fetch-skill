@@ -57,9 +57,8 @@ python -m pip install "paper-fetch-skill[full]"
 构建并内置锁定的 Byparr 源码和私有依赖，但不分发浏览器 binary 或 fpgen 模型。
 组件版本、缓存和后端配置见[浏览器后端](browser-backends.md#统一受管-byparr)。
 
-Byparr 在 Windows/Linux x64 使用 InvisiblePlaywright 及其 seal 校验的 Firefox；
-macOS 与 ARM 使用 Camoufox。平台选择与组件版本见
-[统一受管 Byparr](browser-backends.md#统一受管-byparr)，两个引擎的 executable 不能互换。
+所有已支持平台均通过 Byparr 启动 Camoufox。组件版本与配置见
+[统一受管 Byparr](browser-backends.md#统一受管-byparr)。
 
 以下渠道、版本 pin、24 小时更新检查与 fpgen 说明仅适用于 Camoufox。
 Camoufox Python 包固定为 0.5.9，浏览器独立跟踪渠道。未显式配置渠道或 pin 时默认
@@ -125,15 +124,13 @@ paper-fetch-skill-windows-x86_64-setup.exe
 
 #### 锁定依赖与更新
 
-`browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
-安装 InvisiblePlaywright 0.59.0、invisible-core 69.82.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
-不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
-`>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
-x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
+`browser` 与 `full` 在所有已支持平台使用 Camoufox 0.5.9 和 Playwright
+`>=1.58,<1.63`（锁定 1.62.0）。首次准备浏览器时按平台获取 Camoufox 可执行文件和 fpgen 模型。
+Linux arm64 继续通过在线安装使用。
 
 `uv.lock` 固定开发和 CI 版本。离线构建核对实际安装的目标引擎包集合，
-在 `offline-manifest.json` 的 `components.invisible` 或 `components.camoufox` 记录
-`python_package_version` 和 `playwright_version`；Invisible 另记录 `core_version`。
+在 `offline-manifest.json` 的 `components.camoufox` 记录
+`python_package_version` 和 `playwright_version`。
 SBOM 与依赖快照从实际目标安装生成。quality job 在其它静态门禁之前通过独立的 `Check lockfile freshness` 步骤执行 `uv lock --check`，项目版本、依赖声明或 lock metadata 的陈旧状态会直接令 CI 失败；后续 `uv sync --frozen` 只消费已验证的锁文件，不会在常规运行中重新选择版本。Dependabot 每周为 pip、npm 和 GitHub Actions 更新创建可跟进的 PR；普通 PR 继续由 `verify.yml` 对锁定依赖执行全 extras 漏洞审计。离线 wheelhouse/hash manifest 继续负责跨平台离线资产，不替代开发锁文件。
 
 PDF 的 `pdf/full` extras 协调使用 `PyMuPDF>=2,<3` 与 `pymupdf4llm>=2,<3`，

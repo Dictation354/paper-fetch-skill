@@ -214,9 +214,9 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
             if owner is not None and owner not in [page, *popups]:
                 matched_requests.discard(root)
                 return
-            if (
-                request.url in redirect_targets
-                and owner in redirect_targets[request.url]
+            redirect_owners = redirect_targets.get(request.url, set())
+            if (owner is not None and owner in redirect_owners) or (
+                None in redirect_owners and request.is_navigation_request()
             ):
                 matched_requests.add(root)
         if root in matched_requests:
@@ -231,7 +231,12 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
             return
         if 300 <= candidate.status < 400:
             location = candidate.headers.get("location")
-            if location and owner is not None:
+            # Firefox can report the popup's entire redirect chain before it
+            # has a frame. Keep its Location for the next navigation. A
+            # frameless final response still needs an owned page or download.
+            if location and (
+                owner is not None or candidate.request.is_navigation_request()
+            ):
                 url = urldefrag(urljoin(candidate.url, location)).url
                 redirect_targets.setdefault(url, set()).add(owner)
             return

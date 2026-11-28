@@ -48,6 +48,7 @@ current_skill_path_only = true
 check_is_read_only = true
 
 [browser]
+# The browser/full extras use this Camoufox and Playwright pair on every supported platform.
 native_engine = "camoufox"
 default_backend = "byparr"
 system_chrome_required = false

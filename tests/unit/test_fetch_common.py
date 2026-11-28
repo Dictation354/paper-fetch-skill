@@ -115,7 +115,7 @@ class FetchCommonTests(unittest.TestCase):
                 [str(Requirement(r).specifier) for r in camoufox_requirements],
                 ["==0.5.9"],
             )
-            self.assertIsNotNone(Requirement(camoufox_requirements[0]).marker)
+            self.assertIsNone(Requirement(camoufox_requirements[0]).marker)
 
         camoufox_packages = [
             package
@@ -186,11 +186,7 @@ class FetchCommonTests(unittest.TestCase):
             for dependency in extra
         )
 
-        pinned_versions = {
-            "camoufox": "0.5.9",
-            "invisible-playwright": "0.59.0",
-            "invisible-core": "69.82.0",
-        }
+        pinned_versions = {"camoufox": "0.5.9"}
         for dependency in dependencies:
             requirement = Requirement(dependency)
             operators = {specifier.operator for specifier in requirement.specifier}

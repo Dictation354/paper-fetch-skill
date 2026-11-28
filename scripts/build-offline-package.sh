@@ -315,14 +315,11 @@ build_project_runtime() {
     --only-binary=:all: \
     "${wheels[0]}[full]"
 
-  BROWSER_ENGINE="$(PYTHONPATH="$REPO_DIR/src" "$PYTHON_BIN" -c 'from paper_fetch.browser_runtime_policy import engine_name; print(engine_name())')"
-  local browser_package="camoufox"
-  [ "$BROWSER_ENGINE" != "invisible" ] || browser_package="invisible_playwright"
   shopt -s nullglob
-  local browser_wheels=("$wheelhouse"/"$browser_package"-*.whl)
+  local browser_wheels=("$wheelhouse"/camoufox-*.whl)
   shopt -u nullglob
   [ "${#browser_wheels[@]}" -eq 1 ] \
-    || die "Expected one $browser_package dependency wheel, found ${#browser_wheels[@]}."
+    || die "Expected one Camoufox dependency wheel, found ${#browser_wheels[@]}."
 
   log "Installing project runtime into package"
   PLAYWRIGHT_SKIP_BROWSER_DOWNLOAD=1 \
@@ -655,12 +652,11 @@ EOF
   printf '\n%s\n\n' "$install_line" >> "$staging/README.offline.md"
 
   cat >> "$staging/README.offline.md" <<'EOF'
-All browser routes use Byparr. Linux x64 uses InvisiblePlaywright; macOS uses Camoufox.
+All browser routes use Byparr with Camoufox.
 Linux and macOS bundle pinned Byparr source and private Python dependencies under
 `runtime/browser-components/byparr/`.
-Preparation manages the selected platform engine; only Camoufox needs fingerprint models.
-Camoufox reuses successful update checks for 24 hours; failed/cancelled checks can retry.
-Invisible uses its pinned release seal and reuses valid local engine binaries.
+Preparation installs Camoufox and its fingerprint model. Successful browser update checks
+are reused for 24 hours. Failed or cancelled checks can retry.
 See `browser-setup-results.txt`, or rerun the shared preparation command above.
 Set `PAPER_FETCH_BROWSER_HEADLESS=false` only when running with a display-capable session.
 
@@ -770,16 +766,12 @@ installed = {str(d.metadata["Name"]).lower().replace("_", "-"): d.version
              for d in distributions(path=[str(site_packages)])}
 if any(installed.get(name) != version for name, version in resolved_browser_versions.items()):
     raise SystemExit("Offline manifest browser versions differ from installed packages")
-engine = "invisible" if target_platform in {"linux", "windows"} and target_arch == "x86_64" else "camoufox"
-package = "invisible-playwright" if engine == "invisible" else "camoufox"
 browser_component = {
     "python_package": "runtime/site-packages",
-    "python_package_version": installed[package],
+    "python_package_version": installed["camoufox"],
     "playwright_version": installed["playwright"],
     "browser_binary": "not_bundled",
 }
-if engine == "invisible":
-    browser_component["core_version"] = installed["invisible-core"]
 manifest_name_key = f"{target_platform}_manifest_name"
 
 payload = {
@@ -809,7 +801,7 @@ payload = {
         "formula_tools": "formula-tools",
         "node_runtime": json.loads((staging / "runtime/node/node-runtime.json").read_text(encoding="utf-8")),
         "image_tools": "image-tools",
-        engine: browser_component,
+        "camoufox": browser_component,
     },
 }
 

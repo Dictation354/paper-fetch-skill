@@ -11,7 +11,7 @@ from tests._environment import PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR
 
 
 @contextmanager
-def prepared_browser(monkeypatch, *, headless=True):
+def prepared_browser(monkeypatch, *, headless=True, main_world_eval=False):
     executable = os.environ.get(PRESERVED_CAMOUFOX_EXECUTABLE_ENV_VAR)
     if not executable or not Path(executable).is_file():
         pytest.skip("requires the existing local Camoufox executable")
@@ -33,6 +33,7 @@ def prepared_browser(monkeypatch, *, headless=True):
     monkeypatch.setattr(utils, "get_path", lambda file: str(version_file.parent / file))
     with camoufox.Camoufox(
         headless=headless,
+        main_world_eval=main_world_eval,
         executable_path=executable,
         exclude_addons=list(DefaultAddons),
     ) as browser:

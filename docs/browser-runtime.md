@@ -1,14 +1,12 @@
 # Browser runtime ownership
 
-浏览器请求统一使用受管 Byparr 3.1.1（Windows/Linux x64 使用 Invisible，其余既有平台使用 Camoufox），由 `paper_fetch.providers.browser_runtime`
+浏览器请求统一使用受管 Byparr 3.1.1 和 Camoufox，由 `paper_fetch.providers.browser_runtime`
 管理线程、context、状态目录与资源释放。组件和状态模式见[浏览器后端](browser-backends.md)，
 安装与预置见[部署指南](deployment.md#浏览器安装与准备)。
 
-`browser` 与 `full` 使用互斥平台依赖：Windows/Linux x64（`AMD64`、`amd64`、`x86_64`）
-安装 InvisiblePlaywright 0.59.0、invisible-core 69.82.0 和 Playwright `>=1.58,<2`（锁定 1.65.2），
-不安装 Camoufox；macOS 与 Linux arm64 使用 Camoufox 0.5.9 和 Playwright
-`>=1.58,<1.63`（锁定 1.62.0），不安装 Invisible 系列。Linux arm64 仅沿用在线支持，不新增离线发行资产。
-x64 的浏览器准备不下载 Camoufox 或 fpgen，保留宿主 Playwright 的 HTTP 请求通道。
+`browser` 与 `full` 在所有已支持平台使用 Camoufox 0.5.9 和 Playwright
+`>=1.58,<1.63`（锁定 1.62.0）。首次准备浏览器时按平台获取 Camoufox 可执行文件和 fpgen 模型。
+Linux arm64 继续通过在线安装使用。
 
 ## 依赖方向
 
@@ -43,8 +41,7 @@ bundle 的 `BrowserAssetPolicy` 显式声明附件点击和 figure page 能力�
 请求期限。切换出版社前关闭上一会话并释放锁，不交叉持锁等待。外部占用、归属冲突、
 元数据损坏和等待超时明确报错，不删除 Firefox 原生锁或回退临时会话。
 
-显式 executable 必须匹配当前平台引擎：Invisible 校验 release seal，Camoufox 读取
-相邻 `version.json`；配置边界见[浏览器后端](browser-backends.md#选择与配置)。
+显式指定 Camoufox executable 时，运行时读取相邻的 `version.json` 核对版本。配置项见[浏览器后端](browser-backends.md#选择与配置)。
 启动进度与错误写 stderr；CLI stdout 默认只承载逐篇 JSON 回执。
 
 ## HTML 策略与资源阻断
@@ -164,7 +161,7 @@ IEEE preflight 不以初始 HTTP 202 或 `/rest/document/` 请求作为终态：
 `reason_code=aws_waf_challenge`、`status=challenge`，diagnostics 保留
 `challenge_provider=aws_waf` 。
 
-离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供各平台的 Playwright 与 Byparr 使用。`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。Windows/Linux x64 使用 InvisiblePlaywright 0.59.0 和 invisible-core 69.82.0。POSIX 上的 Invisible 浏览器由 invisible-core 原生启动。pyee 锁定为 13.0.1。
+离线包独立打包官方 Node.js 26.13.0，`PLAYWRIGHT_NODEJS_PATH` 默认指向 POSIX 的 `runtime/node/bin/node` 或 Windows 的 `runtime/node/node.exe`，供各平台的 Playwright 与 Byparr 使用。`MATHML_TO_LATEX_NODE_BIN` 使用同一路径。显式环境覆盖继续生效，Playwright 包内原始文件保留。pyee 锁定为 13.0.1。
 
 ### AMS 认证前置
 

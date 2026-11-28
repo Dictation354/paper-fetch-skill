@@ -196,9 +196,9 @@ function Build-ProjectWheelhouse {
 
     Write-Log "Downloading Windows dependency wheelhouse"
     Invoke-Native $PythonBin -m pip download --dest $wheelhouse --only-binary=:all: "$($projectWheelPath)[full]"
-    $invisibleWheels = @(Get-ChildItem -Path $wheelhouse -Filter "invisible_playwright-*.whl" -ErrorAction SilentlyContinue)
-    if ($invisibleWheels.Count -ne 1) {
-        throw "Dependency wheelhouse is missing invisible_playwright-*.whl."
+    $camoufoxWheels = @(Get-ChildItem -Path $wheelhouse -Filter "camoufox-*.whl" -ErrorAction SilentlyContinue)
+    if ($camoufoxWheels.Count -ne 1) {
+        throw "Expected one Camoufox wheel in the dependency wheelhouse."
     }
 }
 
@@ -440,10 +440,10 @@ function Write-OfflineReadme {
 This installer includes the embedded Python runtime, installed Python packages, formula tools, and image-tools configuration for optional conversion tools.
 The offline build does not bundle Ghostscript/libvips from the build host PATH; AMS EPS/TIFF source figure conversion falls back to webpage JPG/PNG candidates when those tools are unavailable.
 It bundles pinned Byparr source/private dependencies under `runtime/browser-components/byparr/`.
-The sealed Invisible engine and Byparr are prepared after core installation, including silent installs.
+Camoufox, its fingerprint model and Byparr are prepared after core installation, including silent installs.
 Use `/SKIPBROWSERPREPARE` to skip. single-backend failure preserves core installation.
 See `browser-setup-results.txt`. Retry with `python -m paper_fetch.offline_setup --install-root <path> --prepare-browsers`.
-Invisible uses its pinned release seal and reuses valid local engine binaries.
+Successful Camoufox update checks are reused for 24 hours.
 Ghostscript uses the official visible x64 installer (UAC/admin and system registry); libvips keeps the complete official x64 ZIP with DLLs/resources. Tools go under versioned `image-tools` directories; existing valid tools are reused and real EPS/TIFF conversion is checked before saving paths. Optional failures preserve the core installation. See `optional-setup-results.txt` after using the wizard.
 Upgrades preserve credentials and optional tools. Uninstall keeps optional tools by default; interactive cleanup removes only recorded owned tools via the official Ghostscript uninstaller or individually recorded libvips files, preserving user additions. Shared browser caches remain.
 Official Node.js and its license are bundled under `runtime/node/`; the version and official archive hashes are pinned in `installer/manifest.json`. Formula tools, Playwright and Byparr use `runtime/node/node.exe` through `MATHML_TO_LATEX_NODE_BIN` and `PLAYWRIGHT_NODEJS_PATH`. Explicit environment overrides are preserved.
@@ -534,10 +534,9 @@ function Write-ManifestAndChecksums {
             formula_tools = "formula-tools"
             node_runtime = (Get-Content -LiteralPath (Join-Path $Staging "runtime/node/node-runtime.json") -Raw | ConvertFrom-Json)
             image_tools = "image-tools"
-            invisible = [ordered]@{
+            camoufox = [ordered]@{
                 python_package = "runtime/Lib/site-packages"
-                python_package_version = $browserVersions.'invisible-playwright'
-                core_version = $browserVersions.'invisible-core'
+                python_package_version = $browserVersions.camoufox
                 playwright_version = $browserVersions.playwright
                 browser_binary = "not_bundled"
             }

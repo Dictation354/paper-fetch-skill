@@ -10,7 +10,8 @@
 
 ## 8.2.3 - 2026-11-28
 
-- Linux 和 Windows x86-64 浏览器运行时升级至 InvisiblePlaywright 0.59.0，并同步升级其指定的 invisible-core 69.82.0。
+- Linux 和 Windows x86-64 改用已有的 Byparr 与 Camoufox 运行时。`browser` 和 `full` 安装 Camoufox 0.5.9 和 Playwright `>=1.58,<1.63`（锁定 1.62.0）。
+- 修复补充 PDF 在新标签页重定向时，Firefox 尚未报告页面归属而导致的下载超时。
 - 修复 SpringerLink 将多语摘要、PDF 预览和附加信息中的文章要点误判为全文的问题。HTML 只有摘要时尝试同篇 PDF，PDF 不可用时保留摘要。提取修订号升至 17，重新抓取时按新规则验收旧缓存对应的论文。
 - 明确 Skill 复用文件或回执、查询已知历史目录、抓取全文和解析身份的适用条件。新增 Unix 和 Windows 可执行示例，用于定位离线安装的 Python 并读取 PDF 附件。
 

@@ -2,7 +2,7 @@
 
 ## 统一受管 Byparr
 
-所有 provider 固定经单一 `paper_fetch.providers.browser_runtime.backends.byparr.ByparrBackend` 使用受管 Byparr，不再维护平行的浏览器后端分支或选择注册表。底层按平台策略选用引擎（Windows/Linux x64 使用 InvisiblePlaywright，macOS 与 ARM 使用 Camoufox）；当前事实由 provider catalog 提供。
+所有 provider 固定经单一 `paper_fetch.providers.browser_runtime.backends.byparr.ByparrBackend` 使用受管 Byparr，不再维护平行的浏览器后端分支或选择注册表。所有已支持平台均使用 Camoufox 引擎，当前配置由 provider catalog 提供。
 
 ## 选择与配置
 

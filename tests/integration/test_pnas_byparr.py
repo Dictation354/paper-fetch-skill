@@ -159,6 +159,11 @@ def site():
 
         def do_GET(self):
             calls.append(self.path)
+            if self.path == "/redirect/si.pdf":
+                self.send_response(302)
+                self.send_header("Location", "/download/si.pdf")
+                self.end_headers()
+                return
             status = 200
             challenge = False
             if self.path in {
@@ -188,6 +193,13 @@ def site():
             elif self.path == "/slow":
                 time.sleep(2)
                 mime, body = "text/html", b"<html><title>Slow article</title></html>"
+            elif self.path == "/supplements":
+                mime = "text/html"
+                body = (
+                    b'<a target="_blank" href="/redirect/si.pdf">Supplementary PDF</a>'
+                )
+            elif self.path == "/download/si.pdf":
+                mime, body = assets["/paper.pdf"]
             elif self.path in assets:
                 mime, body = assets[self.path]
             else:
@@ -204,6 +216,8 @@ def site():
                         + '</p></main><a href="/paper.pdf" target="_blank">Supplement</a></body></html>'
                     ).encode()
             self.send_response(status)
+            if self.path == "/download/si.pdf":
+                self.send_header("Content-Disposition", 'attachment; filename="si.pdf"')
             if challenge:
                 self.send_header("cf-mitigated", "challenge")
             self.send_header("Content-Type", mime)
@@ -400,8 +414,13 @@ def test_cancellation_stops_owned_browser_tree(prepared, site, monkeypatch, tmp_
     assert manager.context is None and manager.browser is None and not work.exists()
 
 
+@pytest.mark.parametrize(
+    "article,href",
+    [("/article", "/paper.pdf"), ("/supplements", "/redirect/si.pdf")],
+    ids=["direct", "popup_redirect"],
+)
 def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
-    prepared, site, monkeypatch, tmp_path
+    prepared, site, monkeypatch, tmp_path, article, href
 ):
     from paper_fetch.providers.browser_workflow.fetchers.context import (
         BrowserDocumentFetcherOptions,
@@ -416,10 +435,8 @@ def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
     with RuntimeContext(env={}) as runtime:
         context = runtime.new_browser_context_for_runtime_config(config)
         fetcher = _SharedBrowserFileDocumentFetcher(
-            browser_context_seed_getter=lambda: {
-                "browser_final_url": base + "/article"
-            },
-            seed_urls_getter=lambda: [base + "/article"],
+            browser_context_seed_getter=lambda: {"browser_final_url": base + article},
+            seed_urls_getter=lambda: [base + article],
             runtime_context=runtime,
             browser_options=BrowserDocumentFetcherOptions(
                 runtime_config=config, file_fetch_mode="page_click"
@@ -427,12 +444,16 @@ def test_native_pdf_click_uses_download_bytes_in_same_camoufox(
         )
         try:
             result = fetcher(
-                base + "/paper.pdf",
-                {"kind": "supplementary", "source_url": base + "/paper.pdf"},
+                base + href,
+                {"kind": "supplementary", "source_url": base + href},
             )
-            assert result is not None, str(fetcher.failure_for(base + "/paper.pdf"))
+            assert result is not None, str(fetcher.failure_for(base + href))
             assert result["body"] == assets["/paper.pdf"][1]
-            assert calls.count("/paper.pdf") == 1
+            assert calls.count(href) == 1
+            if href == "/redirect/si.pdf":
+                assert calls.count("/download/si.pdf") == 1
+                assert result.route_diagnostics["capture_event"] == "download"
+            assert context._paper_fetch_navigator.diagnostics["engine"] == "camoufox"
             assert runtime.new_browser_context_for_runtime_config(config) is context
         finally:
             fetcher.close()

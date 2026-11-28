@@ -26,15 +26,13 @@ ROOT = Path(__file__).resolve().parents[2]
         (system, machine)
         for system, machines in (
             ("linux", ("x86_64", "AMD64", "amd64", "arm64", "aarch64")),
-            ("win32", ("AMD64", "amd64", "x86_64")),
+            ("win32", ("AMD64", "amd64", "x86_64", "arm64", "aarch64")),
             ("darwin", ("arm64", "aarch64", "x86_64")),
         )
         for machine in machines
     ],
 )
-def test_platform_dependencies_are_exclusive(
-    extra, python, system, machine, monkeypatch
-):
+def test_supported_platforms_use_camoufox(extra, python, system, machine, monkeypatch):
     project = tomllib.loads((ROOT / "pyproject.toml").read_text())
     env = {
         "sys_platform": system,
@@ -49,12 +47,14 @@ def test_platform_dependencies_are_exclusive(
     active = {r.name: r for r in requirements if not r.marker or r.marker.evaluate(env)}
     monkeypatch.setattr(policy, "sys", SimpleNamespace(platform=system))
     monkeypatch.setattr(policy, "platform", SimpleNamespace(machine=lambda: machine))
-    invisible = policy.engine_name() == "invisible"
-    assert ("camoufox" in active) is not invisible
-    assert ("invisible-playwright" in active) is invisible
-    assert ("invisible-core" in active) is invisible
-    assert ("1.65.2" in active["playwright"].specifier) is invisible
-    assert "1.62.0" in active["playwright"].specifier
+    assert policy.supported_platform()
+    assert policy.engine_name() == "camoufox"
+    assert active["camoufox"].specifier == Requirement("camoufox==0.5.9").specifier
+    assert (
+        active["playwright"].specifier
+        == Requirement("playwright>=1.58,<1.63").specifier
+    )
+    assert {"invisible-playwright", "invisible-core"}.isdisjoint(active)
     shared = json.loads(policy.BYPARR_MANIFEST_PATH.read_text())
     shared_active = {
         r.name: r

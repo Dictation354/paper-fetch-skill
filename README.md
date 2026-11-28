@@ -233,7 +233,7 @@ Agent 安装 Skill 后，可以识别 Paper Fetch 的适用边界，按用户意
 Paper Fetch 不绕过付费墙、订阅授权或反爬验证码。实际可获取范围取决于目标 provider、用户凭据、机构网络权限与本机运行环境：
 
 - **官方 API 凭据**：Elsevier XML/PDF API 路线使用从 <https://dev.elsevier.com/> 申请的 `ELSEVIER_API_KEY`（ScienceDirect 浏览器路线独立使用浏览器访问状态，API key 不赋予浏览器权限）；Wiley 可选配置 `WILEY_TDM_CLIENT_TOKEN` 启用官方 TDM PDF 通道。
-- **受管浏览器运行时**：所有浏览器路线统一经受管 Byparr 调度（Windows / Linux x64 使用 InvisiblePlaywright，macOS / ARM 使用 Camoufox），认证、预检与抓取共用 `publisher-browser-profiles/<provider>/` 原生持久目录。安装器默认准备当前平台支持的浏览器，跳过、离线预置与重试命令见 [部署指南](docs/deployment.md#浏览器安装与准备)。
+- **受管浏览器运行时**：所有浏览器路线统一由受管 Byparr 启动 Camoufox，认证、预检与抓取共用 `publisher-browser-profiles/<provider>/` 原生持久目录。安装器默认准备当前平台支持的浏览器，跳过、离线预置与重试命令见 [部署指南](docs/deployment.md#浏览器安装与准备)。
 - **AMS 认证要求**：AMS 正文、补充材料与定向补图的联网请求要求已完成一次 `paper-fetch auth ams` 验证（交互式 CLI 缺少状态时会引导认证后继续，非交互环境返回 `auth_required`）。
 - **静态诊断、预检与人工认证**：`doctor` 仅做本地无网络检查；`browser-preflight` 会实际启动浏览器访问页面（建议用 `--provider` 指定目标出版社，省略时将串行预检全部浏览器 provider）；需要建立或更新机构登录态时运行 `auth`：
 
