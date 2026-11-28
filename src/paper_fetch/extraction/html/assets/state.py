@@ -207,6 +207,7 @@ class AssetFetchResponse(MutableMapping[str, Any]):
     timing: dict[str, float] = field(default_factory=dict)
     started_at: float | None = None
     diagnostics: dict[str, Any] = field(default_factory=dict)
+    filename_hint: str = ""
 
     @classmethod
     def from_mapping(cls, response: Mapping[str, Any]) -> AssetFetchResponse:

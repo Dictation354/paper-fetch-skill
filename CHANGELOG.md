@@ -8,6 +8,10 @@ All notable public changes to `paper-fetch-skill` are documented in this file.
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.4 - 2026-11-28
+
+- Fix Science and PNAS supplementary downloads when Chromium reports only the final download event. Match the same-origin endpoint to the clicked link's DOI and filename, and preserve the verified filename and both URLs in the archive.
+
 ## 8.2.3 - 2026-11-28
 
 - Use Scrapling Chromium for publisher browsing on Linux, Windows, and macOS. The `browser` and `full` extras pin Scrapling 0.5.1 with fetchers, Patchright 1.64.4, and Playwright 1.65.2. Chromium has its own persistent profile. Run `paper-fetch auth <provider>` to sign in again after moving from Firefox.

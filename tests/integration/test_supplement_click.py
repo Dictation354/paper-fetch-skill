@@ -1,13 +1,16 @@
-"""Real Camoufox page-click contracts against locally fulfilled responses."""
+"""Real Chromium page-click contracts against local responses."""
 
 from __future__ import annotations
 
 import hashlib
 import json
 from html import escape
+from io import BytesIO
 from pathlib import Path
 from types import SimpleNamespace
 from unittest import mock
+from urllib.parse import quote, urlencode
+from zipfile import ZipFile
 
 import pytest
 
@@ -39,7 +42,7 @@ pytestmark = pytest.mark.browser
 def local_click_deadline(monkeypatch):
     from paper_fetch.providers.browser_workflow.fetchers import click
 
-    # Parallel Camoufox workers can take several seconds to render a local
+    # Parallel Chromium workers can take several seconds to render a local
     # article. Keep the short deadline specific to the timeout scenario.
     monkeypatch.setattr(click, "_CLICK_TIMEOUT_SECONDS", 20)
 
@@ -357,6 +360,175 @@ def test_click_response_and_failure_boundaries(
         assert not context._impl_obj.listeners("requestfinished")
         assert not context._impl_obj.listeners("requestfailed")
         context.close()
+
+
+def workbook_bytes():
+    package = "http://schemas.openxmlformats.org/package/2006"
+    office_rels = "http://schemas.openxmlformats.org/officeDocument/2006/relationships"
+    spreadsheet = "http://schemas.openxmlformats.org/spreadsheetml/2006/main"
+    spreadsheet_type = "application/vnd.openxmlformats-officedocument.spreadsheetml"
+    buffer = BytesIO()
+    with ZipFile(buffer, "w") as archive:
+        archive.writestr(
+            "[Content_Types].xml",
+            f'''<Types xmlns="{package}/content-types">
+                <Default Extension="rels" ContentType="application/vnd.openxmlformats-package.relationships+xml"/>
+                <Override PartName="/xl/workbook.xml" ContentType="{spreadsheet_type}.sheet.main+xml"/>
+                <Override PartName="/xl/worksheets/sheet1.xml" ContentType="{spreadsheet_type}.worksheet+xml"/>
+            </Types>''',
+        )
+        archive.writestr(
+            "_rels/.rels",
+            f'''<Relationships xmlns="{package}/relationships">
+                <Relationship Id="rId1" Type="{office_rels}/officeDocument" Target="xl/workbook.xml"/>
+            </Relationships>''',
+        )
+        archive.writestr(
+            "xl/workbook.xml",
+            f'''<workbook xmlns="{spreadsheet}" xmlns:r="{office_rels}">
+                <sheets><sheet name="Data" sheetId="1" r:id="rId1"/></sheets>
+            </workbook>''',
+        )
+        archive.writestr(
+            "xl/_rels/workbook.xml.rels",
+            f'''<Relationships xmlns="{package}/relationships">
+                <Relationship Id="rId1" Type="{office_rels}/worksheet" Target="worksheets/sheet1.xml"/>
+            </Relationships>''',
+        )
+        archive.writestr(
+            "xl/worksheets/sheet1.xml",
+            f'''<worksheet xmlns="{spreadsheet}">
+                <sheetData><row r="1"><c r="A1"><v>1</v></c></row></sheetData>
+            </worksheet>''',
+        )
+    return buffer.getvalue()
+
+
+@pytest.mark.parametrize(
+    ("provider", "case"),
+    [
+        ("science", "matching"),
+        ("pnas", "matching"),
+        ("science", "wrong_doi"),
+        ("science", "wrong_filename_case"),
+        ("science", "duplicate_doi"),
+        ("science", "duplicate_file"),
+        ("science", "different_origin"),
+    ],
+)
+def test_atypon_download_without_network_chain(
+    click_browser, local_responses, monkeypatch, tmp_path, provider, case
+):
+    from paper_fetch.providers.browser_workflow.fetchers import click
+
+    if provider == "pnas":
+        doi, filename = "10.1073/pnas.test", "pnas.test_S1.xlsx"
+        content_type = (
+            "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+        )
+        body = workbook_bytes()
+    else:
+        doi, filename = "10.1126/science.test", "science.test_S1.pdf"
+        content_type = "application/pdf"
+        body = build_pdf_bytes(["Supplementary Material"])
+
+    href = f"/doi/suppl/{doi}/suppl_file/{filename.replace('_', '%5F')}"
+    query = [("doi", doi.upper()), ("file", filename)]
+    if case == "wrong_doi":
+        query[0] = ("doi", doi + "-other")
+    elif case == "wrong_filename_case":
+        query[1] = ("file", filename.lower())
+    elif case == "duplicate_doi":
+        query.append(("doi", doi.upper()))
+    elif case == "duplicate_file":
+        query.append(("file", ""))
+    endpoint = "/action/downloadSupplement?" + urlencode(query, quote_via=quote)
+    received = []
+
+    def serve(path, _headers):
+        if path == "/favicon.ico":
+            return 204, {}, b""
+        received.append(path)
+        if path == "/article":
+            link = f'<a href="{href}" download="browser-suggested">Supplement</a>'
+            return 200, {"Content-Type": "text/html"}, article_html(link).encode()
+        if path == href:
+            return 302, {"Location": redirect_url}, b""
+        return (
+            200,
+            {
+                "Content-Type": content_type,
+                "Content-Disposition": 'attachment; filename="server-suggested"',
+            },
+            body,
+        )
+
+    base = local_responses(serve)
+    final_url = (
+        local_responses(serve) if case == "different_origin" else base
+    ) + endpoint
+    redirect_url = final_url if case == "different_origin" else endpoint
+    article, target = base + "/article", base + href
+    asset = {"kind": "supplementary", "url": target, "source_href": href}
+    if provider == "pnas":
+        asset["filename_hint"] = filename
+
+    with RuntimeContext(env={}) as runtime:
+        context = click_browser.new_context(accept_downloads=True)
+        try:
+            fetcher = click_fetcher(
+                context, runtime, provider=provider, article=article
+            )
+            fetcher._page.goto(article)
+            network_urls = []
+            download_urls = []
+            context.on("request", lambda request: network_urls.append(request.url))
+            context.on("response", lambda response: network_urls.append(response.url))
+            fetcher._page.on(
+                "download", lambda download: download_urls.append(download.url)
+            )
+            if case != "matching":
+                monkeypatch.setattr(click, "_CLICK_TIMEOUT_SECONDS", 3)
+
+            result = download_assets(
+                SUPPLEMENTARY_KIND,
+                mock.Mock(),
+                article_id=doi,
+                user_agent="test-agent",
+                output_dir=tmp_path,
+                assets=[asset],
+                asset_profile="all",
+                options=AssetDownloadOptions(
+                    file_document_fetcher=fetcher,
+                    runtime_context=runtime,
+                    fetch_policy="browser_only",
+                    asset_download_concurrency=1,
+                ),
+            )
+
+            assert received == ["/article", href, endpoint]
+            assert download_urls == [final_url]
+            assert target not in network_urls
+            # Chromium can expose the cross-origin request without the chain's root.
+            if case != "different_origin":
+                assert final_url not in network_urls
+            if case == "matching":
+                assert not result["asset_failures"], result
+                (saved,) = result["assets"]
+                path = Path(saved["path"])
+                assert path.name == filename
+                assert path.read_bytes() == body
+                assert saved["download_url"] == target
+                assert saved["source_url"] == final_url
+                assert saved["asset_route"]["original_href"] == href
+                assert saved["asset_route"]["capture_event"] == "download"
+            else:
+                assert not result["assets"], result
+                (failure,) = result["asset_failures"]
+                assert failure["reason"] == "supplement_click_download_timeout"
+                assert not any(path.is_file() for path in tmp_path.rglob("*"))
+        finally:
+            context.close()
 
 
 def test_iop_directory_click_and_mdpi_original_url_mapping(

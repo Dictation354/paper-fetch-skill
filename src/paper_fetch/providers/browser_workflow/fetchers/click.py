@@ -9,13 +9,22 @@ import time
 from collections.abc import Mapping
 from pathlib import Path
 from typing import Any
-from urllib.parse import parse_qsl, urldefrag, urljoin, urlsplit
+from urllib.parse import (
+    SplitResult,
+    parse_qs,
+    parse_qsl,
+    unquote,
+    urldefrag,
+    urljoin,
+    urlsplit,
+)
 
 from ....asset_budget import DEFAULT_ASSET_MAX_BYTES_PER_ASSET, AssetBudgetExceeded
 from ....extraction.html.assets import supplementary_response_block_reason
 from ....extraction.html.assets.state import AssetBinaryPayload, AssetFetchResponse
 from ....http import RequestCancelledError
 from ....http.cache import redact_url_for_cache
+from ....publisher_identity import DOI_PATTERN
 from ..._registry import BrowserAssetPolicy, browser_asset_policy
 from ...browser_runtime.navigation import (
     managed_action,
@@ -25,6 +34,55 @@ from ...browser_runtime.navigation import (
 from .context import _browser_response_headers, _browser_response_status
 
 _CLICK_TIMEOUT_SECONDS = 60.0
+
+
+def _http_origin(url: SplitResult) -> tuple[str, str | None, int]:
+    port = url.port
+    return (
+        url.scheme,
+        url.hostname,
+        port if port is not None else (443 if url.scheme == "https" else 80),
+    )
+
+
+def _verified_supplement_filename(target: str, download_url: str) -> str:
+    try:
+        source = urlsplit(target)
+        final = urlsplit(download_url)
+        if (
+            final.path != "/action/downloadSupplement"
+            or source.scheme not in {"http", "https"}
+            or not source.hostname
+            or _http_origin(source) != _http_origin(final)
+            or not source.path.startswith("/doi/suppl/")
+        ):
+            return ""
+        doi, separator, filename = source.path.removeprefix("/doi/suppl/").rpartition(
+            "/suppl_file/"
+        )
+        doi, filename = (
+            unquote(doi, errors="strict"),
+            unquote(filename, errors="strict"),
+        )
+        if (
+            not separator
+            or DOI_PATTERN.fullmatch(doi) is None
+            or not filename
+            or "/" in filename
+            or "\\" in filename
+        ):
+            return ""
+        query = parse_qs(final.query, keep_blank_values=True, errors="strict")
+        dois = query.get("doi", [])
+        if (
+            len(dois) == 1
+            and dois[0].casefold() == doi.casefold()
+            and query.get("file") == [filename]
+        ):
+            return filename
+    except ValueError:
+        return ""
+    return ""
 
 
 def _page_link(page, urls, asset, policy: BrowserAssetPolicy, remaining_ms):
@@ -252,11 +310,28 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
         if armed and request_root(request) in matched_requests:
             finished.add(request)
 
+    def download_match(candidate):
+        owner = candidate.page
+        if owner not in [page, *popups]:
+            return False, ""
+        url = candidate.url
+        linked = (
+            clicked_url(url)
+            or url in request_urls
+            or owner in redirect_targets.get(url, ())
+            or (response is not None and url == response.url)
+        )
+        # Chromium's HTML download handoff can expose only the final URL.
+        filename = (
+            _verified_supplement_filename(target, url)
+            if policy.supplement_download_query_fallback
+            else ""
+        )
+        return linked, filename
+
     def capture_download(candidate):
         nonlocal response
-        # Chromium can deliver downloads initiated by an HTML download
-        # attribute without exposing the request to the page's network client.
-        if armed and (candidate.url in request_urls or clicked_url(candidate.url)):
+        if armed and any(download_match(candidate)):
             downloads.append(candidate)
             if pending_response is not None and pending_response.url == candidate.url:
                 response = pending_response
@@ -396,18 +471,16 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                     for owner in [page, *popups]
                 ):
                     response = pending_response
-            download = next(
-                (
-                    item
-                    for item in downloads
-                    if (
-                        item.url == response.url
-                        if response is not None
-                        else clicked_url(item.url)
-                    )
-                ),
-                None,
-            )
+            download = None
+            verified_filename = ""
+            for item in downloads:
+                if response is not None and item.url != response.url:
+                    continue
+                linked, filename = download_match(item)
+                if linked or (filename and download is None):
+                    download, verified_filename = item, filename
+                    if linked:
+                        break
             # A download manager handoff need not finish the page request.
             # A local path or save_as() supplies the complete file; deadline/cancellation
             # and byte limits are checked before accepting it below.
@@ -503,6 +576,7 @@ def fetch_file_with_page_click(fetcher, file_url: str, asset: Mapping[str, Any])
                         body=body,
                         downloaded_bytes=len(body),
                     ),
+                    filename_hint=verified_filename,
                     recovery_attempts=[{"stage": "page_click", **route}],
                     route_diagnostics=dict(route),
                     diagnostics={

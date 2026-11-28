@@ -109,6 +109,8 @@
 
 - 浏览器缺少重定向请求的父指针时，可用本次点击所属页面或弹窗实际收到的 `Location` 关联后续请求。AIP 控件允许在原链接上追加一个 `_gl` 参数。PNAS 按原始 `href` 识别附件，并沿用 `/suppl_file/` 链接中的文件名。
 
+- Science 和 PNAS 优先使用已匹配的响应和可见重定向。Chromium 未提供可关联的请求链时，接受点击页面或其所属弹窗发出的 `/action/downloadSupplement` 下载事件。下载地址须与原始附件链接同源，且 `doi` 和 `file` 各出现一次。解码后的 DOI 和文件名须与原始 `/doi/suppl/<DOI>/suppl_file/<文件名>` 链接完整匹配。DOI 比较忽略大小写，文件名区分大小写。归档优先采用资产的文件名提示，其次采用已核验的文件名，并保留原始链接与实际下载地址。
+
 - 边界说明：
   - 这条规则不定义每个 publisher 的完整 DOM selector、REST endpoint 或 URL allowlist；这些细节由 provider-specific helper 维护，本文只保留用户可见 contract。
   - 它也不限制附件文件类型。只要来源 scope 明确，supplementary 可以是 PDF、Office 文档、压缩包、数据表、图片或视频。

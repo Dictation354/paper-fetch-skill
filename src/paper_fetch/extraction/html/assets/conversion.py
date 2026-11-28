@@ -515,7 +515,9 @@ def save_asset_resolution(
         final_url,
         used_names_by_dir.setdefault(target_asset_dir, set()),
         preferred_filename=(
-            normalize_text(str(asset.get("filename_hint") or "")) or None
+            normalize_text(str(asset.get("filename_hint") or ""))
+            or response.filename_hint
+            or None
             if kind.name == "supplementary"
             else None
         ),

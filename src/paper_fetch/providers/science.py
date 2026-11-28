@@ -44,7 +44,10 @@ class ScienceClient(browser_workflow.BrowserWorkflowClient):
 
 
 PROVIDER_BUNDLE = ProviderBundle(
-    browser_asset_policy=BrowserAssetPolicy(click_supplements=True),
+    browser_asset_policy=BrowserAssetPolicy(
+        click_supplements=True,
+        supplement_download_query_fallback=True,
+    ),
     browser_page_policy=BrowserPagePolicy(
         document_hosts=("science.org", "www.science.org")
     ),

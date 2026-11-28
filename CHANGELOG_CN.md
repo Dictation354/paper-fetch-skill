@@ -8,6 +8,10 @@
 
 <!-- SCAFFOLD: changelog-unreleased -->
 
+## 8.2.4 - 2026-11-28
+
+- 修复 Chromium 只报告最终下载事件时 Science 和 PNAS 补充材料下载失败的问题。按点击链接的 DOI 和文件名核验同源下载地址，归档时保留已核验的文件名、原始链接和实际下载地址。
+
 ## 8.2.3 - 2026-11-28
 
 - Linux、Windows 和 macOS 的出版社浏览器统一使用 Scrapling Chromium。`browser` 和 `full` 锁定 Scrapling 0.5.1（含 fetchers）、Patchright 1.64.4 和 Playwright 1.65.2。Chromium 使用独立持久 profile，从 Firefox 迁移后用 `paper-fetch auth <provider>` 重新登录。

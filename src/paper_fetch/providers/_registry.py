@@ -102,6 +102,7 @@ class BrowserAssetPolicy:
     supplement_activate: Callable[..., None] | None = None
     supplement_ignore_tracking_query: bool = False
     supplement_added_query_parameter: str | None = None
+    supplement_download_query_fallback: bool = False
     supplement_exact_href: bool = False
     supplement_control_scope: str | None = None
     supplement_prefer_visible: bool = False
